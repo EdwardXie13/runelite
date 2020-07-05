@@ -28,38 +28,17 @@ package net.runelite.client.plugins.runecraft;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
-import net.runelite.client.config.ConfigSection;
 
 @ConfigGroup("runecraft")
 public interface RunecraftConfig extends Config
 {
-	@ConfigSection(
-		name = "Rift Settings",
-		description = "Abyss rift overlay settings",
-		position = 99
-	)
-	String riftSection = "rifts";
-
 	@ConfigItem(
 		keyName = "showRifts",
 		name = "Show Rifts in Abyss",
 		description = "Configures whether the rifts in the abyss will be displayed",
-		position = 2,
-		section = riftSection
+		position = 3
 	)
 	default boolean showRifts()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "showClickBox",
-		name = "Show Rift click box",
-		description = "Configures whether to display the click box of the rift",
-		position = 3,
-		section = riftSection
-	)
-	default boolean showClickBox()
 	{
 		return true;
 	}
@@ -68,8 +47,7 @@ public interface RunecraftConfig extends Config
 		keyName = "showAir",
 		name = "Show Air rift",
 		description = "Configures whether to display the air rift",
-		position = 4,
-		section = riftSection
+		position = 4
 	)
 	default boolean showAir()
 	{
@@ -80,8 +58,7 @@ public interface RunecraftConfig extends Config
 		keyName = "showBlood",
 		name = "Show Blood rift",
 		description = "Configures whether to display the Blood rift",
-		position = 5,
-		section = riftSection
+		position = 5
 	)
 	default boolean showBlood()
 	{
@@ -92,8 +69,7 @@ public interface RunecraftConfig extends Config
 		keyName = "showBody",
 		name = "Show Body rift",
 		description = "Configures whether to display the Body rift",
-		position = 6,
-		section = riftSection
+		position = 6
 	)
 	default boolean showBody()
 	{
@@ -104,8 +80,7 @@ public interface RunecraftConfig extends Config
 		keyName = "showChaos",
 		name = "Show Chaos rift",
 		description = "Configures whether to display the Chaos rift",
-		position = 7,
-		section = riftSection
+		position = 7
 	)
 	default boolean showChaos()
 	{
@@ -116,8 +91,7 @@ public interface RunecraftConfig extends Config
 		keyName = "showCosmic",
 		name = "Show Cosmic rift",
 		description = "Configures whether to display the Cosmic rift",
-		position = 8,
-		section = riftSection
+		position = 8
 	)
 	default boolean showCosmic()
 	{
@@ -128,8 +102,7 @@ public interface RunecraftConfig extends Config
 		keyName = "showDeath",
 		name = "Show Death rift",
 		description = "Configures whether to display the Death rift",
-		position = 9,
-		section = riftSection
+		position = 9
 	)
 	default boolean showDeath()
 	{
@@ -140,8 +113,7 @@ public interface RunecraftConfig extends Config
 		keyName = "showEarth",
 		name = "Show Earth rift",
 		description = "Configures whether to display the Earth rift",
-		position = 10,
-		section = riftSection
+		position = 10
 	)
 	default boolean showEarth()
 	{
@@ -152,8 +124,7 @@ public interface RunecraftConfig extends Config
 		keyName = "showFire",
 		name = "Show Fire rift",
 		description = "Configures whether to display the Fire rift",
-		position = 11,
-		section = riftSection
+		position = 11
 	)
 	default boolean showFire()
 	{
@@ -164,8 +135,7 @@ public interface RunecraftConfig extends Config
 		keyName = "showLaw",
 		name = "Show Law rift",
 		description = "Configures whether to display the Law rift",
-		position = 12,
-		section = riftSection
+		position = 12
 	)
 	default boolean showLaw()
 	{
@@ -176,8 +146,7 @@ public interface RunecraftConfig extends Config
 		keyName = "showMind",
 		name = "Show Mind rift",
 		description = "Configures whether to display the Mind rift",
-		position = 13,
-		section = riftSection
+		position = 13
 	)
 	default boolean showMind()
 	{
@@ -188,8 +157,7 @@ public interface RunecraftConfig extends Config
 		keyName = "showNature",
 		name = "Show Nature rift",
 		description = "Configures whether to display the Nature rift",
-		position = 14,
-		section = riftSection
+		position = 14
 	)
 	default boolean showNature()
 	{
@@ -200,8 +168,7 @@ public interface RunecraftConfig extends Config
 		keyName = "showSoul",
 		name = "Show Soul rift",
 		description = "Configures whether to display the Soul rift",
-		position = 15,
-		section = riftSection
+		position = 15
 	)
 	default boolean showSoul()
 	{
@@ -212,10 +179,20 @@ public interface RunecraftConfig extends Config
 		keyName = "showWater",
 		name = "Show Water rift",
 		description = "Configures whether to display the Water rift",
-		position = 16,
-		section = riftSection
+		position = 16
 	)
 	default boolean showWater()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "showClickBox",
+		name = "Show Rift click box",
+		description = "Configures whether to display the click box of the rift",
+		position = 17
+	)
+	default boolean showClickBox()
 	{
 		return true;
 	}
@@ -238,6 +215,28 @@ public interface RunecraftConfig extends Config
 		position = 19
 	)
 	default boolean degradingNotification()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+			keyName = "showDenseRunestoneIndicator",
+			name = "Show dense runestone indicator",
+			description = "Configures whether to display an indicator when dense runestone is ready to be mined",
+			position = 20
+	)
+	default boolean showDenseRunestoneIndicator()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+			keyName = "showDenseRunestoneClickbox",
+			name = "Show dense runestone click box",
+			description = "Configures whether to display a click box when dense runestone is ready to be mined",
+			position = 21
+	)
+	default boolean showDenseRunestoneClickbox()
 	{
 		return true;
 	}

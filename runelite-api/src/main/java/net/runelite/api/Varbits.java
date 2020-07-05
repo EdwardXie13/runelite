@@ -578,10 +578,13 @@ public enum Varbits
 	 *
 	 * @see <a href="https://oldschool.runescape.wiki/w/Minimap#Special_attack_orb">The OSRS Wiki's Minimap page</a>
 	 */
-	PVP_SPEC_ORB(8121);
+	PVP_SPEC_ORB(8121),
 
 	/**
 	 * The raw varbit ID.
 	 */
+	DENSE_RUNESTONE_NORTH_DEPLETED(4927),
+	DENSE_RUNESTONE_SOUTH_DEPLETED(4928);
+
 	private final int id;
 }
