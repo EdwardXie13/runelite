@@ -1,4 +1,5 @@
 /*
+ *
  * Copyright (c) 2017, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
