@@ -96,6 +96,7 @@ class KourendLibraryTutorialOverlay extends OverlayPanel
 			case COMPLETE:
 				panelComponent.getChildren().add(completeMessageComponent);
 				panelComponent.getChildren().add(sidebarMessageComponent);
+
 				break;
 		}
 

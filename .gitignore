@@ -12,3 +12,4 @@ project.properties
 .factorypath
 runelite-client/src/main/java/net/runelite/client/plugins/runecraft
 runelite-client/src/main/java/net/runelite/client/plugins/zulrah
+runelite-client/src/main/java/net/runelite/client/plugins/kourendlibrary
