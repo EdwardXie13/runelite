@@ -208,6 +208,7 @@ public class MenuEntrySwapperPlugin extends Plugin
 		swap("talk-to", "enchant", config::swapEnchant);
 		swap("talk-to", "start-minigame", config::swapStartMinigame);
 		swap("talk-to", ESSENCE_MINE_NPCS::contains, "teleport", config::swapEssenceMineTeleport);
+		swap("talk-to", "collect", config::swapCollectMiscellania);
 
 		swap("leave tomb", "quick-leave", config::swapQuickLeave);
 		swap("tomb door", "quick-leave", config::swapQuickLeave);
@@ -263,7 +264,7 @@ public class MenuEntrySwapperPlugin extends Plugin
 
 		swap("teleport menu", "duel arena", config::swapJewelleryBox);
 		swap("teleport menu", "castle wars", config::swapJewelleryBox);
-		swap("teleport menu", "clan wars", config::swapJewelleryBox);
+		swap("teleport menu", "ferox enclave", config::swapJewelleryBox);
 		swap("teleport menu", "burthorpe", config::swapJewelleryBox);
 		swap("teleport menu", "barbarian outpost", config::swapJewelleryBox);
 		swap("teleport menu", "corporeal beast", config::swapJewelleryBox);
