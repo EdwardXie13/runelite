@@ -53,6 +53,10 @@ import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.api.events.NpcSpawned;
+import net.runelite.client.chat.ChatColorType;
+import net.runelite.client.chat.ChatMessageBuilder;
+import net.runelite.client.chat.ChatMessageManager;
+import net.runelite.client.chat.QueuedMessage;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
@@ -80,6 +84,7 @@ public class KourendLibraryPlugin extends Plugin
 	private static final Pattern BOOK_EXTRACTOR = Pattern.compile("'<col=0000ff>(.*)</col>'");
 	private static final Pattern TAG_MATCHER = Pattern.compile("(<[^>]*>)");
 	static final int REGION = 6459;
+	String temp = "";
 
 	static final boolean debug = false;
 
@@ -106,6 +111,9 @@ public class KourendLibraryPlugin extends Plugin
 
 	@Inject
 	private ItemManager itemManager;
+
+	@Inject
+	private ChatMessageManager chatMessageManager;
 
 	private KourendLibraryPanel panel;
 	private NavigationButton navButton;
@@ -319,6 +327,21 @@ public class KourendLibraryPlugin extends Plugin
 					updateBooksPanel();
 				}
 			}
+			else if (isBiblia(npcHead.getModelId()))
+			{
+				Widget textw = client.getWidget(WidgetInfo.DIALOG_NPC_TEXT);
+				String text = textw.getText();
+
+				if (text.contains("Try the") )
+				{
+					if (temp != text)
+					{
+						sendChatMessage(text);
+						temp = text;
+					}
+				}
+
+			}
 		}
 	}
 
@@ -415,5 +438,24 @@ public class KourendLibraryPlugin extends Plugin
 	static boolean isLibraryCustomer(int npcId)
 	{
 		return npcId == NpcID.VILLIA || npcId == NpcID.PROFESSOR_GRACKLEBONE || npcId == NpcID.SAM_7049;
+	}
+
+	static boolean isBiblia(int npcId)
+	{
+		return npcId == NpcID.BIBLIA;
+	}
+
+	private void sendChatMessage(String chatMessage)
+	{
+		final String message = new ChatMessageBuilder()
+				.append(ChatColorType.HIGHLIGHT)
+				.append(chatMessage)
+				.build();
+
+		chatMessageManager.queue(
+				QueuedMessage.builder()
+						.type(ChatMessageType.CONSOLE)
+						.runeLiteFormattedMessage(message)
+						.build());
 	}
 }
