@@ -34,6 +34,9 @@ import net.runelite.http.api.chat.LayoutRoom;
 import net.runelite.http.api.chat.Task;
 import net.runelite.http.service.util.exception.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -155,13 +158,22 @@ public class ChatController
 	}
 
 	@GetMapping("/task")
-	public Task getTask(@RequestParam String name)
+	public ResponseEntity<Task> getTask(@RequestParam String name)
 	{
-		return chatService.getTask(name);
+		Task task = chatService.getTask(name);
+		if (task == null)
+		{
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+				.build();
+		}
+
+		return ResponseEntity.ok()
+			.cacheControl(CacheControl.maxAge(2, TimeUnit.MINUTES).cachePublic())
+			.body(task);
 	}
 
 	@PostMapping("/pb")
-	public void submitPb(@RequestParam String name, @RequestParam String boss, @RequestParam int pb)
+	public void submitPb(@RequestParam String name, @RequestParam String boss, @RequestParam double pb)
 	{
 		if (pb < 0)
 		{
@@ -172,9 +184,9 @@ public class ChatController
 	}
 
 	@GetMapping("/pb")
-	public int getPb(@RequestParam String name, @RequestParam String boss)
+	public double getPb(@RequestParam String name, @RequestParam String boss)
 	{
-		Integer pb = chatService.getPb(name, boss);
+		Double pb = chatService.getPb(name, boss);
 		if (pb == null)
 		{
 			throw new NotFoundException();

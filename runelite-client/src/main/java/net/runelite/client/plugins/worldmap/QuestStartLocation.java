@@ -26,19 +26,20 @@
 package net.runelite.client.plugins.worldmap;
 
 import lombok.Getter;
-import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.Quest;
+import net.runelite.api.coords.WorldPoint;
 
 // Some quests are in the same spot, but they are done in order. If multiple
 // quests start in the same location, an array of quests is expected.
 enum QuestStartLocation
 {
 	//Free Quests
+	BELOW_ICE_MOUNTAIN(Quest.BELOW_ICE_MOUNTAIN, new WorldPoint(3001, 3436, 0)),
 	COOKS_ASSISTANT_RFD(Quest.COOKS_ASSISTANT, new WorldPoint(3211, 3216, 0)),
 	THE_CORSAIR_CURSE(Quest.THE_CORSAIR_CURSE, new WorldPoint(3029, 3273, 0)),
 	DEMON_SLAYER(Quest.DEMON_SLAYER, new WorldPoint(3204, 3424, 0)),
 	DORICS_QUEST(Quest.DORICS_QUEST, new WorldPoint(2952, 3450, 0)),
-	DRAGON_SLAYER(Quest.DRAGON_SLAYER, new WorldPoint(3190, 3362, 0)),
+	DRAGON_SLAYER_I(Quest.DRAGON_SLAYER_I, new WorldPoint(3190, 3362, 0)),
 	ERNEST_THE_CHICKEN(Quest.ERNEST_THE_CHICKEN, new WorldPoint(3109, 3330, 0)),
 	GOBLIN_DIPLOMACY(Quest.GOBLIN_DIPLOMACY, new WorldPoint(2957, 3509, 0)),
 	IMP_CATCHER(Quest.IMP_CATCHER, new WorldPoint(3108, 3160, 0)),
@@ -99,6 +100,7 @@ enum QuestStartLocation
 	THE_FREMENNIK_EXILES(Quest.THE_FREMENNIK_EXILES, new WorldPoint(2658, 3669, 0)),
 	GARDEN_OF_TRANQUILLITY(Quest.GARDEN_OF_TRANQUILLITY, new WorldPoint(3227, 3477, 0)),
 	GERTRUDES_CAT_RATCATCHERS(Quest.GERTRUDES_CAT, new WorldPoint(3150, 3411, 0)),
+	GETTING_AHEAD(Quest.GETTING_AHEAD, new WorldPoint(1247, 3686, 0)),
 	GHOSTS_AHOY(Quest.GHOSTS_AHOY, new WorldPoint(3677, 3510, 0)),
 	THE_GIANT_DWARF(Quest.THE_GIANT_DWARF, new WorldPoint(2841, 10129, 0)),
 	THE_GOLEM(Quest.THE_GOLEM, new WorldPoint(3487, 3089, 0)),
@@ -114,6 +116,7 @@ enum QuestStartLocation
 	ICTHLARINS_LITTLE_HELPER(Quest.ICTHLARINS_LITTLE_HELPER, new WorldPoint(3314, 2849, 0)),
 	IN_SEARCH_OF_THE_MYREQUE(Quest.IN_SEARCH_OF_THE_MYREQUE, new WorldPoint(3502, 3477, 0)),
 	JUNGLE_POTION(Quest.JUNGLE_POTION, new WorldPoint(2809, 3086, 0)),
+	A_KINGDOM_DIVIDED(Quest.A_KINGDOM_DIVIDED, new WorldPoint(1663, 3672, 0)),
 	KINGS_RANSOM(Quest.KINGS_RANSOM, new WorldPoint(2741, 3554, 0)),
 	LEGENDS_QUEST(Quest.LEGENDS_QUEST, new WorldPoint(2725, 3367, 0)),
 	LOST_CITY(Quest.LOST_CITY, new WorldPoint(3149, 3205, 0)),
@@ -128,6 +131,7 @@ enum QuestStartLocation
 	MURDER_MYSTERY(Quest.MURDER_MYSTERY, new WorldPoint(2740, 3562, 0)),
 	MY_ARMS_BIG_ADVENTURE(Quest.MY_ARMS_BIG_ADVENTURE, new WorldPoint(2908, 10088, 0)),
 	NATURE_SPIRIT(Quest.NATURE_SPIRIT, new WorldPoint(3440, 9894, 0)),
+	A_NIGHT_AT_THE_THEATRE(Quest.A_NIGHT_AT_THE_THEATRE, new WorldPoint(3672, 3224, 0)),
 	OBSERVATORY_QUEST(Quest.OBSERVATORY_QUEST, new WorldPoint(2438, 3185, 0)),
 	OLAFS_QUEST(Quest.OLAFS_QUEST, new WorldPoint(2723, 3729, 0)),
 	ONE_SMALL_FAVOUR(Quest.ONE_SMALL_FAVOUR, new WorldPoint(2834, 2985, 0)),
@@ -135,7 +139,7 @@ enum QuestStartLocation
 	A_PORCINE_OF_INTEREST(Quest.A_PORCINE_OF_INTEREST, new WorldPoint(3085, 3251, 0)),
 	PRIEST_IN_PERIL(Quest.PRIEST_IN_PERIL, new WorldPoint(3219, 3473, 0)),
 	THE_QUEEN_OF_THIEVES(Quest.THE_QUEEN_OF_THIEVES, new WorldPoint(1795, 3782, 0)),
-	RAG_AND_BONE_MAN(new Quest[]{Quest.RAG_AND_BONE_MAN, Quest.RAG_AND_BONE_MAN_II}, new WorldPoint(3359, 3504, 0)),
+	RAG_AND_BONE_MAN_I(new Quest[]{Quest.RAG_AND_BONE_MAN_I, Quest.RAG_AND_BONE_MAN_II}, new WorldPoint(3359, 3504, 0)),
 	RECRUITMENT_DRIVE_BLACK_KNIGHTS_FORTRESS(new Quest[]{Quest.BLACK_KNIGHTS_FORTRESS, Quest.RECRUITMENT_DRIVE}, new WorldPoint(2959, 3336, 0)),
 	ROVING_ELVES(Quest.ROVING_ELVES, new WorldPoint(2288, 3146, 0)),
 	RUM_DEAL(Quest.RUM_DEAL, new WorldPoint(3679, 3535, 0)),
@@ -151,7 +155,7 @@ enum QuestStartLocation
 	SWAN_SONG(Quest.SWAN_SONG, new WorldPoint(2345, 3652, 0)),
 	TAI_BWO_WANNAI_TRIO(Quest.TAI_BWO_WANNAI_TRIO, new WorldPoint(2779, 3087, 0)),
 	A_TAIL_OF_TWO_CATS(Quest.A_TAIL_OF_TWO_CATS, new WorldPoint(2917, 3557, 0)),
-	TALE_OF_THE_RIGHTEOUS(Quest.TALE_OF_THE_RIGHTEOUS, new WorldPoint(1511, 3631, 0)),
+	TALE_OF_THE_RIGHTEOUS(Quest.TALE_OF_THE_RIGHTEOUS, new WorldPoint(1541, 3570, 0)),
 	A_TASTE_OF_HOPE(Quest.A_TASTE_OF_HOPE, new WorldPoint(3668, 3216, 0)),
 	TEARS_OF_GUTHIX(Quest.TEARS_OF_GUTHIX, new WorldPoint(3251, 9517, 0)),
 	TEMPLE_OF_IKOV(Quest.TEMPLE_OF_IKOV, new WorldPoint(2574, 3320, 0)),

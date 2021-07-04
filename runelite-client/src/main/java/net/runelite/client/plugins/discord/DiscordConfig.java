@@ -24,6 +24,7 @@
  */
 package net.runelite.client.plugins.discord;
 
+import lombok.AllArgsConstructor;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
@@ -32,11 +33,38 @@ import net.runelite.client.config.Units;
 @ConfigGroup("discord")
 public interface DiscordConfig extends Config
 {
+	@AllArgsConstructor
+	enum ElapsedTimeType
+	{
+		TOTAL("Total elapsed time"),
+		ACTIVITY("Per activity"),
+		HIDDEN("Hide elapsed time");
+
+		private final String value;
+
+		@Override
+		public String toString()
+		{
+			return value;
+		}
+	}
+
+	@ConfigItem(
+		keyName = "elapsedTime",
+		name = "Elapsed Time",
+		description = "Configures elapsed time shown.",
+		position = 1
+	)
+	default ElapsedTimeType elapsedTimeType()
+	{
+		return ElapsedTimeType.ACTIVITY;
+	}
+
 	@ConfigItem(
 		keyName = "actionTimeout",
-		name = "Action timeout",
-		description = "Configures after how long of not updating status will be reset (in minutes)",
-		position = 1
+		name = "Activity timeout",
+		description = "Configures after how long of not updating activity will be reset (in minutes)",
+		position = 2
 	)
 	@Units(Units.MINUTES)
 	default int actionTimeout()
@@ -45,21 +73,21 @@ public interface DiscordConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "hideElapsedTime",
-		name = "Hide elapsed time",
-		description = "Configures if the elapsed time of your activity should be hidden.",
-		position = 2
+		keyName = "showMainMenu",
+		name = "Main Menu",
+		description = "Show status when in main menu",
+		position = 3
 	)
-	default boolean hideElapsedTime()
+	default boolean showMainMenu()
 	{
-		return false;
+		return true;
 	}
 
 	@ConfigItem(
 		keyName = "showSkillActivity",
 		name = "Skilling",
 		description = "Show your activity while training skills",
-		position = 3
+		position = 4
 	)
 	default boolean showSkillingActivity()
 	{
@@ -70,7 +98,7 @@ public interface DiscordConfig extends Config
 		keyName = "showBossActivity",
 		name = "Bosses",
 		description = "Show your activity and location while at bosses",
-		position = 4
+		position = 5
 	)
 	default boolean showBossActivity()
 	{
@@ -81,7 +109,7 @@ public interface DiscordConfig extends Config
 		keyName = "showCityActivity",
 		name = "Cities",
 		description = "Show your activity and location while in cities",
-		position = 5
+		position = 6
 	)
 	default boolean showCityActivity()
 	{
@@ -92,7 +120,7 @@ public interface DiscordConfig extends Config
 		keyName = "showDungeonActivity",
 		name = "Dungeons",
 		description = "Show your activity and location while in dungeons",
-		position = 6
+		position = 7
 	)
 	default boolean showDungeonActivity()
 	{
@@ -103,7 +131,7 @@ public interface DiscordConfig extends Config
 		keyName = "showMinigameActivity",
 		name = "Minigames",
 		description = "Show your activity and location while in minigames",
-		position = 7
+		position = 8
 	)
 	default boolean showMinigameActivity()
 	{
@@ -114,7 +142,7 @@ public interface DiscordConfig extends Config
 		keyName = "showRaidingActivity",
 		name = "Raids",
 		description = "Show your activity and location while in Raids",
-		position = 8
+		position = 9
 	)
 	default boolean showRaidingActivity()
 	{
@@ -125,7 +153,7 @@ public interface DiscordConfig extends Config
 		keyName = "showRegionsActivity",
 		name = "Regions",
 		description = "Show your activity and location while in other regions",
-		position = 9
+		position = 10
 	)
 	default boolean showRegionsActivity()
 	{

@@ -40,6 +40,7 @@ import java.time.Instant;
 import java.util.List;
 import javax.inject.Inject;
 import net.runelite.api.Client;
+import static net.runelite.api.MenuAction.RUNELITE_OVERLAY;
 import static net.runelite.api.MenuAction.RUNELITE_OVERLAY_CONFIG;
 import net.runelite.api.Point;
 import net.runelite.client.game.SkillIconManager;
@@ -55,6 +56,7 @@ import net.runelite.client.ui.overlay.components.LineComponent;
 import net.runelite.client.ui.overlay.components.PanelComponent;
 import net.runelite.client.ui.overlay.tooltip.Tooltip;
 import net.runelite.client.ui.overlay.tooltip.TooltipManager;
+import net.runelite.client.util.ImageUtil;
 
 public class XpGlobesOverlay extends Overlay
 {
@@ -63,6 +65,8 @@ public class XpGlobesOverlay extends Overlay
 	private static final int PROGRESS_RADIUS_REMAINDER = 0;
 	private static final int TOOLTIP_RECT_SIZE_X = 150;
 	private static final Color DARK_OVERLAY_COLOR = new Color(0, 0, 0, 180);
+	static final String FLIP_ACTION = "Flip";
+	private static final double GLOBE_ICON_RATIO = 0.65;
 
 	private final Client client;
 	private final XpGlobesPlugin plugin;
@@ -91,6 +95,7 @@ public class XpGlobesOverlay extends Overlay
 		this.xpTooltip.getComponent().setPreferredSize(new Dimension(TOOLTIP_RECT_SIZE_X, 0));
 		setPosition(OverlayPosition.TOP_CENTER);
 		getMenuEntries().add(new OverlayMenuEntry(RUNELITE_OVERLAY_CONFIG, OPTION_CONFIGURE, "XP Globes overlay"));
+		getMenuEntries().add(new OverlayMenuEntry(RUNELITE_OVERLAY, FLIP_ACTION, "XP Globes overlay"));
 	}
 
 	@Override
@@ -103,18 +108,32 @@ public class XpGlobesOverlay extends Overlay
 			return null;
 		}
 
-		int curDrawX = 0;
+		int curDrawPosition = 0;
 		for (final XpGlobe xpGlobe : xpGlobes)
 		{
 			int startXp = xpTrackerService.getStartGoalXp(xpGlobe.getSkill());
 			int goalXp = xpTrackerService.getEndGoalXp(xpGlobe.getSkill());
-			renderProgressCircle(graphics, xpGlobe, startXp, goalXp, curDrawX, 0, getBounds());
-			curDrawX += MINIMUM_STEP + config.xpOrbSize();
+			if (config.alignOrbsVertically())
+			{
+				renderProgressCircle(graphics, xpGlobe, startXp, goalXp, 0, curDrawPosition, getBounds());
+			}
+			else
+			{
+				renderProgressCircle(graphics, xpGlobe, startXp, goalXp, curDrawPosition, 0, getBounds());
+			}
+			curDrawPosition += MINIMUM_STEP + config.xpOrbSize();
 		}
 
-		// Get width of markers
+		// Get length of markers
 		final int markersLength = (queueSize * (config.xpOrbSize())) + ((MINIMUM_STEP) * (queueSize - 1));
-		return new Dimension(markersLength, config.xpOrbSize());
+		if (config.alignOrbsVertically())
+		{
+			return new Dimension(config.xpOrbSize(), markersLength);
+		}
+		else
+		{
+			return new Dimension(markersLength, config.xpOrbSize());
+		}
 	}
 
 	private double getSkillProgress(int startXp, int currentXp, int goalXp)
@@ -218,7 +237,8 @@ public class XpGlobesOverlay extends Overlay
 
 	private void drawSkillImage(Graphics2D graphics, XpGlobe xpGlobe, int x, int y)
 	{
-		BufferedImage skillImage = iconManager.getSkillImage(xpGlobe.getSkill());
+		final int orbSize = config.xpOrbSize();
+		final BufferedImage skillImage = getScaledSkillIcon(xpGlobe, orbSize);
 
 		if (skillImage == null)
 		{
@@ -227,10 +247,38 @@ public class XpGlobesOverlay extends Overlay
 
 		graphics.drawImage(
 			skillImage,
-			x + (config.xpOrbSize() / 2) - (skillImage.getWidth() / 2),
-			y + (config.xpOrbSize() / 2) - (skillImage.getHeight() / 2),
+			x + (orbSize / 2) - (skillImage.getWidth() / 2),
+			y + (orbSize / 2) - (skillImage.getHeight() / 2),
 			null
 		);
+	}
+
+	private BufferedImage getScaledSkillIcon(XpGlobe xpGlobe, int orbSize)
+	{
+		// Cache the previous icon if the size hasn't changed
+		if (xpGlobe.getSkillIcon() != null && xpGlobe.getSize() == orbSize)
+		{
+			return xpGlobe.getSkillIcon();
+		}
+
+		BufferedImage icon = iconManager.getSkillImage(xpGlobe.getSkill());
+		if (icon == null)
+		{
+			return null;
+		}
+
+		final int size = orbSize - config.progressArcStrokeWidth();
+		final int scaledIconSize = (int) (size * GLOBE_ICON_RATIO);
+		if (scaledIconSize <= 0)
+		{
+			return null;
+		}
+
+		icon = ImageUtil.resizeImage(icon, scaledIconSize, scaledIconSize, true);
+
+		xpGlobe.setSkillIcon(icon);
+		xpGlobe.setSize(orbSize);
+		return icon;
 	}
 
 	private void drawTooltip(XpGlobe mouseOverSkill, int goalXp)

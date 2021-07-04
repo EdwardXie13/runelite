@@ -30,13 +30,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum Quest
 {
-	//Free Quests
 	BLACK_KNIGHTS_FORTRESS(299, "Black Knights' Fortress"),
 	COOKS_ASSISTANT(300, "Cook's Assistant"),
 	THE_CORSAIR_CURSE(301, "The Corsair Curse"),
 	DEMON_SLAYER(302, "Demon Slayer"),
 	DORICS_QUEST(303, "Doric's Quest"),
-	DRAGON_SLAYER(304, "Dragon Slayer"),
+	DRAGON_SLAYER_I(304, "Dragon Slayer I"),
 	ERNEST_THE_CHICKEN(305, "Ernest the Chicken"),
 	GOBLIN_DIPLOMACY(306, "Goblin Diplomacy"),
 	IMP_CATCHER(307, "Imp Catcher"),
@@ -52,6 +51,7 @@ public enum Quest
 	VAMPYRE_SLAYER(1278, "Vampyre Slayer"),
 	WITCHS_POTION(318, "Witch's Potion"),
 	X_MARKS_THE_SPOT(550, "X Marks the Spot"),
+	BELOW_ICE_MOUNTAIN(2874, "Below Ice Mountain"),
 
 	//Members' Quests
 	ANIMAL_MAGNETISM(331, "Animal Magnetism"),
@@ -133,7 +133,7 @@ public enum Quest
 	PLAGUE_CITY(407, "Plague City"),
 	PRIEST_IN_PERIL(408, "Priest in Peril"),
 	THE_QUEEN_OF_THIEVES(409, "The Queen of Thieves"),
-	RAG_AND_BONE_MAN(410, "Rag and Bone Man"),
+	RAG_AND_BONE_MAN_I(410, "Rag and Bone Man I"),
 	RAG_AND_BONE_MAN_II(411, "Rag and Bone Man II"),
 	RATCATCHERS(412, "Ratcatchers"),
 	RECIPE_FOR_DISASTER(413, "Recipe for Disaster"),
@@ -179,11 +179,14 @@ public enum Quest
 	THE_FREMENNIK_EXILES(718, "The Fremennik Exiles"),
 	SINS_OF_THE_FATHER(1276, "Sins of the Father"),
 	A_PORCINE_OF_INTEREST(1690, "A Porcine of Interest"),
+	GETTING_AHEAD(752, "Getting Ahead"),
+	A_KINGDOM_DIVIDED(2971, "A Kingdom Divided"),
+	A_NIGHT_AT_THE_THEATRE(949, "A Night at the Theatre"),
 
 	//Miniquests
 	ENTER_THE_ABYSS(319, "Enter the Abyss"),
 	ARCHITECTURAL_ALLIANCE(320, "Architectural Alliance"),
-	BEAR_YOUR_SOUL(321, "Bear your Soul"),
+	BEAR_YOUR_SOUL(321, "Bear Your Soul"),
 	ALFRED_GRIMHANDS_BARCRAWL(322, "Alfred Grimhand's Barcrawl"),
 	CURSE_OF_THE_EMPTY_LORD(323, "Curse of the Empty Lord"),
 	ENCHANTED_KEY(324, "Enchanted Key"),
@@ -204,7 +207,7 @@ public enum Quest
 
 	public QuestState getState(Client client)
 	{
-		client.runScript(ScriptID.QUESTLIST_PROGRESS, id);
+		client.runScript(ScriptID.QUEST_STATUS_GET, id);
 		switch (client.getIntStack()[0])
 		{
 			case 2:

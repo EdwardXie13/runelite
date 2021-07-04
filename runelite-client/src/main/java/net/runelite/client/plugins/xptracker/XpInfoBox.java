@@ -29,6 +29,7 @@ package net.runelite.client.plugins.xptracker;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -50,9 +51,9 @@ import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.Experience;
 import net.runelite.api.Skill;
+import net.runelite.api.WorldType;
 import net.runelite.client.game.SkillIconManager;
 import net.runelite.client.ui.ColorScheme;
-import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.SkillColor;
 import net.runelite.client.ui.components.MouseDragEventForwarder;
@@ -74,7 +75,7 @@ class XpInfoBox extends JPanel
 	private static final String HTML_TOOL_TIP_TEMPLATE =
 		"<html>%s %s done<br/>"
 			+ "%s %s/hr<br/>"
-			+ "%s till goal lvl</html>";
+			+ "%s %s</html>";
 	private static final String HTML_LABEL_TEMPLATE =
 		"<html><body style='color:%s'>%s<span style='color:white'>%s</span></body></html>";
 
@@ -122,8 +123,9 @@ class XpInfoBox extends JPanel
 		container.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 
 		// Create open xp tracker menu
-		final JMenuItem openXpTracker = new JMenuItem("Open online tracker");
-		openXpTracker.addActionListener(e -> LinkBrowser.browse(XpPanel.buildXpTrackerUrl(client.getLocalPlayer(), skill)));
+		final JMenuItem openXpTracker = new JMenuItem("Open Wise Old Man");
+		openXpTracker.addActionListener(e -> LinkBrowser.browse(XpPanel.buildXpTrackerUrl(
+			client.getLocalPlayer(), skill, client.getWorldType().contains(WorldType.LEAGUE))));
 
 		// Create reset menu
 		final JMenuItem reset = new JMenuItem("Reset");
@@ -132,6 +134,10 @@ class XpInfoBox extends JPanel
 		// Create reset others menu
 		final JMenuItem resetOthers = new JMenuItem("Reset others");
 		resetOthers.addActionListener(e -> xpTrackerPlugin.resetOtherSkillState(skill));
+
+		// Create reset per hour menu
+		final JMenuItem resetPerHour = new JMenuItem("Reset/hr");
+		resetPerHour.addActionListener(e -> xpTrackerPlugin.resetSkillPerHourState(skill));
 
 		// Create reset others menu
 		pauseSkill.addActionListener(e -> xpTrackerPlugin.pauseSkill(skill, !paused));
@@ -142,6 +148,7 @@ class XpInfoBox extends JPanel
 		popupMenu.add(openXpTracker);
 		popupMenu.add(reset);
 		popupMenu.add(resetOthers);
+		popupMenu.add(resetPerHour);
 		popupMenu.add(pauseSkill);
 		popupMenu.add(canvasItem);
 		popupMenu.addPopupMenuListener(new PopupMenuListener()
@@ -183,7 +190,7 @@ class XpInfoBox extends JPanel
 		headerPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		headerPanel.setLayout(new BorderLayout());
 
-		statsPanel.setLayout(new DynamicGridLayout(2, 2));
+		statsPanel.setLayout(new GridLayout(2, 2));
 		statsPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		statsPanel.setBorder(new EmptyBorder(9, 2, 9, 2));
 
@@ -271,7 +278,7 @@ class XpInfoBox extends JPanel
 			{
 				final List<Integer> positions = new ArrayList<>();
 
-				for (int level = xpSnapshotSingle.getStartLevel() + 1; level < xpSnapshotSingle.getEndLevel(); level++)
+				for (int level = xpSnapshotSingle.getStartLevel() + 1; level <= xpSnapshotSingle.getEndLevel(); level++)
 				{
 					double relativeStartExperience = Experience.getXpForLevel(level) - xpSnapshotSingle.getStartGoalXp();
 					double relativeEndExperience = xpSnapshotSingle.getEndGoalXp() - xpSnapshotSingle.getStartGoalXp();
@@ -285,23 +292,23 @@ class XpInfoBox extends JPanel
 				progressBar.setPositions(Collections.emptyList());
 			}
 
+			XpProgressBarLabel tooltipLabel = xpTrackerConfig.progressBarTooltipLabel();
+
 			progressBar.setToolTipText(String.format(
 				HTML_TOOL_TIP_TEMPLATE,
 				xpSnapshotSingle.getActionsInSession(),
 				xpSnapshotSingle.getActionType().getLabel(),
 				xpSnapshotSingle.getActionsPerHour(),
 				xpSnapshotSingle.getActionType().getLabel(),
-				xpSnapshotSingle.getTimeTillGoal()));
+				tooltipLabel.getValueFunc().apply(xpSnapshotSingle),
+				tooltipLabel == XpProgressBarLabel.PERCENTAGE ? "of goal" : "till goal lvl"));
 
 			progressBar.setDimmed(skillPaused);
-
-			progressBar.repaint();
 		}
 		else if (!paused && skillPaused)
 		{
 			// React to the skill state now being paused
 			progressBar.setDimmed(true);
-			progressBar.repaint();
 			paused = true;
 			pauseSkill.setText("Unpause");
 		}
@@ -309,7 +316,6 @@ class XpInfoBox extends JPanel
 		{
 			// React to the skill being unpaused (without update)
 			progressBar.setDimmed(false);
-			progressBar.repaint();
 			paused = false;
 			pauseSkill.setText("Pause");
 		}

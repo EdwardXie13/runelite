@@ -25,10 +25,10 @@ minio:
   secretkey: /PZCxzmsJzwCHYlogcymuprniGCaaLUOET2n6yMP
   bucket: runelite
 
-# Redis client for temporary data storage
+# Redis client
 redis:
   pool.size: 10
-  host: http://localhost:6379
+  host: tcp://localhost:6379
 
 mongo:
   jndiName: java:comp/env/mongodb/runelite
@@ -44,3 +44,8 @@ runelite:
     history: 90 # days
   loottracker:
     history: 90 # days
+  wiki:
+    poll.ms: 300000 # 5 minutes
+    url: https://prices.runescape.wiki/api/v1/osrs/latest
+  price:
+    cache: 30 # minutes

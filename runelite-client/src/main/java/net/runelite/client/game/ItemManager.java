@@ -50,12 +50,13 @@ import net.runelite.api.Constants;
 import static net.runelite.api.Constants.CLIENT_DEFAULT_ZOOM;
 import net.runelite.api.GameState;
 import net.runelite.api.ItemComposition;
-import net.runelite.api.ItemID;
 import static net.runelite.api.ItemID.*;
 import net.runelite.api.SpritePixels;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.PostItemComposition;
 import net.runelite.client.callback.ClientThread;
+import net.runelite.client.config.RuneLiteConfig;
+import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.util.AsyncBufferedImage;
 import net.runelite.http.api.item.ItemClient;
@@ -86,6 +87,7 @@ public class ItemManager
 	private final Client client;
 	private final ClientThread clientThread;
 	private final ItemClient itemClient;
+	private final RuneLiteConfig runeLiteConfig;
 
 	private Map<Integer, ItemPrice> itemPrices = Collections.emptyMap();
 	private Map<Integer, ItemStats> itemStats = Collections.emptyMap();
@@ -152,6 +154,12 @@ public class ItemManager
 		put(GRACEFUL_LEGS_24754, GRACEFUL_LEGS_24752).
 		put(GRACEFUL_GLOVES_24757, GRACEFUL_GLOVES_24755).
 		put(GRACEFUL_BOOTS_24760, GRACEFUL_BOOTS_24758).
+		put(GRACEFUL_HOOD_25071, GRACEFUL_HOOD_25069).
+		put(GRACEFUL_CAPE_25074, GRACEFUL_CAPE_25072).
+		put(GRACEFUL_TOP_25077, GRACEFUL_TOP_25075).
+		put(GRACEFUL_LEGS_25080, GRACEFUL_LEGS_25078).
+		put(GRACEFUL_GLOVES_25083, GRACEFUL_GLOVES_25081).
+		put(GRACEFUL_BOOTS_25086, GRACEFUL_BOOTS_25084).
 
 		put(MAX_CAPE_13342, MAX_CAPE).
 
@@ -164,11 +172,12 @@ public class ItemManager
 
 	@Inject
 	public ItemManager(Client client, ScheduledExecutorService scheduledExecutorService, ClientThread clientThread,
-		OkHttpClient okHttpClient)
+		OkHttpClient okHttpClient, EventBus eventBus, RuneLiteConfig runeLiteConfig)
 	{
 		this.client = client;
 		this.clientThread = clientThread;
 		this.itemClient = new ItemClient(okHttpClient);
+		this.runeLiteConfig = runeLiteConfig;
 
 		scheduledExecutorService.scheduleWithFixedDelay(this::loadPrices, 0, 30, TimeUnit.MINUTES);
 		scheduledExecutorService.submit(this::loadStats);
@@ -208,6 +217,8 @@ public class ItemManager
 					return loadItemOutline(key.itemId, key.itemQuantity, key.outlineColor);
 				}
 			});
+
+		eventBus.register(this);
 	}
 
 	private void loadPrices()
@@ -284,23 +295,23 @@ public class ItemManager
 	 */
 	public int getItemPrice(int itemID)
 	{
-		return getItemPrice(itemID, false);
+		return getItemPriceWithSource(itemID, runeLiteConfig.useWikiItemPrices());
 	}
 
 	/**
 	 * Look up an item's price
 	 *
 	 * @param itemID item id
-	 * @param ignoreUntradeableMap should the price returned ignore items that are not tradeable for coins in regular way
+	 * @param useWikiPrice use the actively traded/wiki price
 	 * @return item price
 	 */
-	public int getItemPrice(int itemID, boolean ignoreUntradeableMap)
+	public int getItemPriceWithSource(int itemID, boolean useWikiPrice)
 	{
-		if (itemID == ItemID.COINS_995)
+		if (itemID == COINS_995)
 		{
 			return 1;
 		}
-		if (itemID == ItemID.PLATINUM_TOKEN)
+		if (itemID == PLATINUM_TOKEN)
 		{
 			return 1000;
 		}
@@ -322,19 +333,14 @@ public class ItemManager
 
 			if (ip != null)
 			{
-				price += ip.getPrice();
+				price = useWikiPrice && ip.getWikiPrice() > 0 ? ip.getWikiPrice() : ip.getPrice();
 			}
 		}
 		else
 		{
 			for (final ItemMapping mappedItem : mappedItems)
 			{
-				if (ignoreUntradeableMap && mappedItem.isUntradeable())
-				{
-					continue;
-				}
-
-				price += getItemPrice(mappedItem.getTradeableItem(), ignoreUntradeableMap) * mappedItem.getQuantity();
+				price += getItemPriceWithSource(mappedItem.getTradeableItem(), useWikiPrice) * mappedItem.getQuantity();
 			}
 		}
 
@@ -490,7 +496,7 @@ public class ItemManager
 	 */
 	private BufferedImage loadItemOutline(final int itemId, final int itemQuantity, final Color outlineColor)
 	{
-		final SpritePixels itemSprite = client.createItemSprite(itemId, itemQuantity, 1, 0, 0, false, Constants.CLIENT_DEFAULT_ZOOM);
+		final SpritePixels itemSprite = client.createItemSprite(itemId, itemQuantity, 1, 0, 0, false, CLIENT_DEFAULT_ZOOM);
 		return itemSprite.toBufferedOutline(outlineColor);
 	}
 

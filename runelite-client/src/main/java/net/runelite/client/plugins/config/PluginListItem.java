@@ -53,7 +53,7 @@ import net.runelite.client.ui.PluginPanel;
 import net.runelite.client.util.ImageUtil;
 import net.runelite.client.util.SwingUtil;
 
-class PluginListItem extends JPanel
+class PluginListItem extends JPanel implements SearchablePlugin
 {
 	private static final ImageIcon CONFIG_ICON;
 	private static final ImageIcon CONFIG_ICON_HOVER;
@@ -73,8 +73,8 @@ class PluginListItem extends JPanel
 
 	static
 	{
-		BufferedImage configIcon = ImageUtil.getResourceStreamFromClass(ConfigPanel.class, "config_edit_icon.png");
-		BufferedImage onStar = ImageUtil.getResourceStreamFromClass(ConfigPanel.class, "star_on.png");
+		BufferedImage configIcon = ImageUtil.loadImageResource(ConfigPanel.class, "config_edit_icon.png");
+		BufferedImage onStar = ImageUtil.loadImageResource(ConfigPanel.class, "star_on.png");
 		CONFIG_ICON = new ImageIcon(configIcon);
 		ON_STAR = new ImageIcon(onStar);
 		CONFIG_ICON_HOVER = new ImageIcon(ImageUtil.luminanceOffset(configIcon, -100));
@@ -188,7 +188,14 @@ class PluginListItem extends JPanel
 		}
 	}
 
-	boolean isPinned()
+	@Override
+	public String getSearchableName()
+	{
+		return pluginConfig.getName();
+	}
+
+	@Override
+	public boolean isPinned()
 	{
 		return pinButton.isSelected();
 	}

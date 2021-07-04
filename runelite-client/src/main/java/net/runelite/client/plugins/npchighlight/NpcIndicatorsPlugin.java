@@ -57,13 +57,13 @@ import net.runelite.api.events.GameTick;
 import net.runelite.api.events.GraphicsObjectCreated;
 import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.events.MenuOptionClicked;
+import net.runelite.api.events.NpcChanged;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.api.events.NpcSpawned;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
-import net.runelite.client.input.KeyManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
@@ -106,9 +106,6 @@ public class NpcIndicatorsPlugin extends Plugin
 
 	@Inject
 	private NpcMinimapOverlay npcMinimapOverlay;
-
-	@Inject
-	private KeyManager keyManager;
 
 	@Inject
 	private ClientThread clientThread;
@@ -411,6 +408,26 @@ public class NpcIndicatorsPlugin extends Plugin
 		}
 
 		highlightedNpcs.remove(npc);
+	}
+
+	@Subscribe
+	public void onNpcChanged(NpcChanged event)
+	{
+		final NPC npc = event.getNpc();
+		final String npcName = npc.getName();
+
+		highlightedNpcs.remove(npc);
+
+		if (npcName == null)
+		{
+			return;
+		}
+
+		if (npcTags.contains(npc.getIndex())
+			|| highlightMatchesNPCName(npcName))
+		{
+			highlightedNpcs.add(npc);
+		}
 	}
 
 	@Subscribe

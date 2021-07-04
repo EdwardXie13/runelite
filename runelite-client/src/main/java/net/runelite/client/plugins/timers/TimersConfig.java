@@ -29,9 +29,11 @@ import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import java.time.Instant;
 
-@ConfigGroup("timers")
+@ConfigGroup(TimersConfig.GROUP)
 public interface TimersConfig extends Config
 {
+	String GROUP = "timers";
+
 	@ConfigItem(
 		keyName = "showHomeMinigameTeleports",
 		name = "Teleport cooldown timers",
@@ -260,5 +262,25 @@ public interface TimersConfig extends Config
 	default boolean showDFSSpecial()
 	{
 		return true;
+	}
+
+	@ConfigItem(
+		keyName = "showArceuus",
+		name = "Arceuus spells duration",
+		description = "Whether to show Arceuus spellbook spell timers"
+	)
+	default boolean showArceuus()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "showArceuusCooldown",
+		name = "Arceuus spells cooldown",
+		description = "Whether to show cooldown timers for Arceuus spellbook spells"
+	)
+	default boolean showArceuusCooldown()
+	{
+		return false;
 	}
 }

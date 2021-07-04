@@ -39,6 +39,7 @@ import net.runelite.api.GameObject;
 import net.runelite.api.GameState;
 import net.runelite.api.InventoryID;
 import net.runelite.api.Item;
+import net.runelite.api.ItemContainer;
 import net.runelite.api.ItemID;
 import static net.runelite.api.ObjectID.CANNON_BASE;
 import net.runelite.api.Player;
@@ -85,6 +86,9 @@ public class CannonPlugin extends Plugin
 
 	@Getter
 	private WorldPoint cannonPosition;
+
+	@Getter
+	private int cannonWorld = -1;
 
 	@Getter
 	private GameObject cannon;
@@ -139,6 +143,7 @@ public class CannonPlugin extends Plugin
 		overlayManager.remove(cannonOverlay);
 		overlayManager.remove(cannonSpotOverlay);
 		cannonPlaced = false;
+		cannonWorld = -1;
 		cannonPosition = null;
 		cannonBallNotificationSent = false;
 		cballsLeft = 0;
@@ -247,6 +252,7 @@ public class CannonPlugin extends Plugin
 				&& localPlayer.getAnimation() == AnimationID.BURYING_BONES)
 			{
 				cannonPosition = gameObject.getWorldLocation();
+				cannonWorld = client.getWorld();
 				cannon = gameObject;
 			}
 		}
@@ -257,7 +263,7 @@ public class CannonPlugin extends Plugin
 	{
 		Projectile projectile = event.getProjectile();
 
-		if ((projectile.getId() == CANNONBALL || projectile.getId() == GRANITE_CANNONBALL) && cannonPosition != null)
+		if ((projectile.getId() == CANNONBALL || projectile.getId() == GRANITE_CANNONBALL) && cannonPosition != null && cannonWorld == client.getWorld())
 		{
 			WorldPoint projectileLoc = WorldPoint.fromLocal(client, projectile.getX1(), projectile.getY1(), client.getPlane());
 
@@ -296,10 +302,28 @@ public class CannonPlugin extends Plugin
 			cannonPlaced = true;
 			addCounter();
 			cballsLeft = 0;
+
+			final ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
+			if (inventory != null)
+			{
+				int invCballs = inventory.count(ItemID.GRANITE_CANNONBALL) > 0
+						? inventory.count(ItemID.GRANITE_CANNONBALL)
+						: inventory.count(ItemID.CANNONBALL);
+				// Cannonballs are always forcibly loaded after the furnace is added. If the player has more than
+				// the max number of cannon balls in their inventory, the cannon will always be fully filled.
+				// This is preferable to using the proceeding "You load the cannon with x cannon balls" message
+				// since it will show a lower number of cannon balls if the cannon is already partially-filled
+				// prior to being placed.
+				if (invCballs >= MAX_CBALLS)
+				{
+					cballsLeft = MAX_CBALLS;
+				}
+			}
 		}
 
 		if (event.getMessage().contains("You pick up the cannon")
-			|| event.getMessage().contains("Your cannon has decayed. Speak to Nulodion to get a new one!"))
+			|| event.getMessage().contains("Your cannon has decayed. Speak to Nulodion to get a new one!")
+			|| event.getMessage().contains("Your cannon has been destroyed!"))
 		{
 			cannonPlaced = false;
 			cballsLeft = 0;
@@ -357,6 +381,15 @@ public class CannonPlugin extends Plugin
 			if (config.showCannonNotifications())
 			{
 				notifier.notify("Your cannon is out of ammo!");
+			}
+		}
+
+		if (event.getMessage().startsWith("Your cannon contains"))
+		{
+			Matcher m = NUMBER_PATTERN.matcher(event.getMessage());
+			if (m.find())
+			{
+				cballsLeft = Integer.parseInt(m.group());
 			}
 		}
 
