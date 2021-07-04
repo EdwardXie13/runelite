@@ -63,6 +63,8 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
 
+import net.runelite.api.Client;
+
 @PluginDescriptor(
 	name = "Runecraft",
 	description = "Show minimap icons and clickboxes for abyssal rifts",
@@ -80,6 +82,9 @@ public class RunecraftPlugin extends Plugin
 
 	private static final int DENSE_RUNESTONE_SOUTH_ID = NullObjectID.NULL_10796;
 	private static final int DENSE_RUNESTONE_NORTH_ID = NullObjectID.NULL_8981;
+
+	@Inject
+	private Client client;
 
 	@Getter(AccessLevel.PACKAGE)
 	private final Set<DecorativeObject> abyssObjects = new HashSet<>();
@@ -136,10 +141,7 @@ public class RunecraftPlugin extends Plugin
 		overlayManager.add(abyssMinimapOverlay);
 		overlayManager.add(denseRunestoneOverlay);
 		updateRifts();
-		if (client.getGameState() == GameState.LOGGED_IN)
-		{
-			updateDenseRunestoneState();
-		}
+		updateDenseRunestoneState();
 	}
 
 	@Override
