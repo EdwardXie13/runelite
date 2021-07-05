@@ -23,10 +23,9 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.runecraft;
+package net.runelite.client.plugins.runecraftPlus;
 
 import java.awt.*;
-import java.awt.geom.Area;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
@@ -52,13 +51,13 @@ public class DenseRunestoneOverlay extends Overlay
     private static final Color CLICKBOX_BORDER_HOVER_COLOR = CLICKBOX_BORDER_COLOR.darker();
 
     private final Client client;
-    private final RunecraftPlugin plugin;
-    private final RunecraftConfig config;
+    private final RunecraftPlusPlugin plugin;
+    private final RunecraftPlusConfig config;
     private final SkillIconManager skillIconManager;
 
     @Inject
     private DenseRunestoneOverlay(
-            Client client, RunecraftPlugin plugin, RunecraftConfig config, SkillIconManager skillIconManager)
+            Client client, RunecraftPlusPlugin plugin, RunecraftPlusConfig config, SkillIconManager skillIconManager)
     {
         this.client = client;
         this.plugin = plugin;

@@ -36,22 +36,16 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.DecorativeObject;
-import net.runelite.api.GameObject;
 import net.runelite.api.GameState;
 import net.runelite.api.InventoryID;
 import net.runelite.api.Item;
 import net.runelite.api.ItemID;
 import net.runelite.api.NPC;
 import net.runelite.api.NpcID;
-import net.runelite.api.NullObjectID;
-import net.runelite.api.Varbits;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.DecorativeObjectDespawned;
 import net.runelite.api.events.DecorativeObjectSpawned;
-import net.runelite.api.events.GameObjectDespawned;
-import net.runelite.api.events.GameObjectSpawned;
 import net.runelite.api.events.GameStateChanged;
-import net.runelite.api.events.VarbitChanged;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.api.events.NpcSpawned;
@@ -63,28 +57,20 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
 
-import net.runelite.api.Client;
-
 @PluginDescriptor(
-	name = "Runecraft",
-	description = "Show minimap icons and clickboxes for abyssal rifts",
-	tags = {"abyssal", "minimap", "overlay", "rifts", "rc", "runecrafting"}
+		name = "Runecraft",
+		description = "Show minimap icons and clickboxes for abyssal rifts",
+		tags = {"abyssal", "minimap", "overlay", "rifts", "rc", "runecrafting"}
 )
 public class RunecraftPlugin extends Plugin
 {
 	private static final String POUCH_DECAYED_NOTIFICATION_MESSAGE = "Your rune pouch has decayed.";
 	private static final String POUCH_DECAYED_MESSAGE = "Your pouch has decayed through use.";
 	private static final List<Integer> DEGRADED_POUCHES = ImmutableList.of(
-		ItemID.MEDIUM_POUCH_5511,
-		ItemID.LARGE_POUCH_5513,
-		ItemID.GIANT_POUCH_5515
+			ItemID.MEDIUM_POUCH_5511,
+			ItemID.LARGE_POUCH_5513,
+			ItemID.GIANT_POUCH_5515
 	);
-
-	private static final int DENSE_RUNESTONE_SOUTH_ID = NullObjectID.NULL_10796;
-	private static final int DENSE_RUNESTONE_NORTH_ID = NullObjectID.NULL_8981;
-
-	@Inject
-	private Client client;
 
 	@Getter(AccessLevel.PACKAGE)
 	private final Set<DecorativeObject> abyssObjects = new HashSet<>();
@@ -98,26 +84,11 @@ public class RunecraftPlugin extends Plugin
 	@Getter(AccessLevel.PACKAGE)
 	private NPC darkMage;
 
-	@Getter(AccessLevel.PACKAGE)
-	private GameObject denseRunestoneSouth;
-
-	@Getter(AccessLevel.PACKAGE)
-	private GameObject denseRunestoneNorth;
-
-	@Getter(AccessLevel.PACKAGE)
-	private boolean denseRunestoneSouthMineable;
-
-	@Getter(AccessLevel.PACKAGE)
-	private boolean denseRunestoneNorthMineable;
-
 	@Inject
 	private OverlayManager overlayManager;
 
 	@Inject
 	private AbyssOverlay abyssOverlay;
-
-	@Inject
-	private DenseRunestoneOverlay denseRunestoneOverlay;
 
 	@Inject
 	private AbyssMinimapOverlay abyssMinimapOverlay;
@@ -139,9 +110,7 @@ public class RunecraftPlugin extends Plugin
 	{
 		overlayManager.add(abyssOverlay);
 		overlayManager.add(abyssMinimapOverlay);
-		overlayManager.add(denseRunestoneOverlay);
 		updateRifts();
-		updateDenseRunestoneState();
 	}
 
 	@Override
@@ -152,9 +121,6 @@ public class RunecraftPlugin extends Plugin
 		abyssObjects.clear();
 		darkMage = null;
 		degradedPouchInInventory = false;
-		overlayManager.remove(denseRunestoneOverlay);
-		denseRunestoneNorth = null;
-		denseRunestoneSouth = null;
 	}
 
 	@Subscribe
@@ -208,8 +174,6 @@ public class RunecraftPlugin extends Plugin
 		{
 			case LOADING:
 				abyssObjects.clear();
-				denseRunestoneNorth = null;
-				denseRunestoneSouth = null;
 				break;
 			case CONNECTION_LOST:
 			case HOPPING:
@@ -251,54 +215,11 @@ public class RunecraftPlugin extends Plugin
 		}
 	}
 
-	@Subscribe
-	public void onGameObjectSpawned(GameObjectSpawned event)
-	{
-		GameObject obj = event.getGameObject();
-		int id = obj.getId();
-
-		switch (id)
-		{
-			case DENSE_RUNESTONE_SOUTH_ID:
-				denseRunestoneSouth = obj;
-				break;
-			case DENSE_RUNESTONE_NORTH_ID:
-				denseRunestoneNorth = obj;
-				break;
-		}
-	}
-
-	@Subscribe
-	public void onGameObjectDespawned(GameObjectDespawned event)
-	{
-		switch (event.getGameObject().getId())
-		{
-			case DENSE_RUNESTONE_SOUTH_ID:
-				denseRunestoneSouth = null;
-				break;
-			case DENSE_RUNESTONE_NORTH_ID:
-				denseRunestoneNorth = null;
-				break;
-		}
-	}
-
-	@Subscribe
-	public void onVarbitChanged(VarbitChanged event)
-	{
-		updateDenseRunestoneState();
-	}
-
-	private void updateDenseRunestoneState()
-	{
-		denseRunestoneSouthMineable = client.getVar(Varbits.DENSE_RUNESTONE_SOUTH_DEPLETED) == 0;
-		denseRunestoneNorthMineable = client.getVar(Varbits.DENSE_RUNESTONE_NORTH_DEPLETED) == 0;
-	}
-
 	private void updateRifts()
 	{
 		rifts.clear();
 		Arrays.stream(AbyssRifts.values())
-			.filter(r -> r.getConfigEnabled().test(config))
-			.forEach(rifts::add);
+				.filter(r -> r.getConfigEnabled().test(config))
+				.forEach(rifts::add);
 	}
 }
