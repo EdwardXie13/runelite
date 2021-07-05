@@ -28,25 +28,17 @@ package net.runelite.client.plugins.runecraftPlus;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
-import net.runelite.client.config.ConfigSection;
 
 @ConfigGroup(RunecraftPlusConfig.GROUP)
 public interface RunecraftPlusConfig extends Config
 {
 	String GROUP = "runecraftPlus";
 
-	@ConfigSection(
-			name = "Zeah RC Settings",
-			description = "Zeah Runestone overlay settings",
-			position = 1
-	)String zeahSection = "runestone";
-
 	@ConfigItem(
 			keyName = "showDenseRunestoneIndicator",
 			name = "Show dense runestone indicator",
 			description = "Configures whether to display an indicator when dense runestone is ready to be mined",
-			position = 2,
-			section = zeahSection
+			position = 1
 	)
 	default boolean showDenseRunestoneIndicator() {return true;}
 
@@ -54,8 +46,7 @@ public interface RunecraftPlusConfig extends Config
 			keyName = "showDenseRunestoneClickbox",
 			name = "Show dense runestone click box",
 			description = "Configures whether to display a click box when dense runestone is ready to be mined",
-			position = 3,
-			section = zeahSection
+			position = 2
 	)
 	default boolean showDenseRunestoneClickbox()
 	{
