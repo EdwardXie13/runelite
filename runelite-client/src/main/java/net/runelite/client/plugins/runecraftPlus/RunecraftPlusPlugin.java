@@ -94,7 +94,9 @@ public class RunecraftPlusPlugin extends Plugin
     protected void startUp() throws Exception
     {
         overlayManager.add(denseRunestoneOverlay);
-        updateDenseRunestoneState();
+        if (client.getGameState() == GameState.LOGGED_IN) {
+            updateDenseRunestoneState();
+        }
     }
 
     @Override
