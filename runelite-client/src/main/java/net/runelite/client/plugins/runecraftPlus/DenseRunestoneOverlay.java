@@ -102,17 +102,17 @@ public class DenseRunestoneOverlay extends Overlay
                 }
             }
             //at north rock or south rock
-            else if(getInventorySlotID(27) == 13445 && (isAtTile(1762, 3855) || isAtTile(1762, 3849))) {
+            else if(getInventorySlotID(27) == 13445 && client.getLocalPlayer().getWorldLocation().distanceTo2D(centerOfMine) < 13) {
                 northRockClimb(graphics);
             }
             //at outer south rock
-            else if(getInventorySlotID(27) == 13445 && isAtTile(1761, 3848)) {
-                renderTile(graphics, LocalPoint.fromWorld(client, beforeRockClimb));
-            }
+//            else if(getInventorySlotID(27) == 13445 && isAtTile(1761, 3848)) {
+//                renderTile(graphics, LocalPoint.fromWorld(client, beforeRockClimb));
+//            }
             //before rock climb
-            else if(getInventorySlotID(27) == 13445 && isAtTile(1761, 3872)) {
-                northRockClimb(graphics);
-            }
+//            else if(getInventorySlotID(27) == 13445 && isAtTile(1761, 3872)) {
+//                northRockClimb(graphics);
+//            }
             //after rock climb or at the altar, then render the middle spot
             else if(getInventorySlotID(27) == 13445 && isAtTile(1761, 3874) || (getInventorySlotID(27) == -1 && isAtTile(1718, 3882))) {
                 renderTileArea(graphics, LocalPoint.fromWorld(client, middleArea));
