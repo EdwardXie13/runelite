@@ -52,4 +52,15 @@ public interface RunecraftPlusConfig extends Config
 	{
 		return true;
 	}
+
+	@ConfigItem(
+			keyName = "showClickbox",
+			name = "Show click box",
+			description = "Configures whether to display a click box",
+			position = 3
+	)
+	default boolean showClickbox()
+	{
+		return true;
+	}
 }

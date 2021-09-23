@@ -26,13 +26,10 @@ package net.runelite.client.plugins.runecraftPlus;
 
 import com.google.inject.Provides;
 import javax.inject.Inject;
+
 import lombok.AccessLevel;
 import lombok.Getter;
-import net.runelite.api.ChatMessageType;
-import net.runelite.api.GameObject;
-import net.runelite.api.GameState;
-import net.runelite.api.NullObjectID;
-import net.runelite.api.Varbits;
+import net.runelite.api.*;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameObjectDespawned;
 import net.runelite.api.events.GameObjectSpawned;
@@ -45,8 +42,6 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
 
-import net.runelite.api.Client;
-
 @PluginDescriptor(
         name = "RunecraftPlus",
         description = "Show runestone overlays for Zeah RC",
@@ -56,6 +51,8 @@ public class RunecraftPlusPlugin extends Plugin
 {
     private static final int DENSE_RUNESTONE_SOUTH_ID = NullObjectID.NULL_10796;
     private static final int DENSE_RUNESTONE_NORTH_ID = NullObjectID.NULL_8981;
+    private static final int BLOOD_ALTAR_ID = ObjectID.BLOOD_ALTAR;
+    private static final int DARK_ALTAR_ID = ObjectID.DARK_ALTAR;
 
     @Inject
     private Client client;
@@ -65,6 +62,12 @@ public class RunecraftPlusPlugin extends Plugin
 
     @Getter(AccessLevel.PACKAGE)
     private GameObject denseRunestoneNorth;
+
+    @Getter(AccessLevel.PACKAGE)
+    private GameObject bloodAltar;
+
+    @Getter(AccessLevel.PACKAGE)
+    private GameObject darkAltar;
 
     @Getter(AccessLevel.PACKAGE)
     private boolean denseRunestoneSouthMineable;
@@ -105,6 +108,8 @@ public class RunecraftPlusPlugin extends Plugin
         overlayManager.remove(denseRunestoneOverlay);
         denseRunestoneNorth = null;
         denseRunestoneSouth = null;
+        bloodAltar = null;
+        darkAltar = null;
     }
 
     @Subscribe
@@ -114,14 +119,6 @@ public class RunecraftPlusPlugin extends Plugin
         {
             return;
         }
-
-//        if (config.degradingNotification())
-//        {
-//            if (event.getMessage().contains(POUCH_DECAYED_MESSAGE))
-//            {
-//                notifier.notify(POUCH_DECAYED_NOTIFICATION_MESSAGE);
-//            }
-//        }
     }
 
     @Subscribe
@@ -133,6 +130,8 @@ public class RunecraftPlusPlugin extends Plugin
             case LOADING:
                 denseRunestoneNorth = null;
                 denseRunestoneSouth = null;
+                bloodAltar = null;
+                darkAltar = null;
                 break;
             case CONNECTION_LOST:
             case HOPPING:
@@ -145,6 +144,7 @@ public class RunecraftPlusPlugin extends Plugin
     public void onGameObjectSpawned(GameObjectSpawned event)
     {
         GameObject obj = event.getGameObject();
+
         int id = obj.getId();
 
         switch (id)
@@ -154,6 +154,12 @@ public class RunecraftPlusPlugin extends Plugin
                 break;
             case DENSE_RUNESTONE_NORTH_ID:
                 denseRunestoneNorth = obj;
+                break;
+            case BLOOD_ALTAR_ID:
+                bloodAltar = obj;
+                break;
+            case DARK_ALTAR_ID:
+                darkAltar = obj;
                 break;
         }
     }
@@ -168,6 +174,12 @@ public class RunecraftPlusPlugin extends Plugin
                 break;
             case DENSE_RUNESTONE_NORTH_ID:
                 denseRunestoneNorth = null;
+                break;
+            case BLOOD_ALTAR_ID:
+                bloodAltar = null;
+                break;
+            case DARK_ALTAR_ID:
+                darkAltar = null;
                 break;
         }
     }

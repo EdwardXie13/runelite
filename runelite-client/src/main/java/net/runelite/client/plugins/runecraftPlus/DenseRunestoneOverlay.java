@@ -27,13 +27,14 @@ package net.runelite.client.plugins.runecraftPlus;
 
 import java.awt.*;
 import javax.inject.Inject;
+
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
-import net.runelite.api.GameObject;
+import net.runelite.api.*;
 import net.runelite.api.Point;
-import net.runelite.api.Skill;
 import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.game.SkillIconManager;
+
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -50,14 +51,25 @@ public class DenseRunestoneOverlay extends Overlay
             CLICKBOX_BORDER_COLOR.getBlue(), 50);
     private static final Color CLICKBOX_BORDER_HOVER_COLOR = CLICKBOX_BORDER_COLOR.darker();
 
+    private static final WorldPoint beforeRockClimb = new WorldPoint(1761, 3872, 0);
+    private static final WorldPoint middleArea = new WorldPoint(1737, 3875, 0);
+    private static final WorldPoint runZone = new WorldPoint(1707, 3860, 0);
+    private static final WorldPoint bloodZone = new WorldPoint(1717, 3835,0);
+    private static final WorldPoint bloodAltarTile = new WorldPoint(1716, 3832, 0);
+    private static final WorldPoint returnZone = new WorldPoint(1738, 3852, 0);
+    private static final WorldPoint centerOfMine = new WorldPoint(1761, 3860, 0);
+
+    private static final Color Pink_Color = new Color(255,128,255, 255);
+//    private static final WorldPoint NorthRock = new WorldPoint(1762, 3856, 0);
+//    private static final WorldPoint SouthRock = new WorldPoint(1762, 3848, 0);
+
     private final Client client;
     private final RunecraftPlusPlugin plugin;
     private final RunecraftPlusConfig config;
     private final SkillIconManager skillIconManager;
 
     @Inject
-    private DenseRunestoneOverlay(
-            Client client, RunecraftPlusPlugin plugin, RunecraftPlusConfig config, SkillIconManager skillIconManager)
+    private DenseRunestoneOverlay(Client client, RunecraftPlusPlugin plugin, RunecraftPlusConfig config, SkillIconManager skillIconManager)
     {
         this.client = client;
         this.plugin = plugin;
@@ -75,17 +87,130 @@ public class DenseRunestoneOverlay extends Overlay
         boolean southStoneMineable = plugin.isDenseRunestoneSouthMineable();
         GameObject northStone = plugin.getDenseRunestoneNorth();
         GameObject southStone = plugin.getDenseRunestoneSouth();
+        GameObject bloodAltar = plugin.getBloodAltar();
+        GameObject darkAltar = plugin.getDarkAltar();
 
-        if (northStoneMineable && northStone != null)
-        {
-            renderStone(graphics, northStone);
-        }
-        if (southStoneMineable && southStone != null)
-        {
-            renderStone(graphics, southStone);
+        if (config.showClickbox()) {
+            if(getInventorySlotID(27) == -1 && client.getLocalPlayer().getWorldLocation().distanceTo2D(centerOfMine) < 13) {
+                if ((northStoneMineable && northStone != null && closerRock() == "N") || !southStoneMineable)
+                {
+                    renderBox(graphics, northStone);
+                }
+                if ((southStoneMineable && southStone != null && closerRock() == "S") || !northStoneMineable)
+                {
+                    renderBox(graphics, southStone);
+                }
+            }
+            //at north rock or south rock
+            else if(getInventorySlotID(27) == 13445 && (isAtTile(1762, 3855) || isAtTile(1762, 3849))) {
+                northRockClimb(graphics);
+            }
+            //at outer south rock
+            else if(getInventorySlotID(27) == 13445 && isAtTile(1761, 3848)) {
+                renderTile(graphics, LocalPoint.fromWorld(client, beforeRockClimb));
+            }
+            //before rock climb
+            else if(getInventorySlotID(27) == 13445 && isAtTile(1761, 3872)) {
+                northRockClimb(graphics);
+            }
+            //after rock climb or at the altar, then render the middle spot
+            else if(getInventorySlotID(27) == 13445 && isAtTile(1761, 3874) || (getInventorySlotID(27) == -1 && isAtTile(1718, 3882))) {
+                renderTileArea(graphics, LocalPoint.fromWorld(client, middleArea));
+            }
+            //if in middle area with dense essence blocks. then render altar
+            else if(getInventorySlotID(27) == 13445 && client.getLocalPlayer().getWorldLocation().distanceTo2D(middleArea) < 2 && darkAltar != null) {
+                renderBox(graphics, darkAltar);
+            }
+            //if in middle area with dark essence blocks OR nothing then render rock
+            else if((getInventorySlotID(27) == 13446 || getInventorySlotID(27) == -1) && client.getLocalPlayer().getWorldLocation().distanceTo2D(middleArea) < 2) {
+                northRockClimb(graphics);
+            }
+            //if at altar after imbue but NO fragments
+            else if(getInventorySlotID(27) == 13446 && isAtTile(1718, 3882) && getInventorySlotID(0) == 13446) {
+                renderTileArea(graphics, LocalPoint.fromWorld(client, middleArea));
+            }
+            //if at altar after imbue but YES fragments
+            else if(getInventorySlotID(27) == 13446 && isAtTile(1718, 3882) && getInventorySlotID(0) == 7938) {
+                //turn camera to see run zone
+                client.setCameraYawTarget(650);
+                renderTileArea(graphics, LocalPoint.fromWorld(client, runZone));
+            }
+            //little area above blood altar
+            else if(getInventorySlotID(27) == 13446 && client.getLocalPlayer().getWorldLocation().distanceTo2D(runZone) < 2) {
+                renderTileArea(graphics, LocalPoint.fromWorld(client, bloodZone));
+            }
+            //render blood altar if at blood spot
+            else if(getInventorySlotID(27) == 13446 && client.getLocalPlayer().getWorldLocation().distanceTo2D(bloodZone) < 2 && bloodAltar != null) {
+                renderBox(graphics, bloodAltar);
+            }
+            //if at blood altar spot render return zone
+            else if(getInventorySlotID(27) == -1 && getInventorySlotID(0) == -1 && client.getLocalPlayer().getWorldLocation().distanceTo2D(bloodAltarTile) < 2) {
+                client.setCameraYawTarget(1930);
+                renderTileArea(graphics, LocalPoint.fromWorld(client, returnZone));
+            }
+            //if at return zone
+            else if(getInventorySlotID(27) == -1 && client.getLocalPlayer().getWorldLocation().distanceTo2D(returnZone) < 2) {
+                client.setCameraYawTarget(0);
+                returnRockClimb(graphics);
+            }
+        } else { //Normal render
+            if ((northStoneMineable && northStone != null && closerRock() == "N") || !southStoneMineable)
+            {
+                renderStone(graphics, northStone);
+            }
+            if ((southStoneMineable && southStone != null && closerRock() == "S") || !northStoneMineable)
+            {
+                renderStone(graphics, southStone);
+            }
         }
 
         return null;
+    }
+
+    public Boolean isAtTile(final int x, final int y) {
+        Boolean playerX = client.getLocalPlayer().getWorldLocation().getX() == x;
+        Boolean playerY = client.getLocalPlayer().getWorldLocation().getY() == y;
+        return playerX && playerY;
+    }
+
+    public void northRockClimb(Graphics2D graphics) {
+        Tile[][][] sceneTiles = client.getScene().getTiles();
+
+        int startX = sceneTiles[0][0][0].getWorldLocation().getX();
+        int startY = sceneTiles[0][0][0].getWorldLocation().getY();
+
+        GroundObject rockClimb = sceneTiles[0][1761-startX][3873-startY].getGroundObject();
+
+        renderRock(graphics, rockClimb);
+    }
+
+    public void returnRockClimb(Graphics2D graphics) {
+        Tile[][][] sceneTiles = client.getScene().getTiles();
+
+        int startX = sceneTiles[0][0][0].getWorldLocation().getX();
+        int startY = sceneTiles[0][0][0].getWorldLocation().getY();
+
+        GroundObject rockClimb = sceneTiles[0][1743-startX][3854-startY].getGroundObject();
+
+        renderRock(graphics, rockClimb);
+    }
+
+    public int getInventorySlotID(int i) {
+        Item temp = client.getItemContainer(InventoryID.INVENTORY).getItem(i);
+        if(temp == null)
+            return -1;
+        else
+            return temp.getId();
+    }
+
+    public String closerRock() {
+        int NorthRockDist = client.getLocalPlayer().getWorldLocation().distanceTo2D(plugin.getDenseRunestoneNorth().getWorldLocation());
+        int SouthRockDist = client.getLocalPlayer().getWorldLocation().distanceTo2D(plugin.getDenseRunestoneSouth().getWorldLocation());
+
+        if(NorthRockDist < SouthRockDist)
+            return "N";
+        else
+            return "S";
     }
 
     private void renderStone(Graphics2D graphics, GameObject gameObject)
@@ -105,5 +230,56 @@ public class DenseRunestoneOverlay extends Overlay
                     client, graphics, gameObjectLocation,
                     skillIconManager.getSkillImage(Skill.MINING, false), Z_OFFSET);
         }
+    }
+    private void renderBox(Graphics2D graphics, GameObject gameObject)
+    {
+        if (config.showClickbox()) {
+            Shape clickbox = gameObject.getClickbox();
+            Point mousePosition = client.getMouseCanvasPosition();
+            OverlayUtil.renderHoverableArea(
+                    graphics, clickbox, mousePosition,
+                    Pink_Color,
+                    Pink_Color,
+                    Pink_Color
+            );
+        }
+    }
+    private void renderRock(Graphics2D graphics, GroundObject gameObject)
+    {
+        if (config.showClickbox()) {
+            Shape clickbox = gameObject.getClickbox();
+            Point mousePosition = client.getMouseCanvasPosition();
+            OverlayUtil.renderHoverableArea(
+                    graphics, clickbox, mousePosition,
+                    Pink_Color,
+                    Pink_Color,
+                    Pink_Color
+            );
+        }
+    }
+
+    public void renderTile(Graphics2D graphics, final LocalPoint dest)
+    {
+        Polygon poly = Perspective.getCanvasTilePoly(this.client, dest);
+        if (poly == null)
+        {
+            return;
+        }
+        graphics.setColor(Pink_Color);
+        graphics.draw(poly);
+        graphics.setColor(Pink_Color);
+        graphics.fill(poly);
+    }
+    public void renderTileArea(Graphics2D graphics, final LocalPoint dest)
+    {
+        Polygon poly = Perspective.getCanvasTileAreaPoly(this.client, dest, 3);
+        if (poly == null)
+        {
+            return;
+        }
+        graphics.setColor(Pink_Color);
+        graphics.draw(poly);
+        graphics.setColor(Pink_Color);
+        graphics.fill(poly);
     }
 }
