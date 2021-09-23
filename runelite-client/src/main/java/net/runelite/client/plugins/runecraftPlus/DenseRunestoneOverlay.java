@@ -55,7 +55,7 @@ public class DenseRunestoneOverlay extends Overlay
     private static final WorldPoint middleArea = new WorldPoint(1737, 3875, 0);
     private static final WorldPoint runZone = new WorldPoint(1707, 3860, 0);
     private static final WorldPoint bloodZone = new WorldPoint(1717, 3835,0);
-    private static final WorldPoint bloodAltarTile = new WorldPoint(1716, 3832, 0);
+    private static final WorldPoint bloodAltarCenter = new WorldPoint(1717, 3830, 0);
     private static final WorldPoint returnZone = new WorldPoint(1738, 3852, 0);
     private static final WorldPoint centerOfMine = new WorldPoint(1761, 3860, 0);
 
@@ -144,7 +144,7 @@ public class DenseRunestoneOverlay extends Overlay
                 renderBox(graphics, bloodAltar);
             }
             //if at blood altar spot render return zone
-            else if(getInventorySlotID(27) == -1 && getInventorySlotID(0) == -1 && client.getLocalPlayer().getWorldLocation().distanceTo2D(bloodAltarTile) < 2) {
+            else if(getInventorySlotID(27) == -1 && getInventorySlotID(0) == -1 && client.getLocalPlayer().getWorldLocation().distanceTo2D(bloodAltarCenter) < 3) {
                 client.setCameraYawTarget(1930);
                 renderTileArea(graphics, LocalPoint.fromWorld(client, returnZone));
             }
