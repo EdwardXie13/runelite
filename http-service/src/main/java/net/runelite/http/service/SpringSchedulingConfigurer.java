@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Kamiel
+ * Copyright (c) 2021, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,28 +22,31 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.api;
+package net.runelite.http.service;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.annotation.SchedulingConfigurer;
+import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
+import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 
-/**
- * Client side only, content-developer strings
- *
- * VarCInts are stored entirely in memory, or locally on a user's
- * machine in the preferences2.dat file depending on how Jagex
- * configured the variable
- */
-@AllArgsConstructor
-@Getter
-public enum VarClientStr
+@Configuration
+public class SpringSchedulingConfigurer implements SchedulingConfigurer
 {
-	CHATBOX_TYPED_TEXT(335),
-	INPUT_TEXT(359),
-	PRIVATE_MESSAGE_TARGET(360),
-	RECENT_FRIENDS_CHAT(362),
-	NOTIFICATION_TOP_TEXT(387),
-	NOTIFICATION_BOTTOM_TEXT(388);
-
-	private final int index;
+	@Override
+	public void configureTasks(ScheduledTaskRegistrar taskRegistrar)
+	{
+		// this is from ScheduledTaskRegistrar.scheduleTasks() but modified to give the scheduler thread a
+		// recognizable name
+		ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(
+			new ThreadFactoryBuilder()
+				.setNameFormat("scheduler-%d")
+				.build()
+		);
+		TaskScheduler scheduler = new ConcurrentTaskScheduler(scheduledExecutorService);
+		taskRegistrar.setTaskScheduler(scheduler);
+	}
 }

@@ -610,6 +610,16 @@ public enum Varbits
 	PVP_SPEC_ORB(8121),
 
 	/**
+	 * Collection Log notification settings whenever a new item is added
+	 *
+	 * 0 = no notification
+	 * 1 = chat notification only
+	 * 2 = popup notification only
+	 * 3 = chat and popup
+	 */
+	COLLECTION_LOG_NOTIFICATION(11959);
+
+	/**
 	 * The raw varbit ID.
 	 */
 	DENSE_RUNESTONE_NORTH_DEPLETED(4927),
