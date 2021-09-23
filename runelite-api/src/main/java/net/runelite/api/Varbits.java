@@ -610,6 +610,12 @@ public enum Varbits
 	PVP_SPEC_ORB(8121),
 
 	/**
+	 * The raw varbit ID.
+	 */
+	DENSE_RUNESTONE_NORTH_DEPLETED(4927),
+	DENSE_RUNESTONE_SOUTH_DEPLETED(4928),
+
+	/**
 	 * Collection Log notification settings whenever a new item is added
 	 *
 	 * 0 = no notification
@@ -619,11 +625,7 @@ public enum Varbits
 	 */
 	COLLECTION_LOG_NOTIFICATION(11959);
 
-	/**
-	 * The raw varbit ID.
-	 */
-	DENSE_RUNESTONE_NORTH_DEPLETED(4927),
-	DENSE_RUNESTONE_SOUTH_DEPLETED(4928);
+
 
 	private final int id;
 }
