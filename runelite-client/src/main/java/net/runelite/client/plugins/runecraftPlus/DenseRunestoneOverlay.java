@@ -33,18 +33,12 @@ import net.runelite.api.*;
 import net.runelite.api.Point;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.client.game.SkillIconManager;
-
-import net.runelite.client.ui.overlay.Overlay;
-import net.runelite.client.ui.overlay.OverlayLayer;
+import net.runelite.client.ui.overlay.*;
 import net.runelite.client.ui.overlay.OverlayPosition;
-import net.runelite.client.ui.overlay.OverlayUtil;
 
 @Slf4j
 public class DenseRunestoneOverlay extends Overlay
 {
-    private static final int Z_OFFSET = 200;
-
     private static final Color CLICKBOX_BORDER_COLOR = Color.GREEN;
     private static final Color CLICKBOX_FILL_COLOR = new Color(
             CLICKBOX_BORDER_COLOR.getRed(), CLICKBOX_BORDER_COLOR.getGreen(),
@@ -66,15 +60,13 @@ public class DenseRunestoneOverlay extends Overlay
     private final Client client;
     private final RunecraftPlusPlugin plugin;
     private final RunecraftPlusConfig config;
-    private final SkillIconManager skillIconManager;
 
     @Inject
-    private DenseRunestoneOverlay(Client client, RunecraftPlusPlugin plugin, RunecraftPlusConfig config, SkillIconManager skillIconManager)
+    private DenseRunestoneOverlay(Client client, RunecraftPlusPlugin plugin, RunecraftPlusConfig config)
     {
         this.client = client;
         this.plugin = plugin;
         this.config = config;
-        this.skillIconManager = skillIconManager;
 
         setLayer(OverlayLayer.ABOVE_SCENE);
         setPosition(OverlayPosition.DYNAMIC);
@@ -89,6 +81,8 @@ public class DenseRunestoneOverlay extends Overlay
         GameObject southStone = plugin.getDenseRunestoneSouth();
         GameObject bloodAltar = plugin.getBloodAltar();
         GameObject darkAltar = plugin.getDarkAltar();
+
+//        System.out.println("ani " + client.getLocalPlayer().getAnimation());
 
         if (config.showClickbox()) {
             if(getInventorySlotID(27) == -1 && client.getLocalPlayer().getWorldLocation().distanceTo2D(centerOfMine) < 13) {
@@ -109,8 +103,8 @@ public class DenseRunestoneOverlay extends Overlay
 //            else if(getInventorySlotID(27) == 13445 && isAtTile(1761, 3848)) {
 //                renderTile(graphics, LocalPoint.fromWorld(client, beforeRockClimb));
 //            }
-            //before rock climb
-//            else if(getInventorySlotID(27) == 13445 && isAtTile(1761, 3872)) {
+            //before rock climb coming back
+//            else if(getInventorySlotID(27) == -1 && isAtTile(1761, 3872)) {
 //                northRockClimb(graphics);
 //            }
             //after rock climb or at the altar, then render the middle spot
@@ -223,13 +217,6 @@ public class DenseRunestoneOverlay extends Overlay
                     graphics, clickbox, mousePosition,
                     CLICKBOX_FILL_COLOR, CLICKBOX_BORDER_COLOR, CLICKBOX_BORDER_HOVER_COLOR);
         }
-        if (config.showDenseRunestoneIndicator())
-        {
-            LocalPoint gameObjectLocation = gameObject.getLocalLocation();
-            OverlayUtil.renderImageLocation(
-                    client, graphics, gameObjectLocation,
-                    skillIconManager.getSkillImage(Skill.MINING, false), Z_OFFSET);
-        }
     }
     private void renderBox(Graphics2D graphics, GameObject gameObject)
     {
@@ -257,7 +244,6 @@ public class DenseRunestoneOverlay extends Overlay
             );
         }
     }
-
     public void renderTile(Graphics2D graphics, final LocalPoint dest)
     {
         Polygon poly = Perspective.getCanvasTilePoly(this.client, dest);

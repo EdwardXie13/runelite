@@ -35,18 +35,10 @@ public interface RunecraftPlusConfig extends Config
 	String GROUP = "runecraftPlus";
 
 	@ConfigItem(
-			keyName = "showDenseRunestoneIndicator",
-			name = "Show dense runestone indicator",
-			description = "Configures whether to display an indicator when dense runestone is ready to be mined",
-			position = 1
-	)
-	default boolean showDenseRunestoneIndicator() {return true;}
-
-	@ConfigItem(
 			keyName = "showDenseRunestoneClickbox",
 			name = "Show dense runestone click box",
 			description = "Configures whether to display a click box when dense runestone is ready to be mined",
-			position = 2
+			position = 1
 	)
 	default boolean showDenseRunestoneClickbox()
 	{
@@ -57,7 +49,7 @@ public interface RunecraftPlusConfig extends Config
 			keyName = "showClickbox",
 			name = "Show click box",
 			description = "Configures whether to display a click box",
-			position = 3
+			position = 2
 	)
 	default boolean showClickbox()
 	{
