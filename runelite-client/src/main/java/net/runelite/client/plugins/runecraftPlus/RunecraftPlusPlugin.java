@@ -232,8 +232,8 @@ public class RunecraftPlusPlugin extends Plugin
             notifyPosition = true;
             lastPosition = position;
             lastMoving = Instant.now();
+            statusOverlayPanel.CurrentStatus = RunecraftActivity.RUNNING;
         }
-
         return false;
     }
 
