@@ -147,6 +147,7 @@ public class RunecraftPlusPlugin extends Plugin
     public void onInteractingChanged(InteractingChanged event)
     {
         final Actor source = event.getSource();
+
         if (source != client.getLocalPlayer())
         {
             return;
@@ -169,7 +170,7 @@ public class RunecraftPlusPlugin extends Plugin
     public void onGameTick(GameTick event)
     {
         final Player local = client.getLocalPlayer();
-        final Duration waitDuration = Duration.ofMillis(1000);
+        final Duration waitDuration = Duration.ofMillis(500);
 
         if (client.getGameState() != GameState.LOGGED_IN
                 || local == null
@@ -189,16 +190,19 @@ public class RunecraftPlusPlugin extends Plugin
         if (checkAnimationIdle(waitDuration, local))
         {
             System.out.println("You are now idle!");
+            statusOverlayPanel.CurrentStatus = RunecraftActivity.IDLE;
         }
 
         if (checkMovementIdle(waitDuration, local))
         {
             System.out.println("You have stopped moving!");
+            statusOverlayPanel.CurrentStatus = RunecraftActivity.IDLE;
         }
 
         if (checkInteractionIdle(waitDuration, local))
         {
             System.out.println("You are now idle!");
+            statusOverlayPanel.CurrentStatus = RunecraftActivity.IDLE;
         }
     }
 
@@ -275,13 +279,21 @@ public class RunecraftPlusPlugin extends Plugin
         return false;
     }
 
+    private void changeAnimationStatus(int animation) {
+        if(animation == 7201 || animation == 624)
+            statusOverlayPanel.CurrentStatus = RunecraftActivity.MINING;
+        else if(animation == 645 || animation == 791)
+            statusOverlayPanel.CurrentStatus = RunecraftActivity.IMBUE;
+        else if(animation == 7202)
+            statusOverlayPanel.CurrentStatus = RunecraftActivity.CHISEL;
+        else if(animation == 1148 || animation == 839)
+            statusOverlayPanel.CurrentStatus = RunecraftActivity.ROCK;
+        else if(animation == -1)
+            statusOverlayPanel.CurrentStatus = RunecraftActivity.IDLE;
+    }
+
     private boolean checkAnimationIdle(Duration waitDuration, Player local)
     {
-        if (lastAnimation == IDLE)
-        {
-            return false;
-        }
-
         final int animation = local.getAnimation();
 
         if (animation == IDLE)
@@ -301,6 +313,7 @@ public class RunecraftPlusPlugin extends Plugin
         else
         {
             lastAnimating = Instant.now();
+            changeAnimationStatus(animation);
         }
 
         return false;

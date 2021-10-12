@@ -2,6 +2,7 @@ package net.runelite.client.plugins.runecraftPlus;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import net.runelite.api.Actor;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
@@ -26,13 +27,11 @@ import java.time.Duration;
 import java.time.Instant;
 
 public class StatusOverlayPanel extends OverlayPanel {
-    private String CurrentStatus = "";
+    RunecraftActivity CurrentStatus = RunecraftActivity.IDLE;
 
     private final Client client;
     private final RunecraftPlusPlugin plugin;
     private final RunecraftPlusConfig config;
-
-    private String currentActivity = "IDLE";
 
     @Inject
     private StatusOverlayPanel(Client client, RunecraftPlusPlugin plugin, RunecraftPlusConfig config)
@@ -55,7 +54,7 @@ public class StatusOverlayPanel extends OverlayPanel {
         }
 
         panelComponent.getChildren().add(TitleComponent.builder()
-                .text(currentActivity)
+                .text(String.valueOf(CurrentStatus))
                 .color(Color.GREEN)
                 .build());
 

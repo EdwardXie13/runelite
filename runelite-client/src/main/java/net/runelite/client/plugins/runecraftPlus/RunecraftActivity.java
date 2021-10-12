@@ -10,7 +10,8 @@ enum RunecraftActivity {
     RUNNING("RUNNING"),
     MINING("MINING"),
     CHISEL("CHISEL"),
-    IMBUE("IMBUE");
+    IMBUE("IMBUE"),
+    ROCK("ROCK");
 
     private final String actionString;
 }
