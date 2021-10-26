@@ -51,7 +51,7 @@ import net.runelite.client.ui.overlay.OverlayUtil;
 
 class KourendLibraryOverlay extends Overlay
 {
-	private static final int MAXIMUM_DISTANCE = 24;
+	private static final int MAXIMUM_DISTANCE = 50;
 	private final Library library;
 	private final Client client;
 	private final KourendLibraryConfig config;
