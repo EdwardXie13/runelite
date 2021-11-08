@@ -111,7 +111,7 @@ class Bookcase
 		switch (location.getPlane())
 		{
 			case 0:
-				b.append("ground floor");
+				b.append("bottom floor");
 				break;
 			case 1:
 				b.append("middle floor");

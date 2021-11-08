@@ -40,6 +40,7 @@ class KourendLibraryTutorialOverlay extends OverlayPanel
 	private final Client client;
 	private final KourendLibraryConfig config;
 	private final Library library;
+	private final KourendLibraryPanel panel;
 
 	private final LineComponent noDataMessageComponent;
 	private final LineComponent incompleteMessageComponent;
@@ -47,13 +48,14 @@ class KourendLibraryTutorialOverlay extends OverlayPanel
 	private final LineComponent sidebarMessageComponent;
 
 	@Inject
-	private KourendLibraryTutorialOverlay(Client client, KourendLibraryConfig config, Library library)
+	private KourendLibraryTutorialOverlay(Client client, KourendLibraryConfig config, Library library, KourendLibraryPanel panel)
 	{
 		this.client = client;
 		this.config = config;
 		this.library = library;
+		this.panel = panel;
 
-		panelComponent.setPreferredSize(new Dimension(177, 0));
+		panelComponent.setPreferredSize(new Dimension(180, 0));
 
 		noDataMessageComponent = LineComponent.builder().left("Click on the white squares to start finding books.").build();
 		incompleteMessageComponent = LineComponent.builder().left("Some books have been found. Keep checking marked bookcases to find more.").build();
@@ -62,6 +64,10 @@ class KourendLibraryTutorialOverlay extends OverlayPanel
 
 		setPriority(OverlayPriority.LOW);
 		setPosition(OverlayPosition.TOP_LEFT);
+	}
+
+	private LineComponent strToLineComponent(String str) {
+		return LineComponent.builder().left(str).build();
 	}
 
 	@Override
@@ -96,6 +102,10 @@ class KourendLibraryTutorialOverlay extends OverlayPanel
 			case COMPLETE:
 				panelComponent.getChildren().add(completeMessageComponent);
 				panelComponent.getChildren().add(sidebarMessageComponent);
+
+//				for (Map.Entry<Book, BookPanel> b : panel.getBookPanels().entrySet()) {
+//					panelComponent.getChildren().add(strToLineComponent(b.getValue().getL);
+//				}
 
 				break;
 		}

@@ -25,6 +25,8 @@
 package net.runelite.client.plugins.kourendlibrary;
 
 import com.google.inject.Provides;
+
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -459,8 +461,7 @@ public class KourendLibraryPlugin extends Plugin
 	private void sendChatMessage(String chatMessage)
 	{
 		final String message = new ChatMessageBuilder()
-				.append(ChatColorType.HIGHLIGHT)
-				.append(chatMessage)
+				.append(new Color(100, 0, 200), chatMessage)
 				.build();
 
 		chatMessageManager.queue(

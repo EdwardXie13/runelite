@@ -42,6 +42,8 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
+
+import lombok.Getter;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
 import net.runelite.client.util.ImageUtil;
@@ -55,6 +57,7 @@ class KourendLibraryPanel extends PluginPanel
 	private final KourendLibraryPlugin plugin;
 	private final Library library;
 
+	@Getter
 	private final HashMap<Book, BookPanel> bookPanels = new HashMap<>();
 
 	static
