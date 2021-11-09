@@ -55,4 +55,15 @@ public interface RunecraftPlusConfig extends Config
 	{
 		return true;
 	}
+
+	@ConfigItem(
+			keyName = "rotateCamera",
+			name = "Rotate Camera",
+			description = "Configures whether to auto-rotate camera",
+			position = 3
+	)
+	default boolean rotateCamera()
+	{
+		return false;
+	}
 }
