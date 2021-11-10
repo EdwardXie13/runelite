@@ -6,8 +6,9 @@ batCommand = "@echo off \n" + \
 
 for file in os.listdir(os.getcwd() + "/runelite-client/target"):
     if('shaded' in file):
-        batCommand = batCommand.format(file)
-
-        f = open("runRunelite.bat", "w")
-        f.write(batCommand)
-        f.close()
+        command = batCommand.format(file)
+        #print(command)
+        
+f = open("runRunelite.bat", "w")
+f.write(command)
+f.close()

@@ -64,6 +64,6 @@ public interface RunecraftPlusConfig extends Config
 	)
 	default boolean rotateCamera()
 	{
-		return false;
+		return true;
 	}
 }
