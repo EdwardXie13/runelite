@@ -64,6 +64,17 @@ public interface RunecraftPlusConfig extends Config
 	)
 	default boolean rotateCamera()
 	{
-		return true;
+		return false;
+	}
+
+	@ConfigItem(
+			keyName = "showStatus",
+			name = "Show Status",
+			description = "Configures whether to show status bar",
+			position = 4
+	)
+	default boolean showStatus()
+	{
+		return false;
 	}
 }

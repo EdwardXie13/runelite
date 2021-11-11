@@ -48,8 +48,7 @@ public class StatusOverlayPanel extends OverlayPanel {
     @Override
     public Dimension render(Graphics2D graphics)
     {
-        if (!this.config.showClickbox())
-        {
+        if (!this.config.showStatus()) {
             return null;
         }
 
@@ -57,7 +56,6 @@ public class StatusOverlayPanel extends OverlayPanel {
                 .text(String.valueOf(CurrentStatus))
                 .color(Color.GREEN)
                 .build());
-
         return super.render(graphics);
     }
 }
