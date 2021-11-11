@@ -45,7 +45,7 @@ public class DenseRunestoneOverlay extends Overlay
             CLICKBOX_BORDER_COLOR.getBlue(), 50);
     private static final Color CLICKBOX_BORDER_HOVER_COLOR = CLICKBOX_BORDER_COLOR.darker();
 
-    private static final WorldPoint beforeRockClimb = new WorldPoint(1761, 3872, 0);
+//    private static final WorldPoint beforeRockClimb = new WorldPoint(1761, 3872, 0);
     private static final WorldPoint middleArea = new WorldPoint(1737, 3875, 0);
     private static final WorldPoint runZone = new WorldPoint(1707, 3860, 0);
     private static final WorldPoint bloodZone = new WorldPoint(1717, 3835,0);
@@ -56,6 +56,10 @@ public class DenseRunestoneOverlay extends Overlay
     private static final Color Pink_Color = new Color(255,128,255, 255);
 //    private static final WorldPoint NorthRock = new WorldPoint(1762, 3856, 0);
 //    private static final WorldPoint SouthRock = new WorldPoint(1762, 3848, 0);
+
+    private static final int cameraRunZone = 650;
+    private static final int cameraReturnZone = 1930;
+    private static final int cameraReset = 0;
 
     private final Client client;
     private final RunecraftPlusPlugin plugin;
@@ -126,8 +130,10 @@ public class DenseRunestoneOverlay extends Overlay
             //if at altar after imbue but YES fragments
             else if(getInventorySlotID(27) == 13446 && isAtTile(1718, 3882) && getInventorySlotID(0) == 7938) {
                 //turn camera to see run zone
-                if(config.rotateCamera() && client.getCameraYaw() != 650)
-                    client.setCameraYawTarget(650);
+                if(config.rotateCamera() && client.getCameraYaw() != cameraRunZone) {
+                    client.setCameraYawTarget(cameraRunZone);
+                }
+
                 renderTileArea(graphics, LocalPoint.fromWorld(client, runZone));
             }
             //little area above blood altar
@@ -141,14 +147,18 @@ public class DenseRunestoneOverlay extends Overlay
 
             //if at blood altar spot render return zone
             else if(getInventorySlotID(27) == -1 && getInventorySlotID(0) == -1 && client.getLocalPlayer().getWorldLocation().distanceTo2D(bloodAltarCenter) < 3) {
-                if(config.rotateCamera() && client.getCameraYaw() != 1930)
-                    client.setCameraYawTarget(1930);
+                if(config.rotateCamera() && client.getCameraYaw() != cameraReturnZone) {
+                    client.setCameraYawTarget(cameraReturnZone);
+                }
+
                 renderTileArea(graphics, LocalPoint.fromWorld(client, returnZone));
             }
             //if at return zone
             else if(getInventorySlotID(27) == -1 && client.getLocalPlayer().getWorldLocation().distanceTo2D(returnZone) < 3) {
-                if(config.rotateCamera() && client.getCameraYaw() != 0)
-                    client.setCameraYawTarget(0);
+                if(config.rotateCamera() && client.getCameraYaw() != cameraReset) {
+                    client.setCameraYawTarget(cameraReset);
+                }
+
                 returnRockClimb(graphics);
             }
         } else { //Normal render
