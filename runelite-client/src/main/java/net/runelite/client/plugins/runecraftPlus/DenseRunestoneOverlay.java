@@ -135,7 +135,7 @@ public class DenseRunestoneOverlay extends Overlay
                 renderTileArea(graphics, LocalPoint.fromWorld(client, bloodZone));
             }
             //render blood altar if at blood spot
-            else if(getInventorySlotID(27) == 13446 && client.getLocalPlayer().getWorldLocation().distanceTo2D(bloodZone) < 2 && bloodAltar != null) {
+            else if(getInventorySlotID(27) == 13446 && client.getLocalPlayer().getWorldLocation().distanceTo2D(bloodZone) < 3 && bloodAltar != null) {
                 renderBox(graphics, bloodAltar);
             }
             //if at blood altar spot render return zone
@@ -145,7 +145,7 @@ public class DenseRunestoneOverlay extends Overlay
                 renderTileArea(graphics, LocalPoint.fromWorld(client, returnZone));
             }
             //if at return zone
-            else if(getInventorySlotID(27) == -1 && client.getLocalPlayer().getWorldLocation().distanceTo2D(returnZone) < 2) {
+            else if(getInventorySlotID(27) == -1 && client.getLocalPlayer().getWorldLocation().distanceTo2D(returnZone) < 3) {
                 if(config.rotateCamera() && client.getCameraYaw() != 0)
                     client.setCameraYawTarget(0);
                 returnRockClimb(graphics);
