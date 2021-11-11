@@ -126,7 +126,7 @@ public class DenseRunestoneOverlay extends Overlay
             //if at altar after imbue but YES fragments
             else if(getInventorySlotID(27) == 13446 && isAtTile(1718, 3882) && getInventorySlotID(0) == 7938) {
                 //turn camera to see run zone
-                if(config.rotateCamera())
+                if(config.rotateCamera() && client.getCameraYaw() != 650)
                     client.setCameraYawTarget(650);
                 renderTileArea(graphics, LocalPoint.fromWorld(client, runZone));
             }
@@ -140,13 +140,13 @@ public class DenseRunestoneOverlay extends Overlay
             }
             //if at blood altar spot render return zone
             else if(getInventorySlotID(27) == -1 && getInventorySlotID(0) == -1 && client.getLocalPlayer().getWorldLocation().distanceTo2D(bloodAltarCenter) < 3) {
-                if(config.rotateCamera())
+                if(config.rotateCamera() && client.getCameraYaw() != 1930)
                     client.setCameraYawTarget(1930);
                 renderTileArea(graphics, LocalPoint.fromWorld(client, returnZone));
             }
             //if at return zone
             else if(getInventorySlotID(27) == -1 && client.getLocalPlayer().getWorldLocation().distanceTo2D(returnZone) < 2) {
-                if(config.rotateCamera())
+                if(config.rotateCamera() && client.getCameraYaw() != 0)
                     client.setCameraYawTarget(0);
                 returnRockClimb(graphics);
             }
