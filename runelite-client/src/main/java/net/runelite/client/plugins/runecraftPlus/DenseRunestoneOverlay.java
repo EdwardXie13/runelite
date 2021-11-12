@@ -46,6 +46,7 @@ public class DenseRunestoneOverlay extends Overlay
     private static final Color CLICKBOX_BORDER_HOVER_COLOR = CLICKBOX_BORDER_COLOR.darker();
 
 //    private static final WorldPoint beforeRockClimb = new WorldPoint(1761, 3872, 0);
+    private static final WorldPoint darkAltarArea = new WorldPoint(1718, 3882, 0);
     private static final WorldPoint middleArea = new WorldPoint(1737, 3875, 0);
     private static final WorldPoint runZone = new WorldPoint(1707, 3860, 0);
     private static final WorldPoint bloodZone = new WorldPoint(1717, 3835,0);
@@ -89,7 +90,7 @@ public class DenseRunestoneOverlay extends Overlay
 //        System.out.println("ani " + client.getLocalPlayer().getAnimation());
 
         if (config.showClickbox()) {
-            if(getInventorySlotID(27) == -1 && client.getLocalPlayer().getWorldLocation().distanceTo2D(centerOfMine) < 13) {
+            if(getInventorySlotID(27) == -1 && isNearWorldTile(centerOfMine, 13)) {
                 if ((northStoneMineable && northStone != null && closerRock() == "N") || !southStoneMineable)
                 {
                     renderBox(graphics, northStone);
@@ -100,7 +101,7 @@ public class DenseRunestoneOverlay extends Overlay
                 }
             }
             //at north rock or south rock
-            else if(getInventorySlotID(27) == 13445 && client.getLocalPlayer().getWorldLocation().distanceTo2D(centerOfMine) < 13) {
+            else if(getInventorySlotID(27) == 13445 && isNearWorldTile(centerOfMine, 13)) {
                 northRockClimb(graphics);
             }
             //at outer south rock
@@ -116,37 +117,38 @@ public class DenseRunestoneOverlay extends Overlay
                 renderTileArea(graphics, LocalPoint.fromWorld(client, middleArea));
             }
             //if in middle area with dense essence blocks. then render altar
-            else if(getInventorySlotID(27) == 13445 && client.getLocalPlayer().getWorldLocation().distanceTo2D(middleArea) < 2 && darkAltar != null) {
+            else if(getInventorySlotID(27) == 13445 && isNearWorldTile(middleArea, 2) && darkAltar != null) {
                 renderBox(graphics, darkAltar);
             }
             //if in middle area with dark essence blocks OR nothing then render rock
-            else if((getInventorySlotID(27) == 13446 || getInventorySlotID(27) == -1) && client.getLocalPlayer().getWorldLocation().distanceTo2D(middleArea) < 2) {
+            else if((getInventorySlotID(27) == 13446 || getInventorySlotID(27) == -1) && isNearWorldTile(middleArea, 2)) {
                 northRockClimb(graphics);
             }
-            //if at altar after imbue but NO fragments
-            else if(getInventorySlotID(27) == 13446 && isAtTile(1718, 3882) && getInventorySlotID(0) == 13446) {
-                renderTileArea(graphics, LocalPoint.fromWorld(client, middleArea));
-            }
-            //if at altar after imbue but YES fragments
-            else if(getInventorySlotID(27) == 13446 && isAtTile(1718, 3882) && getInventorySlotID(0) == 7938) {
-                //turn camera to see run zone
-                if(config.rotateCamera() && client.getCameraYaw() != cameraRunZone) {
-                    client.setCameraYawTarget(cameraRunZone);
-                }
+            //if at altar after imbue but NO fragments / YES fragments
+            else if(getInventorySlotID(27) == 13446 && isNearWorldTile(darkAltarArea, 2)) {
+                if(getInventorySlotID(0) == 13446){
+                    renderTileArea(graphics, LocalPoint.fromWorld(client, middleArea));
+                } else { //getInventorySlotID(0) == 7938
+                    //turn camera to see run zone
+                    if(config.rotateCamera() && client.getCameraYaw() != cameraRunZone) {
+                        client.setCameraYawTarget(cameraRunZone);
+                    }
 
-                renderTileArea(graphics, LocalPoint.fromWorld(client, runZone));
+                    renderTileArea(graphics, LocalPoint.fromWorld(client, runZone));
+                }
             }
+
             //little area above blood altar
-            else if(getInventorySlotID(27) == 13446 && client.getLocalPlayer().getWorldLocation().distanceTo2D(runZone) < 2) {
+            else if(getInventorySlotID(27) == 13446 && isNearWorldTile(runZone, 2)) {
                 renderTileArea(graphics, LocalPoint.fromWorld(client, bloodZone));
             }
             //render blood altar if near it
-            else if(getInventorySlotID(27) == 13446 && client.getLocalPlayer().getWorldLocation().distanceTo2D(bloodAltarCenter) < 3 && bloodAltar != null) {
+            else if((getInventorySlotID(0) == 7938 || getInventorySlotID(27) == 13446) && isNearWorldTile(bloodAltarCenter, 3) && bloodAltar != null) {
                 renderBox(graphics, bloodAltar);
             }
 
             //if at blood altar spot render return zone
-            else if(getInventorySlotID(27) == -1 && getInventorySlotID(0) == -1 && client.getLocalPlayer().getWorldLocation().distanceTo2D(bloodAltarCenter) < 3) {
+            else if(getInventorySlotID(27) == -1 && getInventorySlotID(0) == -1 && isNearWorldTile(bloodAltarCenter, 3)) {
                 if(config.rotateCamera() && client.getCameraYaw() != cameraReturnZone) {
                     client.setCameraYawTarget(cameraReturnZone);
                 }
@@ -154,7 +156,7 @@ public class DenseRunestoneOverlay extends Overlay
                 renderTileArea(graphics, LocalPoint.fromWorld(client, returnZone));
             }
             //if at return zone
-            else if(getInventorySlotID(27) == -1 && client.getLocalPlayer().getWorldLocation().distanceTo2D(returnZone) < 3) {
+            else if(getInventorySlotID(27) == -1 && isNearWorldTile(returnZone, 3)) {
                 if(config.rotateCamera() && client.getCameraYaw() != cameraReset) {
                     client.setCameraYawTarget(cameraReset);
                 }
@@ -173,6 +175,10 @@ public class DenseRunestoneOverlay extends Overlay
         }
 
         return null;
+    }
+
+    public Boolean isNearWorldTile(final WorldPoint target, final int range) {
+        return this.client.getLocalPlayer().getWorldLocation().distanceTo2D(target) < range;
     }
 
     public Boolean isAtTile(final int x, final int y) {
