@@ -33,6 +33,8 @@ import net.runelite.api.*;
 import net.runelite.api.Point;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.ui.overlay.*;
 import net.runelite.client.ui.overlay.OverlayPosition;
 
@@ -87,7 +89,9 @@ public class DenseRunestoneOverlay extends Overlay
         GameObject bloodAltar = plugin.getBloodAltar();
         GameObject darkAltar = plugin.getDarkAltar();
 
-//        System.out.println("ani " + client.getLocalPlayer().getAnimation());
+        if(config.disableEmoteMenu()) {
+            Widget emoteMenu = client.getWidget(WidgetInfo.EMOTE_WINDOW);
+        }
 
         if (config.showClickbox()) {
             if(getInventorySlotID(27) == -1 && isNearWorldTile(centerOfMine, 13)) {

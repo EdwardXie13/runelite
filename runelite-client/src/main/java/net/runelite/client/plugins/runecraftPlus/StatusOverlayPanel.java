@@ -1,30 +1,15 @@
 package net.runelite.client.plugins.runecraftPlus;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
-import net.runelite.api.Actor;
 import net.runelite.api.Client;
-import net.runelite.api.GameState;
-import net.runelite.api.Player;
-import net.runelite.api.coords.WorldPoint;
-import net.runelite.api.events.GameTick;
-import net.runelite.client.Notifier;
-import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.ui.overlay.OverlayPanel;
-import static net.runelite.api.AnimationID.IDLE;
 import static net.runelite.api.MenuAction.RUNELITE_OVERLAY_CONFIG;
 import static net.runelite.client.ui.overlay.OverlayManager.OPTION_CONFIGURE;
 import net.runelite.client.ui.overlay.OverlayMenuEntry;
-import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
-import net.runelite.client.ui.overlay.components.LineComponent;
 import net.runelite.client.ui.overlay.components.TitleComponent;
 
 import javax.inject.Inject;
 import java.awt.*;
-import java.time.Duration;
-import java.time.Instant;
 
 public class StatusOverlayPanel extends OverlayPanel {
     RunecraftActivity CurrentStatus = RunecraftActivity.IDLE;
