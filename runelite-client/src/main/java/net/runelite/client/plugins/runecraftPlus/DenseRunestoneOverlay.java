@@ -113,14 +113,14 @@ public class DenseRunestoneOverlay extends Overlay
 //        }
 
         if (config.showClickbox()) {
-            //after rockSlide
+            //after return
             if(isAtTile(1752, 3854)){
                 if(config.rotateCamera() && client.getCameraYaw() != cameraReset) {
                     client.setCameraYawTarget(cameraReset);
                 }
             }
             //Render closer mine Rock
-            else if(getInventorySlotID(27) == -1 && isNearWorldTile(centerOfMine, 13)) {
+            if(getInventorySlotID(27) == -1 && isNearWorldTile(centerOfMine, 13)) {
                 if ((northStoneMineable && northStone != null && closerRock() == "N") || !southStoneMineable)
                 {
                     renderBox(graphics, northStone);
