@@ -56,6 +56,25 @@ public class DenseRunestoneOverlay extends Overlay
     private static final WorldPoint returnZone = new WorldPoint(1738, 3852, 0);
     private static final WorldPoint centerOfMine = new WorldPoint(1761, 3860, 0);
 
+    private static final WorldPoint bloodAltarArea[] = {
+            new WorldPoint(1715, 3832, 0),
+            new WorldPoint(1716, 3832, 0),
+            new WorldPoint(1717, 3832, 0),
+            new WorldPoint(1718, 3832, 0),
+            new WorldPoint(1719, 3832, 0),
+
+            new WorldPoint(1719, 3831, 0),
+            new WorldPoint(1719, 3830, 0),
+            new WorldPoint(1719, 3829, 0),
+            new WorldPoint(1719, 3828, 0),
+            new WorldPoint(1719, 3827, 0),
+
+            new WorldPoint(1718, 3827, 0),
+            new WorldPoint(1717, 3827, 0),
+            new WorldPoint(1716, 3827, 0),
+            new WorldPoint(1715, 3827, 0)
+    };
+
     private static final Color Pink_Color = new Color(255,128,255, 255);
 //    private static final WorldPoint NorthRock = new WorldPoint(1762, 3856, 0);
 //    private static final WorldPoint SouthRock = new WorldPoint(1762, 3848, 0);
@@ -166,7 +185,7 @@ public class DenseRunestoneOverlay extends Overlay
                 renderBox(graphics, bloodAltar);
             }
             //if at blood altar spot render return zone
-            else if(getInventorySlotID(27) == -1 && getInventorySlotID(0) == -1 && isNearWorldTile(bloodAltarCenter, 3)) {
+            else if(getInventorySlotID(27) == -1 && getInventorySlotID(0) == -1 && isInBloodArea()) {
                 if(config.rotateCamera() && client.getCameraYaw() != cameraReturnZone) {
                     client.setCameraYawTarget(cameraReturnZone);
                 }
@@ -189,6 +208,16 @@ public class DenseRunestoneOverlay extends Overlay
         }
 
         return null;
+    }
+
+    public Boolean isInBloodArea() {
+        for(int i = 0; i < bloodAltarArea.length; i++) {
+            if(bloodAltarArea[i].getX() == client.getLocalPlayer().getWorldLocation().getX() &&
+                    bloodAltarArea[i].getY() == client.getLocalPlayer().getWorldLocation().getY() ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public Boolean isNearWorldTile(final WorldPoint target, final int range) {
