@@ -64,19 +64,19 @@ public interface RunecraftPlusConfig extends Config
 	)
 	default boolean rotateCamera()
 	{
-		return false;
-	}
-
-	@ConfigItem(
-			keyName = "disableEmoteMenu",
-			name = "Disable Emote Menu",
-			description = "Configures whether to allow Emote Menu to be clicked",
-			position = 4
-	)
-	default boolean disableEmoteMenu()
-	{
 		return true;
 	}
+
+//	@ConfigItem(
+//			keyName = "disableEmoteMenu",
+//			name = "Disable Emote Menu",
+//			description = "Configures whether to allow Emote Menu to be clicked",
+//			position = 4
+//	)
+//	default boolean disableEmoteMenu()
+//	{
+//		return true;
+//	}
 
 	@ConfigItem(
 			keyName = "showStatus",

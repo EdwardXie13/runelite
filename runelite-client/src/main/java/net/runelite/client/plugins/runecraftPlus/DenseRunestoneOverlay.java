@@ -89,12 +89,19 @@ public class DenseRunestoneOverlay extends Overlay
         GameObject bloodAltar = plugin.getBloodAltar();
         GameObject darkAltar = plugin.getDarkAltar();
 
-        if(config.disableEmoteMenu()) {
-            Widget emoteMenu = client.getWidget(WidgetInfo.EMOTE_WINDOW);
-        }
+//        if(config.disableEmoteMenu()) {
+//            Widget emoteMenu = client.getWidget(WidgetInfo.EMOTE_WINDOW);
+//        }
 
         if (config.showClickbox()) {
-            if(getInventorySlotID(27) == -1 && isNearWorldTile(centerOfMine, 13)) {
+            //after rockSlide
+            if(isAtTile(1752, 3854)){
+                if(config.rotateCamera() && client.getCameraYaw() != cameraReset) {
+                    client.setCameraYawTarget(cameraReset);
+                }
+            }
+            //Render closer mine Rock
+            else if(getInventorySlotID(27) == -1 && isNearWorldTile(centerOfMine, 13)) {
                 if ((northStoneMineable && northStone != null && closerRock() == "N") || !southStoneMineable)
                 {
                     renderBox(graphics, northStone);
@@ -129,10 +136,14 @@ public class DenseRunestoneOverlay extends Overlay
                 northRockClimb(graphics);
             }
             //if at altar after imbue but NO fragments / YES fragments
-            else if(getInventorySlotID(27) == 13446 && isNearWorldTile(darkAltarArea, 2)) {
-                if(getInventorySlotID(0) == 13446){
+            else if(getInventorySlotID(27) == 13446 && isNearWorldTile(darkAltarArea, 3)) {
+                if(getInventorySlotID(0) == 13446 || getInventorySlotID(2) == -1) { // denseBlocks
+                    if(config.rotateCamera() && client.getCameraYaw() != cameraReset) {
+                        client.setCameraYawTarget(cameraReset);
+                    }
+
                     renderTileArea(graphics, LocalPoint.fromWorld(client, middleArea));
-                } else { //getInventorySlotID(0) == 7938
+                } else { //getInventorySlotID(0) == 7938 <- fragments
                     //turn camera to see run zone
                     if(config.rotateCamera() && client.getCameraYaw() != cameraRunZone) {
                         client.setCameraYawTarget(cameraRunZone);
@@ -150,7 +161,6 @@ public class DenseRunestoneOverlay extends Overlay
             else if((getInventorySlotID(0) == 7938 || getInventorySlotID(27) == 13446) && isNearWorldTile(bloodAltarCenter, 3) && bloodAltar != null) {
                 renderBox(graphics, bloodAltar);
             }
-
             //if at blood altar spot render return zone
             else if(getInventorySlotID(27) == -1 && getInventorySlotID(0) == -1 && isNearWorldTile(bloodAltarCenter, 3)) {
                 if(config.rotateCamera() && client.getCameraYaw() != cameraReturnZone) {
@@ -159,12 +169,8 @@ public class DenseRunestoneOverlay extends Overlay
 
                 renderTileArea(graphics, LocalPoint.fromWorld(client, returnZone));
             }
-            //if at return zone
+            //if at return zone render rockClimb
             else if(getInventorySlotID(27) == -1 && isNearWorldTile(returnZone, 3)) {
-                if(config.rotateCamera() && client.getCameraYaw() != cameraReset) {
-                    client.setCameraYawTarget(cameraReset);
-                }
-
                 returnRockClimb(graphics);
             }
         } else { //Normal render
