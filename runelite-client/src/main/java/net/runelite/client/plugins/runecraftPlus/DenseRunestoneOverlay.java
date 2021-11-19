@@ -153,8 +153,12 @@ public class DenseRunestoneOverlay extends Overlay
                 }
             }
 
-            //little area above blood altar
+            //if at run zone, render little area above blood altar
             else if(getInventorySlotID(27) == 13446 && isNearWorldTile(runZone, 2)) {
+                if(config.rotateCamera() && client.getCameraYaw() != cameraRunZone) {
+                    client.setCameraYawTarget(cameraRunZone);
+                }
+
                 renderTileArea(graphics, LocalPoint.fromWorld(client, bloodZone));
             }
             //render blood altar if near it
