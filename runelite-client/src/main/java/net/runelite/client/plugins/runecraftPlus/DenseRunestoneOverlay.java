@@ -115,7 +115,7 @@ public class DenseRunestoneOverlay extends Overlay
         if (config.showClickbox()) {
             //after return
             if(isAtTile(1752, 3854)){
-                if(config.rotateCamera() && client.getCameraYaw() != cameraReset) {
+                if(config.rotateCamera() && client.getMapAngle() != cameraReset) {
                     client.setCameraYawTarget(cameraReset);
                 }
             }
@@ -157,14 +157,14 @@ public class DenseRunestoneOverlay extends Overlay
             //if at altar after imbue but NO fragments / YES fragments
             else if(getInventorySlotID(27) == 13446 && isNearWorldTile(darkAltarArea, 3)) {
                 if(getInventorySlotID(0) == 13446 || getInventorySlotID(2) == -1) { // denseBlocks
-                    if(config.rotateCamera() && client.getCameraYaw() != cameraReset) {
+                    if(config.rotateCamera() && client.getMapAngle() != cameraReset) {
                         client.setCameraYawTarget(cameraReset);
                     }
 
                     renderTileArea(graphics, LocalPoint.fromWorld(client, middleArea));
                 } else { //getInventorySlotID(0) == 7938 <- fragments
                     //turn camera to see run zone
-                    if(config.rotateCamera() && client.getCameraYaw() != cameraRunZone) {
+                    if(config.rotateCamera() && client.getMapAngle() != cameraRunZone) {
                         client.setCameraYawTarget(cameraRunZone);
                     }
 
@@ -174,7 +174,7 @@ public class DenseRunestoneOverlay extends Overlay
 
             //if at run zone, render little area above blood altar
             else if(getInventorySlotID(27) == 13446 && isNearWorldTile(runZone, 2)) {
-                if(config.rotateCamera() && client.getCameraYaw() != cameraRunZone) {
+                if(config.rotateCamera() && client.getMapAngle() != cameraRunZone) {
                     client.setCameraYawTarget(cameraRunZone);
                 }
 
@@ -186,7 +186,7 @@ public class DenseRunestoneOverlay extends Overlay
             }
             //if at blood altar spot render return zone
             else if(getInventorySlotID(27) == -1 && getInventorySlotID(0) == -1 && isInBloodArea()) {
-                if(config.rotateCamera() && client.getCameraYaw() != cameraReturnZone) {
+                if(config.rotateCamera() && client.getMapAngle() != cameraReturnZone) {
                     client.setCameraYawTarget(cameraReturnZone);
                 }
 
