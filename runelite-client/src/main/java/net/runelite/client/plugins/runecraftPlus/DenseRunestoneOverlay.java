@@ -52,7 +52,6 @@ public class DenseRunestoneOverlay extends Overlay
     private static final WorldPoint middleArea = new WorldPoint(1737, 3875, 0);
     private static final WorldPoint runZone = new WorldPoint(1707, 3860, 0);
     private static final WorldPoint bloodZone = new WorldPoint(1717, 3835,0);
-    private static final WorldPoint bloodAltarCenter = new WorldPoint(1717, 3830, 0);
     private static final WorldPoint returnZone = new WorldPoint(1738, 3852, 0);
     private static final WorldPoint centerOfMine = new WorldPoint(1761, 3860, 0);
 
@@ -115,7 +114,7 @@ public class DenseRunestoneOverlay extends Overlay
         if (config.showClickbox()) {
             //after return
             if(isAtTile(1752, 3854)){
-                if(config.rotateCamera() && client.getCameraYaw() != cameraReset) {
+                if(config.rotateCamera() && client.getMapAngle() != cameraReset) {
                     client.setCameraYawTarget(cameraReset);
                 }
             }
@@ -157,36 +156,35 @@ public class DenseRunestoneOverlay extends Overlay
             //if at altar after imbue but NO fragments / YES fragments
             else if(getInventorySlotID(27) == 13446 && isNearWorldTile(darkAltarArea, 3)) {
                 if(getInventorySlotID(0) == 13446 || getInventorySlotID(2) == -1) { // denseBlocks
-                    if(config.rotateCamera() && client.getCameraYaw() != cameraReset) {
+                    if(config.rotateCamera() && client.getMapAngle() != cameraReset) {
                         client.setCameraYawTarget(cameraReset);
                     }
 
                     renderTileArea(graphics, LocalPoint.fromWorld(client, middleArea));
                 } else { //getInventorySlotID(0) == 7938 <- fragments
                     //turn camera to see run zone
-                    if(config.rotateCamera() && client.getCameraYaw() != cameraRunZone) {
+                    if(config.rotateCamera() && client.getMapAngle() != cameraRunZone) {
                         client.setCameraYawTarget(cameraRunZone);
                     }
 
                     renderTileArea(graphics, LocalPoint.fromWorld(client, runZone));
                 }
             }
-
             //if at run zone, render little area above blood altar
             else if(getInventorySlotID(27) == 13446 && isNearWorldTile(runZone, 2)) {
-                if(config.rotateCamera() && client.getCameraYaw() != cameraRunZone) {
+                if(config.rotateCamera() && client.getMapAngle() != cameraRunZone) {
                     client.setCameraYawTarget(cameraRunZone);
                 }
 
                 renderTileArea(graphics, LocalPoint.fromWorld(client, bloodZone));
             }
             //render blood altar if near it
-            else if((getInventorySlotID(0) == 7938 || getInventorySlotID(27) == 13446) && isNearWorldTile(bloodAltarCenter, 3) && bloodAltar != null) {
+            else if((getInventorySlotID(0) == 7938 || getInventorySlotID(27) == 13446) && isNearWorldTile(bloodZone, 2) && bloodAltar != null) {
                 renderBox(graphics, bloodAltar);
             }
             //if at blood altar spot render return zone
             else if(getInventorySlotID(27) == -1 && getInventorySlotID(0) == -1 && isInBloodArea()) {
-                if(config.rotateCamera() && client.getCameraYaw() != cameraReturnZone) {
+                if(config.rotateCamera() && client.getMapAngle() != cameraReturnZone) {
                     client.setCameraYawTarget(cameraReturnZone);
                 }
 
