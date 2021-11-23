@@ -41,8 +41,6 @@ import net.runelite.client.ui.overlay.OverlayManager;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.List;
 
 import static net.runelite.api.AnimationID.IDLE;
 
