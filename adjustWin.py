@@ -1,5 +1,5 @@
 import pygetwindow as gw
 window = gw.getWindowsWithTitle("RuneLite")[0]
 
-window.moveTo(-1, -1)
-window.resizeTo(965, 1045)
+window.moveTo(-10, -5)
+window.resizeTo(980, 1055)
