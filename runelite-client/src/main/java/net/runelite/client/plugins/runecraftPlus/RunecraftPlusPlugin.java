@@ -185,19 +185,7 @@ public class RunecraftPlusPlugin extends Plugin
             System.out.println("You are about to log out from being online for 6 hours!");
         }
 
-        if (checkAnimationIdle(waitDuration, local))
-        {
-            System.out.println("You are now idle!");
-            statusOverlayPanel.CurrentStatus = RunecraftActivity.IDLE;
-        }
-
-        if (checkMovementIdle(waitDuration, local))
-        {
-            System.out.println("You have stopped moving!");
-            statusOverlayPanel.CurrentStatus = RunecraftActivity.IDLE;
-        }
-
-        if (checkInteractionIdle(waitDuration, local))
+        if (checkAnimationIdle(waitDuration, local) || checkMovementIdle(waitDuration, local) || checkInteractionIdle(waitDuration, local))
         {
             System.out.println("You are now idle!");
             statusOverlayPanel.CurrentStatus = RunecraftActivity.IDLE;
