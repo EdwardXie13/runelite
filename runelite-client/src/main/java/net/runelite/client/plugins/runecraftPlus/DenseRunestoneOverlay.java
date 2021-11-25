@@ -26,6 +26,7 @@
 package net.runelite.client.plugins.runecraftPlus;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import javax.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
@@ -86,15 +87,18 @@ public class DenseRunestoneOverlay extends Overlay
     private final RunecraftPlusPlugin plugin;
     private final RunecraftPlusConfig config;
 
+    Robot robot;
+
     @Inject
-    private DenseRunestoneOverlay(Client client, RunecraftPlusPlugin plugin, RunecraftPlusConfig config)
-    {
+    private DenseRunestoneOverlay(Client client, RunecraftPlusPlugin plugin, RunecraftPlusConfig config) throws AWTException {
         this.client = client;
         this.plugin = plugin;
         this.config = config;
 
         setLayer(OverlayLayer.ABOVE_SCENE);
         setPosition(OverlayPosition.DYNAMIC);
+
+        this.robot = new Robot();
     }
 
     @Override
@@ -107,9 +111,12 @@ public class DenseRunestoneOverlay extends Overlay
         GameObject bloodAltar = plugin.getBloodAltar();
         GameObject darkAltar = plugin.getDarkAltar();
 
-//        if(config.disableEmoteMenu()) {
-//            Widget emoteMenu = client.getWidget(WidgetInfo.EMOTE_WINDOW);
-//        }
+        if(config.disableEmoteMenu()) {
+            Widget emoteMenu = client.getWidget(WidgetInfo.EMOTE_CONTAINER);
+            if(!emoteMenu.isHidden()) {
+                robot.keyPress(KeyEvent.VK_ESCAPE);
+            }
+        }
 
         if (config.showClickbox()) {
             //after return
