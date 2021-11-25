@@ -51,7 +51,7 @@ public class DenseRunestoneOverlay extends Overlay
 //    private static final WorldPoint beforeRockClimb = new WorldPoint(1761, 3872, 0);
     private static final WorldPoint darkAltarArea = new WorldPoint(1718, 3882, 0);
     private static final WorldPoint middleArea = new WorldPoint(1737, 3875, 0);
-    private static final WorldPoint runZone = new WorldPoint(1707, 3860, 0);
+    private static final WorldPoint runZone = new WorldPoint(1721, 3855, 0);
     private static final WorldPoint bloodZone = new WorldPoint(1717, 3835,0);
     private static final WorldPoint returnZone = new WorldPoint(1738, 3852, 0);
     private static final WorldPoint centerOfMine = new WorldPoint(1761, 3860, 0);
@@ -79,7 +79,7 @@ public class DenseRunestoneOverlay extends Overlay
 //    private static final WorldPoint NorthRock = new WorldPoint(1762, 3856, 0);
 //    private static final WorldPoint SouthRock = new WorldPoint(1762, 3848, 0);
 
-    private static final int cameraRunZone = 650;
+    private static final int cameraRunZone = 800;
     private static final int cameraReturnZone = 1930;
     private static final int cameraReset = 0;
 
@@ -177,25 +177,25 @@ public class DenseRunestoneOverlay extends Overlay
                     renderTileArea(graphics, LocalPoint.fromWorld(client, runZone));
                 }
             }
-            //if at run zone, render little area above blood altar
+            //if at run zone, render blood altar
             else if(getInventorySlotID(27) == 13446 && isNearWorldTile(runZone, 2)) {
                 if(config.rotateCamera() && client.getMapAngle() != cameraRunZone) {
                     client.setCameraYawTarget(cameraRunZone);
                 }
 
-                renderTileArea(graphics, LocalPoint.fromWorld(client, bloodZone));
-            }
-            //render blood altar if near it
-            else if((getInventorySlotID(0) == 7938 || getInventorySlotID(27) == 13446) && isNearWorldTile(bloodZone, 2) && bloodAltar != null) {
                 renderBox(graphics, bloodAltar);
             }
-            //if at blood altar spot render return zone
-            else if(getInventorySlotID(27) == -1 && getInventorySlotID(0) == -1 && isInBloodArea()) {
-                if(config.rotateCamera() && client.getMapAngle() != cameraReturnZone) {
-                    client.setCameraYawTarget(cameraReturnZone);
-                }
+            //if at blood area, render altar or return zone
+            else if(isInBloodArea()) {
+                if(getInventorySlotID(0) == 7938 && getInventorySlotID(27) == -1)
+                    renderBox(graphics, bloodAltar);
+                else {
+                    if(config.rotateCamera() && client.getMapAngle() != cameraReturnZone) {
+                        client.setCameraYawTarget(cameraReturnZone);
+                    }
 
-                renderTileArea(graphics, LocalPoint.fromWorld(client, returnZone));
+                    renderTileArea(graphics, LocalPoint.fromWorld(client, returnZone));
+                }
             }
             //if at return zone render rockClimb
             else if(getInventorySlotID(27) == -1 && isNearWorldTile(returnZone, 3)) {
