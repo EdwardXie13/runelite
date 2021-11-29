@@ -1,5 +1,26 @@
 import pygetwindow as gw
-window = gw.getWindowsWithTitle("RuneLite")[0]
+import time
 
-window.moveTo(-10, -5)
-window.resizeTo(980, 1055)
+hasLauncherAppeared = False
+hasLauncherDisappeared = False
+
+while True:
+    #wait until shows up
+    if(len(gw.getWindowsWithTitle("RuneLite Launcher")) == 0 and hasLauncherAppeared == False):
+        print("sleep")
+        time.sleep(.1)
+    elif(len(gw.getWindowsWithTitle("RuneLite Launcher")) > 0):
+        hasLauncherAppeared = True
+        print("appeared")
+    elif(hasLauncherDisappeared == True and len(gw.getWindowsWithTitle("RuneLite")) == 1):
+        print("disappeared sleep")
+        time.sleep(2)
+        window = gw.getWindowsWithTitle("RuneLite")[0]
+        window.moveTo(-10, -5)
+        window.resizeTo(980, 1055)
+        break
+    elif(len(gw.getWindowsWithTitle("RuneLite Launcher")) == 0 and hasLauncherAppeared == True):
+        hasLauncherDisappeared = True
+        print("disappeared")
+    
+
