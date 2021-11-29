@@ -13,7 +13,7 @@ while True:
         hasLauncherAppeared = True
         print("appeared")
         time.sleep(.5)
-    elif(hasLauncherDisappeared == True and len(gw.getWindowsWithTitle("RuneLite")) == 1):
+    elif(hasLauncherDisappeared == True and len(gw.getWindowsWithTitle("RuneLite")) == 2):
         print("disappeared sleep")
         time.sleep(2)
         window = gw.getWindowsWithTitle("RuneLite")[0]
