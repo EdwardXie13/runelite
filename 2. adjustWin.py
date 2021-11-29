@@ -8,10 +8,11 @@ while True:
     #wait until shows up
     if(len(gw.getWindowsWithTitle("RuneLite Launcher")) == 0 and hasLauncherAppeared == False):
         print("sleep")
-        time.sleep(.1)
+        time.sleep(.5)
     elif(len(gw.getWindowsWithTitle("RuneLite Launcher")) > 0):
         hasLauncherAppeared = True
         print("appeared")
+        time.sleep(.5)
     elif(hasLauncherDisappeared == True and len(gw.getWindowsWithTitle("RuneLite")) == 1):
         print("disappeared sleep")
         time.sleep(2)
@@ -22,5 +23,6 @@ while True:
     elif(len(gw.getWindowsWithTitle("RuneLite Launcher")) == 0 and hasLauncherAppeared == True):
         hasLauncherDisappeared = True
         print("disappeared")
+        time.sleep(.5)
     
 
