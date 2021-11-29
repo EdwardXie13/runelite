@@ -15,7 +15,6 @@ while True:
         time.sleep(.5)
     elif(hasLauncherDisappeared == True and len(gw.getWindowsWithTitle("RuneLite")) == 2):
         print("disappeared sleep")
-        time.sleep(2)
         window = gw.getWindowsWithTitle("RuneLite")[0]
         window.moveTo(-10, -5)
         window.resizeTo(980, 1055)
