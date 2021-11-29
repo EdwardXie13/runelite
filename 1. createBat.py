@@ -3,7 +3,8 @@ import shutil
 
 #create Bat
 batCommand = "@echo off \n" + \
-    "start javaw -jar -ea ./runelite-client/target/{} --debug --developer-mode \n" + \
+    "start javaw -jar -ea ./runelite-client/target/{} --debug --developer-mode\n" + \
+    'python "2. adjustWin.py"\n' + \
     "exit"
 
 for file in os.listdir(os.getcwd() + "/runelite-client/target"):
