@@ -51,8 +51,7 @@ public class DenseRunestoneOverlay extends Overlay
 //    private static final WorldPoint beforeRockClimb = new WorldPoint(1761, 3872, 0);
     private static final WorldPoint darkAltarArea = new WorldPoint(1718, 3882, 0);
     private static final WorldPoint middleArea = new WorldPoint(1737, 3875, 0);
-    private static final WorldPoint runZone = new WorldPoint(1721, 3855, 0);
-    private static final WorldPoint bloodZone = new WorldPoint(1717, 3835,0);
+    private static final WorldPoint runZone = new WorldPoint(1722, 3855, 0);
     private static final WorldPoint returnZone = new WorldPoint(1738, 3852, 0);
     private static final WorldPoint centerOfMine = new WorldPoint(1761, 3860, 0);
 
@@ -79,7 +78,7 @@ public class DenseRunestoneOverlay extends Overlay
 //    private static final WorldPoint NorthRock = new WorldPoint(1762, 3856, 0);
 //    private static final WorldPoint SouthRock = new WorldPoint(1762, 3848, 0);
 
-    private static final int cameraRunZone = 800;
+    private static final int cameraRunZone = 830;
     private static final int cameraReturnZone = 1930;
     private static final int cameraReset = 0;
 
