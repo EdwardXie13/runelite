@@ -120,12 +120,11 @@ public class DenseRunestoneOverlay extends Overlay
         if (config.showClickbox()) {
             //after return
             if(isAtTile(1752, 3854)){
-                if(config.rotateCamera() && client.getMapAngle() != cameraReset) {
-                    client.setCameraYawTarget(cameraReset);
-                }
+                changeCameraYaw(cameraReset);
             }
             //Render closer mine Rock
             if(getInventorySlotID(27) == -1 && isNearWorldTile(centerOfMine, 13)) {
+                changeCameraYaw(cameraReset);
                 if ((northStoneMineable && northStone != null && closerRock() == "N") || !southStoneMineable)
                 {
                     renderBox(graphics, northStone);
@@ -139,14 +138,6 @@ public class DenseRunestoneOverlay extends Overlay
             else if(getInventorySlotID(27) == 13445 && isNearWorldTile(centerOfMine, 13)) {
                 northRockClimb(graphics);
             }
-            //at outer south rock
-//            else if(getInventorySlotID(27) == 13445 && isAtTile(1761, 3848)) {
-//                renderTile(graphics, LocalPoint.fromWorld(client, beforeRockClimb));
-//            }
-            //before rock climb coming back
-//            else if(getInventorySlotID(27) == -1 && isAtTile(1761, 3872)) {
-//                northRockClimb(graphics);
-//            }
             //after rock climb or at the altar, then render the middle spot
             else if(getInventorySlotID(27) == 13445 && isAtTile(1761, 3874) || (getInventorySlotID(27) == -1 && isAtTile(1718, 3882))) {
                 renderTileArea(graphics, LocalPoint.fromWorld(client, middleArea));
@@ -162,25 +153,19 @@ public class DenseRunestoneOverlay extends Overlay
             //if at altar after imbue but NO fragments / YES fragments
             else if(getInventorySlotID(27) == 13446 && isNearWorldTile(darkAltarArea, 3)) {
                 if(getInventorySlotID(0) == 13446 || getInventorySlotID(2) == -1) { // denseBlocks
-                    if(config.rotateCamera() && client.getMapAngle() != cameraReset) {
-                        client.setCameraYawTarget(cameraReset);
-                    }
+                    changeCameraYaw(cameraReset);
 
                     renderTileArea(graphics, LocalPoint.fromWorld(client, middleArea));
                 } else { //getInventorySlotID(0) == 7938 <- fragments
                     //turn camera to see run zone
-                    if(config.rotateCamera() && client.getMapAngle() != cameraRunZone) {
-                        client.setCameraYawTarget(cameraRunZone);
-                    }
+                    changeCameraYaw(cameraRunZone);
 
                     renderTileArea(graphics, LocalPoint.fromWorld(client, runZone));
                 }
             }
             //if at run zone, render blood altar
             else if(getInventorySlotID(27) == 13446 && isNearWorldTile(runZone, 2)) {
-                if(config.rotateCamera() && client.getMapAngle() != cameraRunZone) {
-                    client.setCameraYawTarget(cameraRunZone);
-                }
+                changeCameraYaw(cameraRunZone);
 
                 renderBox(graphics, bloodAltar);
             }
@@ -189,9 +174,7 @@ public class DenseRunestoneOverlay extends Overlay
                 if(getInventorySlotID(0) == 7938 && getInventorySlotID(27) == -1)
                     renderBox(graphics, bloodAltar);
                 else {
-                    if(config.rotateCamera() && client.getMapAngle() != cameraReturnZone) {
-                        client.setCameraYawTarget(cameraReturnZone);
-                    }
+                    changeCameraYaw(cameraReturnZone);
 
                     renderTileArea(graphics, LocalPoint.fromWorld(client, returnZone));
                 }
@@ -212,6 +195,12 @@ public class DenseRunestoneOverlay extends Overlay
         }
 
         return null;
+    }
+
+    public void changeCameraYaw(int yaw) {
+        if(config.rotateCamera() && client.getMapAngle() != yaw) {
+            client.setCameraYawTarget(yaw);
+        }
     }
 
     public Boolean isInBloodArea() {
