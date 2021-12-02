@@ -1,16 +1,17 @@
-name: Sync Fork
+name: "Sync Fork"
+#https://github.com/marketplace/actions/fork-sync
 
-on: [ push, pull_request ]
+on:
   schedule:
-    - cron: '*/30 * * * *' # every 30 minutes
+    - cron: '*/60 * * * *'
 
 jobs:
   sync:
-
     runs-on: ubuntu-latest
 
     steps:
-      - uses: tgymnich/fork-sync@v1.4
+      - uses: tgymnich/fork-sync@v1.6
         with:
-          base: master
-          head: master
+          owner: runelite
+          auto_approve: true
+          
