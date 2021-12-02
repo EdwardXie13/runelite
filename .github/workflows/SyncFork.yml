@@ -4,7 +4,6 @@ name: "Sync Fork"
 on:
   schedule:
     - cron: '*/5 * * * *'
-  workflow_dispatch: # on button click
 
 jobs:
   sync:
@@ -14,8 +13,4 @@ jobs:
       - uses: tgymnich/fork-sync@v1.6
         with:
           owner: runelite
-          head: master
-          base: master
-          merge_method: merge
-          pr_title: Fork Sync
           auto_approve: true
