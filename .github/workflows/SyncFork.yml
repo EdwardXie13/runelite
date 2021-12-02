@@ -1,9 +1,9 @@
-name: "Sync with original repo - action"
+name: "Sync Fork"
 #https://github.com/marketplace/actions/fork-sync
 
 on:
   schedule:
-    - cron: '0 16 * * 1,4'
+    - cron: '30 8 * * *'
   workflow_dispatch: # on button click
 
 jobs:
