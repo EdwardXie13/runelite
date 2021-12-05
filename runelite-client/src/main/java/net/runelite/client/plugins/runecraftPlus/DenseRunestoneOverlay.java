@@ -151,19 +151,16 @@ public class DenseRunestoneOverlay extends Overlay
             else if(getInventorySlotID(27) == 13446 && isNearWorldTile(darkAltarArea, 3)) {
                 if(getInventorySlotID(0) == 13446 || getInventorySlotID(2) == -1) { // denseBlocks
                     changeCameraYaw(cameraReset);
-
                     renderTileArea(graphics, LocalPoint.fromWorld(client, middleArea));
                 } else { //getInventorySlotID(0) == 7938 <- fragments
                     //turn camera to see run zone
                     changeCameraYaw(cameraRunZone);
-
                     renderTileArea(graphics, LocalPoint.fromWorld(client, runZone));
                 }
             }
             //if at run zone, render blood altar
             else if(getInventorySlotID(27) == 13446 && isNearWorldTile(runZone, 2)) {
                 changeCameraYaw(cameraRunZone);
-
                 renderBox(graphics, bloodAltar);
             }
             //if at blood area, render altar or return zone
@@ -172,7 +169,6 @@ public class DenseRunestoneOverlay extends Overlay
                     renderBox(graphics, bloodAltar);
                 else {
                     changeCameraYaw(cameraReturnZone);
-
                     renderTileArea(graphics, LocalPoint.fromWorld(client, returnZone));
                 }
             }
