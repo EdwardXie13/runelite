@@ -7,7 +7,7 @@
     }
   },
   "pr": {
-    "example": {
+    "automerge": {
       "requires": 1,
       "conditions": [
         {
