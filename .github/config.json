@@ -1,7 +1,7 @@
 {
   "labels": {
     "automerge": {
-      "name": "Automerge",
+      "name": "automerge",
       "colour": "#00ff00",
       "description": "Automerge label"
     }
@@ -11,8 +11,8 @@
       "requires": 1,
       "conditions": [
         {
-          "type": "creatorMatches",
-          "pattern": "github-actions"
+          "type": "titleMatches",
+          "pattern": "Fork Sync: Update from parent repository"
         }
       ]
     }
