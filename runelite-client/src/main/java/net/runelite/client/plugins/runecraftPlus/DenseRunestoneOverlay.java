@@ -76,7 +76,7 @@ public class DenseRunestoneOverlay extends Overlay
     };
 
     private static final int cameraRunZone = 830;
-    private static final int cameraReturnZone = 1960;
+    private static final int cameraReturnZone = 1570;
     private static final int cameraReset = 0;
 
     private final Client client;
@@ -165,16 +165,12 @@ public class DenseRunestoneOverlay extends Overlay
             }
             //if at blood area, render altar or return zone
             else if(isInBloodArea()) {
-                if(getInventorySlotID(0) == 7938 && getInventorySlotID(27) == -1)
-                    renderBox(graphics, bloodAltar);
-                else {
+                if(getInventorySlotID(0) == -1 && getInventorySlotID(27) == -1) {
                     changeCameraYaw(cameraReturnZone);
-                    renderTileArea(graphics, LocalPoint.fromWorld(client, returnZone));
+                    returnRockClimb(graphics);
                 }
-            }
-            //if at return zone render rockClimb
-            else if(getInventorySlotID(27) == -1 && isNearWorldTile(returnZone, 3)) {
-                returnRockClimb(graphics);
+                else
+                    renderBox(graphics, bloodAltar);
             }
         } else { //Normal render
             if ((northStoneMineable && northStone != null && closerRock() == "N") || !southStoneMineable)
