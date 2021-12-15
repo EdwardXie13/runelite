@@ -50,10 +50,8 @@ public class DenseRunestoneOverlay extends Overlay
 
     private static final Color Pink_Color = new Color(255,128,255, 255);
 
-    private static final WorldPoint darkAltarArea = new WorldPoint(1718, 3882, 0);
     private static final WorldPoint middleArea = new WorldPoint(1737, 3875, 0);
     private static final WorldPoint runZone = new WorldPoint(1722, 3855, 0);
-    private static final WorldPoint returnZone = new WorldPoint(1740, 3852, 0);
     private static final WorldPoint centerOfMine = new WorldPoint(1761, 3860, 0);
 
     private static final WorldPoint[] bloodAltarArea = {
@@ -73,6 +71,29 @@ public class DenseRunestoneOverlay extends Overlay
         new WorldPoint(1717, 3827, 0),
         new WorldPoint(1716, 3827, 0),
         new WorldPoint(1715, 3827, 0)
+    };
+
+    private static final WorldPoint[] darkAltarArea = {
+        new WorldPoint(1714, 3885, 0),
+        new WorldPoint(1715, 3885, 0),
+        new WorldPoint(1716, 3885, 0),
+        new WorldPoint(1717, 3885, 0),
+
+        new WorldPoint(1718, 3885, 0),
+        new WorldPoint(1718, 3884, 0),
+        new WorldPoint(1718, 3883, 0),
+        new WorldPoint(1718, 3882, 0),
+
+        new WorldPoint(1718, 3881, 0),
+        new WorldPoint(1717, 3881, 0),
+        new WorldPoint(1716, 3881, 0),
+        new WorldPoint(1715, 3881, 0),
+
+        new WorldPoint(1714, 3881, 0),
+        new WorldPoint(1714, 3852, 0),
+        new WorldPoint(1714, 3883, 0),
+        new WorldPoint(1714, 3884, 0)
+
     };
 
     private static final int cameraRunZone = 830;
@@ -148,7 +169,7 @@ public class DenseRunestoneOverlay extends Overlay
                 northRockClimb(graphics);
             }
             //if at altar after imbue but NO fragments / YES fragments
-            else if(getInventorySlotID(27) == 13446 && isNearWorldTile(darkAltarArea, 3)) {
+            else if(getInventorySlotID(27) == 13446 && isInArea(darkAltarArea)) {
                 if(getInventorySlotID(0) == 13446 || getInventorySlotID(2) == -1) { // denseBlocks
                     changeCameraYaw(cameraReset);
                     renderTileArea(graphics, LocalPoint.fromWorld(client, middleArea));
@@ -164,7 +185,7 @@ public class DenseRunestoneOverlay extends Overlay
                 renderBox(graphics, bloodAltar);
             }
             //if at blood area, render altar or return zone
-            else if(isInBloodArea()) {
+            else if(isInArea(bloodAltarArea)) {
                 if(getInventorySlotID(0) == -1 && getInventorySlotID(27) == -1) {
                     changeCameraYaw(cameraReturnZone);
                     returnRockClimb(graphics);
@@ -192,8 +213,8 @@ public class DenseRunestoneOverlay extends Overlay
         }
     }
 
-    public Boolean isInBloodArea() {
-        for (WorldPoint worldPoint : bloodAltarArea) {
+    public boolean isInArea(WorldPoint[] area) {
+        for (WorldPoint worldPoint : area) {
             if (worldPoint.getX() == client.getLocalPlayer().getWorldLocation().getX() &&
                     worldPoint.getY() == client.getLocalPlayer().getWorldLocation().getY()) {
                 return true;
