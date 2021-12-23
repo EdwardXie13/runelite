@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Adam <Adam@sigterm.info>
+ * Copyright (c) 2021, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,14 +22,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.http.api.ws.messages;
+package net.runelite.cache.util;
 
-import java.util.UUID;
 import lombok.Data;
-import net.runelite.http.api.ws.WebsocketMessage;
 
 @Data
-public class Handshake extends WebsocketMessage
+public class XteaKey
 {
-	private UUID session;
+	private int region;
+	private int keys[];
 }
