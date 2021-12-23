@@ -22,37 +22,58 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.http.api;
+package net.runelite.client.plugins.xptracker;
 
 import java.io.IOException;
+import javax.inject.Inject;
+import javax.inject.Named;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import static org.junit.Assert.assertTrue;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import okhttp3.Response;
 
-public class RuneLiteAPITest
+@Slf4j
+public class XpClient
 {
-	@Rule
-	public final MockWebServer server = new MockWebServer();
+	private final OkHttpClient client;
+	private final HttpUrl apiBase;
 
-	@Before
-	public void before() throws IOException
+	@Inject
+	private XpClient(OkHttpClient client, @Named("runelite.api.base") HttpUrl apiBase)
 	{
-		server.enqueue(new MockResponse().setBody("OK"));
+		this.client = client;
+		this.apiBase = apiBase;
 	}
 
-	@Test
-	public void testUserAgent() throws IOException, InterruptedException
+	public void update(String username)
 	{
-		Request request = new Request.Builder()
-			.url(server.url("/").url())
+		HttpUrl url = apiBase.newBuilder()
+			.addPathSegment("xp")
+			.addPathSegment("update")
+			.addQueryParameter("username", username)
 			.build();
-		RuneLiteAPI.CLIENT.newCall(request).execute().close();
 
-		// rest of UA depends on if git is found
-		assertTrue(server.takeRequest().getHeader("User-Agent").startsWith("RuneLite/" + RuneLiteAPI.getVersion()));
+		Request request = new Request.Builder()
+			.url(url)
+			.build();
+
+		client.newCall(request).enqueue(new Callback()
+		{
+			@Override
+			public void onFailure(Call call, IOException e)
+			{
+				log.warn("Error submitting xp track", e);
+			}
+
+			@Override
+			public void onResponse(Call call, Response response)
+			{
+				response.close();
+				log.debug("Submitted xp track for {}", username);
+			}
+		});
 	}
 }
