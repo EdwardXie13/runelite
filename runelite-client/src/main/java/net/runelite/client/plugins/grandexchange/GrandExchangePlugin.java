@@ -100,12 +100,9 @@ import net.runelite.client.util.LinkBrowser;
 import net.runelite.client.util.OSType;
 import net.runelite.client.util.QuantityFormatter;
 import net.runelite.client.util.Text;
-import net.runelite.http.api.ge.GrandExchangeClient;
 import net.runelite.http.api.ge.GrandExchangeTrade;
 import net.runelite.http.api.item.ItemStats;
-import net.runelite.http.api.osbuddy.OSBGrandExchangeClient;
 import net.runelite.http.api.worlds.WorldType;
-import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.text.similarity.FuzzyScore;
 
@@ -258,18 +255,6 @@ public class GrandExchangePlugin extends Plugin
 	GrandExchangeConfig provideConfig(ConfigManager configManager)
 	{
 		return configManager.getConfig(GrandExchangeConfig.class);
-	}
-
-	@Provides
-	OSBGrandExchangeClient provideOsbGrandExchangeClient(OkHttpClient okHttpClient)
-	{
-		return new OSBGrandExchangeClient(okHttpClient);
-	}
-
-	@Provides
-	GrandExchangeClient provideGrandExchangeClient(OkHttpClient okHttpClient)
-	{
-		return new GrandExchangeClient(okHttpClient);
 	}
 
 	@Override
@@ -717,13 +702,15 @@ public class GrandExchangePlugin extends Plugin
 			case "setGETitle":
 				setGeTitle();
 				break;
-			case "geExamineText":
+			case "geBuyExamineText":
+			case "geSellExamineText":
 			{
+				boolean buy = "geBuyExamineText".equals(event.getEventName());
 				String[] stack = client.getStringStack();
 				int sz = client.getStringStackSize();
 				String fee = stack[sz - 2];
 				String examine = stack[sz - 3];
-				String text = setExamineText(examine, fee);
+				String text = setExamineText(examine, fee, buy);
 				if (text != null)
 				{
 					stack[sz - 1] = text;
@@ -814,12 +801,12 @@ public class GrandExchangePlugin extends Plugin
 		}
 	}
 
-	private String setExamineText(String examine, String fee)
+	private String setExamineText(String examine, String fee, boolean buy)
 	{
 		final int itemId = client.getVar(VarPlayer.CURRENT_GE_ITEM);
 		StringBuilder sb = new StringBuilder();
 
-		if (config.enableGELimits())
+		if (buy && config.enableGELimits())
 		{
 			final ItemStats itemStats = itemManager.getItemStats(itemId, false);
 
@@ -830,7 +817,7 @@ public class GrandExchangePlugin extends Plugin
 			}
 		}
 
-		if (config.enableGELimitReset())
+		if (buy && config.enableGELimitReset())
 		{
 			Instant resetTime = getLimitResetTime(itemId);
 			if (resetTime != null)
@@ -858,7 +845,13 @@ public class GrandExchangePlugin extends Plugin
 			return null;
 		}
 
-		return shortenExamine(examine) + "<br>" + sb + "<br>" + fee;
+		if (!fee.isEmpty())
+		{
+			sb.append("<br>").append(fee);
+		}
+
+		// Sell offers include an additional fee text which doesn't fit, so we truncate the examine text
+		return (!buy ? shortenExamine(examine) : examine) + "<br>" + sb;
 	}
 
 	private static String shortenExamine(String examine)
