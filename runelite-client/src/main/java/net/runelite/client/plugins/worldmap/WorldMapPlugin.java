@@ -34,7 +34,6 @@ import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.Quest;
 import net.runelite.api.Skill;
-import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.StatChanged;
 import net.runelite.api.events.WidgetLoaded;
 import net.runelite.api.widgets.WidgetID;
@@ -167,15 +166,6 @@ public class WorldMapPlugin extends Plugin
 		worldMapPointManager.removeIf(MapPoint.class::isInstance);
 		agilityLevel = 0;
 		woodcuttingLevel = 0;
-	}
-
-	@Subscribe
-	public void onGameStateChanged(GameStateChanged gameStateChanged)
-	{
-		if (gameStateChanged.getGameState() == GameState.LOGGED_IN)
-		{
-			updateQuestStartPointIcons();
-		}
 	}
 
 	@Subscribe
