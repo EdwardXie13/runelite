@@ -44,13 +44,17 @@ public class DenseRunestoneOverlay extends Overlay
 {
     private static final Color CLICKBOX_BORDER_COLOR = Color.GREEN;
     private static final Color CLICKBOX_FILL_COLOR = new Color(
-        CLICKBOX_BORDER_COLOR.getRed(), CLICKBOX_BORDER_COLOR.getGreen(),
+        CLICKBOX_BORDER_COLOR.getRed(),
+        CLICKBOX_BORDER_COLOR.getGreen(),
         CLICKBOX_BORDER_COLOR.getBlue(), 50);
     private static final Color CLICKBOX_BORDER_HOVER_COLOR = CLICKBOX_BORDER_COLOR.darker();
 
     private static final Color Pink_Color = new Color(255,128,255, 255);
 
-    private static final WorldPoint middleArea = new WorldPoint(1737, 3875, 0);
+    private static boolean secondRun = false;
+
+    private static final WorldPoint afterNorthRock = new WorldPoint(1761, 3874, 0);
+    private static final WorldPoint returnMiddleArea = new WorldPoint(1748, 3872, 0);
     private static final WorldPoint runZone = new WorldPoint(1722, 3855, 0);
     private static final WorldPoint centerOfMine = new WorldPoint(1761, 3860, 0);
 
@@ -93,9 +97,10 @@ public class DenseRunestoneOverlay extends Overlay
         new WorldPoint(1714, 3852, 0),
         new WorldPoint(1714, 3883, 0),
         new WorldPoint(1714, 3884, 0)
-
     };
 
+    private static final int cameraHeadingAltar = 200;
+    private static final int cameraReturnMiddle = 1170;
     private static final int cameraRunZone = 830;
     private static final int cameraReturnZone = 1570;
     private static final int cameraReset = 0;
@@ -128,12 +133,8 @@ public class DenseRunestoneOverlay extends Overlay
         GameObject bloodAltar = plugin.getBloodAltar();
         GameObject darkAltar = plugin.getDarkAltar();
 
-        if(config.disableEmoteMenu()) {
-            Widget emoteMenu = client.getWidget(WidgetInfo.EMOTE_CONTAINER);
-            if(!emoteMenu.isHidden()) {
-                robot.keyPress(KeyEvent.VK_ESCAPE);
-            }
-        }
+        disableEmoteMenu();
+        disableMusicMenu();
 
         if (config.showClickbox()) {
             //after return
@@ -143,11 +144,12 @@ public class DenseRunestoneOverlay extends Overlay
             //Render closer mine Rock
             if(getInventorySlotID(27) == -1 && isNearWorldTile(centerOfMine, 13)) {
                 changeCameraYaw(cameraReset);
-                if ((northStoneMineable && northStone != null && closerRock() == "N") || !southStoneMineable)
+                checkRun();
+                if ((northStoneMineable && northStone != null && closerRock().equals("N")) || !southStoneMineable)
                 {
                     renderBox(graphics, northStone);
                 }
-                if ((southStoneMineable && southStone != null && closerRock() == "S") || !northStoneMineable)
+                if ((southStoneMineable && southStone != null && closerRock().equals("S")) || !northStoneMineable)
                 {
                     renderBox(graphics, southStone);
                 }
@@ -156,27 +158,24 @@ public class DenseRunestoneOverlay extends Overlay
             else if(getInventorySlotID(27) == 13445 && isNearWorldTile(centerOfMine, 13)) {
                 northRockClimb(graphics);
             }
-            //after rock climb or at the altar, then render the middle spot
-            else if(getInventorySlotID(27) == 13445 && isAtTile(1761, 3874) || (getInventorySlotID(27) == -1 && isAtTile(1718, 3882))) {
-                renderTileArea(graphics, LocalPoint.fromWorld(client, middleArea));
-            }
-            //if in middle area with dense essence blocks. then render altar
-            else if(getInventorySlotID(27) == 13445 && isNearWorldTile(middleArea, 2) && darkAltar != null) {
+            //after rock climb then render the altar
+            else if(getInventorySlotID(27) == 13445 && isNearWorldTile(afterNorthRock,1)) {
+
+                changeCameraYaw(cameraHeadingAltar);
                 renderBox(graphics, darkAltar);
             }
-            //if in middle area with dark essence blocks OR nothing then render rock
-            else if((getInventorySlotID(27) == 13446 || getInventorySlotID(27) == -1) && isNearWorldTile(middleArea, 2)) {
+            //if in middle area and empty slot 27 then render rock
+            else if(getInventorySlotID(27) == -1 && isNearWorldTile(returnMiddleArea, 2)) {
                 northRockClimb(graphics);
             }
             //if at altar after imbue but NO fragments / YES fragments
-            else if(getInventorySlotID(27) == 13446 && isInArea(darkAltarArea)) {
-                if(getInventorySlotID(0) == 13446 || getInventorySlotID(2) == -1) { // denseBlocks
-                    changeCameraYaw(cameraReset);
-                    renderTileArea(graphics, LocalPoint.fromWorld(client, middleArea));
-                } else { //getInventorySlotID(0) == 7938 <- fragments
-                    //turn camera to see run zone
+            else if(isInArea(darkAltarArea)) {
+                if(secondRun) {
                     changeCameraYaw(cameraRunZone);
                     renderTileArea(graphics, LocalPoint.fromWorld(client, runZone));
+                } else {
+                    changeCameraYaw(cameraReturnMiddle);
+                    renderTileArea(graphics, LocalPoint.fromWorld(client, returnMiddleArea));
                 }
             }
             //if at run zone, render blood altar
@@ -189,6 +188,7 @@ public class DenseRunestoneOverlay extends Overlay
                 if(getInventorySlotID(0) == -1 && getInventorySlotID(27) == -1) {
                     changeCameraYaw(cameraReturnZone);
                     returnRockClimb(graphics);
+                    secondRun = false;
                 }
                 else
                     renderBox(graphics, bloodAltar);
@@ -333,5 +333,37 @@ public class DenseRunestoneOverlay extends Overlay
         graphics.draw(poly);
         graphics.setColor(Pink_Color);
         graphics.fill(poly);
+    }
+
+    public void disableEmoteMenu() {
+        if(config.disableEmoteMenu() && isInChiselRegion()) {
+            Widget emoteMenu = client.getWidget(WidgetInfo.EMOTE_CONTAINER);
+            if(!emoteMenu.isHidden()) {
+                robot.keyPress(KeyEvent.VK_ESCAPE);
+            }
+        }
+    }
+
+    public void disableMusicMenu() {
+        if(config.disableMusicMenu() && isInChiselRegion()) {
+            Widget musicMenu = client.getWidget(WidgetInfo.MUSIC_WINDOW);
+            if(!musicMenu.isHidden()) {
+                robot.keyPress(KeyEvent.VK_ESCAPE);
+            }
+        }
+    }
+
+    public void checkRun() {
+        if(getInventorySlotID(0) == 7938 && !secondRun) {
+            secondRun = true;
+        }
+    }
+
+    public boolean isInChiselRegion() {
+//        6972 - mine
+//        6716 - altar
+//        6715 - blood
+        int regionID = this.client.getLocalPlayer().getWorldLocation().getRegionID();
+        return regionID == 6972 || regionID == 6716 || regionID == 6715;
     }
 }

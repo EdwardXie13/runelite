@@ -28,11 +28,17 @@ package net.runelite.client.plugins.runecraftPlus;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
+import net.runelite.client.config.ConfigSection;
 
-@ConfigGroup(RunecraftPlusConfig.GROUP)
+@ConfigGroup("runecraftPlus")
 public interface RunecraftPlusConfig extends Config
 {
-	String GROUP = "runecraftPlus";
+	@ConfigSection(
+			name = "Add On Section",
+			description = "Settings for Runecraft QOL",
+			position = 17
+	)
+	String addOnSection = "Runecraft Plus Add Ons";
 
 	@ConfigItem(
 			keyName = "showDenseRunestoneClickbox",
@@ -71,9 +77,22 @@ public interface RunecraftPlusConfig extends Config
 			keyName = "disableEmoteMenu",
 			name = "Disable Emote Menu",
 			description = "Configures whether to allow Emote Menu to be clicked",
-			position = 4
+			position = 4,
+			section = addOnSection
 	)
 	default boolean disableEmoteMenu()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+			keyName = "disableMusicMenu",
+			name = "Disable Music Menu",
+			description = "Configures whether to allow Music Menu to be clicked",
+			position = 5,
+			section = addOnSection
+	)
+	default boolean disableMusicMenu()
 	{
 		return true;
 	}
@@ -82,7 +101,8 @@ public interface RunecraftPlusConfig extends Config
 			keyName = "showStatus",
 			name = "Show Status",
 			description = "Configures whether to show status bar",
-			position = 5
+			position = 6,
+			section = addOnSection
 	)
 	default boolean showStatus()
 	{
