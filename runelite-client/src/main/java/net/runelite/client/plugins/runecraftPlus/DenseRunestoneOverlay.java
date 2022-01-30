@@ -160,11 +160,10 @@ public class DenseRunestoneOverlay extends Overlay
             }
             //after rock climb then render the altar
             else if(getInventorySlotID(27) == 13445 && isNearWorldTile(afterNorthRock,1)) {
-
                 changeCameraYaw(cameraHeadingAltar);
                 renderBox(graphics, darkAltar);
             }
-            //if in middle area and empty slot 27 then render rock
+            //if in return middle area and empty slot 27 then render rock
             else if(getInventorySlotID(27) == -1 && isNearWorldTile(returnMiddleArea, 2)) {
                 northRockClimb(graphics);
             }
