@@ -28,7 +28,6 @@ package net.runelite.client.plugins.runecraftPlus;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.*;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
@@ -40,7 +39,6 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
-import net.runelite.api.widgets.WidgetItem;
 import net.runelite.client.ui.overlay.*;
 import net.runelite.client.ui.overlay.OverlayPosition;
 
@@ -75,7 +73,6 @@ public class DenseRunestoneOverlay extends Overlay
 
     private static final WorldPoint afterNorthRock = new WorldPoint(1761, 3874, 0);
     private static final WorldPoint returnRunArea = new WorldPoint(1761, 3877, 0);
-    private static final WorldPoint returnMiddleArea = new WorldPoint(1748, 3872, 0);
     private static final WorldPoint runZone = new WorldPoint(1722, 3855, 0);
     private static final WorldPoint centerOfMine = new WorldPoint(1761, 3860, 0);
 
@@ -137,7 +134,6 @@ public class DenseRunestoneOverlay extends Overlay
     };
 
     private static final int cameraHeadingAltar = 200;
-    private static final int cameraReturnMiddle = 1170;
     private static final int cameraRunZone = 830;
     private static final int cameraReturnZone = 1570;
     private static final int cameraReset = 0;
@@ -158,16 +154,14 @@ public class DenseRunestoneOverlay extends Overlay
     private final Client client;
     private final RunecraftPlusPlugin plugin;
     private final RunecraftPlusConfig config;
-    private final OverlayManager overlayManager;
 
     public static Robot robot;
 
     @Inject
-    private DenseRunestoneOverlay(Client client, RunecraftPlusPlugin plugin, RunecraftPlusConfig config, OverlayManager overlayManager) throws AWTException {
+    private DenseRunestoneOverlay(Client client, RunecraftPlusPlugin plugin, RunecraftPlusConfig config) throws AWTException {
         this.client = client;
         this.plugin = plugin;
         this.config = config;
-        this.overlayManager = overlayManager;
 
         setLayer(OverlayLayer.ABOVE_SCENE);
         setPosition(OverlayPosition.DYNAMIC);
@@ -248,23 +242,20 @@ public class DenseRunestoneOverlay extends Overlay
         }
         //if destination is dark altar
         else if(destinationDarkAltar() && !secondRun) {
-            renderTileArea(graphics, LocalPoint.fromWorld(client, returnRunArea), 5);
+            client.setOculusOrbState(1);
         }
-        else if(destinationReturnRun() && getInventorySlotID(27) == -1) {
-            northRockClimb(graphics);
-        }
-        //if in return middle area and empty slot 27 then render rock
-        else if(getInventorySlotID(27) == -1 && isNearWorldTile(returnMiddleArea, 2)) {
+        //if destination is return Area
+        else if((isInReturnRun() || isNearWorldTile(afterNorthRock,1) && getInventorySlotID(27) == -1)) {
+            client.setOculusOrbState(0);
             northRockClimb(graphics);
         }
         //if at altar after imbue but NO fragments / YES fragments
-        else if(isInArea(darkAltarArea)) {
-            if(secondRun && getInventorySlotID(27) == 13446) {
+        else if(isInArea(darkAltarArea) && getInventorySlotID(27) == 13446) {
+            if(secondRun) {
                 changeCameraYaw(cameraRunZone);
                 renderTileArea(graphics, LocalPoint.fromWorld(client, runZone), 3);
             } else {
-                changeCameraYaw(cameraReturnMiddle);
-                renderTileArea(graphics, LocalPoint.fromWorld(client, returnMiddleArea), 3);
+                renderTileArea(graphics, LocalPoint.fromWorld(client, returnRunArea), 7);
             }
         }
         //if at run zone, render blood altar
@@ -458,12 +449,12 @@ public class DenseRunestoneOverlay extends Overlay
         return dest[0] == 1718 && dest[1] == 3882;
     }
 
-    private boolean destinationReturnRun() {
-        int[] dest = destination();
-        return dest[0] >= 1759 &&
-               dest[0] <= 1763 &&
-               dest[1] >= 3875 &&
-               dest[1] <= 3879;
+    private boolean isInReturnRun() {
+        int[] location = {client.getLocalPlayer().getWorldLocation().getX(), client.getLocalPlayer().getWorldLocation().getY()};
+        return location[0] >= 1758 &&
+               location[0] <= 1764 &&
+               location[1] >= 3874 &&
+               location[1] <= 3880;
     }
 
 //    private boolean checkEnergy(int required) {
