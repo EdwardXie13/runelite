@@ -245,7 +245,7 @@ public class DenseRunestoneOverlay extends Overlay
             client.setOculusOrbState(1);
         }
         //if destination is return Area
-        else if((isInReturnRun() || isNearWorldTile(afterNorthRock,1) && getInventorySlotID(27) == -1)) {
+        else if((isInReturnRun() || isNearWorldTile(afterNorthRock,1)) && getInventorySlotID(27) == -1) {
             client.setOculusOrbState(0);
             northRockClimb(graphics);
         }
