@@ -18,7 +18,7 @@ while True:
         windows = gw.getWindowsWithTitle("RuneLite")
         for window in windows:
             if(window.title == "RuneLite"):
-                window.moveTo(-10, -5)
+                window.moveTo(-8, -5)
                 window.resizeTo(980, 1055)
                 break
         break
