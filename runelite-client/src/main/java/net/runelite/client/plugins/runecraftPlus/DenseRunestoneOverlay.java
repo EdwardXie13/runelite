@@ -470,7 +470,12 @@ public class DenseRunestoneOverlay extends Overlay
     }
 
     private boolean swapWorldItem(MenuEntry e) {
-        String target = !e.getTarget().equals("") ? e.getTarget().split(">")[1] : "";
+        String target;
+        try {
+            target = !e.getTarget().equals("") ? e.getTarget().split(">")[1] : "";
+        } catch (Exception exception) {
+            return false;
+        }
         return RCpouch.contains(target) || Capes.contains(target) || JewleryUncharged.contains(target);
     }
 
