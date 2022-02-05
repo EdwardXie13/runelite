@@ -12,7 +12,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 import javax.inject.Inject;
 
 @PluginDescriptor(
-        name = "SmithingAnvil",
+        name = "Smithing Anvil",
         description = "Only smith chose Item",
         tags = {"smithing", "smith", "darts"}
 )

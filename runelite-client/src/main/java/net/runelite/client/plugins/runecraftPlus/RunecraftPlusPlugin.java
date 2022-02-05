@@ -32,7 +32,6 @@ import lombok.Getter;
 import net.runelite.api.*;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
-import net.runelite.client.Notifier;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
@@ -40,7 +39,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 @PluginDescriptor(
-        name = "RunecraftPlus",
+        name = "Runecraft Plus",
         description = "Show runestone overlays for Zeah RC",
         tags = {"blood", "soul", "rc", "runecrafting", "runestone", "zeah"}
 )
@@ -124,9 +123,6 @@ public class RunecraftPlusPlugin extends Plugin
 
     @Inject
     private RunecraftPlusConfig config;
-
-    @Inject
-    private Notifier notifier;
 
     @Provides
     RunecraftPlusConfig getConfig(ConfigManager configManager) {
