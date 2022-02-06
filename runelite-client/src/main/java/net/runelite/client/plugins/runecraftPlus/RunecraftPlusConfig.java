@@ -48,33 +48,11 @@ public interface RunecraftPlusConfig extends Config
 		return AbyssRifts.NONE;
 	}
 
-//	@ConfigItem(
-//			keyName = "rotateCamera",
-//			name = "Rotate Camera",
-//			description = "Configures whether to auto-rotate camera",
-//			position = 3
-//	)
-//	default boolean rotateCamera()
-//	{
-//		return true;
-//	}
-
-//	@ConfigItem(
-//			keyName = "checkEnergy",
-//			name = "Check Energy",
-//			description = "Configures whether to check for enough energy",
-//			position = 4
-//	)
-//	default boolean checkEnergy()
-//	{
-//		return true;
-//	}
-
 	@ConfigItem(
 			keyName = "disableEmoteMenu",
 			name = "Disable Emote Menu",
 			description = "Configures whether to allow Emote Menu to be clicked",
-			position = 5,
+			position = 4,
 			section = addOnSection
 	)
 	default boolean disableEmoteMenu()
@@ -86,7 +64,7 @@ public interface RunecraftPlusConfig extends Config
 			keyName = "disableMusicMenu",
 			name = "Disable Music Menu",
 			description = "Configures whether to allow Music Menu to be clicked",
-			position = 6,
+			position = 5,
 			section = addOnSection
 	)
 	default boolean disableMusicMenu()
