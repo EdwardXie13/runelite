@@ -93,16 +93,4 @@ public interface RunecraftPlusConfig extends Config
 	{
 		return true;
 	}
-
-	@ConfigItem(
-			keyName = "showStatus",
-			name = "Show Status",
-			description = "Configures whether to show status bar",
-			position = 7,
-			section = addOnSection
-	)
-	default boolean showStatus()
-	{
-		return false;
-	}
 }

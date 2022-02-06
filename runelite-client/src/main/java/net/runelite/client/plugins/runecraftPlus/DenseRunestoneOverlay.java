@@ -418,7 +418,7 @@ public class DenseRunestoneOverlay extends Overlay
     }
 
     private int getRegionID() {
-        return this.client.getMapRegions()[0];
+        return this.client.getLocalPlayer().getWorldLocation().getRegionID();
     }
 
     private boolean isInChiselRegion() {

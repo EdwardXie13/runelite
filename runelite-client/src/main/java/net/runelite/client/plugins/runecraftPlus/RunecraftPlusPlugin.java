@@ -74,7 +74,7 @@ public class RunecraftPlusPlugin extends Plugin
     private GameObject bloodAltar;
 
     @Getter(AccessLevel.PACKAGE)
-    private GameObject darkAltar = null;
+    private GameObject darkAltar;
 
     @Getter(AccessLevel.PACKAGE)
     private GameObject edgeBankBooth;
@@ -158,18 +158,6 @@ public class RunecraftPlusPlugin extends Plugin
     }
 
     @Subscribe
-    public void onInteractingChanged(InteractingChanged event) {
-        final Actor source = event.getSource();
-
-        if (source != client.getLocalPlayer())
-        {
-            return;
-        }
-
-        final Actor target = event.getTarget();
-    }
-
-    @Subscribe
     public void onGameStateChanged(GameStateChanged event) {
         GameState gameState = event.getGameState();
         switch (gameState)
@@ -194,7 +182,6 @@ public class RunecraftPlusPlugin extends Plugin
             case CONNECTION_LOST:
             case HOPPING:
             case LOGIN_SCREEN:
-                break;
             case LOGGED_IN:
                 break;
         }
