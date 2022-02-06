@@ -567,6 +567,10 @@ public class DenseRunestoneOverlay extends Overlay
         return client.getItemContainer(InventoryID.EQUIPMENT).contains(ItemID.AMULET_OF_GLORY);
     }
 
+    private boolean inventoryContains(int id) {
+        return client.getItemContainer(InventoryID.INVENTORY).contains(id);
+    }
+
     private void renderRifts(Graphics2D graphics) {
         int riftID = config.showAbyssClickBox().getId();
         if(riftID == 1) {
@@ -588,7 +592,7 @@ public class DenseRunestoneOverlay extends Overlay
             renderObject(graphics, statue, Pink_Color, Pink_Color, Pink_Color);
         } else if(isNearWorldTile(EnterStatue, 5)) {
             changeCameraYaw(cameraSouth);
-            if(client.getItemContainer(InventoryID.INVENTORY).contains(ItemID.AMULET_OF_GLORY))
+            if(inventoryContains(ItemID.AMULET_OF_GLORY))
                 renderObject(graphics, fountainGlory, Pink_Color, Pink_Color, Pink_Color);
             else
                 renderObject(graphics, caveEntrance, Pink_Color, Pink_Color, Pink_Color);
