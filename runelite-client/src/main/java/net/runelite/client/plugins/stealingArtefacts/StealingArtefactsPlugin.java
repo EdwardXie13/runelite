@@ -316,14 +316,11 @@ public class StealingArtefactsPlugin extends Plugin {
 
     /**
      * Check if the user is in Port Pisc
-     * @param position The user's position in the world
      * @return True if they are in Port Pisc, otherwise false
      */
-    public boolean isInPisc(WorldPoint position) {
-        if (position.getX() >= 1739 && position.getX() <= 1855) {
-            return position.getY() >= 3675 && position.getY() <= 3803;
-        }
-
-        return false;
+    public boolean isInPisc(WorldPoint positon) {
+        int region = positon.getRegionID();
+        return region == 6971 || region == 7227 ||
+               region == 6970 || region == 7226;
     }
 }
