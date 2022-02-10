@@ -28,6 +28,8 @@ package net.runelite.client.plugins.runecraftPlus;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
@@ -142,8 +144,10 @@ public class DenseRunestoneOverlay extends Overlay
     private static final Set<String> RCpouch = new HashSet<>(Arrays.asList("Small pouch", "Medium pouch", "Large pouch", "Giant pouch"));
     private static final Set<String> Skillcapes = new HashSet<>(Arrays.asList("Runecraft cape", "Runecraft cape(t)", "Agility cape", "Agility cape(t)"));
     private static final Set<String> Capes = new HashSet<>(Arrays.asList("Mythical cape"));
-    private static final Set<String> JewleryCharged = new HashSet<>(Arrays.asList("Amulet of glory(4)", "Amulet of glory(3)", "Amulet of glory(2)", "Amulet of glory(1)"));
-    private static final Set<String> JewleryUncharged = new HashSet<>(Arrays.asList("Amulet of glory"));
+    private static final Set<String> AmuletOfGlory = new HashSet<>(Arrays.asList("Amulet of glory(4)", "Amulet of glory(3)", "Amulet of glory(2)", "Amulet of glory(1)"));
+    private static final Set<String> RingOfDueling = new HashSet<>(Arrays.asList("Ring of dueling(8)", "Ring of dueling(7)", "Ring of dueling(6)", "Ring of dueling(5)",
+                                                                                 "Ring of dueling(4)", "Ring of dueling(3)", "Ring of dueling(2)", "Ring of dueling(1)"));
+    private static final Set<String> UnchargedGlory = new HashSet<>(Arrays.asList("Amulet of glory"));
 
     private static final WorldPoint EdgeTpReturn = new WorldPoint(3087, 3496, 0);
     private static final WorldPoint FrontStatue = new WorldPoint(2457, 2849, 0);
@@ -466,7 +470,7 @@ public class DenseRunestoneOverlay extends Overlay
 
     private boolean swapBankItem(MenuEntry e) {
         String target = stripTargetAnchors(e);
-        return RCpouch.contains(target) || Skillcapes.contains(target) || JewleryCharged.contains(target);
+        return RCpouch.contains(target) || Skillcapes.contains(target) || AmuletOfGlory.contains(target) || RingOfDueling.contains(target);
     }
 
     private boolean swapWorldItem(MenuEntry e) {
@@ -476,29 +480,28 @@ public class DenseRunestoneOverlay extends Overlay
         } catch (Exception exception) {
             return false;
         }
-        return RCpouch.contains(target) || Capes.contains(target) || JewleryUncharged.contains(target);
+        return RCpouch.contains(target) || Capes.contains(target) || UnchargedGlory.contains(target) || target.equals("Mage of Zamorak");
     }
 
     private boolean swapEquipItems(MenuEntry e) {
         String target = stripTargetAnchors(e);
-        return JewleryCharged.contains(target);
+        return AmuletOfGlory.contains(target) || RingOfDueling.contains(target);
     }
 
     private boolean isBankOpen() {
-        return client.getWidget(WidgetInfo.BANK_CONTAINER) == null;
+        return client.getWidget(WidgetInfo.BANK_CONTAINER) != null;
     }
 
     void swapMenus() {
+        MenuEntry entry = client.getMenuEntries()[client.getMenuEntries().length - 1];
         if (isBankOpen()) {
-            if(swapWorldItem(client.getMenuEntries()[client.getMenuEntries().length - 1])) {
-                inventorySwap();
-            } else if(swapEquipItems(client.getMenuEntries()[client.getMenuEntries().length - 1])) {
-                equipSwap();
-            }
-        } else {
-            if(swapBankItem(client.getMenuEntries()[client.getMenuEntries().length - 1])) {
+            if(swapBankItem(entry)) {
                 bankModeSwap();
             }
+        } else if(swapWorldItem(entry)) {
+            inventorySwap();
+        } else if(swapEquipItems(entry)) {
+            equipSwap();
         }
     }
 
@@ -511,11 +514,13 @@ public class DenseRunestoneOverlay extends Overlay
         MenuEntry[] menuEntries = client.getMenuEntries();
         for (int i = menuEntries.length - 1; i >= 0; --i) {
             MenuEntry entry = menuEntries[i];
+            String target = stripTargetAnchors(entry);
 
             if((swapBankItem(entry) && entry.getType() == MenuAction.CC_OP_LOW_PRIORITY && entry.getIdentifier() == 9 && menuEntries.length == 10) &&
-                (RCpouch.contains(stripTargetAnchors(entry)) ||
-                Skillcapes.contains(stripTargetAnchors(entry)) ||
-                (JewleryCharged.contains(stripTargetAnchors(entry)) && isUnchargedGloryEquipped()))) {
+                (RCpouch.contains(target) ||
+                Skillcapes.contains(target) ||
+                (AmuletOfGlory.contains(target) && isUnchargedGloryEquipped()) ||
+                (RingOfDueling.contains(target) && !isRingOfDuelingEquipped()))) {
                     entry.setType(MenuAction.CC_OP);
 
                     menuEntries[i] = menuEntries[menuEntries.length - 1];
@@ -536,7 +541,8 @@ public class DenseRunestoneOverlay extends Overlay
             if (
                 (RCpouch.contains(target) && targetType == MenuAction.ITEM_SECOND_OPTION && menuEntries.length == 7) ||
                 (Capes.contains(target) && targetType == MenuAction.ITEM_THIRD_OPTION && menuEntries.length == 6) ||
-                (JewleryUncharged.contains(target) && targetType == MenuAction.ITEM_USE && menuEntries.length == 6)
+                (UnchargedGlory.contains(target) && targetType == MenuAction.ITEM_USE && menuEntries.length == 6) ||
+                (target.equals("Mage of Zamorak") && entry.getOption().equals("Teleport") &&menuEntries.length == 6)
             ){
                 menuEntries[i] = menuEntries[menuEntries.length - 1];
                 menuEntries[menuEntries.length - 1] = entry;
@@ -552,8 +558,10 @@ public class DenseRunestoneOverlay extends Overlay
 
         for (int i = menuEntries.length - 1; i >= 0; --i) {
             MenuEntry entry = menuEntries[i];
+            String target = stripTargetAnchors(entry);
 
-            if(JewleryCharged.contains(stripTargetAnchors(entry)) && entry.getIdentifier() == 2 && menuEntries.length == 7) {
+            if((AmuletOfGlory.contains(target) && entry.getIdentifier() == 2 && menuEntries.length == 7) ||
+               (RingOfDueling.contains(target) && entry.getIdentifier() == 4 && menuEntries.length == 6) ) {
                 menuEntries[i] = menuEntries[menuEntries.length - 1];
                 menuEntries[menuEntries.length - 1] = entry;
 
@@ -565,6 +573,18 @@ public class DenseRunestoneOverlay extends Overlay
 
     private boolean isUnchargedGloryEquipped() {
         return client.getItemContainer(InventoryID.EQUIPMENT).contains(ItemID.AMULET_OF_GLORY);
+    }
+
+    private boolean isRingOfDuelingEquipped() {
+        List<Item> equipItems = new ArrayList<>(Arrays.asList(client.getItemContainer(InventoryID.EQUIPMENT).getItems()));
+        Set<Integer> rod = new HashSet<>(Arrays.asList(2552, 2554, 2556, 2558, 2560, 2562, 2564, 2566));
+
+        for(Item i : equipItems) {
+            if(rod.contains(i.getId()))
+                return true;
+        }
+
+        return false;
     }
 
     private boolean inventoryContains(int id) {
