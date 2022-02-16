@@ -61,6 +61,19 @@ public class RunecraftPlusPlugin extends Plugin
     private static final int WRATH_ALTAR_ENTRANCE = ObjectID.MYSTERIOUS_RUINS_34824;
     private static final int WRATH_ALTAR = ObjectID.ALTAR_34772;
 
+    public static final int ABYSS_OBJECT_26187 = 26187;
+    public static final int ABYSS_OBJECT_26188 = 26188;
+    public static final int ABYSS_OBJECT_26189 = 26189;
+    public static final int ABYSS_OBJECT_26190 = 26190;
+    public static final int ABYSS_OBJECT_26191 = 26191;
+    public static final int ABYSS_OBJECT_26192 = 26192;
+    public static final int ABYSS_OBJECT_26208 = 26208;
+    public static final int ABYSS_OBJECT_26250 = 26250;
+    public static final int ABYSS_OBJECT_26251 = 26251;
+    public static final int ABYSS_OBJECT_26252 = 26252;
+    public static final int ABYSS_OBJECT_26253 = 26253;
+    public static final int ABYSS_OBJECT_26574 = 26574;
+
     @Inject
     private Client client;
 
@@ -115,6 +128,31 @@ public class RunecraftPlusPlugin extends Plugin
     @Getter(AccessLevel.PACKAGE)
     private boolean denseRunestoneNorthMineable;
 
+    @Getter(AccessLevel.PACKAGE)
+    private GameObject abyssObject26187;
+    @Getter(AccessLevel.PACKAGE)
+    private GameObject abyssObject26188;
+    @Getter(AccessLevel.PACKAGE)
+    private GameObject abyssObject26189;
+    @Getter(AccessLevel.PACKAGE)
+    private GameObject abyssObject26190;
+    @Getter(AccessLevel.PACKAGE)
+    private GameObject abyssObject26191;
+    @Getter(AccessLevel.PACKAGE)
+    private GameObject abyssObject26192;
+    @Getter(AccessLevel.PACKAGE)
+    private GameObject abyssObject26208;
+    @Getter(AccessLevel.PACKAGE)
+    private GameObject abyssObject26250;
+    @Getter(AccessLevel.PACKAGE)
+    private GameObject abyssObject26251;
+    @Getter(AccessLevel.PACKAGE)
+    private GameObject abyssObject26252;
+    @Getter(AccessLevel.PACKAGE)
+    private GameObject abyssObject26253;
+    @Getter(AccessLevel.PACKAGE)
+    private GameObject abyssObject26574;
+
     @Inject
     private OverlayManager overlayManager;
 
@@ -140,21 +178,7 @@ public class RunecraftPlusPlugin extends Plugin
     @Override
     protected void shutDown() throws Exception {
         overlayManager.remove(denseRunestoneOverlay);
-        denseRunestoneNorth = null;
-        denseRunestoneSouth = null;
-        bloodAltar = null;
-        darkAltar = null;
-        edgeBankBooth = null;
-        chaosRift = null;
-        cosmicRift = null;
-        deathRift = null;
-        natureRift = null;
-        lawRift = null;
-        statue = null;
-        caveEntrance = null;
-        fountainGlory = null;
-        wrathAltarEntrance = null;
-        wrathAltar = null;
+        setAllVarsNull();
     }
 
     @Subscribe
@@ -163,21 +187,7 @@ public class RunecraftPlusPlugin extends Plugin
         switch (gameState)
         {
             case LOADING:
-                denseRunestoneNorth = null;
-                denseRunestoneSouth = null;
-                bloodAltar = null;
-                darkAltar = null;
-                edgeBankBooth = null;
-                chaosRift = null;
-                cosmicRift = null;
-                deathRift = null;
-                natureRift = null;
-                lawRift = null;
-                statue = null;
-                caveEntrance = null;
-                fountainGlory = null;
-                wrathAltarEntrance = null;
-                wrathAltar = null;
+                setAllVarsNull();
                 break;
             case CONNECTION_LOST:
             case HOPPING:
@@ -208,9 +218,8 @@ public class RunecraftPlusPlugin extends Plugin
                 darkAltar = obj;
                 break;
             case EDGE_BANK_BOOTH:
-                if(obj.getWorldLocation().equals(new WorldPoint(3095, 3491, 0))){
+                if(obj.getWorldLocation().equals(new WorldPoint(3095, 3491, 0)))
                     edgeBankBooth = obj;
-                }
                 break;
             case STATUE:
                 statue = obj;
@@ -226,6 +235,42 @@ public class RunecraftPlusPlugin extends Plugin
                 break;
             case WRATH_ALTAR:
                 wrathAltar = obj;
+                break;
+            case ABYSS_OBJECT_26187:
+                abyssObject26187 = obj;
+                break;
+            case ABYSS_OBJECT_26188:
+                abyssObject26188 = obj;
+                break;
+            case ABYSS_OBJECT_26189:
+                abyssObject26189 = obj;
+                break;
+            case ABYSS_OBJECT_26190:
+                abyssObject26190 = obj;
+                break;
+            case ABYSS_OBJECT_26191:
+                abyssObject26191 = obj;
+                break;
+            case ABYSS_OBJECT_26192:
+                abyssObject26192 = obj;
+                break;
+            case ABYSS_OBJECT_26208:
+                abyssObject26208 = obj;
+                break;
+            case ABYSS_OBJECT_26250:
+                abyssObject26250 = obj;
+                break;
+            case ABYSS_OBJECT_26251:
+                abyssObject26251 = obj;
+                break;
+            case ABYSS_OBJECT_26252:
+                abyssObject26252 = obj;
+                break;
+            case ABYSS_OBJECT_26253:
+                abyssObject26253 = obj;
+                break;
+            case ABYSS_OBJECT_26574:
+                abyssObject26574 = obj;
                 break;
         }
     }
@@ -263,6 +308,42 @@ public class RunecraftPlusPlugin extends Plugin
                 break;
             case WRATH_ALTAR:
                 wrathAltar = null;
+                break;
+            case ABYSS_OBJECT_26187:
+                abyssObject26187 = null;
+                break;
+            case ABYSS_OBJECT_26188:
+                abyssObject26188 = null;
+                break;
+            case ABYSS_OBJECT_26189:
+                abyssObject26189 = null;
+                break;
+            case ABYSS_OBJECT_26190:
+                abyssObject26190 = null;
+                break;
+            case ABYSS_OBJECT_26191:
+                abyssObject26191 = null;
+                break;
+            case ABYSS_OBJECT_26192:
+                abyssObject26192 = null;
+                break;
+            case ABYSS_OBJECT_26208:
+                abyssObject26208 = null;
+                break;
+            case ABYSS_OBJECT_26250:
+                abyssObject26250 = null;
+                break;
+            case ABYSS_OBJECT_26251:
+                abyssObject26251 = null;
+                break;
+            case ABYSS_OBJECT_26252:
+                abyssObject26252 = null;
+                break;
+            case ABYSS_OBJECT_26253:
+                abyssObject26253 = null;
+                break;
+            case ABYSS_OBJECT_26574:
+                abyssObject26574 = null;
                 break;
         }
     }
@@ -331,5 +412,35 @@ public class RunecraftPlusPlugin extends Plugin
         if(config.showAbyssClickBox() != AbyssRifts.NONE) {
             denseRunestoneOverlay.swapMenus();
         }
+    }
+
+    public void setAllVarsNull() {
+        denseRunestoneNorth = null;
+        denseRunestoneSouth = null;
+        bloodAltar = null;
+        darkAltar = null;
+        edgeBankBooth = null;
+        chaosRift = null;
+        cosmicRift = null;
+        deathRift = null;
+        natureRift = null;
+        lawRift = null;
+        statue = null;
+        caveEntrance = null;
+        fountainGlory = null;
+        wrathAltarEntrance = null;
+        wrathAltar = null;
+        abyssObject26187 = null;
+        abyssObject26188 = null;
+        abyssObject26189 = null;
+        abyssObject26190 = null;
+        abyssObject26191 = null;
+        abyssObject26192 = null;
+        abyssObject26208 = null;
+        abyssObject26250 = null;
+        abyssObject26251 = null;
+        abyssObject26252 = null;
+        abyssObject26253 = null;
+        abyssObject26574 = null;
     }
 }

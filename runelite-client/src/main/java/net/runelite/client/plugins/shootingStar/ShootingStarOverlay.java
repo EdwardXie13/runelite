@@ -10,7 +10,6 @@ import net.runelite.client.ui.overlay.OverlayUtil;
 
 import javax.inject.Inject;
 import java.awt.*;
-import java.util.Set;
 
 public class ShootingStarOverlay extends Overlay {
     private static final Color BORDER_COLOR = Color.GREEN;
@@ -18,16 +17,14 @@ public class ShootingStarOverlay extends Overlay {
     private static final Color BORDER_HOVER_COLOR = BORDER_COLOR.darker();
 
     private final Client client;
+    private final ShootingStarPlugin plugin;
 
     GameObject crashedStar;
-    Set<Integer> crashedStarSet;
 
     @Inject
     private ShootingStarOverlay(Client client, ShootingStarPlugin plugin) {
         this.client = client;
-
-        this.crashedStar = plugin.getCrashedStar();
-        this.crashedStarSet = plugin.getCrashedStarSet();
+        this.plugin = plugin;
 
         setLayer(OverlayLayer.ABOVE_SCENE);
         setPosition(OverlayPosition.DYNAMIC);
@@ -35,6 +32,8 @@ public class ShootingStarOverlay extends Overlay {
 
     @Override
     public Dimension render(Graphics2D graphics) {
+        crashedStar = plugin.getCrashedStar();
+
         if(crashedStar != null) {
             renderObject(graphics, crashedStar, BORDER_COLOR, FILL_COLOR, BORDER_HOVER_COLOR);
             OverlayUtil.renderTextLocation(graphics, crashedStar.getCanvasLocation(), idStar(crashedStar), Color.YELLOW);
@@ -50,6 +49,6 @@ public class ShootingStarOverlay extends Overlay {
     }
 
     private String idStar(GameObject o) {
-        return "level " + (41240 - o.getId()) + "0 needed";
+        return "level " + ((41240 - o.getId()) - 10) + "0 needed";
     }
 }

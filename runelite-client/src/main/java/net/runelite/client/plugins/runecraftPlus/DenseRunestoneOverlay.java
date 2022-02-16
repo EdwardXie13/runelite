@@ -155,6 +155,8 @@ public class DenseRunestoneOverlay extends Overlay
     private static final WorldPoint WrathAltarEntrance = new WorldPoint(2445, 2818, 0);
     private static final WorldPoint WrathAltar = new WorldPoint(2335, 4832, 0);
 
+    private static Set<GameObject> abyssObjects = new HashSet<>();
+
     private final Client client;
     private final RunecraftPlusPlugin plugin;
     private final RunecraftPlusConfig config;
@@ -182,6 +184,8 @@ public class DenseRunestoneOverlay extends Overlay
 
         if(config.showZeahClickbox() && isInChiselRegion()) {
             clickBoxRender(graphics);
+        } else if(config.showDenseRunestoneClickbox()) { //Normal render
+            closerRockRender(graphics, CLICKBOX_FILL_COLOR, CLICKBOX_BORDER_COLOR, CLICKBOX_BORDER_HOVER_COLOR);
         }
 
         if(config.showAbyssClickBox() != AbyssRifts.NONE) {
@@ -194,10 +198,6 @@ public class DenseRunestoneOverlay extends Overlay
                 renderWrath(graphics);
             else
                 abyssClickBoxes(graphics);
-        }
-
-        if(config.showDenseRunestoneClickbox()) { //Normal render
-             closerRockRender(graphics, CLICKBOX_FILL_COLOR, CLICKBOX_BORDER_COLOR, CLICKBOX_BORDER_HOVER_COLOR);
         }
 
         return null;
@@ -221,6 +221,20 @@ public class DenseRunestoneOverlay extends Overlay
         fountainGlory = plugin.getFountainGlory();
         wrathAltarEntrance = plugin.getWrathAltarEntrance();
         wrathAltar = plugin.getWrathAltar();
+
+        abyssObjects.add(plugin.getAbyssObject26187());
+        abyssObjects.add(plugin.getAbyssObject26187());
+        abyssObjects.add(plugin.getAbyssObject26188());
+        abyssObjects.add(plugin.getAbyssObject26189());
+        abyssObjects.add(plugin.getAbyssObject26190());
+        abyssObjects.add(plugin.getAbyssObject26191());
+        abyssObjects.add(plugin.getAbyssObject26192());
+        abyssObjects.add(plugin.getAbyssObject26208());
+        abyssObjects.add(plugin.getAbyssObject26250());
+        abyssObjects.add(plugin.getAbyssObject26251());
+        abyssObjects.add(plugin.getAbyssObject26252());
+        abyssObjects.add(plugin.getAbyssObject26253());
+        abyssObjects.add(plugin.getAbyssObject26574());
     }
 
     private void clickBoxRender(Graphics2D graphics) {
@@ -461,13 +475,6 @@ public class DenseRunestoneOverlay extends Overlay
                location[1] <= 3880;
     }
 
-//    private boolean checkEnergy(int required) {
-//        if(config.checkEnergy()) {
-//            return client.getEnergy() >= required;
-//        }
-//        return true;
-//    }
-
     private boolean swapBankItem(MenuEntry e) {
         String target = stripTargetAnchors(e);
         return RCpouch.contains(target) || Skillcapes.contains(target) || AmuletOfGlory.contains(target) || RingOfDueling.contains(target);
@@ -624,31 +631,4 @@ public class DenseRunestoneOverlay extends Overlay
             renderObject(graphics, wrathAltar, Pink_Color, Pink_Color, Pink_Color);
         }
     }
-
-//    private void checkDestination() {
-//
-//
-//        Rectangle box = Perspective.getCanvasTilePoly(
-//                client,
-//                client.getLocalPlayer().getLocalLocation()
-//        ).getBounds();
-//        int[] corners = {0,0,0,0};
-////        if (worldDestination.getX() == 1718 && worldDestination.getY() == 3882) {
-//            //right click current tile
-//
-//            corners[0] = box.x;
-//            corners[1] = box.y;
-//            corners[2] = box.x + box.width;
-//            corners[3] = box.y + box.height;
-//
-//            System.out.println("box->" + corners[0] + ":" +
-//                    corners[1] + ":" + corners[2] + ":" + corners[3]);
-//
-//            Random r = new Random();
-//            int x = r.nextInt(corners[2]-corners[0]) + corners[0];
-//            int y = r.nextInt(corners[3]-corners[1]) + corners[1];
-//
-//            System.out.println("coords->" + x + ":" + y);
-////        }
-//    }
 }

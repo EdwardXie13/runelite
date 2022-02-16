@@ -1,21 +1,15 @@
 package net.runelite.client.plugins.shootingStar;
 
-import com.google.inject.Provides;
 import lombok.AccessLevel;
 import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.GameObject;
-import net.runelite.api.GameState;
 import net.runelite.api.ObjectID;
-import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameObjectDespawned;
 import net.runelite.api.events.GameObjectSpawned;
-import net.runelite.client.Notifier;
-import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.plugins.runecraftPlus.RunecraftPlusConfig;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
@@ -30,13 +24,14 @@ import java.util.Set;
 )
 public class ShootingStarPlugin extends Plugin {
 
+
+
     @Inject
     private Client client;
 
     @Getter(AccessLevel.PACKAGE)
     private GameObject crashedStar;
 
-    @Getter(AccessLevel.PACKAGE)
     private final Set<Integer> crashedStarSet = new HashSet<>(Arrays.asList(
             ObjectID.CRASHED_STAR_41229, //10
             ObjectID.CRASHED_STAR_41228, //20
@@ -52,9 +47,6 @@ public class ShootingStarPlugin extends Plugin {
 
     @Inject
     private ShootingStarOverlay shootingStarOverlay;
-
-    @Inject
-    private Notifier notifier;
 
     @Override
     protected void startUp() throws Exception {
@@ -80,6 +72,6 @@ public class ShootingStarPlugin extends Plugin {
         int id = event.getGameObject().getId();
 
         if(crashedStarSet.contains(id))
-            crashedStar= null;
+            crashedStar = null;
     }
 }
