@@ -192,7 +192,6 @@ public class StealingArtefactsPlugin extends Plugin {
             }
             if (event.getNpc().getId() >= Constants.PATROL_ID_MIN && event.getNpc().getId() <= Constants.PATROL_ID_MAX) {
                 markedNPCs.add(event.getNpc());
-                log.debug("NPC Spawned: {} Index: {}", event.getNpc().getName(), event.getNpc().getId());
             }
         }
     }
