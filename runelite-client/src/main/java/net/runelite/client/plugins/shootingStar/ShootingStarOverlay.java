@@ -9,7 +9,10 @@ import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.OverlayUtil;
 
 import javax.inject.Inject;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Shape;
 
 public class ShootingStarOverlay extends Overlay {
     private static final Color BORDER_COLOR = Color.GREEN;
