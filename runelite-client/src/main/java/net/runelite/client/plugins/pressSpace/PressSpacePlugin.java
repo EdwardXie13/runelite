@@ -13,7 +13,6 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
-import java.awt.Robot;
 import java.awt.event.KeyEvent;
 
 @PluginDescriptor(
@@ -29,21 +28,10 @@ public class PressSpacePlugin extends Plugin {
     private PressSpaceConfig config;
 
     private int recipe;
-    public static Robot robot;
 
     @Provides
     PressSpaceConfig provideConfig(ConfigManager configManager) {
         return configManager.getConfig(PressSpaceConfig.class);
-    }
-
-    @Override
-    protected void startUp() throws Exception {
-        robot = new Robot();
-    }
-
-    @Override
-    protected void shutDown() throws Exception {
-        robot = null;
     }
 
     @Subscribe
@@ -72,16 +60,16 @@ public class PressSpacePlugin extends Plugin {
     private void closeBank() {
         recipe = getRecipe();
         if (isBankOpen() && recipe != 0)
-            robot.keyPress(KeyEvent.VK_ESCAPE);
+            pressKey(KeyEvent.VK_ESCAPE);
     }
 
     private void craftBox() {
         Widget craftBox = client.getWidget(17694724);
         if (craftBox != null && craftBox.getText().equals("Choose a quantity, then click an item to begin.")) {
             if (recipe == Recipe.BlowGlass.getId() && !getWidget()) {
-                robot.keyPress(KeyEvent.VK_6);
+                pressKey(KeyEvent.VK_6);
             } else {
-                robot.keyPress(KeyEvent.VK_SPACE);
+                pressKey(KeyEvent.VK_SPACE);
             }
         }
     }
@@ -94,4 +82,10 @@ public class PressSpacePlugin extends Plugin {
         return client.getWidget(17694733).getText().equals("Space");
     }
 
+    private void pressKey(int key) {
+        KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key);
+        this.client.getCanvas().dispatchEvent(keyPress);
+        KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key);
+        this.client.getCanvas().dispatchEvent(keyRelease);
+    }
 }

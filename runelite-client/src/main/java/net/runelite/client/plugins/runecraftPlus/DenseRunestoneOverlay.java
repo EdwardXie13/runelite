@@ -53,7 +53,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
-import java.awt.Robot;
 import java.awt.Shape;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
@@ -181,8 +180,6 @@ public class DenseRunestoneOverlay extends Overlay
     private final RunecraftPlusPlugin plugin;
     private final RunecraftPlusConfig config;
 
-    public static Robot robot;
-
     @Inject
     private DenseRunestoneOverlay(Client client, RunecraftPlusPlugin plugin, RunecraftPlusConfig config) throws AWTException {
         this.client = client;
@@ -191,8 +188,6 @@ public class DenseRunestoneOverlay extends Overlay
 
         setLayer(OverlayLayer.ABOVE_SCENE);
         setPosition(OverlayPosition.DYNAMIC);
-
-        robot = new Robot();
     }
 
     @Override
@@ -435,7 +430,7 @@ public class DenseRunestoneOverlay extends Overlay
         if(config.disableEmoteMenu() && isInChiselRegion()) {
             Widget emoteMenu = client.getWidget(WidgetInfo.EMOTE_CONTAINER);
             if(!emoteMenu.isHidden()) {
-                robot.keyPress(KeyEvent.VK_ESCAPE);
+                pressKey(KeyEvent.VK_ESCAPE);
             }
         }
     }
@@ -444,7 +439,7 @@ public class DenseRunestoneOverlay extends Overlay
         if(config.disableMusicMenu() && isInChiselRegion()) {
             Widget musicMenu = client.getWidget(WidgetInfo.MUSIC_WINDOW);
             if(!musicMenu.isHidden()) {
-                robot.keyPress(KeyEvent.VK_ESCAPE);
+                pressKey(KeyEvent.VK_ESCAPE);
             }
         }
     }
@@ -650,5 +645,12 @@ public class DenseRunestoneOverlay extends Overlay
             changeCameraYaw(cameraSouth);
             renderObject(graphics, wrathAltar, Pink_Color, Pink_Color, Pink_Color);
         }
+    }
+
+    private void pressKey(int key) {
+        KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key);
+        this.client.getCanvas().dispatchEvent(keyPress);
+        KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key);
+        this.client.getCanvas().dispatchEvent(keyRelease);
     }
 }

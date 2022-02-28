@@ -23,15 +23,6 @@ public class NeverLogoutPlugin extends Plugin {
     @Inject
     private Client client;
 
-    @Inject
-    private NeverLogoutConfig config;
-
-    @Provides
-    NeverLogoutConfig getConfig(ConfigManager configManager)
-    {
-        return configManager.getConfig(NeverLogoutConfig.class);
-    }
-
     private final Random random = new Random();
     private long randomDelay;
 
@@ -52,7 +43,7 @@ public class NeverLogoutPlugin extends Plugin {
     @Subscribe
     public void onGameTick(GameTick event)
     {
-        if (checkIdleLogout() && config.neverLogout())
+        if (checkIdleLogout())
         {
             randomDelay = randomDelay();
             Executors.newSingleThreadExecutor()
