@@ -13,6 +13,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
+import java.awt.Robot;
 import java.awt.event.KeyEvent;
 
 @PluginDescriptor(
@@ -66,8 +67,8 @@ public class PressSpacePlugin extends Plugin {
     private void craftBox() {
         Widget craftBox = client.getWidget(17694724);
         if (craftBox != null && craftBox.getText().equals("Choose a quantity, then click an item to begin.")) {
-            if (recipe == Recipe.BlowGlass.getId() && !getWidget()) {
-                pressKey(KeyEvent.VK_6);
+            if (recipe == Recipe.BlowGlass.getId() && getWidget()) {
+                pressOtherKey(KeyEvent.VK_6);
             } else {
                 pressKey(KeyEvent.VK_SPACE);
             }
@@ -79,7 +80,15 @@ public class PressSpacePlugin extends Plugin {
     }
 
     private boolean getWidget() {
-        return client.getWidget(17694733).getText().equals("Space");
+        return client.getWidget(17694733).getChild(5).getText().equals("6");
+    }
+
+    private void pressOtherKey(int key) {
+        try {
+            Robot robot = new Robot();
+            robot.keyPress(key);
+        } catch (Exception ignored){
+        }
     }
 
     private void pressKey(int key) {
