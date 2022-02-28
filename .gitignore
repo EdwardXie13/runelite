@@ -10,5 +10,3 @@ project.properties
 .classpath
 .vscode
 .factorypath
-runelite-client/src/main/java/net/runelite/client/plugins/zulrah
-runelite-client/src/main/java/net/runelite/client/plugins/kourendlibrary

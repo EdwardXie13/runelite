@@ -23,9 +23,6 @@ import java.util.Set;
         tags = {"crashed star", "shooting star", "mining"}
 )
 public class ShootingStarPlugin extends Plugin {
-
-
-
     @Inject
     private Client client;
 
