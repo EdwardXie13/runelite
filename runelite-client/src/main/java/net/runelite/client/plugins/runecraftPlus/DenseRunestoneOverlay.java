@@ -53,6 +53,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
+import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
@@ -176,12 +177,15 @@ public class DenseRunestoneOverlay extends Overlay
 
     private static Set<GameObject> abyssObjects = new HashSet<>();
 
+    private static final int BankContainerWidgetID = 786445;
+    private static final int BankInventoryWidgetID = 983043;
+
     private final Client client;
     private final RunecraftPlusPlugin plugin;
     private final RunecraftPlusConfig config;
 
     @Inject
-    private DenseRunestoneOverlay(Client client, RunecraftPlusPlugin plugin, RunecraftPlusConfig config) throws AWTException {
+    private DenseRunestoneOverlay(Client client, RunecraftPlusPlugin plugin, RunecraftPlusConfig config) {
         this.client = client;
         this.plugin = plugin;
         this.config = config;
@@ -208,6 +212,14 @@ public class DenseRunestoneOverlay extends Overlay
                 changeCameraYaw(cameraReset);
                 renderObject(graphics, edgeBankBooth, Pink_Color, Pink_Color, Pink_Color);
             }
+//            else if (isAtTile(3094, 3491) && isBankOpen()) {
+//                if(isUnchargedGloryEquipped() && !inventoryContains(ItemID.AMULET_OF_GLORY4))
+//                    //outline glory in bank
+//                    renderItem(graphics, BankContainerWidgetID, ItemID.AMULET_OF_GLORY4);
+//                else
+//                    //outline glory in inventory
+//                    System.out.println("outline glory in inv");
+//            }
 
             if(config.showAbyssClickBox() == AbyssRifts.WRATH)
                 renderWrath(graphics);
@@ -320,14 +332,11 @@ public class DenseRunestoneOverlay extends Overlay
     }
 
     private void abyssClickBoxes(Graphics2D graphics) {
-        if (isAtTile(3094, 3491)) {
-            for(WorldPoint wp : wildernessWall) {
-                renderTileArea(graphics, LocalPoint.fromWorld(client, wp), 1);
-            }
+        if (isAtTile(3094, 3491) && !isBankOpen()) {
+            renderWildernessWall(graphics);
         } else if(isInAbyss()) {
             renderRifts(graphics);
         }
-
     }
 
     private void changeCameraYaw(int yaw) {
@@ -412,6 +421,18 @@ public class DenseRunestoneOverlay extends Overlay
         Shape clickbox = decorativeObject.getClickbox();
         Point mousePosition = client.getMouseCanvasPosition();
         OverlayUtil.renderHoverableArea(graphics, clickbox, mousePosition, fill, border, borderHover);
+    }
+
+    private void renderItem(Graphics2D graphics, int widgetID, int itemID) {
+        List<Widget> container = new ArrayList<>(Arrays.asList(client.getWidget(widgetID).getChildren()));
+        for(Widget item : container) {
+            if(item.getItemId() == itemID) {
+//                Polygon poly = new Polygon.Rectangle(item.getBounds());
+                Rectangle rectangle = new Rectangle(item.getBounds());
+                graphics.setColor(Pink_Color);
+                graphics.fill(rectangle);
+            }
+        }
     }
 
     private void renderTileArea(Graphics2D graphics, final LocalPoint dest, int size) {
@@ -514,7 +535,7 @@ public class DenseRunestoneOverlay extends Overlay
         return client.getWidget(WidgetInfo.BANK_CONTAINER) != null;
     }
 
-    void swapMenus() {
+    public void swapMenus() {
         MenuEntry entry = client.getMenuEntries()[client.getMenuEntries().length - 1];
         if (isBankOpen()) {
             if(swapBankItem(entry)) {
@@ -644,6 +665,12 @@ public class DenseRunestoneOverlay extends Overlay
         } else if(isNearWorldTile(WrathAltar, 10)) {
             changeCameraYaw(cameraSouth);
             renderObject(graphics, wrathAltar, Pink_Color, Pink_Color, Pink_Color);
+        }
+    }
+
+    private void renderWildernessWall(Graphics2D graphics) {
+        for(WorldPoint wp : wildernessWall) {
+            renderTileArea(graphics, LocalPoint.fromWorld(client, wp), 1);
         }
     }
 
