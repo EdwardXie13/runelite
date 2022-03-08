@@ -43,7 +43,7 @@ class WintertodtIdleOverlay extends OverlayPanel
         if (plugin.getCurrentActivity() == WintertodtActivity.IDLE)
         {
             final Color color = graphics.getColor();
-            graphics.setColor(new Color(0, 255, 255, 70));
+            graphics.setColor(new Color(0, 255, 255, 50));
             graphics.fill(new Rectangle(client.getCanvas().getSize()));
             graphics.setColor(color);
         }
