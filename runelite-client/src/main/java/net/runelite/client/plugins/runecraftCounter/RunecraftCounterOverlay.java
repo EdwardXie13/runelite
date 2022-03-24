@@ -45,7 +45,8 @@ public class RunecraftCounterOverlay extends Overlay
                     .text("Runecraft Counter")
                     .color(Color.ORANGE)
                     .build());
-
+            panelComponent.getChildren().add(LineComponent.builder()
+                    .left("Blood: ").right(Integer.toString(session.getBloodRuneCrafted())).build());
             panelComponent.getChildren().add(LineComponent.builder()
                     .left("Chaos: ").right(Integer.toString(session.getChaosRuneCrafted())).build());
             panelComponent.getChildren().add(LineComponent.builder()
@@ -79,7 +80,8 @@ public class RunecraftCounterOverlay extends Overlay
                     i -> i.getId() == ItemID.SMALL_POUCH ||
                             i.getId() == ItemID.MEDIUM_POUCH ||
                             i.getId() == ItemID.LARGE_POUCH ||
-                            i.getId() == ItemID.GIANT_POUCH);
+                            i.getId() == ItemID.GIANT_POUCH ||
+                            i.getId() == ItemID.COLOSSAL_POUCH);
         } catch (NullPointerException e) {
             return false;
         }

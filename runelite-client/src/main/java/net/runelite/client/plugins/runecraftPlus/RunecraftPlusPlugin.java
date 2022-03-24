@@ -67,11 +67,13 @@ public class RunecraftPlusPlugin extends Plugin
     private static final int DEATH_RIFT = ObjectID.DEATH_RIFT;
     private static final int NATURE_RIFT = ObjectID.NATURE_RIFT;
     private static final int LAW_RIFT = ObjectID.LAW_RIFT;
+    private static final int BLOOD_RIFT = 43848; // ObjectID.BLOOD_RIFT;
     private static final int STATUE = ObjectID.MYTHIC_STATUE;
     private static final int CAVE_ENTRANCE = ObjectID.CAVE_31807;
     private static final int FountainGlory = ObjectID.FOUNTAIN_OF_UHLD;
     private static final int WRATH_ALTAR_ENTRANCE = ObjectID.MYSTERIOUS_RUINS_34824;
     private static final int WRATH_ALTAR = ObjectID.ALTAR_34772;
+
 
     public static final int ABYSS_OBJECT_26187 = 26187;
     public static final int ABYSS_OBJECT_26188 = 26188;
@@ -118,6 +120,9 @@ public class RunecraftPlusPlugin extends Plugin
 
     @Getter(AccessLevel.PACKAGE)
     private DecorativeObject lawRift;
+
+    @Getter(AccessLevel.PACKAGE)
+    private DecorativeObject bloodRift;
 
     @Getter(AccessLevel.PACKAGE)
     private GameObject statue;
@@ -381,6 +386,9 @@ public class RunecraftPlusPlugin extends Plugin
             case LAW_RIFT:
                 lawRift = obj;
                 break;
+            case BLOOD_RIFT:
+                bloodRift = obj;
+                break;
         }
     }
 
@@ -402,6 +410,9 @@ public class RunecraftPlusPlugin extends Plugin
                 break;
             case LAW_RIFT:
                 lawRift = null;
+                break;
+            case BLOOD_RIFT:
+                bloodRift = null;
                 break;
         }
     }
@@ -437,6 +448,7 @@ public class RunecraftPlusPlugin extends Plugin
         deathRift = null;
         natureRift = null;
         lawRift = null;
+        bloodRift = null;
         statue = null;
         caveEntrance = null;
         fountainGlory = null;

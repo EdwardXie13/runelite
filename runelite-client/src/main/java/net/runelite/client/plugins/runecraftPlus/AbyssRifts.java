@@ -12,8 +12,8 @@ public enum AbyssRifts {
     DEATH("DEATH", 3),
     NATURE("NATURE", 4),
     LAW("LAW", 5),
-    WRATH("WRATH", 6);
-
+    WRATH("WRATH", 6),
+    Blood("BLOOD", 7);
     private final String name;
     private final int id;
 }

@@ -14,6 +14,7 @@ public class RunecraftCounterSession
 
     public RunecraftCounterSession()
     {
+        bloodRuneCrafted = 0;
         deathRuneCrafted = 0;
         natureRuneCrafted = 0;
         chaosRuneCrafted = 0;
@@ -22,6 +23,9 @@ public class RunecraftCounterSession
         astralRuneCrafted = 0;
         wrathRuneCrafted = 0;
     }
+
+    @Getter(AccessLevel.PACKAGE)
+    private int bloodRuneCrafted;
 
     @Getter(AccessLevel.PACKAGE)
     private int deathRuneCrafted;
@@ -48,6 +52,9 @@ public class RunecraftCounterSession
     {
         switch(runeId)
         {
+            case ItemID.BLOOD_RUNE:
+                bloodRuneCrafted += quantity;
+                break;
             case ItemID.DEATH_RUNE:
                 deathRuneCrafted += quantity;
                 break;
@@ -82,6 +89,7 @@ public class RunecraftCounterSession
     }
 
     void reset() {
+        bloodRuneCrafted = 0;
         deathRuneCrafted = 0;
         natureRuneCrafted = 0;
         chaosRuneCrafted = 0;

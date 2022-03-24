@@ -85,6 +85,7 @@ public class DenseRunestoneOverlay extends Overlay
     DecorativeObject deathRift;
     DecorativeObject natureRift;
     DecorativeObject lawRift;
+    DecorativeObject bloodRift;
     GameObject statue;
     GameObject caveEntrance;
     GameObject fountainGlory;
@@ -161,7 +162,7 @@ public class DenseRunestoneOverlay extends Overlay
     private static final int cameraReset = 0;
     private static final int cameraSouth = 1024;
 
-    private static final Set<String> RCpouch = new HashSet<>(Arrays.asList("Small pouch", "Medium pouch", "Large pouch", "Giant pouch"));
+    private static final Set<String> RCpouch = new HashSet<>(Arrays.asList("Small pouch", "Medium pouch", "Large pouch", "Giant pouch", "Colossal pouch"));
     private static final Set<String> Skillcapes = new HashSet<>(Arrays.asList("Runecraft cape", "Runecraft cape(t)", "Agility cape", "Agility cape(t)"));
     private static final Set<String> Capes = new HashSet<>(Arrays.asList("Mythical cape"));
     private static final Set<String> AmuletOfGlory = new HashSet<>(Arrays.asList("Amulet of glory(4)", "Amulet of glory(3)", "Amulet of glory(2)", "Amulet of glory(1)"));
@@ -179,6 +180,21 @@ public class DenseRunestoneOverlay extends Overlay
 
     private static final int BankContainerWidgetID = 786445;
     private static final int BankInventoryWidgetID = 983043;
+
+    private static final Set<Integer> RCAltarRegionIDs = new HashSet<>(Arrays.asList(
+            11339, //air altar
+            10059, //body altar
+            12875, //blood altar
+            9035, //chaos altar
+            8523, //cosmic altar
+            8779, //death altar
+            10571, //earth altar
+            10315, //fire altar
+            9803, //law altar
+            11083, //mind altar
+            9547, //nature altar
+            9291 //wrath altar
+    ));
 
     private final Client client;
     private final RunecraftPlusPlugin plugin;
@@ -243,6 +259,7 @@ public class DenseRunestoneOverlay extends Overlay
         deathRift = plugin.getDeathRift();
         natureRift = plugin.getNatureRift();
         lawRift = plugin.getLawRift();
+        bloodRift = plugin.getBloodRift();
         statue = plugin.getStatue();
         caveEntrance = plugin.getCaveEntrance();
         fountainGlory = plugin.getFountainGlory();
@@ -582,7 +599,7 @@ public class DenseRunestoneOverlay extends Overlay
             String target = !entry.getTarget().equals("") ? entry.getTarget().split(">")[1] : "";
             MenuAction targetType = entry.getType();
             if (
-                (RCpouch.contains(target) && targetType == MenuAction.ITEM_SECOND_OPTION && menuEntries.length == 7) ||
+                (RCpouch.contains(target) && targetType == MenuAction.ITEM_SECOND_OPTION && menuEntries.length == 7 && isAtRCAltar()) ||
                 (Capes.contains(target) && targetType == MenuAction.ITEM_THIRD_OPTION && menuEntries.length == 6) ||
                 (UnchargedGlory.contains(target) && targetType == MenuAction.ITEM_USE && menuEntries.length == 6) ||
                 (target.equals("Mage of Zamorak") && entry.getOption().equals("Teleport") &&menuEntries.length == 6)
@@ -646,6 +663,8 @@ public class DenseRunestoneOverlay extends Overlay
             renderObject(graphics, natureRift, Color.GREEN, Color.GREEN, Color.GREEN);
         } else if(riftID == 5) {
             renderObject(graphics, lawRift, Color.GREEN, Color.GREEN, Color.GREEN);
+        } else if(riftID == 7) {
+            renderObject(graphics, bloodRift, Color.GREEN, Color.GREEN, Color.GREEN);
         }
     }
 
@@ -679,5 +698,10 @@ public class DenseRunestoneOverlay extends Overlay
         this.client.getCanvas().dispatchEvent(keyPress);
         KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key);
         this.client.getCanvas().dispatchEvent(keyRelease);
+    }
+
+    private boolean isAtRCAltar() {
+        int regionID = getRegionID();
+        return RCAltarRegionIDs.contains(regionID);
     }
 }

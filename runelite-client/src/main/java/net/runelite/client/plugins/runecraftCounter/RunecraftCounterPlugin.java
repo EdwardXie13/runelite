@@ -4,7 +4,9 @@ import com.google.common.collect.ImmutableSet;
 import lombok.AccessLevel;
 import lombok.Getter;
 import net.runelite.api.Client;
+import net.runelite.api.InventoryID;
 import net.runelite.api.Item;
+import net.runelite.api.ItemContainer;
 import net.runelite.api.ItemID;
 import net.runelite.api.Skill;
 import net.runelite.api.events.ItemContainerChanged;
@@ -17,6 +19,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
 import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -33,6 +36,21 @@ public class RunecraftCounterPlugin extends Plugin
             ItemID.SOUL_RUNE, ItemID.ASTRAL_RUNE, ItemID.WRATH_RUNE);
     private static String RUNECRAFTING = "Runecraft";
     private boolean isRuneCrafting = false;
+
+    private static final Set<Integer> RCAltarRegionIDs = new HashSet<>(Arrays.asList(
+            11339, //air altar
+            10059, //body altar
+            12875, //blood altar
+            9035, //chaos altar
+            8523, //cosmic altar
+            8779, //death altar
+            10571, //earth altar
+            10315, //fire altar
+            9803, //law altar
+            11083, //mind altar
+            9547, //nature altar
+            9291 //wrath altar
+    ));
 
     @Inject
     private RunecraftCounterSession session;
@@ -64,6 +82,8 @@ public class RunecraftCounterPlugin extends Plugin
     @Subscribe
     public void onItemContainerChanged(ItemContainerChanged event)
     {
+        if(event.getItemContainer().getId() != InventoryID.INVENTORY.getId())
+            return;
         Item[] items = event.getItemContainer().getItems();
 
         // Build set of current inventory
@@ -82,7 +102,7 @@ public class RunecraftCounterPlugin extends Plugin
         }
 
         // Update session with difference between previous and current inventory
-        if(isRuneCrafting)
+        if(isRuneCrafting && isAtRCAltar())
         {
             for(Map.Entry<Integer, Integer> entry : currentInventory.entrySet())
             {
@@ -111,5 +131,13 @@ public class RunecraftCounterPlugin extends Plugin
         {
             isRuneCrafting = true;
         }
+    }
+    private int getRegionID() {
+        return this.client.getLocalPlayer().getWorldLocation().getRegionID();
+    }
+
+    private boolean isAtRCAltar() {
+        int regionID = getRegionID();
+        return RCAltarRegionIDs.contains(regionID);
     }
 }
