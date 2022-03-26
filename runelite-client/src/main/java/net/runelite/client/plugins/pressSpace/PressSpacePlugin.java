@@ -67,6 +67,7 @@ public class PressSpacePlugin extends Plugin {
     private void craftBox() {
         Widget craftBox = client.getWidget(17694724);
         if (craftBox != null && craftBox.getText().equals("Choose a quantity, then click an item to begin.")) {
+            if(recipe == 0) return;
             if (recipe == Recipe.BlowGlass.getId() && getWidget()) {
                 pressOtherKey(KeyEvent.VK_6);
             } else {
