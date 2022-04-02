@@ -10,4 +10,4 @@ project.properties
 .classpath
 .vscode
 .factorypath
-notes.txt
+*.txt
