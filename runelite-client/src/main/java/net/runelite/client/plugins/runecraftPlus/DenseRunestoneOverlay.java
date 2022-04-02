@@ -193,7 +193,8 @@ public class DenseRunestoneOverlay extends Overlay
             9803, //law altar
             11083, //mind altar
             9547, //nature altar
-            9291 //wrath altar
+            9291, //wrath altar
+            10827 //water altar
     ));
 
     private final Client client;
@@ -353,6 +354,8 @@ public class DenseRunestoneOverlay extends Overlay
             renderWildernessWall(graphics);
         } else if(isInAbyss()) {
             renderRifts(graphics);
+        } else if(isAtRCAltar()) {
+            //soom in
         }
     }
 
