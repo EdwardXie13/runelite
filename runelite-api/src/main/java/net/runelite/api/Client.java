@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.runelite.api.annotations.Varbit;
 import net.runelite.api.annotations.VisibleForDevtools;
 import net.runelite.api.annotations.VisibleForExternalPlugins;
 import net.runelite.api.clan.ClanChannel;
@@ -773,12 +774,22 @@ public interface Client extends OAuthApi, GameEngine
 	int getVar(VarPlayer varPlayer);
 
 	/**
-	 * Gets a value corresponding to the passed variable.
+	 * Gets a value corresponding to the passed varbit.
 	 *
-	 * @param varbit the variable
+	 * @param varbit the varbit id
+	 * @return the value
+	 * @see Client#getVarbitValue(int)
+	 */
+	@Deprecated
+	int getVar(@Varbit int varbit);
+
+	/**
+	 * Gets a value corresponding to the passed varbit.
+	 *
+	 * @param varbit the varbit id
 	 * @return the value
 	 */
-	int getVar(Varbits varbit);
+	int getVarbitValue(@Varbit int varbit);
 
 	/**
 	 * Gets an int value corresponding to the passed variable.
@@ -804,15 +815,6 @@ public interface Client extends OAuthApi, GameEngine
 	 */
 	@VisibleForExternalPlugins
 	int getVarpValue(int varpId);
-
-	/**
-	 * Gets the value of a given Varbit.
-	 *
-	 * @param varbitId the varbit id
-	 * @return the value
-	 */
-	@VisibleForExternalPlugins
-	int getVarbitValue(int varbitId);
 
 	/**
 	 * Gets the value of a given VarClientInt
@@ -843,12 +845,12 @@ public interface Client extends OAuthApi, GameEngine
 	void setVar(VarClientInt varClientStr, int value);
 
 	/**
-	 * Sets the value of a given variable.
+	 * Sets the value of a varbit
 	 *
-	 * @param varbit the variable
+	 * @param varbit the varbit id
 	 * @param value the new value
 	 */
-	void setVarbit(Varbits varbit, int value);
+	void setVarbit(@Varbit int varbit, int value);
 
 	/**
 	 * Gets the varbit composition for a given varbit id
@@ -866,10 +868,10 @@ public interface Client extends OAuthApi, GameEngine
 	 * @param varps passed varbits
 	 * @param varbitId the variable ID
 	 * @return the value
-	 * @see Varbits#id
+	 * @see Varbits
 	 */
 	@VisibleForDevtools
-	int getVarbitValue(int[] varps, int varbitId);
+	int getVarbitValue(int[] varps, @Varbit int varbitId);
 
 	/**
 	 * Sets the value of a given variable.
@@ -877,10 +879,10 @@ public interface Client extends OAuthApi, GameEngine
 	 * @param varps passed varbits
 	 * @param varbit the variable
 	 * @param value the value
-	 * @see Varbits#id
+	 * @see Varbits
 	 */
 	@VisibleForDevtools
-	void setVarbitValue(int[] varps, int varbit, int value);
+	void setVarbitValue(int[] varps, @Varbit int varbit, int value);
 
 	/**
 	 * Mark the given varp as changed, causing var listeners to be

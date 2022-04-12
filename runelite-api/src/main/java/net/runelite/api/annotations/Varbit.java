@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2020, dekvall <https://github.com/dekvall>
- * Copyright (c) 2020, Jordan <nightfirecat@protonmail.com>
+ * Copyright (c) 2022, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,40 +22,17 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.herbiboars;
+package net.runelite.api.annotations;
 
-import com.google.common.collect.ImmutableSet;
-import java.util.Set;
-import lombok.Getter;
-import lombok.Value;
-import net.runelite.api.annotations.Varbit;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import net.runelite.api.Varbits;
+import org.intellij.lang.annotations.MagicConstant;
 
-/**
- * A representation of a trail of footsteps which appears when hunting for the Herbiboar.
- */
-@Value
-class TrailToSpot
+@MagicConstant(valuesFromClass = Varbits.class)
+@Documented
+@Retention(RetentionPolicy.SOURCE)
+public @interface Varbit
 {
-	/**
-	 * The Varbit associated with the trail. When inactive, this Varbit's value should be less than
-	 * {@link TrailToSpot#getValue()}. When this trail appears after searching a spot, this Varbit's value should be
-	 * equal to that of {@link TrailToSpot#getValue()}. Once the next object along the trail has been searched, this
-	 * Varbit's value will be greater than that of {@link TrailToSpot#getValue()}.
-	 */
-	@Getter(onMethod_ = {@Varbit})
-	private final int varbitId;
-	/**
-	 * The cutoff reference value to compare against the value of {@link TrailToSpot#getVarbitId()} ()} to determine its state
-	 * along the current trail.
-	 */
-	private final int value;
-	/**
-	 * The object ID of the footprints which appear when the trail is made visible.
-	 */
-	private final int footprint;
-
-	Set<Integer> getFootprintIds()
-	{
-		return ImmutableSet.of(footprint, footprint + 1);
-	}
 }
