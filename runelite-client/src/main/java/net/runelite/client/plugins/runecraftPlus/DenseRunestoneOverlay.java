@@ -48,7 +48,6 @@ import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.OverlayUtil;
 
 import javax.inject.Inject;
-import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -178,8 +177,8 @@ public class DenseRunestoneOverlay extends Overlay
 
     private static Set<GameObject> abyssObjects = new HashSet<>();
 
-    private static final int BankContainerWidgetID = 786445;
-    private static final int BankInventoryWidgetID = 983043;
+//    private static final int BankContainerWidgetID = 786445;
+//    private static final int BankInventoryWidgetID = 983043;
 
     private static final Set<Integer> RCAltarRegionIDs = new HashSet<>(Arrays.asList(
             11339, //air altar

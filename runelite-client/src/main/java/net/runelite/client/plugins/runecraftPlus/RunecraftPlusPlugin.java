@@ -425,8 +425,8 @@ public class RunecraftPlusPlugin extends Plugin
 
     private void updateDenseRunestoneState()
     {
-        denseRunestoneSouthMineable = client.getVar(Varbits.DENSE_RUNESTONE_SOUTH_DEPLETED) == 0;
-        denseRunestoneNorthMineable = client.getVar(Varbits.DENSE_RUNESTONE_NORTH_DEPLETED) == 0;
+        denseRunestoneSouthMineable = client.getVarbitValue(Varbits.DENSE_RUNESTONE_SOUTH_DEPLETED) == 0;
+        denseRunestoneNorthMineable = client.getVarbitValue(Varbits.DENSE_RUNESTONE_NORTH_DEPLETED) == 0;
     }
 
     @Subscribe

@@ -621,8 +621,8 @@ public final class Varbits
 	/**
 	 * The raw varbit ID.
 	 */
-	DENSE_RUNESTONE_NORTH_DEPLETED(4927),
-	DENSE_RUNESTONE_SOUTH_DEPLETED(4928),
+	public static final int DENSE_RUNESTONE_NORTH_DEPLETED = 4927;
+	public static final int DENSE_RUNESTONE_SOUTH_DEPLETED = 4928;
 
 	/**
 	 * Collection Log notification settings whenever a new item is added
