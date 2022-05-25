@@ -174,6 +174,7 @@ public final class WidgetID
 	public static final int GROUP_STORAGE_INVENTORY_GROUP_ID = 725;
 	public static final int GROUP_STORAGE_GROUP_ID = 724;
 	public static final int WILDERNESS_LOOT_CHEST = 742;
+	public static final int TRADE_WINDOW_GROUP_ID = 335;
 
 	static class WorldMap
 	{
@@ -451,6 +452,8 @@ public final class WidgetID
 		static final int MAGIC_ICON = 71;
 		static final int INTERFACE_CONTAINER = 72;
 		static final int INVENTORY_CONTAINER = 78;
+		static final int CHATBOX_PARENT = 94;
+		static final int INVENTORY_PARENT = 95;
 	}
 
 	static class ResizableViewportBottomLine
@@ -477,6 +480,10 @@ public final class WidgetID
 		static final int MAGIC_ICON = 64;
 		static final int INTERFACE_CONTAINER = 69;
 		static final int INVENTORY_CONTAINER = 75;
+		static final int CHATBOX_PARENT = 91;
+		static final int TABS1 = 92;
+		static final int TABS2 = 93;
+		static final int INVENTORY_PARENT = 94;
 	}
 
 	static class Chatbox
@@ -772,6 +779,7 @@ public final class WidgetID
 	static class LunarSpellBook
 	{
 		static final int LUNAR_HOME_TELEPORT = 101;
+		static final int FERTILE_SOIL = 126;
 	}
 
 	static class ArceuusSpellBook
@@ -935,5 +943,10 @@ public final class WidgetID
 		static final int LAYER = 0;
 		static final int HEADER = 1;
 		static final int MEMBERS = 6;
+	}
+
+	static class Trade
+	{
+		static final int HEADER = 31;
 	}
 }

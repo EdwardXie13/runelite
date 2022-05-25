@@ -48,6 +48,7 @@ import net.runelite.api.VarbitComposition;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.CommandExecuted;
 import net.runelite.api.events.MenuEntryAdded;
+import net.runelite.api.events.ScriptCallbackEvent;
 import net.runelite.api.events.StatChanged;
 import net.runelite.api.events.VarbitChanged;
 import net.runelite.api.kit.KitType;
@@ -471,7 +472,8 @@ public class DevToolsPlugin extends Plugin
 
 			if (action == MenuAction.EXAMINE_NPC)
 			{
-				NPC npc = client.getCachedNPCs()[identifier];
+				NPC npc = entry.getNpc();
+				assert npc != null;
 				info += npc.getId();
 			}
 			else
@@ -486,6 +488,15 @@ public class DevToolsPlugin extends Plugin
 			}
 
 			entry.setTarget(entry.getTarget() + " " + ColorUtil.prependColorTag("(" + info + ")", JagexColors.MENU_TARGET));
+		}
+	}
+
+	@Subscribe
+	public void onScriptCallbackEvent(ScriptCallbackEvent ev)
+	{
+		if ("devtoolsEnabled".equals(ev.getEventName()))
+		{
+			client.getIntStack()[client.getIntStackSize() - 1] = 1;
 		}
 	}
 }

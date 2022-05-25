@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Adam <Adam@sigterm.info>
+ * Copyright (c) 2022, emerald000
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,50 +22,28 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.examine;
+package net.runelite.client.plugins.itemstats.special;
 
-import java.util.Objects;
+import net.runelite.api.Client;
+import static net.runelite.api.Skill.HITPOINTS;
+import net.runelite.client.plugins.itemstats.StatBoost;
+import static net.runelite.client.plugins.itemstats.stats.Stats.RUN_ENERGY;
 
-class CacheKey
+public class NettleTeaRunEnergy extends StatBoost
 {
-	private final ExamineType type;
-	private final int id;
-
-	public CacheKey(ExamineType type, int id)
+	public NettleTeaRunEnergy()
 	{
-		this.type = type;
-		this.id = id;
+		super(RUN_ENERGY, false);
 	}
 
 	@Override
-	public int hashCode()
+	public int heals(Client client)
 	{
-		int hash = 3;
-		hash = 23 * hash + Objects.hashCode(this.type);
-		hash = 23 * hash + this.id;
-		return hash;
-	}
-
-	@Override
-	public boolean equals(Object obj)
-	{
-		if (this == obj)
+		// Only restores run energy if your hitpoints aren't full
+		if (client.getBoostedSkillLevel(HITPOINTS) < client.getRealSkillLevel(HITPOINTS))
 		{
-			return true;
+			return 5;
 		}
-		if (obj == null)
-		{
-			return false;
-		}
-		if (getClass() != obj.getClass())
-		{
-			return false;
-		}
-		final CacheKey other = (CacheKey) obj;
-		if (this.id != other.id)
-		{
-			return false;
-		}
-		return this.type == other.type;
+		return 0;
 	}
 }

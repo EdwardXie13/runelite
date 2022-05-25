@@ -27,6 +27,7 @@ package net.runelite.client.plugins.chatcommands;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -90,6 +91,7 @@ import net.runelite.client.hiscore.Skill;
 import net.runelite.client.input.KeyManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.util.AsyncBufferedImage;
 import net.runelite.client.util.ImageUtil;
 import net.runelite.client.util.QuantityFormatter;
 import net.runelite.client.util.Text;
@@ -106,8 +108,8 @@ import org.apache.commons.text.WordUtils;
 @Slf4j
 public class ChatCommandsPlugin extends Plugin
 {
-	private static final Pattern KILLCOUNT_PATTERN = Pattern.compile("Your (?:completion count for |subdued |completed )?(.+?) (?:(?:kill|harvest|lap|completion) )?(?:count )?is: <col=ff0000>(\\d+)</col>");
-	private static final String TEAM_SIZES = "(?<teamsize>\\d+(?:\\+|-\\d+)? players|Solo)";
+	private static final Pattern KILLCOUNT_PATTERN = Pattern.compile("Your (?<pre>completion count for |subdued |completed )?(?<boss>.+?) (?<post>(?:(?:kill|harvest|lap|completion) )?(?:count )?)is: <col=ff0000>(?<kc>\\d+)</col>");
+	private static final String TEAM_SIZES = "(?<teamsize>\\d+(?:\\+|-\\d+)? players?|Solo)";
 	private static final Pattern RAIDS_PB_PATTERN = Pattern.compile("<col=ef20ff>Congratulations - your raid is complete!</col><br>Team size: <col=ff0000>" + TEAM_SIZES + "</col> Duration:</col> <col=ff0000>(?<pb>[0-9:]+(?:\\.[0-9]+)?)</col> \\(new personal best\\)</col>");
 	private static final Pattern RAIDS_DURATION_PATTERN = Pattern.compile("<col=ef20ff>Congratulations - your raid is complete!</col><br>Team size: <col=ff0000>" + TEAM_SIZES + "</col> Duration:</col> <col=ff0000>[0-9:.]+</col> Personal best: </col><col=ff0000>(?<pb>[0-9:]+(?:\\.[0-9]+)?)</col>");
 	private static final Pattern KILL_DURATION_PATTERN = Pattern.compile("(?i)(?:(?:Fight |Lap |Challenge |Corrupted challenge )?duration:|Subdued in|(?<!total )completion time:) <col=[0-9a-f]{6}>[0-9:.]+</col>\\. Personal best: (?:<col=ff0000>)?(?<pb>[0-9:]+(?:\\.[0-9]+)?)");
@@ -115,13 +117,13 @@ public class ChatCommandsPlugin extends Plugin
 	private static final Pattern DUEL_ARENA_WINS_PATTERN = Pattern.compile("You (were defeated|won)! You have(?: now)? won ([\\d,]+|one) duels?");
 	private static final Pattern DUEL_ARENA_LOSSES_PATTERN = Pattern.compile("You have(?: now)? lost ([\\d,]+|one) duels?");
 	private static final Pattern ADVENTURE_LOG_TITLE_PATTERN = Pattern.compile("The Exploits of (.+)");
-	private static final Pattern ADVENTURE_LOG_PB_PATTERN = Pattern.compile("Fastest (?:kill|run)(?: - \\(Team size: " + TEAM_SIZES + "\\))?: (?<time>[0-9:]+(?:\\.[0-9]+)?)");
+	private static final Pattern ADVENTURE_LOG_PB_PATTERN = Pattern.compile("Fastest (?:kill|run|Room time)(?: - \\(Team size: \\(?" + TEAM_SIZES + "\\)\\)?)?: (?<time>[0-9:]+(?:\\.[0-9]+)?)");
 	private static final Pattern HS_PB_PATTERN = Pattern.compile("Floor (?<floor>\\d) time: <col=ff0000>(?<floortime>[0-9:]+(?:\\.[0-9]+)?)</col>(?: \\(new personal best\\)|. Personal best: (?<floorpb>[0-9:]+(?:\\.[0-9]+)?))" +
 		"(?:<br>Overall time: <col=ff0000>(?<otime>[0-9:]+(?:\\.[0-9]+)?)</col>(?: \\(new personal best\\)|. Personal best: (?<opb>[0-9:]+(?:\\.[0-9]+)?)))?");
 	private static final Pattern HS_KC_FLOOR_PATTERN = Pattern.compile("You have completed Floor (\\d) of the Hallowed Sepulchre! Total completions: <col=ff0000>([0-9,]+)</col>\\.");
 	private static final Pattern HS_KC_GHC_PATTERN = Pattern.compile("You have opened the Grand Hallowed Coffin <col=ff0000>([0-9,]+)</col> times?!");
 	private static final Pattern COLLECTION_LOG_ITEM_PATTERN = Pattern.compile("New item added to your collection log: (.*)");
-	private static final Pattern GUARDIANS_OF_THE_RIFT_PATTERN = Pattern.compile("Amount of Rifts you have closed: <col=ff0000>([0-9,]+)</col>.");
+	private static final Pattern GUARDIANS_OF_THE_RIFT_PATTERN = Pattern.compile("Amount of Rifts you have closed: <col=ff0000>([0-9,]+)</col>.", Pattern.CASE_INSENSITIVE);
 
 	private static final String TOTAL_LEVEL_COMMAND_STRING = "!total";
 	private static final String PRICE_COMMAND_STRING = "!price";
@@ -220,7 +222,15 @@ public class ChatCommandsPlugin extends Plugin
 		chatCommandManager.registerCommandAsync(SOUL_WARS_ZEAL_COMMAND, this::soulWarsZealLookup);
 		chatCommandManager.registerCommandAsync(PET_LIST_COMMAND, this::petListLookup, this::petListSubmit);
 
-		clientThread.invoke(this::loadPetIcons);
+		clientThread.invoke(() ->
+		{
+			if (client.getModIcons() == null)
+			{
+				return false;
+			}
+			loadPetIcons();
+			return true;
+		});
 	}
 
 	@Override
@@ -295,26 +305,37 @@ public class ChatCommandsPlugin extends Plugin
 
 	private void loadPetIcons()
 	{
-		final IndexedSprite[] modIcons = client.getModIcons();
-		if (modIconIdx != -1 || modIcons == null)
+		if (modIconIdx != -1)
 		{
 			return;
 		}
 
 		final Pet[] pets = Pet.values();
+		final IndexedSprite[] modIcons = client.getModIcons();
+		assert modIcons != null;
+
 		final IndexedSprite[] newModIcons = Arrays.copyOf(modIcons, modIcons.length + pets.length);
 		modIconIdx = modIcons.length;
+
+		client.setModIcons(newModIcons);
 
 		for (int i = 0; i < pets.length; i++)
 		{
 			final Pet pet = pets[i];
 
-			final BufferedImage image = ImageUtil.resizeImage(itemManager.getImage(pet.getIconID()), 18, 16);
-			final IndexedSprite sprite = ImageUtil.getImageIndexedSprite(image, client);
-			newModIcons[modIconIdx + i] = sprite;
+			final AsyncBufferedImage abi = itemManager.getImage(pet.getIconID());
+			final int idx = modIconIdx + i;
+			Runnable r = () ->
+			{
+				final BufferedImage image = ImageUtil.resizeImage(abi, 18, 16);
+				final IndexedSprite sprite = ImageUtil.getImageIndexedSprite(image, client);
+				// modicons array might be replaced in between when we assign it and the callback,
+				// so fetch modicons again
+				client.getModIcons()[idx] = sprite;
+			};
+			abi.onLoaded(r);
+			r.run();
 		}
-
-		client.setModIcons(newModIcons);
 	}
 
 	/**
@@ -371,8 +392,16 @@ public class ChatCommandsPlugin extends Plugin
 		Matcher matcher = KILLCOUNT_PATTERN.matcher(message);
 		if (matcher.find())
 		{
-			String boss = matcher.group(1);
-			int kc = Integer.parseInt(matcher.group(2));
+			final String boss = matcher.group("boss");
+			final int kc = Integer.parseInt(matcher.group("kc"));
+			final String pre = matcher.group("pre");
+			final String post = matcher.group("post");
+
+			if (Strings.isNullOrEmpty(pre) && Strings.isNullOrEmpty(post))
+			{
+				unsetKc(boss);
+				return;
+			}
 
 			String renamedBoss = KILLCOUNT_RENAMES
 				.getOrDefault(boss, boss)
@@ -673,7 +702,6 @@ public class ChatCommandsPlugin extends Plugin
 				for (int i = 0; i < text.length; ++i)
 				{
 					String boss = longBossName(text[i]);
-					double pb = Double.MAX_VALUE;
 
 					for (i = i + 1; i < text.length; ++i)
 					{
@@ -683,19 +711,35 @@ public class ChatCommandsPlugin extends Plugin
 							break;
 						}
 
-						// Some bosses have multiple pbs for each team size, just use the lowest
 						Matcher matcher = ADVENTURE_LOG_PB_PATTERN.matcher(line);
 						if (matcher.find())
 						{
-							double s = timeStringToSeconds(matcher.group("time"));
-							pb = Math.min(pb, s);
-						}
-					}
+							final double s = timeStringToSeconds(matcher.group("time"));
+							String teamSize = matcher.group("teamsize");
+							if (teamSize != null)
+							{
+								// 3 player -> 3 players
+								// 1 player -> Solo
+								// Solo -> Solo
+								// 2 players -> 2 players
+								if (teamSize.equals("1 player"))
+								{
+									teamSize = "Solo";
+								}
+								else if (teamSize.endsWith("player"))
+								{
+									teamSize = teamSize + "s";
+								}
 
-					if (pb < Double.MAX_VALUE)
-					{
-						log.debug("Found adventure log PB for {}: {}", boss, pb);
-						setPb(boss, pb);
+								log.debug("Found team-size adventure log PB for {} {}: {}", boss, teamSize, s);
+								setPb(boss + " " + teamSize, s);
+							}
+							else
+							{
+								log.debug("Found adventure log PB for {}: {}", boss, s);
+								setPb(boss, s);
+							}
+						}
 					}
 				}
 			}
@@ -768,9 +812,6 @@ public class ChatCommandsPlugin extends Plugin
 			case LOADING:
 			case HOPPING:
 				pohOwner = null;
-				break;
-			case LOGGED_IN:
-				loadPetIcons();
 				break;
 		}
 	}

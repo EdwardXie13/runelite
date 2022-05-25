@@ -423,7 +423,11 @@ public class MenuEntrySwapperPlugin extends Plugin
 		swapTeleport("varrock teleport", "grand exchange");
 		swapTeleport("camelot teleport", "seers'");
 		swapTeleport("watchtower teleport", "yanille");
-		swapTeleport("teleport to house", "outside");
+
+		swapHouseTeleport("cast", () -> shiftModifier() && config.swapHouseTeleportSpell() == MenuEntrySwapperConfig.HouseTeleportMode.CAST);
+		swapHouseTeleport("outside", () -> shiftModifier() && config.swapHouseTeleportSpell() == MenuEntrySwapperConfig.HouseTeleportMode.OUTSIDE);
+		swapHouseTeleport("group: choose", () -> shiftModifier() && config.swapHouseTeleportSpell() == MenuEntrySwapperConfig.HouseTeleportMode.GROUP_CHOOSE);
+		swapHouseTeleport("group: previous", () -> shiftModifier() && config.swapHouseTeleportSpell() == MenuEntrySwapperConfig.HouseTeleportMode.GROUP_PREVIOUS);
 
 		swap("eat", "guzzle", config::swapRockCake);
 
@@ -457,6 +461,12 @@ public class MenuEntrySwapperPlugin extends Plugin
 	{
 		swap("cast", option, swappedOption, () -> shiftModifier() && config.swapTeleportSpell());
 		swap(swappedOption, option, "cast", () -> shiftModifier() && config.swapTeleportSpell());
+	}
+
+	private void swapHouseTeleport(String swappedOption, Supplier<Boolean> enabled)
+	{
+		swap("cast", "teleport to house", swappedOption, enabled);
+		swap("outside", "teleport to house", swappedOption, enabled);
 	}
 
 	@Subscribe
@@ -665,7 +675,7 @@ public class MenuEntrySwapperPlugin extends Plugin
 						.onClick(e ->
 						{
 							final String message = new ChatMessageBuilder()
-								.append("The default left click option for '").append(composition.getName()).append("' ")
+								.append("The default left click option for '").append(Text.removeTags(composition.getName())).append("' ")
 								.append("has been set to '").append(actions[menuIdx]).append("'.")
 								.build();
 
@@ -703,11 +713,11 @@ public class MenuEntrySwapperPlugin extends Plugin
 		{
 			final MenuEntry entry = entries[idx];
 			final MenuAction type = entry.getType();
-			final int id = entry.getIdentifier();
 
 			if (type == MenuAction.EXAMINE_NPC)
 			{
-				final NPC npc = client.getCachedNPCs()[id];
+				final NPC npc = entry.getNpc();
+				assert npc != null;
 				final NPCComposition composition = npc.getTransformedComposition();
 				final String[] actions = composition.getActions();
 
@@ -754,7 +764,7 @@ public class MenuEntrySwapperPlugin extends Plugin
 						.onClick(e ->
 						{
 							final String message = new ChatMessageBuilder()
-								.append("The default left click option for '").append(composition.getName()).append("' ")
+								.append("The default left click option for '").append(Text.removeTags(composition.getName())).append("' ")
 								.append("has been set to '").append(actions[menuIdx]).append("'.")
 								.build();
 
@@ -779,7 +789,7 @@ public class MenuEntrySwapperPlugin extends Plugin
 						.onClick(e ->
 						{
 							final String message = new ChatMessageBuilder()
-								.append("The default left click option for '").append(composition.getName()).append("' ")
+								.append("The default left click option for '").append(Text.removeTags(composition.getName())).append("' ")
 								.append("has been reset.")
 								.build();
 
@@ -957,7 +967,8 @@ public class MenuEntrySwapperPlugin extends Plugin
 
 		if (NPC_MENU_TYPES.contains(menuAction))
 		{
-			final NPC npc = client.getCachedNPCs()[eventId];
+			final NPC npc = menuEntry.getNpc();
+			assert npc != null;
 			final NPCComposition composition = npc.getTransformedComposition();
 
 			Integer customOption = getNpcSwapConfig(composition.getId());

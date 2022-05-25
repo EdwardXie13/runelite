@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Adam <Adam@sigterm.info>
+ * Copyright (c) 2016-2022, emerald000
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,11 +22,31 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package com.jagex.oldscape.pub;
+package net.runelite.client.plugins.itemstats.special;
 
-public interface OtlTokenResponse
+import net.runelite.api.Client;
+import net.runelite.client.plugins.itemstats.StatBoost;
+import static net.runelite.client.plugins.itemstats.stats.Stats.HITPOINTS;
+
+public class CaveNightshade extends StatBoost
 {
-	boolean isSuccess();
+	public CaveNightshade()
+	{
+		super(HITPOINTS, false);
+	}
 
-	String getToken();
+	@Override
+	public int heals(Client client)
+	{
+		int currentHP = this.getStat().getValue(client);
+
+		if (currentHP < 20)
+		{
+			return -currentHP / 2;
+		}
+		else
+		{
+			return -15;
+		}
+	}
 }
