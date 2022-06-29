@@ -29,7 +29,7 @@
 	<parent>
 		<groupId>net.runelite</groupId>
 		<artifactId>runelite-parent</artifactId>
-		<version>1.8.24-SNAPSHOT</version>
+		<version>1.8.26-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>runelite-api</artifactId>
@@ -121,6 +121,8 @@
 								<exclude>net/runelite/api/SpriteID.class</exclude>
 								<exclude>net/runelite/api/StructID.class</exclude>
 								<exclude>net/runelite/api/Varbits.class</exclude>
+								<exclude>net/runelite/api/VarClientInt.class</exclude>
+								<exclude>net/runelite/api/VarClientStr.class</exclude>
 							</excludes>
 						</configuration>
 					</execution>

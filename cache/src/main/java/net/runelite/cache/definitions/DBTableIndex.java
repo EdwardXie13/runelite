@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Tomas Slusny <slusnucky@gmail.com>
+ * Copyright (c) 2022, Joshua Filby <joshua@filby.me>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,16 +22,18 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.party.messages;
+package net.runelite.cache.definitions;
 
-import java.util.UUID;
-import lombok.EqualsAndHashCode;
-import lombok.Value;
+import java.util.List;
+import java.util.Map;
+import lombok.Data;
+import net.runelite.cache.util.BaseVarType;
 
-@Value
-@EqualsAndHashCode(callSuper = true)
-public class Join extends WebsocketMessage
+@Data
+public class DBTableIndex
 {
-	private final UUID partyId;
-	private final String name;
+	private final int tableId;
+	private final int columnId;
+	private BaseVarType[] tupleTypes;
+	private List<Map<Object, List<Integer>>> tupleIndexes;
 }
