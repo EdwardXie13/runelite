@@ -68,6 +68,7 @@ import net.runelite.client.config.FlashNotification;
 import net.runelite.client.config.RuneLiteConfig;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.events.NotificationFired;
+import net.runelite.client.plugins.agilityPlus.AgilityPlusPlugin;
 import net.runelite.client.ui.ClientUI;
 import net.runelite.client.util.OSType;
 
@@ -151,6 +152,8 @@ public class Notifier
 	public void notify(String message)
 	{
 		notify(message, TrayIcon.MessageType.NONE);
+		AgilityPlusPlugin.isIdle = true;
+		AgilityPlusPlugin.scheduledMove = false;
 	}
 
 	public void notify(String message, TrayIcon.MessageType type)
