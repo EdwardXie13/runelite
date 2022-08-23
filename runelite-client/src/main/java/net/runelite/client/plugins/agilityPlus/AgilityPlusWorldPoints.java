@@ -17,6 +17,27 @@ public class AgilityPlusWorldPoints {
     public static final WorldPoint GNOME_LEFT_PIPE = new WorldPoint(2484, 3437, 0);
     public static final WorldPoint GNOME_RIGHT_PIPE = new WorldPoint(2487, 3437, 0);
 
+    //=== CANFIS ===
+
+    public static final WorldPoint CANFIS_START = new WorldPoint(3510, 3485, 0);
+    //                                                             isInArea(3506, 3491, 2) range 3
+    public static final WorldPoint CANFIS_FIRST_ROOF = new WorldPoint(3506, 3492, 2);
+    public static final WorldPoint CANFIS_SECOND_ROOF = new WorldPoint(3502, 3504, 2);
+    public static final WorldPoint CANFIS_THIRD_ROOF = new WorldPoint(3492, 3504, 2);
+    public static final WorldPoint CANFIS_FOURTH_ROOF = new WorldPoint(3479, 3499, 3);
+    public static final WorldPoint CANFIS_FIFTH_ROOF = new WorldPoint(3478, 3486, 2);
+    public static final WorldPoint CANFIS_SIXTH_ROOF = new WorldPoint(3489, 3476, 3);
+    // turn camera yaw 1300
+    public static final WorldPoint CANFIS_SEVENTH_ROOF = new WorldPoint(3510, 3476, 2);
+
+    public static final WorldPoint CANFIS_FAIL1 = new WorldPoint(3482, 3499, 0);
+    public static final WorldPoint CANFIS_FAIL2 = new WorldPoint(3506, 3477, 0);
+
+    public static final WorldPoint CANFIS_GRACEFULMARK1 = new WorldPoint(3506, 3495, 2);
+    public static final WorldPoint CANFIS_GRACEFULMARK2 = new WorldPoint(3501, 3505, 2);
+    public static final WorldPoint CANFIS_GRACEFULMARK3 = new WorldPoint(3490, 3501, 2);
+    public static final WorldPoint CANFIS_GRACEFULMARK4 = new WorldPoint(3478, 3496, 3);
+    public static final WorldPoint CANFIS_GRACEFULMARK5 = new WorldPoint(3478, 3484, 2);
 //    public static final Set<WorldPoint> gnomeWorldPoints = new HashSet<>(ImmutableSet.of(
 //            GNOME_AFTER_LOG,
 //            GNOME_AFTER_CLIMB1,

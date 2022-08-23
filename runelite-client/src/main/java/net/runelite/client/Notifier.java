@@ -151,9 +151,9 @@ public class Notifier
 
 	public void notify(String message)
 	{
-		notify(message, TrayIcon.MessageType.NONE);
-		AgilityPlusPlugin.isIdle = true;
+//		notify(message, TrayIcon.MessageType.NONE);
 		AgilityPlusPlugin.scheduledMove = false;
+		AgilityPlusPlugin.isIdle = true;
 	}
 
 	public void notify(String message, TrayIcon.MessageType type)
