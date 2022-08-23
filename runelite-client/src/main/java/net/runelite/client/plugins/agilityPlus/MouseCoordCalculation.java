@@ -6,6 +6,7 @@ import net.runelite.api.GameObject;
 import net.runelite.api.GroundObject;
 
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.Shape;
 import java.awt.event.InputEvent;
@@ -23,8 +24,8 @@ public class MouseCoordCalculation {
 
         while(points.size() < 3) {
             Point newPoint = randomCoord(point, sigma);
-            if(isCoordInClickBox(clickbox, newPoint))
-                points.add(randomCoord(point, sigma));
+            if(isCoordInClickBox(clickbox, newPoint) && isInGame(newPoint))
+                points.add(randomCoord(newPoint, sigma));
         }
 
         generatedPoint = randomClusterPicker(points);
@@ -43,8 +44,25 @@ public class MouseCoordCalculation {
 
         while(points.size() < 3) {
             Point newPoint = randomCoord(point, sigma);
-            if(isCoordInClickBox(clickbox, newPoint))
-                points.add(randomCoord(point, sigma));
+            if(isCoordInClickBox(clickbox, newPoint) && isInGame(newPoint))
+                points.add(randomCoord(newPoint, sigma));
+        }
+
+        generatedPoint = randomClusterPicker(points);
+
+        if(!AgilityPlusPlugin.scheduledMove) {
+            AgilityPlusPlugin.scheduledMove = true;
+            mouseMove();
+        }
+    }
+
+    public static void generateCoord(Point point, int sigma) {
+        //generate 3 more random points
+        List<Point> points = new ArrayList<>();
+
+        while(points.size() < 3) {
+            Point newPoint = randomCoord(point, sigma);
+            points.add(randomCoord(newPoint, sigma));
         }
 
         generatedPoint = randomClusterPicker(points);
@@ -58,6 +76,13 @@ public class MouseCoordCalculation {
     public static boolean isCoordInClickBox(Shape clickbox, Point point) {
         return clickbox.contains(point.x, point.y);
     }
+
+    public static boolean isInGame(Point point) {
+        Rectangle gameBox = new Rectangle(0, 26, 963, 1039);
+
+        return gameBox.contains(point);
+    }
+
     public static Point randomClusterPicker(List<Point> points) {
         try {
             Random random = new Random();
@@ -88,7 +113,6 @@ public class MouseCoordCalculation {
         return new Point(newXCoord, newYCoord);
     }
 
-    // == change to better mouse move, so not to teleport to location
     public static void mouseMove() {
         MouseMotionFactory fastGamerMotion = FactoryTemplates.createFastGamerMotionFactory();
         try {

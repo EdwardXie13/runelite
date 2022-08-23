@@ -4,20 +4,22 @@ import net.runelite.api.Client;
 import net.runelite.api.GameObject;
 import net.runelite.api.GameState;
 import net.runelite.api.GroundObject;
-import net.runelite.api.MenuEntry;
-import net.runelite.api.Model;
-import net.runelite.api.ObjectID;
-import net.runelite.api.Player;
-import net.runelite.api.Renderable;
+import net.runelite.api.ItemID;
+import net.runelite.api.Perspective;
+import net.runelite.api.Scene;
 import net.runelite.api.ScriptID;
 import net.runelite.api.Tile;
-import net.runelite.api.TileObject;
-import net.runelite.api.World;
+import net.runelite.api.TileItem;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.events.GameObjectDespawned;
 import net.runelite.api.events.GameObjectSpawned;
+import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.GroundObjectDespawned;
 import net.runelite.api.events.GroundObjectSpawned;
+import net.runelite.api.events.ItemDespawned;
+import net.runelite.api.events.ItemSpawned;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
@@ -27,21 +29,15 @@ import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
 import java.awt.Point;
+import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.Shape;
-import java.awt.geom.Rectangle2D;
-import java.awt.geom.RoundRectangle2D;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -57,6 +53,10 @@ public class AgilityPlusPlugin extends Plugin {
     public static boolean scheduledMove = false;
     public static boolean isIdle = true;
 
+    ScheduledExecutorService service;
+
+    public final int MARK_OF_GRACE = ItemID.MARK_OF_GRACE;
+
     @Inject
     private Client client;
 
@@ -71,8 +71,9 @@ public class AgilityPlusPlugin extends Plugin {
 
         if(toggleStatus == STATUS.START) {
             if(getRegionID() == 9781)
-                // before log (new WorldPoint(2474, 3436, 0))
                 doGnomeAgility();
+            else if(getRegionID() == 13878)
+                doCanfisAgility();
         }
     }
 
@@ -113,7 +114,92 @@ public class AgilityPlusPlugin extends Plugin {
         }
     }
 
-    private void populateGnomeAgilityGameObjectPoints_OR_GetPoint(GameObject gameObject, int sigma) {
+    private void doCanfisAgility() {
+        service = null;
+        service = Executors.newSingleThreadScheduledExecutor();
+
+        if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_START) && isIdle) {
+            setCameraZoom(729);
+            changeCameraYaw(1438);
+            service.schedule(() -> scheduledGameObjectPointDelay(new Point(47, 969), AgilityPlusObjectIDs.canfisTallTree, 8, 1), 250, TimeUnit.MILLISECONDS);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FAIL1) && isIdle) {
+            setCameraZoom(-47);
+            changeCameraYaw(1788);
+            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisTallTree, 8, 2), 1, TimeUnit.SECONDS);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FAIL2) && isIdle) {
+            setCameraZoom(296);
+            changeCameraYaw(0);
+            // custom center 559, 49 (base of the tree)
+            service.schedule(() -> scheduledGameObjectPointDelay(new Point(559, 49), AgilityPlusObjectIDs.canfisTallTree, 8, 2), 1, TimeUnit.SECONDS);
+        }
+        // 1 roof
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIRST_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK1) && isIdle) {
+            setCameraZoom(758);
+            changeCameraYaw(0);
+            service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK1), 400, TimeUnit.MILLISECONDS);
+        } else if((isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIRST_ROOF) || isNearWorldTile(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK1, 2)) && isIdle) {
+            setCameraZoom(336);
+            changeCameraYaw(0);
+            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFirstRoofGap, 10, 2), 250, TimeUnit.MILLISECONDS);
+        }
+        // 2 roof
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SECOND_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2) && isIdle) {
+            setCameraZoom(896);
+            service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2), 400, TimeUnit.MILLISECONDS);
+        } else if((isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SECOND_ROOF) || isNearWorldTile(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2, 2)) && isIdle) {
+            setCameraZoom(532);
+            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSecondRoofGap, 10, 1), 250, TimeUnit.MILLISECONDS);
+        }
+        // 3 roof
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_THIRD_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3) && isIdle) {
+            setCameraZoom(751);
+            service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3), 400, TimeUnit.MILLISECONDS);
+        } else if((isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_THIRD_ROOF) || isNearWorldTile(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3, 2)) && isIdle) {
+            setCameraZoom(473);
+            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisThirdRoofGap, 10, 1), 500, TimeUnit.MILLISECONDS);
+        }
+        // 4 roof
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FOURTH_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK4) && isIdle) {
+            setCameraZoom(512);
+            service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK4), 400, TimeUnit.MILLISECONDS);
+        } else if((isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FOURTH_ROOF) || isNearWorldTile(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK4, 2)) && isIdle) {
+            setCameraZoom(404);
+            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFourthRoofGap, 10, 1), 250, TimeUnit.MILLISECONDS);
+        }
+        // 5 roof
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIFTH_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK5) && isIdle) {
+            setCameraZoom(876);
+            changeCameraYaw(512);
+            service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK5), 400, TimeUnit.MILLISECONDS);
+        } else if((isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIFTH_ROOF) || isNearWorldTile(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK5, 2)) && isIdle) {
+            setCameraZoom(719);
+            changeCameraYaw(512);
+            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFifthRoofGap, 10, 1), 250, TimeUnit.MILLISECONDS);
+        }
+        // 6 roof
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SIXTH_ROOF) && isIdle) {
+            setCameraZoom(250);
+            changeCameraYaw(1300);
+            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSixthRoofGap, 10, 1), 250, TimeUnit.MILLISECONDS);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SEVENTH_ROOF) && isIdle) {
+            setCameraZoom(453);
+            changeCameraYaw(0);
+            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSeventhRoofGap, 10, 1), 500, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private Point generatePointsFromPoint(Point point, int sigma) {
+        List<Point> points = new ArrayList<>();
+
+        while(points.size() < 3) {
+            Point newPoint = MouseCoordCalculation.randomCoord(point, sigma);
+            points.add(MouseCoordCalculation.randomCoord(newPoint, sigma));
+        }
+
+        return MouseCoordCalculation.randomClusterPicker(points);
+    }
+
+    private void getObstacleCenter(GameObject gameObject, int sigma) {
         Shape groundObjectConvexHull = gameObject.getConvexHull();
         Rectangle groundObjectRectangle = groundObjectConvexHull.getBounds();
 
@@ -122,17 +208,13 @@ public class AgilityPlusPlugin extends Plugin {
         MouseCoordCalculation.generateCoord(obstacleCenter, gameObject, sigma);
     }
 
-    private void populateGnomeAgilityGroundObjectPoints_OR_GetPoint(GroundObject groundObject, int sigma) {
+    private void getObstacleCenter(GroundObject groundObject, int sigma) {
         Shape groundObjectConvexHull = groundObject.getConvexHull();
         Rectangle groundObjectRectangle = groundObjectConvexHull.getBounds();
 
         Point obstacleCenter = getCenterOfRectangle(groundObjectRectangle);
 
         MouseCoordCalculation.generateCoord(obstacleCenter, groundObject, sigma);
-    }
-
-    private Boolean isNearWorldTile(final WorldPoint target, final int range) {
-        return this.client.getLocalPlayer().getWorldLocation().distanceTo2D(target) < range;
     }
 
     private Point getCenterOfRectangle(Rectangle rectangle) {
@@ -145,10 +227,18 @@ public class AgilityPlusPlugin extends Plugin {
         String chatBoxMessage = stripTargetAnchors(chatboxInput.getText());
         if(chatBoxMessage == null) return;
 
-        if(chatBoxMessage.equals("go") && toggleStatus == STATUS.STOP)
+        if(chatBoxMessage.equals("1") && toggleStatus == STATUS.STOP) {
             toggleStatus = STATUS.START;
-        else if (chatBoxMessage.equals("stop") && toggleStatus == STATUS.START)
+            service = Executors.newSingleThreadScheduledExecutor();
+            System.out.println("status is go");
+        } else if (chatBoxMessage.equals("2") && toggleStatus == STATUS.START) {
             toggleStatus = STATUS.STOP;
+            service.shutdown();
+            service = null;
+            scheduledMove = false;
+            isIdle = true;
+            System.out.println("status is stop");
+        }
     }
 
     private String stripTargetAnchors(String text) {
@@ -163,9 +253,7 @@ public class AgilityPlusPlugin extends Plugin {
     }
 
     private void changeCameraYaw(int yaw) {
-        if(client.getMapAngle() != yaw) {
-            client.setCameraYawTarget(yaw);
-        }
+        client.setCameraYawTarget(yaw);
 //        north: 0
 //        east:1536
 //        south:1024
@@ -197,28 +285,67 @@ public class AgilityPlusPlugin extends Plugin {
 
     private void scheduledGroundObjectDelay(GroundObject groundObject, int sigma, int seconds) {
         isIdle = false;
-        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-
-        service.schedule(() -> populateGnomeAgilityGroundObjectPoints_OR_GetPoint(groundObject, sigma), seconds, TimeUnit.SECONDS);
+        service.schedule(() -> getObstacleCenter(groundObject, sigma), seconds, TimeUnit.SECONDS);
     }
 
     private void scheduledGameObjectDelay(GameObject gameObject, int sigma, int seconds) {
         isIdle = false;
-        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-
-        service.schedule(() -> populateGnomeAgilityGameObjectPoints_OR_GetPoint(gameObject, sigma), seconds, TimeUnit.SECONDS);
+        service.schedule(() -> getObstacleCenter(gameObject, sigma), seconds, TimeUnit.SECONDS);
     }
 
-    enum GNOME_ENUM {
-        START_AREA,
-        LOG_BALANCE_23145,
-        OBSTACLE_NET_23134,
-        TREE_BRANCH_23559,
-        BALANCING_ROPE_23557,
-        TREE_BRANCH_23560,
-        OBSTACLE_NET_23135,
-        OBSTACLE_PIPE_23138,
-        OBSTACLE_PIPE_23139
+    private void scheduledGameObjectPointDelay(Point point, GameObject gameObject, int sigma, int seconds) {
+        isIdle = false;
+        Point generatedPoint = generatePointsFromPoint(point, sigma);
+        service.schedule(() -> MouseCoordCalculation.generateCoord(generatedPoint, gameObject, sigma), seconds, TimeUnit.SECONDS);
+    }
+
+    //possible use would be a ground item that has no clickbox (doubt that will happen)
+    private void scheduledGroundObjectPointDelay(Point point, GroundObject groundObject, int sigma, int seconds) {
+        isIdle = false;
+        service.schedule(() -> MouseCoordCalculation.generateCoord(point, groundObject, sigma), seconds, TimeUnit.SECONDS);
+    }
+
+    private void scheduledPointDelay(Point point, int sigma, int seconds) {
+        isIdle = false;
+        service.schedule(() -> MouseCoordCalculation.generateCoord(point, sigma), seconds, TimeUnit.SECONDS);
+    }
+
+    private void getWorldPointCoords(final LocalPoint dest) {
+        Polygon poly = Perspective.getCanvasTileAreaPoly(this.client, dest, 1);
+        if (poly == null)
+        {
+            return;
+        }
+
+        Rectangle boundingBox = poly.getBounds();
+
+        Point obstacleCenter = getCenterOfRectangle(boundingBox);
+
+        scheduledPointDelay(obstacleCenter, 10, 1);
+    }
+
+    private boolean isNearWorldTile(final WorldPoint target, final int range) {
+        return this.client.getLocalPlayer().getWorldLocation().distanceTo2D(target) < range;
+    }
+
+    private void checkGracefulmark(WorldPoint worldpoint) {
+        if(doesWorldPointHaveGracefulMark(worldpoint))
+            getWorldPointCoords(LocalPoint.fromWorld(client, worldpoint));
+    }
+
+    private boolean doesWorldPointHaveGracefulMark(WorldPoint worldpoint) {
+        Tile[][][] sceneTiles = client.getScene().getTiles();
+
+        int startX = sceneTiles[0][0][0].getWorldLocation().getX();
+        int startY = sceneTiles[0][0][0].getWorldLocation().getY();
+
+        int playerPlane = client.getLocalPlayer().getWorldLocation().getPlane();
+        List<TileItem> itemsOnTile = sceneTiles[playerPlane][worldpoint.getX()-startX][worldpoint.getY()-startY].getGroundItems();
+        List<Integer> tileItemIds = new ArrayList<>();
+        if(itemsOnTile != null)
+            itemsOnTile.forEach(tileItem -> tileItemIds.add(tileItem.getId()));
+
+        return tileItemIds.contains(MARK_OF_GRACE);
     }
 
     enum STATUS{
@@ -227,29 +354,41 @@ public class AgilityPlusPlugin extends Plugin {
     }
 
     @Subscribe
+    private void onGameStateChanged(GameStateChanged ev)
+    {
+        if (ev.getGameState() == GameState.LOGIN_SCREEN)
+        {
+            toggleStatus = STATUS.STOP;
+            service.shutdown();
+            service = null;
+            System.out.println("status is stop (login screen)");
+        }
+    }
+
+    @Subscribe
     public void onGameObjectSpawned(GameObjectSpawned event)
     {
         AgilityPlusObjectIDs.assignObjects(event);
     }
-//
-//    @Subscribe
-//    public void onGameObjectDespawned(GameObjectDespawned event)
-//    {
-//        onTileObject(event.getTile(), event.getGameObject(), null);
-//    }
-//
+
+    @Subscribe
+    public void onGameObjectDespawned(GameObjectDespawned event)
+    {
+        AgilityPlusObjectIDs.assignObjects(event);
+    }
+
     @Subscribe
     public void onGroundObjectSpawned(GroundObjectSpawned event)
     {
         AgilityPlusObjectIDs.assignObjects(event);
     }
-//
-//    @Subscribe
-//    public void onGroundObjectDespawned(GroundObjectDespawned event)
-//    {
-//        onTileObject(event.getTile(), event.getGroundObject(), null);
-//    }
-//
+
+    @Subscribe
+    public void onGroundObjectDespawned(GroundObjectDespawned event)
+    {
+        AgilityPlusObjectIDs.assignObjects(event);
+    }
+
 //    @Subscribe
 //    public void onWallObjectSpawned(WallObjectSpawned event)
 //    {
