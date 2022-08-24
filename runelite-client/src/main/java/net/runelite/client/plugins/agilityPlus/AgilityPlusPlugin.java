@@ -121,39 +121,39 @@ public class AgilityPlusPlugin extends Plugin {
         if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_START) && isIdle) {
             setCameraZoom(729);
             changeCameraYaw(1438);
-            service.schedule(() -> scheduledGameObjectPointDelay(new Point(47, 969), AgilityPlusObjectIDs.canfisTallTree, 8, 1), 250, TimeUnit.MILLISECONDS);
+            service.schedule(() -> scheduledGameObjectPointDelay(new Point(47, 969), AgilityPlusObjectIDs.canfisTallTree, 8, 1), 500, TimeUnit.MILLISECONDS);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FAIL1) && isIdle) {
             setCameraZoom(-47);
             changeCameraYaw(1788);
-            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisTallTree, 8, 2), 1, TimeUnit.SECONDS);
+            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisTallTree, 8, 2), 2, TimeUnit.SECONDS);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FAIL2) && isIdle) {
             setCameraZoom(296);
             changeCameraYaw(0);
             // custom center 559, 49 (base of the tree)
-            service.schedule(() -> scheduledGameObjectPointDelay(new Point(559, 49), AgilityPlusObjectIDs.canfisTallTree, 8, 2), 1, TimeUnit.SECONDS);
+            service.schedule(() -> scheduledGameObjectPointDelay(new Point(559, 49), AgilityPlusObjectIDs.canfisTallTree, 8, 2), 2, TimeUnit.SECONDS);
         }
         // 1 roof
         else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIRST_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK1) && isIdle) {
             setCameraZoom(758);
             changeCameraYaw(0);
-            service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK1), 400, TimeUnit.MILLISECONDS);
+            service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK1), 500, TimeUnit.MILLISECONDS);
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIRST_ROOF) || isNearWorldTile(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK1, 2)) && isIdle) {
             setCameraZoom(336);
             changeCameraYaw(0);
-            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFirstRoofGap, 10, 2), 250, TimeUnit.MILLISECONDS);
+            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFirstRoofGap, 10, 2), 500, TimeUnit.MILLISECONDS);
         }
         // 2 roof
         else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SECOND_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2) && isIdle) {
             setCameraZoom(896);
-            service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2), 400, TimeUnit.MILLISECONDS);
+            service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2), 500, TimeUnit.MILLISECONDS);
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SECOND_ROOF) || isNearWorldTile(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2, 2)) && isIdle) {
             setCameraZoom(532);
-            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSecondRoofGap, 10, 1), 250, TimeUnit.MILLISECONDS);
+            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSecondRoofGap, 10, 1), 500, TimeUnit.MILLISECONDS);
         }
         // 3 roof
         else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_THIRD_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3) && isIdle) {
             setCameraZoom(751);
-            service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3), 400, TimeUnit.MILLISECONDS);
+            service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3), 500, TimeUnit.MILLISECONDS);
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_THIRD_ROOF) || isNearWorldTile(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3, 2)) && isIdle) {
             setCameraZoom(473);
             service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisThirdRoofGap, 10, 1), 500, TimeUnit.MILLISECONDS);
@@ -161,26 +161,26 @@ public class AgilityPlusPlugin extends Plugin {
         // 4 roof
         else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FOURTH_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK4) && isIdle) {
             setCameraZoom(512);
-            service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK4), 400, TimeUnit.MILLISECONDS);
+            service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK4), 500, TimeUnit.MILLISECONDS);
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FOURTH_ROOF) || isNearWorldTile(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK4, 2)) && isIdle) {
             setCameraZoom(404);
-            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFourthRoofGap, 10, 1), 250, TimeUnit.MILLISECONDS);
+            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFourthRoofGap, 10, 1), 500, TimeUnit.MILLISECONDS);
         }
         // 5 roof
         else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIFTH_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK5) && isIdle) {
             setCameraZoom(876);
             changeCameraYaw(512);
-            service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK5), 400, TimeUnit.MILLISECONDS);
+            service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK5), 500, TimeUnit.MILLISECONDS);
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIFTH_ROOF) || isNearWorldTile(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK5, 2)) && isIdle) {
             setCameraZoom(719);
             changeCameraYaw(512);
-            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFifthRoofGap, 10, 1), 250, TimeUnit.MILLISECONDS);
+            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFifthRoofGap, 10, 1), 500, TimeUnit.MILLISECONDS);
         }
         // 6 roof
         else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SIXTH_ROOF) && isIdle) {
             setCameraZoom(250);
             changeCameraYaw(1300);
-            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSixthRoofGap, 10, 1), 250, TimeUnit.MILLISECONDS);
+            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSixthRoofGap, 10, 1), 500, TimeUnit.MILLISECONDS);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SEVENTH_ROOF) && isIdle) {
             setCameraZoom(453);
             changeCameraYaw(0);
