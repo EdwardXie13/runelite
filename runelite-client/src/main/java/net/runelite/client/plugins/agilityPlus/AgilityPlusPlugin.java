@@ -38,6 +38,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -53,7 +54,7 @@ public class AgilityPlusPlugin extends Plugin {
     public static boolean scheduledMove = false;
     public static boolean isIdle = true;
 
-    ScheduledExecutorService service;
+    ScheduledThreadPoolExecutor service = null;
 
     public final int MARK_OF_GRACE = ItemID.MARK_OF_GRACE;
 
@@ -115,9 +116,6 @@ public class AgilityPlusPlugin extends Plugin {
     }
 
     private void doCanfisAgility() {
-        service = null;
-        service = Executors.newSingleThreadScheduledExecutor();
-
         if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_START) && isIdle) {
             setCameraZoom(729);
             changeCameraYaw(1438);
@@ -229,7 +227,7 @@ public class AgilityPlusPlugin extends Plugin {
 
         if(chatBoxMessage.equals("1") && toggleStatus == STATUS.STOP) {
             toggleStatus = STATUS.START;
-            service = Executors.newSingleThreadScheduledExecutor();
+            service = new ScheduledThreadPoolExecutor(1);
             System.out.println("status is go");
         } else if (chatBoxMessage.equals("2") && toggleStatus == STATUS.START) {
             toggleStatus = STATUS.STOP;
