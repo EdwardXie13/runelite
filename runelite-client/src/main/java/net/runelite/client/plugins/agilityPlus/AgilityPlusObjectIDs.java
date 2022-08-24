@@ -1,5 +1,6 @@
 package net.runelite.client.plugins.agilityPlus;
 
+import net.runelite.api.DecorativeObject;
 import net.runelite.api.GameObject;
 import net.runelite.api.GroundObject;
 import net.runelite.api.ItemID;
@@ -52,6 +53,21 @@ public class AgilityPlusObjectIDs {
     public static GameObject canfisFifthRoofGap = null; // poleVault
     public static GameObject canfisSixthRoofGap = null;
     public static GameObject canfisSeventhRoofGap = null;
+
+    //=== SEERS ===
+    public static final int WALL_14927 = ObjectID.WALL_14927;
+    public static final int GAP_14928 = ObjectID.GAP_14928;
+    public static final int TIGHTROPE_14932 = ObjectID.TIGHTROPE_14932;
+    public static final int GAP_14929 = ObjectID.GAP_14929;
+    public static final int GAP_14930 = ObjectID.GAP_14930;
+    public static final int EDGE_14931 = ObjectID.EDGE_14931;
+
+    public static DecorativeObject seersStartWall = null;
+    public static GameObject seersFirstRoofGap = null;
+    public static GroundObject seersTightrope = null;
+    public static GameObject seersThirdRoofGap = null;
+    public static GameObject seersFourthRoofGap = null;
+    public static GameObject seersFifthRoofGap = null;
 
     public static void assignObjects(GameObjectSpawned event) {
         GameObject obj = event.getGameObject();

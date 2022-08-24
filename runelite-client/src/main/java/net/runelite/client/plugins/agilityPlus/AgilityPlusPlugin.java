@@ -52,7 +52,6 @@ public class AgilityPlusPlugin extends Plugin {
     public static boolean isIdle = true;
 
     ScheduledThreadPoolExecutor service = null;
-
     public final int MARK_OF_GRACE = ItemID.MARK_OF_GRACE;
 
     @Inject
@@ -72,6 +71,8 @@ public class AgilityPlusPlugin extends Plugin {
                 doGnomeAgility();
             else if(getRegionID() == 13878)
                 doCanfisAgility();
+            else if(getRegionID() == 10806)
+                doSeersAgility();
         }
     }
 
@@ -119,10 +120,15 @@ public class AgilityPlusPlugin extends Plugin {
             setCameraZoom(729);
             changeCameraYaw(1438);
             service.schedule(() -> scheduledGameObjectPointDelay(new Point(47, 969), AgilityPlusObjectIDs.canfisTallTree, 8, 1), 1, TimeUnit.SECONDS);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FAIL1) && isIdle) {
-            setCameraZoom(-47);
-            changeCameraYaw(1788);
-            service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisTallTree, 8, 2), 2, TimeUnit.SECONDS);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FAIL1) && isIdle && client.getOculusOrbState() == 0) {
+            panCameraToCanfisTree();
+            service.schedule(() -> getWorldPointCoords(LocalPoint.fromWorld(client, new WorldPoint(3506, 3488, 0))), 3, TimeUnit.SECONDS);
+        } else if(isNearWorldTile(new WorldPoint(3506, 3488, 0), 3) && isIdle) {
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            setCameraZoom(896);
+//            847, 377
+            service.schedule(() -> scheduledGameObjectPointDelay(new Point(847, 377), AgilityPlusObjectIDs.canfisTallTree, 8, 1), 2, TimeUnit.SECONDS);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FAIL2) && isIdle) {
             setCameraZoom(404);
             changeCameraYaw(1750);
@@ -183,6 +189,11 @@ public class AgilityPlusPlugin extends Plugin {
             changeCameraYaw(0);
             service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSeventhRoofGap, 8, 1), 1, TimeUnit.SECONDS);
         }
+    }
+
+    private void doSeersAgility() {
+        //yaw 29 from finish
+        //zoom all way out
     }
 
     private Point generatePointsFromPoint(Point point, int sigma) {
@@ -280,6 +291,14 @@ public class AgilityPlusPlugin extends Plugin {
         return false;
     }
 
+    private void panCameraToCanfisTree() {
+        setCameraZoom(300);
+        client.setOculusOrbNormalSpeed(40);
+        client.setOculusOrbState(1);
+        pressKey(KeyEvent.VK_S, 500);
+        service.schedule(() -> pressKey(KeyEvent.VK_D, 1500), 1, TimeUnit.SECONDS);
+    }
+
     private boolean checkLevelUp() {
         Widget levelUpMessage = client.getWidget(10617391);
         return !levelUpMessage.isHidden();
@@ -290,6 +309,14 @@ public class AgilityPlusPlugin extends Plugin {
         this.client.getCanvas().dispatchEvent(keyPress);
         KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key);
         this.client.getCanvas().dispatchEvent(keyRelease);
+    }
+
+    private void pressKey(int key, int ms) {
+        KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key);
+        this.client.getCanvas().dispatchEvent(keyPress);
+
+        KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key);
+        service.schedule(() -> this.client.getCanvas().dispatchEvent(keyRelease), ms, TimeUnit.MILLISECONDS);
     }
 
     private void scheduledGroundObjectDelay(GroundObject groundObject, int sigma, int seconds) {
