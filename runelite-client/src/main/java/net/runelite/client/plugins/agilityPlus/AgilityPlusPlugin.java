@@ -49,7 +49,7 @@ public class AgilityPlusPlugin extends Plugin {
     public static boolean scheduledMove = false;
     public static boolean isIdle = true;
 
-    ScheduledThreadPoolExecutor service = new ScheduledThreadPoolExecutor(1);
+    ScheduledThreadPoolExecutor service = null;
 
     public final int MARK_OF_GRACE = ItemID.MARK_OF_GRACE;
 
@@ -111,6 +111,11 @@ public class AgilityPlusPlugin extends Plugin {
     }
 
     private void doCanfisAgility() {
+        if(isIdle) {
+            service = null;
+            service = new ScheduledThreadPoolExecutor(1);
+        }
+
         if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_START) && isIdle) {
             setCameraZoom(729);
             changeCameraYaw(1438);
@@ -222,10 +227,11 @@ public class AgilityPlusPlugin extends Plugin {
 
         if(chatBoxMessage.equals("1") && toggleStatus == STATUS.STOP) {
             toggleStatus = STATUS.START;
+            service = new ScheduledThreadPoolExecutor(1);
             System.out.println("status is go");
         } else if (chatBoxMessage.equals("2") && toggleStatus == STATUS.START) {
             toggleStatus = STATUS.STOP;
-            service.shutdown();
+            service.shutdownNow();
             service = null;
             scheduledMove = false;
             isIdle = true;
