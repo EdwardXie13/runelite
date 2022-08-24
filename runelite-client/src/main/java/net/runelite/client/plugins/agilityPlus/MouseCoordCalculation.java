@@ -78,9 +78,10 @@ public class MouseCoordCalculation {
     }
 
     public static boolean isInGame(Point point) {
-        Rectangle gameBox = new Rectangle(0, 26, 963, 1039);
+        //Rectangle gameBox = new Rectangle(0, 26, 963, 1039);
 
-        return gameBox.contains(point);
+        return 0 <= point.x && point.x <= 963
+                && 26 <= point.y && point.y <= 1039;
     }
 
     public static Point randomClusterPicker(List<Point> points) {
