@@ -231,7 +231,7 @@ public class AgilityPlusPlugin extends Plugin {
             System.out.println("status is go");
         } else if (chatBoxMessage.equals("2") && toggleStatus == STATUS.START) {
             toggleStatus = STATUS.STOP;
-            service.shutdown();
+            service.shutdownNow();
             service = null;
             scheduledMove = false;
             isIdle = true;
