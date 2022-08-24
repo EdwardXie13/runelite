@@ -34,10 +34,6 @@ import java.awt.Rectangle;
 import java.awt.Shape;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -116,6 +112,11 @@ public class AgilityPlusPlugin extends Plugin {
     }
 
     private void doCanfisAgility() {
+        if(isIdle) {
+            service = null;
+            service = new ScheduledThreadPoolExecutor(1);
+        }
+
         if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_START) && isIdle) {
             setCameraZoom(729);
             changeCameraYaw(1438);
@@ -151,7 +152,7 @@ public class AgilityPlusPlugin extends Plugin {
         // 3 roof
         else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_THIRD_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3) && isIdle) {
             setCameraZoom(751);
-            service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3), 500, TimeUnit.MILLISECONDS);
+            service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3), 1500, TimeUnit.MILLISECONDS);
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_THIRD_ROOF) || isNearWorldTile(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3, 2)) && isIdle) {
             setCameraZoom(473);
             service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisThirdRoofGap, 10, 1), 500, TimeUnit.MILLISECONDS);
