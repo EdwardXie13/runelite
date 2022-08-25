@@ -237,13 +237,22 @@ public class AgilityPlusPlugin extends Plugin {
             } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
         }
         // 6 roof
-        else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SIXTH_ROOF) && isIdle) {
-            setCameraZoom(250);
-            changeCameraYaw(1300);
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SIXTH_ROOF) && isIdle && client.getOculusOrbState() == 0) {
+            panCameraToCanfisSixthRoofGap();
+            setCameraZoom(896);
             try {
-                service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSixthRoofGap, 8, 1), 1, TimeUnit.SECONDS);
+                service.schedule(() -> getWorldPointCoords(LocalPoint.fromWorld(client, new WorldPoint(3502, 3476, 3))), 3, TimeUnit.SECONDS);
             } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SEVENTH_ROOF) && isIdle) {
+        } else if(isNearWorldTile(new WorldPoint(3502, 3476, 3), 3) && isIdle) {
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            setCameraZoom(896);
+            try {
+                service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSixthRoofGap, 10, 1), 1, TimeUnit.SECONDS);
+            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+        }
+        // 7 roof
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SEVENTH_ROOF) && isIdle) {
             setCameraZoom(453);
             changeCameraYaw(0);
             try {
@@ -386,6 +395,15 @@ public class AgilityPlusPlugin extends Plugin {
             client.setOculusOrbNormalSpeed(40);
             client.setOculusOrbState(1);
             service.schedule(() -> pressKey(KeyEvent.VK_D, 1000), 1, TimeUnit.SECONDS);
+        } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+    }
+
+    private void panCameraToCanfisSixthRoofGap() {
+        try {
+            setCameraZoom(300);
+            client.setOculusOrbNormalSpeed(40);
+            client.setOculusOrbState(1);
+            service.schedule(() -> pressKey(KeyEvent.VK_D, 800), 1, TimeUnit.SECONDS);
         } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
     }
 
