@@ -54,6 +54,7 @@ public class AgilityPlusPlugin extends Plugin {
     public static boolean isIdle = true;
 
     ScheduledThreadPoolExecutor service = null;
+    
     public final int MARK_OF_GRACE = ItemID.MARK_OF_GRACE;
 
     @Inject
@@ -347,13 +348,13 @@ public class AgilityPlusPlugin extends Plugin {
     }
 
     private void panCameraToCanfisTree() {
-        try {
             setCameraZoom(300);
             client.setOculusOrbNormalSpeed(40);
             client.setOculusOrbState(1);
             pressKey(KeyEvent.VK_S, 500);
-            service.schedule(() -> pressKey(KeyEvent.VK_D, 1500), 1, TimeUnit.SECONDS);
-        } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            try {
+                service.schedule(() -> pressKey(KeyEvent.VK_D, 1500), 1, TimeUnit.SECONDS);
+            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
     }
 
     private boolean checkLevelUp() {
@@ -373,34 +374,46 @@ public class AgilityPlusPlugin extends Plugin {
         this.client.getCanvas().dispatchEvent(keyPress);
 
         KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key);
-        service.schedule(() -> this.client.getCanvas().dispatchEvent(keyRelease), ms, TimeUnit.MILLISECONDS);
+        try {
+            service.schedule(() -> this.client.getCanvas().dispatchEvent(keyRelease), ms, TimeUnit.MILLISECONDS);
+        } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
     }
 
     private void scheduledGroundObjectDelay(GroundObject groundObject, int sigma, int seconds) {
         isIdle = false;
-        service.schedule(() -> getObstacleCenter(groundObject, sigma), seconds, TimeUnit.SECONDS);
+        try {
+            service.schedule(() -> getObstacleCenter(groundObject, sigma), seconds, TimeUnit.SECONDS);
+        } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
     }
 
     private void scheduledGameObjectDelay(GameObject gameObject, int sigma, int seconds) {
         isIdle = false;
-        service.schedule(() -> getObstacleCenter(gameObject, sigma), seconds, TimeUnit.SECONDS);
+        try {
+            service.schedule(() -> getObstacleCenter(gameObject, sigma), seconds, TimeUnit.SECONDS);
+        } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
     }
 
     private void scheduledGameObjectPointDelay(Point point, GameObject gameObject, int sigma, int seconds) {
         isIdle = false;
         Point generatedPoint = generatePointsFromPoint(point, sigma);
-        service.schedule(() -> MouseCoordCalculation.generateCoord(generatedPoint, gameObject, sigma), seconds, TimeUnit.SECONDS);
+        try {
+            service.schedule(() -> MouseCoordCalculation.generateCoord(generatedPoint, gameObject, sigma), seconds, TimeUnit.SECONDS);
+        } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
     }
 
     //possible use would be a ground item that has no clickbox (doubt that will happen)
     private void scheduledGroundObjectPointDelay(Point point, GroundObject groundObject, int sigma, int seconds) {
         isIdle = false;
-        service.schedule(() -> MouseCoordCalculation.generateCoord(point, groundObject, sigma), seconds, TimeUnit.SECONDS);
+        try {
+            service.schedule(() -> MouseCoordCalculation.generateCoord(point, groundObject, sigma), seconds, TimeUnit.SECONDS);
+        } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
     }
 
     private void scheduledPointDelay(Point point, int sigma, int seconds) {
         isIdle = false;
-        service.schedule(() -> MouseCoordCalculation.generateCoord(point, sigma), seconds, TimeUnit.SECONDS);
+        try {
+            service.schedule(() -> MouseCoordCalculation.generateCoord(point, sigma), seconds, TimeUnit.SECONDS);
+        } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
     }
 
     private void getWorldPointCoords(final LocalPoint dest) {
@@ -439,6 +452,17 @@ public class AgilityPlusPlugin extends Plugin {
             itemsOnTile.forEach(tileItem -> tileItemIds.add(tileItem.getId()));
 
         return tileItemIds.contains(MARK_OF_GRACE);
+    }
+
+    private boolean checkIfAFK() {
+
+    }
+
+    private void reset() {
+        scheduledMove = false;
+        isIdle = true;
+
+        service = null;
     }
 
     enum STATUS{
