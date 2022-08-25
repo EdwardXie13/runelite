@@ -7,7 +7,6 @@ import net.runelite.api.GameState;
 import net.runelite.api.GroundObject;
 import net.runelite.api.ItemID;
 import net.runelite.api.Perspective;
-import net.runelite.api.Scene;
 import net.runelite.api.ScriptID;
 import net.runelite.api.Tile;
 import net.runelite.api.TileItem;
@@ -19,8 +18,6 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.GroundObjectDespawned;
 import net.runelite.api.events.GroundObjectSpawned;
-import net.runelite.api.events.ItemDespawned;
-import net.runelite.api.events.ItemSpawned;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
@@ -35,6 +32,7 @@ import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -52,6 +50,7 @@ import java.util.regex.Pattern;
 public class AgilityPlusPlugin extends Plugin {
     public static boolean scheduledMove = false;
     public static boolean isIdle = true;
+    public long start;
 
     ScheduledThreadPoolExecutor service = null;
     
@@ -70,6 +69,11 @@ public class AgilityPlusPlugin extends Plugin {
         toggleStatus();
 
         if(toggleStatus == STATUS.START) {
+            // if idle for ~30s
+            // make 'last reset' time to stop repeating resets
+            if (checkIdle() && checkLastReset())
+                reset();
+
             if(getRegionID() == 9781)
                 doGnomeAgility();
             else if(getRegionID() == 13878)
@@ -148,6 +152,7 @@ public class AgilityPlusPlugin extends Plugin {
             } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FAIL1) && isIdle && client.getOculusOrbState() == 0) {
             panCameraToCanfisTree();
+            setCameraZoom(896);
             try {
                 service.schedule(() -> getWorldPointCoords(LocalPoint.fromWorld(client, new WorldPoint(3506, 3488, 0))), 3, TimeUnit.SECONDS);
             } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
@@ -250,6 +255,24 @@ public class AgilityPlusPlugin extends Plugin {
     private void doSeersAgility() {
         //yaw 29 from finish
         //zoom all way out
+        if(checkLevelUp())
+            pressKey(KeyEvent.VK_SPACE);
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FAIL1) && isIdle && client.getOculusOrbState() == 0) {
+            panCameraToSeersStart();
+//            try {
+//                service.schedule(() -> getWorldPointCoords(LocalPoint.fromWorld(client, new WorldPoint(3506, 3488, 0))), 3, TimeUnit.SECONDS);
+//            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+        }
+//        else if(isNearWorldTile(new WorldPoint(3506, 3488, 0), 3) && isIdle) {
+//            client.setOculusOrbState(0);
+//            client.setOculusOrbNormalSpeed(12);
+//            setCameraZoom(896);
+////            847, 377
+//            try {
+//                service.schedule(() -> scheduledGameObjectPointDelay(new Point(847, 377), AgilityPlusObjectIDs.canfisTallTree, 8, 1), 2, TimeUnit.SECONDS);
+//            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+//        }
+
     }
 
     private Point generatePointsFromPoint(Point point, int sigma) {
@@ -357,6 +380,15 @@ public class AgilityPlusPlugin extends Plugin {
             } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
     }
 
+    private void panCameraToSeersStart() {
+        try {
+            setCameraZoom(300);
+            client.setOculusOrbNormalSpeed(40);
+            client.setOculusOrbState(1);
+            service.schedule(() -> pressKey(KeyEvent.VK_D, 1000), 1, TimeUnit.SECONDS);
+        } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+    }
+
     private boolean checkLevelUp() {
         Widget levelUpMessage = client.getWidget(10617391);
         return !levelUpMessage.isHidden();
@@ -454,15 +486,35 @@ public class AgilityPlusPlugin extends Plugin {
         return tileItemIds.contains(MARK_OF_GRACE);
     }
 
-    private boolean checkIfAFK() {
+    private boolean checkIdle()
+    {
+        int idleClientTicks = client.getKeyboardIdleTicks();
 
+        if (client.getMouseIdleTicks() < idleClientTicks)
+        {
+            idleClientTicks = client.getMouseIdleTicks();
+        }
+
+        return idleClientTicks >= 1600;
     }
 
     private void reset() {
+        System.out.println("idle for too long, reset");
+        try {
+            service.shutdownNow();
+            service = null;
+            service = new ScheduledThreadPoolExecutor(1);
+        } catch (Throwable t) { log.debug(":( " + Arrays.toString(t.getStackTrace())); }
         scheduledMove = false;
         isIdle = true;
+        start = System.currentTimeMillis();
+    }
 
-        service = null;
+    private boolean checkLastReset() {
+        long end = System.currentTimeMillis();
+        double sec = (end - start) / 1000F;
+
+        return sec >= 30;
     }
 
     enum STATUS{

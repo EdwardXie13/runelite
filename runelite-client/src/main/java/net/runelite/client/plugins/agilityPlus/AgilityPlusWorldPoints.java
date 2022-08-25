@@ -47,6 +47,8 @@ public class AgilityPlusWorldPoints {
     public static final WorldPoint SEERS_FOURTH_ROOF = new WorldPoint(2710, 3472, 3);
     public static final WorldPoint SEERS_FIFTH_ROOF = new WorldPoint(2702, 3465, 2);
 
+    public static final WorldPoint SEERS_FAIL1 = new WorldPoint(2710, 3484, 0);
+
 //    public static final WorldPoint DRAYNOR_AFTER_WALL = new WorldPoint(3102, 3279, 3);
 //    public static final WorldPoint DRAYNOR_TIGHTROPE1 = new WorldPoint(3090, 3276, 3);
 //    // failed point here

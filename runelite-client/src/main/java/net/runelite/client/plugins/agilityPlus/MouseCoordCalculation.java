@@ -6,7 +6,6 @@ import net.runelite.api.GameObject;
 import net.runelite.api.GroundObject;
 
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.Shape;
 import java.awt.event.InputEvent;
