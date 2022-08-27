@@ -45,9 +45,19 @@ public class AgilityPlusWorldPoints {
     public static final WorldPoint SEERS_SECOND_ROOF = new WorldPoint(2713, 3494, 2);
     public static final WorldPoint SEERS_THIRD_ROOF = new WorldPoint(2710, 3480, 2);
     public static final WorldPoint SEERS_FOURTH_ROOF = new WorldPoint(2710, 3472, 3);
+    public static final WorldPoint SEERS_FOURTH_ROOF_RUN_POINT = new WorldPoint(2702, 3470, 3);
     public static final WorldPoint SEERS_FIFTH_ROOF = new WorldPoint(2702, 3465, 2);
 
-    public static final WorldPoint SEERS_FAIL1 = new WorldPoint(2710, 3484, 0);
+    public static final WorldPoint SEERS_FAIL1 = new WorldPoint(2715, 3494, 0);
+    public static final WorldPoint SEERS_FAIL2 = new WorldPoint(2710, 3484, 0);
+
+    public static final WorldPoint SEERS_GRACEFULMARK1 = new WorldPoint(2727, 3493, 3);
+    public static final WorldPoint SEERS_GRACEFULMARK2_1 = new WorldPoint(2706, 3493, 2); //left
+    public static final WorldPoint SEERS_GRACEFULMARK2_2 = new WorldPoint(2709, 3493, 2); //right
+    public static final WorldPoint SEERS_GRACEFULMARK3 = new WorldPoint(2712, 3481, 2);
+
+    // last gap, west with zoom 562
+    public static final WorldPoint SEERS_GRACEFULMARK5 = new WorldPoint(2698, 3465, 2);
 
 //    public static final WorldPoint DRAYNOR_AFTER_WALL = new WorldPoint(3102, 3279, 3);
 //    public static final WorldPoint DRAYNOR_TIGHTROPE1 = new WorldPoint(3090, 3276, 3);

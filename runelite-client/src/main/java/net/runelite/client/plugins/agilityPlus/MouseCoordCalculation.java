@@ -2,6 +2,7 @@ package net.runelite.client.plugins.agilityPlus;
 
 import com.github.joonasvali.naturalmouse.api.MouseMotionFactory;
 import com.github.joonasvali.naturalmouse.util.FactoryTemplates;
+import net.runelite.api.DecorativeObject;
 import net.runelite.api.GameObject;
 import net.runelite.api.GroundObject;
 
@@ -37,6 +38,26 @@ public class MouseCoordCalculation {
 
     public static void generateCoord(Point point, GroundObject groundObject, int sigma) {
         Shape clickbox = groundObject.getClickbox();
+
+        //generate 3 more random points
+        List<Point> points = new ArrayList<>();
+
+        while(points.size() < 3) {
+            Point newPoint = randomCoord(point, sigma);
+            if(isCoordInClickBox(clickbox, newPoint) && isInGame(newPoint))
+                points.add(randomCoord(newPoint, sigma));
+        }
+
+        generatedPoint = randomClusterPicker(points);
+
+        if(!AgilityPlusPlugin.scheduledMove) {
+            AgilityPlusPlugin.scheduledMove = true;
+            mouseMove();
+        }
+    }
+
+    public static void generateCoord(Point point, DecorativeObject decorativeObject, int sigma) {
+        Shape clickbox = decorativeObject.getClickbox();
 
         //generate 3 more random points
         List<Point> points = new ArrayList<>();

@@ -5,6 +5,8 @@ import net.runelite.api.GameObject;
 import net.runelite.api.GroundObject;
 import net.runelite.api.ObjectID;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.events.DecorativeObjectDespawned;
+import net.runelite.api.events.DecorativeObjectSpawned;
 import net.runelite.api.events.GameObjectDespawned;
 import net.runelite.api.events.GameObjectSpawned;
 import net.runelite.api.events.GroundObjectDespawned;
@@ -132,23 +134,21 @@ public class AgilityPlusObjectIDs {
             case GAP_14897:
                 canfisSeventhRoofGap = obj;
                 break;
-        }
-    }
 
-
-    public static void assignObjects(GroundObjectSpawned event) {
-        GroundObject obj = event.getGroundObject();
-
-        int id = obj.getId();
-
-        switch (id) {
-            //=== GNOME_STRONGHOLD ===
-            case LOG_BALANCE_23145:
-                gnomeLogBalance = obj;
+            //=== SEERS ===
+            case GAP_14928:
+                seersFirstRoofGap = obj;
                 break;
-            case BALANCING_ROPE_23557:
-                gnomeBalancingRope = obj;
+            case GAP_14929:
+                seersThirdRoofGap = obj;
                 break;
+            case GAP_14930:
+                seersFourthRoofGap = obj;
+                break;
+            case EDGE_14931:
+                seersFifthRoofGap = obj;
+                break;
+
         }
     }
 
@@ -216,6 +216,41 @@ public class AgilityPlusObjectIDs {
             case GAP_14897:
                 canfisSeventhRoofGap = null;
                 break;
+
+            //=== SEERS ===
+            case GAP_14928:
+                seersFirstRoofGap = null;
+                break;
+            case GAP_14929:
+                seersThirdRoofGap = null;
+                break;
+            case GAP_14930:
+                seersFourthRoofGap = null;
+                break;
+            case EDGE_14931:
+                seersFifthRoofGap = null;
+                break;
+        }
+    }
+
+    public static void assignObjects(GroundObjectSpawned event) {
+        GroundObject obj = event.getGroundObject();
+
+        int id = obj.getId();
+
+        switch (id) {
+            //=== GNOME_STRONGHOLD ===
+            case LOG_BALANCE_23145:
+                gnomeLogBalance = obj;
+                break;
+            case BALANCING_ROPE_23557:
+                gnomeBalancingRope = obj;
+                break;
+
+            //=== SEERS ===
+            case TIGHTROPE_14932:
+                seersTightrope = obj;
+                break;
         }
     }
 
@@ -231,6 +266,37 @@ public class AgilityPlusObjectIDs {
                 break;
             case BALANCING_ROPE_23557:
                 gnomeBalancingRope = null;
+                break;
+
+            //=== SEERS ===
+            case TIGHTROPE_14932:
+                seersTightrope = null;
+                break;
+        }
+    }
+
+    public static void assignObjects(DecorativeObjectSpawned event) {
+        DecorativeObject obj = event.getDecorativeObject();
+
+        int id = obj.getId();
+
+        switch (id) {
+            //=== SEERS ===
+            case WALL_14927:
+                seersStartWall = obj;
+                break;
+        }
+    }
+
+    public static void assignObjects(DecorativeObjectDespawned event) {
+        DecorativeObject obj = event.getDecorativeObject();
+
+        int id = obj.getId();
+
+        switch (id) {
+            //=== SEERS ===
+            case WALL_14927:
+                seersStartWall = null;
                 break;
         }
     }
