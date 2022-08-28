@@ -37,6 +37,9 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -53,7 +56,7 @@ public class AgilityPlusPlugin extends Plugin {
     public static boolean isIdle = true;
     public long start;
 
-    ScheduledThreadPoolExecutor service = new ScheduledThreadPoolExecutor(1);
+    ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
     
     public final int MARK_OF_GRACE = ItemID.MARK_OF_GRACE;
 
@@ -93,7 +96,9 @@ public class AgilityPlusPlugin extends Plugin {
             changeCameraYaw(0);
             try {
                 scheduledGroundObjectDelay(AgilityPlusObjectIDs.gnomeLogBalance, 10, 1);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (Throwable t) {
+                log.debug(":( " + t.getStackTrace());
+            }
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_LOG) && isIdle) {
             try {
                 scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstacleNet1_M, 15, 1);
@@ -274,120 +279,154 @@ public class AgilityPlusPlugin extends Plugin {
             panCameraToSeersStartFromFail1();
             try {
                 service.schedule(() -> getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.SEERS_START)), 3, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (RejectedExecutionException | NullPointerException e) {
+                log.debug(":( " + Arrays.toString(e.getStackTrace()));
+            }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FAIL2) && isIdle && client.getOculusOrbState() == 0) {
             panCameraToSeersStartFromFail2();
             setCameraZoom(896);
             try {
                 service.schedule(() -> getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.SEERS_START)), 3, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (RejectedExecutionException | NullPointerException e) {
+                log.debug(":( " + Arrays.toString(e.getStackTrace()));
+            }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIRST_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1)) {
             pressKey(KeyEvent.VK_UP, 3000);
             changeCameraYaw(0);
             setCameraZoom(896);
             try {
                 service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1), 1, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (RejectedExecutionException | NullPointerException e) {
+                log.debug(":( " + Arrays.toString(e.getStackTrace()));
+            }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIRST_ROOF) && isIdle ) {
             pressKey(KeyEvent.VK_UP, 3000);
             changeCameraYaw(0);
             setCameraZoom(346);
             try {
                 service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10, 1), 1, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (RejectedExecutionException | NullPointerException e) {
+                log.debug(":( " + Arrays.toString(e.getStackTrace()));
+            }
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1, 2) && isIdle) {
             setCameraZoom(434);
             try {
                 service.schedule(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10, 1), 1, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (RejectedExecutionException | NullPointerException e) {
+                log.debug(":( " + Arrays.toString(e.getStackTrace()));
+            }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1)) {
             setCameraZoom(483);
             changeCameraYaw(0);
             try {
                 service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1), 1, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (RejectedExecutionException | NullPointerException e) {
+                log.debug(":( " + Arrays.toString(e.getStackTrace()));
+            }
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1, 2) && isIdle) {
             if (doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1)) {
                 try {
                     service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1), 500, TimeUnit.MILLISECONDS);
-                } catch (Throwable t) {
-                    log.debug(":( " + t.getStackTrace());
+                } catch (RejectedExecutionException | NullPointerException e) {
+                    log.debug(":( " + Arrays.toString(e.getStackTrace()));
                 }
                 isIdle = false;
             } else {
                 setCameraZoom(630);
                 try {
                     service.schedule(() -> scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10, 1), 1, TimeUnit.SECONDS);
-                } catch (Throwable t) {
-                    log.debug(":( " + t.getStackTrace());
+                } catch (RejectedExecutionException | NullPointerException e) {
+                    log.debug(":( " + Arrays.toString(e.getStackTrace()));
                 }
             }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2)) {
             setCameraZoom(661);
             try {
                 service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2), 1, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (RejectedExecutionException | NullPointerException e) {
+                log.debug(":( " + Arrays.toString(e.getStackTrace()));
+            }
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) || isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2, 2)) && isIdle) {
             changeCameraYaw(0);
             setCameraZoom(581);
             try {
                 service.schedule(() -> scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10, 1), 1, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (RejectedExecutionException | NullPointerException e) {
+                log.debug(":( " + Arrays.toString(e.getStackTrace()));
+            }
         }
         // right before 2nd roof Tightrope (case of misclick)
         else if(isNearWorldTile(new WorldPoint(2710, 3490, 2), 3) && isIdle) {
             setCameraZoom(896);
             try {
                 service.schedule(() -> scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10, 1), 1, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (RejectedExecutionException | NullPointerException e) {
+                log.debug(":( " + Arrays.toString(e.getStackTrace()));
+            }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_THIRD_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3) && isIdle) {
             changeCameraYaw(0);
             setCameraZoom(896);
             try {
                 service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3), 1, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (RejectedExecutionException | NullPointerException e) {
+                log.debug(":( " + Arrays.toString(e.getStackTrace()));
+            }
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.SEERS_THIRD_ROOF) || isAtWorldPoint(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3))  && isIdle) {
             setCameraZoom(542);
             changeCameraYaw(0);
             try {
                 service.schedule(() -> scheduledGameObjectPointDelay(new Point(494, 905), AgilityPlusObjectIDs.seersThirdRoofGap, 10, 1), 1, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (RejectedExecutionException | NullPointerException e) {
+                log.debug(":( " + Arrays.toString(e.getStackTrace()));
+            }
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_FOURTH_ROOF, 3) && isIdle && client.getOculusOrbState() == 0) {
             setCameraZoom(600);
             panCameraToSeersFourthRoofGap();
             try {
                 service.schedule(() -> getWorldPointCoords(LocalPoint.fromWorld(client, new WorldPoint(2702, 3470, 3))), 3, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (RejectedExecutionException | NullPointerException e) {
+                log.debug(":( " + Arrays.toString(e.getStackTrace()));
+            }
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_FOURTH_ROOF_RUN_POINT, 2) && isIdle) {
             setCameraZoom(896);
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
             try {
                 service.schedule(() -> scheduledGameObjectPointDelay(new Point(450, 775), AgilityPlusObjectIDs.seersFourthRoofGap, 12, 1), 1, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (RejectedExecutionException | NullPointerException e) {
+                log.debug(":( " + Arrays.toString(e.getStackTrace()));
+            }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIFTH_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5)) {
             setCameraZoom(670);
             try {
                 service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5), 1, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (RejectedExecutionException | NullPointerException e) {
+                log.debug(":( " + Arrays.toString(e.getStackTrace()));
+            }
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5, 2) && isIdle) {
             changeCameraYaw(0);
             setCameraZoom(562);
             try {
                 service.schedule(() -> scheduledGameObjectPointDelay(new Point(895, 575), AgilityPlusObjectIDs.seersFifthRoofGap, 10, 1), 1, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (RejectedExecutionException | NullPointerException e) {
+                log.debug(":( " + Arrays.toString(e.getStackTrace()));
+            }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIFTH_ROOF) && isIdle) {
             setCameraZoom(896);
             changeCameraYaw(512);
             try {
                 service.schedule(() -> scheduledGameObjectPointDelay(new Point(350, 742), AgilityPlusObjectIDs.seersFifthRoofGap, 12, 1), 1, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (RejectedExecutionException | NullPointerException e) {
+                log.debug(":( " + Arrays.toString(e.getStackTrace()));
+            }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FINISH) && isIdle && client.getOculusOrbState() == 0) {
             changeCameraYaw(0);
             panCameraToSeersStartFromFinish();
             try {
                 service.schedule(() -> getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.SEERS_START)), 4, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (RejectedExecutionException | NullPointerException e) {
+                log.debug(":( " + Arrays.toString(e.getStackTrace()));
+            }
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_START, 4) && isIdle) {
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
@@ -397,7 +436,9 @@ public class AgilityPlusPlugin extends Plugin {
 
             try {
                 service.schedule(() -> scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.seersStartWall, 10, 1), 1, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+            } catch (RejectedExecutionException | NullPointerException e) {
+                log.debug(":( " + Arrays.toString(e.getStackTrace()));
+            }
         }
     }
 
