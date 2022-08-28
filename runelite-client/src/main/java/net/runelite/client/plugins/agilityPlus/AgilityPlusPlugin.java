@@ -1,7 +1,6 @@
 package net.runelite.client.plugins.agilityPlus;
 
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import net.runelite.api.Client;
 import net.runelite.api.DecorativeObject;
 import net.runelite.api.GameObject;
@@ -36,15 +35,9 @@ import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -237,11 +230,11 @@ public class AgilityPlusPlugin extends Plugin {
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIRST_ROOF) && isIdle ) {
             pressKey(KeyEvent.VK_UP, 3000);
             changeCameraYaw(0);
-            setCameraZoom(346);
-            timer.schedule(wrap(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10, 1)), 1000);
+            setCameraZoom(355);
+            timer.schedule(wrap(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10, 1000)), 1000);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1, 2) && isIdle) {
             setCameraZoom(434);
-            timer.schedule(wrap(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10, 1)), 1000);
+            timer.schedule(wrap(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10, 1000)), 1000);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1)) {
             setCameraZoom(483);
             changeCameraYaw(0);
@@ -252,7 +245,7 @@ public class AgilityPlusPlugin extends Plugin {
                 isIdle = false;
             } else {
                 setCameraZoom(630);
-                timer.schedule(wrap(() -> scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10, 1)), 1000);
+                timer.schedule(wrap(() -> scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10, 1000)), 1000);
             }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2)) {
             setCameraZoom(661);
@@ -260,12 +253,12 @@ public class AgilityPlusPlugin extends Plugin {
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) || isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2, 2)) && isIdle) {
             changeCameraYaw(0);
             setCameraZoom(581);
-            timer.schedule(wrap(() ->scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10, 1)), 1000);
+            timer.schedule(wrap(() ->scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10, 1000)), 1000);
         }
         // right before 2nd roof Tightrope (case of misclick)
         else if(isNearWorldTile(new WorldPoint(2710, 3490, 2), 3) && isIdle) {
             setCameraZoom(896);
-            timer.schedule(wrap(() -> scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10, 1)), 1000);
+            timer.schedule(wrap(() -> scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10, 1000)), 1000);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_THIRD_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3) && isIdle) {
             changeCameraYaw(0);
             setCameraZoom(896);
@@ -273,7 +266,7 @@ public class AgilityPlusPlugin extends Plugin {
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.SEERS_THIRD_ROOF) || isAtWorldPoint(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3))  && isIdle) {
             setCameraZoom(542);
             changeCameraYaw(0);
-            timer.schedule(wrap(() -> scheduledGameObjectPointDelay(new Point(494, 905), AgilityPlusObjectIDs.seersThirdRoofGap, 10, 1)), 1000);
+            timer.schedule(wrap(() -> scheduledGameObjectPointDelay(new Point(494, 905), AgilityPlusObjectIDs.seersThirdRoofGap, 10, 1000)), 1000);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_FOURTH_ROOF, 3) && isIdle && client.getOculusOrbState() == 0) {
             setCameraZoom(600);
             panCameraToSeersFourthRoofGap();
@@ -282,18 +275,18 @@ public class AgilityPlusPlugin extends Plugin {
             setCameraZoom(896);
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
-            timer.schedule(wrap(() -> scheduledGameObjectPointDelay(new Point(450, 775), AgilityPlusObjectIDs.seersFourthRoofGap, 12, 1)), 1000);
+            timer.schedule(wrap(() -> scheduledGameObjectPointDelay(new Point(450, 775), AgilityPlusObjectIDs.seersFourthRoofGap, 12, 1000)), 1000);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIFTH_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5)) {
             setCameraZoom(670);
             timer.schedule(wrap(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5)), 1000);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5, 2) && isIdle) {
             changeCameraYaw(0);
             setCameraZoom(562);
-            timer.schedule(wrap(() -> scheduledGameObjectPointDelay(new Point(895, 575), AgilityPlusObjectIDs.seersFifthRoofGap, 10, 1)), 1000);
+            timer.schedule(wrap(() -> scheduledGameObjectPointDelay(new Point(895, 575), AgilityPlusObjectIDs.seersFifthRoofGap, 10, 1000)), 1000);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIFTH_ROOF) && isIdle) {
             setCameraZoom(896);
             changeCameraYaw(512);
-            timer.schedule(wrap(() -> scheduledGameObjectPointDelay(new Point(350, 742), AgilityPlusObjectIDs.seersFifthRoofGap, 12, 1)), 1000);
+            timer.schedule(wrap(() -> scheduledGameObjectPointDelay(new Point(350, 742), AgilityPlusObjectIDs.seersFifthRoofGap, 12, 1000)), 1000);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FINISH) && isIdle && client.getOculusOrbState() == 0) {
             changeCameraYaw(0);
             panCameraToSeersStartFromFinish();
@@ -304,7 +297,7 @@ public class AgilityPlusPlugin extends Plugin {
             pressKey(KeyEvent.VK_DOWN, 3000);
             setCameraZoom(768);
             changeCameraYaw(1928);
-            timer.schedule(wrap(() -> scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.seersStartWall, 10, 1)), 1000);
+            timer.schedule(wrap(() -> scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.seersStartWall, 10, 1000)), 1000);
         }
     }
 
