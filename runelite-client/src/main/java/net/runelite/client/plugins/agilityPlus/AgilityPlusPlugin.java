@@ -217,87 +217,187 @@ public class AgilityPlusPlugin extends Plugin {
         else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FAIL1) && isIdle && client.getOculusOrbState() == 0) {
             setCameraZoom(896);
             panCameraToSeersStartFromFail1();
-            timer.schedule(wrap(() -> getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.SEERS_START))), 3000);
+            try {
+                timer.schedule(wrap(() -> getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.SEERS_START))), 3000);
+            } catch (RuntimeException e){
+                log.error("Uncaught Runtime Exception",e);
+                return; // Keep working
+            }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FAIL2) && isIdle && client.getOculusOrbState() == 0) {
             panCameraToSeersStartFromFail2();
             setCameraZoom(896);
-            timer.schedule(wrap(() -> getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.SEERS_START))), 3000);
+            try {
+                timer.schedule(wrap(() -> getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.SEERS_START))), 3000);
+            } catch (RuntimeException e){
+                log.error("Uncaught Runtime Exception",e);
+                return; // Keep working
+            }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIRST_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1)) {
             pressKey(KeyEvent.VK_UP, 3000);
             changeCameraYaw(0);
             setCameraZoom(896);
-            timer.schedule(wrap(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1)), 1000);
+            try {
+                timer.schedule(wrap(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1)), 1000);
+            } catch (RuntimeException e){
+                log.error("Uncaught Runtime Exception",e);
+                return; // Keep working
+            }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIRST_ROOF) && isIdle ) {
             pressKey(KeyEvent.VK_UP, 3000);
             changeCameraYaw(0);
             setCameraZoom(355);
-            timer.schedule(wrap(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10, 1000)), 1000);
+            try {
+                timer.schedule(wrap(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10, 1000)), 1000);
+            } catch (RuntimeException e){
+                log.error("Uncaught Runtime Exception",e);
+                return; // Keep working
+            }
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1, 2) && isIdle) {
             setCameraZoom(434);
-            timer.schedule(wrap(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10, 1000)), 1000);
+            try {
+                timer.schedule(wrap(() -> scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10, 1000)), 1000);
+            } catch (RuntimeException e){
+                log.error("Uncaught Runtime Exception",e);
+                return; // Keep working
+            }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1)) {
             setCameraZoom(483);
             changeCameraYaw(0);
-            timer.schedule(wrap(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1)), 1000);
+            try{
+                timer.schedule(wrap(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1)), 1000);
+            } catch (RuntimeException e){
+                log.error("Uncaught Runtime Exception",e);
+                return; // Keep working
+            }
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1, 2) && isIdle) {
             if (doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1)) {
-                timer.schedule(wrap(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1)), 1000);
                 isIdle = false;
+                try {
+                    timer.schedule(wrap(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1)), 1000);
+                } catch (RuntimeException e){
+                    log.error("Uncaught Runtime Exception",e);
+                    return; // Keep working
+                }
             } else {
                 setCameraZoom(630);
-                timer.schedule(wrap(() -> scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10, 1000)), 1000);
+                try {
+                    timer.schedule(wrap(() -> scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10, 1000)), 1000);
+                } catch (RuntimeException e){
+                    log.error("Uncaught Runtime Exception",e);
+                    return; // Keep working
+                }
             }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2)) {
             setCameraZoom(661);
-            timer.schedule(wrap(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2)), 1000);
+            try {
+                timer.schedule(wrap(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2)), 1000);
+            } catch (RuntimeException e){
+                log.error("Uncaught Runtime Exception",e);
+                return; // Keep working
+            }
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) || isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2, 2)) && isIdle) {
             changeCameraYaw(0);
             setCameraZoom(581);
-            timer.schedule(wrap(() ->scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10, 1000)), 1000);
+            try {
+                timer.schedule(wrap(() ->scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10, 1000)), 1000);
+            } catch (RuntimeException e){
+                log.error("Uncaught Runtime Exception",e);
+                return; // Keep working
+            }
         }
         // right before 2nd roof Tightrope (case of misclick)
         else if(isNearWorldTile(new WorldPoint(2710, 3490, 2), 3) && isIdle) {
             setCameraZoom(896);
-            timer.schedule(wrap(() -> scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10, 1000)), 1000);
+            try {
+                timer.schedule(wrap(() -> scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10, 1000)), 1000);
+            } catch (RuntimeException e){
+                log.error("Uncaught Runtime Exception",e);
+                return; // Keep working
+            }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_THIRD_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3) && isIdle) {
             changeCameraYaw(0);
             setCameraZoom(896);
-            timer.schedule(wrap(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3)), 1000);
+            try {
+                timer.schedule(wrap(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3)), 1000);
+            } catch (RuntimeException e){
+                log.error("Uncaught Runtime Exception",e);
+                return; // Keep working
+            }
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.SEERS_THIRD_ROOF) || isAtWorldPoint(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3))  && isIdle) {
             setCameraZoom(542);
             changeCameraYaw(0);
-            timer.schedule(wrap(() -> scheduledGameObjectPointDelay(new Point(494, 905), AgilityPlusObjectIDs.seersThirdRoofGap, 10, 1000)), 1000);
+            try {
+                timer.schedule(wrap(() -> scheduledGameObjectPointDelay(new Point(494, 905), AgilityPlusObjectIDs.seersThirdRoofGap, 10, 1000)), 1000);
+            } catch (RuntimeException e){
+                log.error("Uncaught Runtime Exception",e);
+                return; // Keep working
+            }
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_FOURTH_ROOF, 3) && isIdle && client.getOculusOrbState() == 0) {
             setCameraZoom(600);
             panCameraToSeersFourthRoofGap();
-            timer.schedule(wrap(() -> getWorldPointCoords(LocalPoint.fromWorld(client, new WorldPoint(2702, 3470, 3)))), 3000);
+            try {
+                timer.schedule(wrap(() -> getWorldPointCoords(LocalPoint.fromWorld(client, new WorldPoint(2702, 3470, 3)))), 3000);
+            } catch (RuntimeException e){
+                log.error("Uncaught Runtime Exception",e);
+                return; // Keep working
+            }
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_FOURTH_ROOF_RUN_POINT, 2) && isIdle) {
             setCameraZoom(896);
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
-            timer.schedule(wrap(() -> scheduledGameObjectPointDelay(new Point(450, 775), AgilityPlusObjectIDs.seersFourthRoofGap, 12, 1000)), 1000);
+            try {
+                timer.schedule(wrap(() -> scheduledGameObjectPointDelay(new Point(450, 775), AgilityPlusObjectIDs.seersFourthRoofGap, 12, 1000)), 1000);
+            } catch (RuntimeException e){
+                log.error("Uncaught Runtime Exception",e);
+                return; // Keep working
+            }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIFTH_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5)) {
             setCameraZoom(670);
-            timer.schedule(wrap(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5)), 1000);
+            try {
+                timer.schedule(wrap(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5)), 1000);
+            } catch (RuntimeException e){
+                log.error("Uncaught Runtime Exception",e);
+                return; // Keep working
+            }
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5, 2) && isIdle) {
             changeCameraYaw(0);
             setCameraZoom(562);
-            timer.schedule(wrap(() -> scheduledGameObjectPointDelay(new Point(895, 575), AgilityPlusObjectIDs.seersFifthRoofGap, 10, 1000)), 1000);
+            try {
+                timer.schedule(wrap(() -> scheduledGameObjectPointDelay(new Point(895, 575), AgilityPlusObjectIDs.seersFifthRoofGap, 10, 1000)), 1000);
+            } catch (RuntimeException e){
+                log.error("Uncaught Runtime Exception",e);
+                return; // Keep working
+            }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIFTH_ROOF) && isIdle) {
             setCameraZoom(896);
             changeCameraYaw(512);
-            timer.schedule(wrap(() -> scheduledGameObjectPointDelay(new Point(350, 742), AgilityPlusObjectIDs.seersFifthRoofGap, 12, 1000)), 1000);
+            try {
+                timer.schedule(wrap(() -> scheduledGameObjectPointDelay(new Point(350, 742), AgilityPlusObjectIDs.seersFifthRoofGap, 12, 1000)), 1000);
+            } catch (RuntimeException e){
+                log.error("Uncaught Runtime Exception",e);
+                return; // Keep working
+            }
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FINISH) && isIdle && client.getOculusOrbState() == 0) {
             changeCameraYaw(0);
             panCameraToSeersStartFromFinish();
-            timer.schedule(wrap(() -> getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.SEERS_START))), 4000);
+            try {
+                timer.schedule(wrap(() -> getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.SEERS_START))), 4000);
+            } catch (RuntimeException e){
+                log.error("Uncaught Runtime Exception",e);
+                return; // Keep working
+            }
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_START, 4) && isIdle) {
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
             pressKey(KeyEvent.VK_DOWN, 3000);
             setCameraZoom(768);
             changeCameraYaw(1928);
-            timer.schedule(wrap(() -> scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.seersStartWall, 10, 1000)), 1000);
+            try {
+                timer.schedule(wrap(() -> scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.seersStartWall, 10, 1000)), 1000);
+            } catch (RuntimeException e){
+                log.error("Uncaught Runtime Exception",e);
+                return; // Keep working
+            }
         }
     }
 
