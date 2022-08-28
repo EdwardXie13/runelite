@@ -42,8 +42,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-;
-
 @PluginDescriptor(
         name = "Agility Plus",
         description = "Show overlays for agility",
@@ -55,7 +53,7 @@ public class AgilityPlusPlugin extends Plugin {
     public static boolean isIdle = true;
     public long start;
 
-    ScheduledThreadPoolExecutor service = null;
+    ScheduledThreadPoolExecutor service = new ScheduledThreadPoolExecutor(1);
     
     public final int MARK_OF_GRACE = ItemID.MARK_OF_GRACE;
 
@@ -76,6 +74,8 @@ public class AgilityPlusPlugin extends Plugin {
             // make 'last reset' time to stop repeating resets
             if (checkIdle() && checkLastReset())
                 reset();
+
+            if(isNotHealthly()) { return; }
 
             if(getRegionID() == 9781)
                 doGnomeAgility();
@@ -270,6 +270,7 @@ public class AgilityPlusPlugin extends Plugin {
         if(checkLevelUp())
             pressKey(KeyEvent.VK_SPACE);
         else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FAIL1) && isIdle && client.getOculusOrbState() == 0) {
+            setCameraZoom(896);
             panCameraToSeersStartFromFail1();
             try {
                 service.schedule(() -> getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.SEERS_START)), 3, TimeUnit.SECONDS);
@@ -321,16 +322,12 @@ public class AgilityPlusPlugin extends Plugin {
                     log.debug(":( " + t.getStackTrace());
                 }
             }
-        }
-
-        else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2)) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2)) {
             setCameraZoom(661);
             try {
                 service.schedule(() -> checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2), 1, TimeUnit.SECONDS);
             } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
-        }
-
-        else if((isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) || isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2, 2)) && isIdle) {
+        } else if((isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) || isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2, 2)) && isIdle) {
             changeCameraYaw(0);
             setCameraZoom(581);
             try {
@@ -343,9 +340,7 @@ public class AgilityPlusPlugin extends Plugin {
             try {
                 service.schedule(() -> scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10, 1), 1, TimeUnit.SECONDS);
             } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
-        }
-
-        else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_THIRD_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3) && isIdle) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_THIRD_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3) && isIdle) {
             changeCameraYaw(0);
             setCameraZoom(896);
             try {
@@ -381,8 +376,7 @@ public class AgilityPlusPlugin extends Plugin {
             try {
                 service.schedule(() -> scheduledGameObjectPointDelay(new Point(895, 575), AgilityPlusObjectIDs.seersFifthRoofGap, 10, 1), 1, TimeUnit.SECONDS);
             } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
-        }
-        else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIFTH_ROOF) && isIdle) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIFTH_ROOF) && isIdle) {
             setCameraZoom(896);
             changeCameraYaw(512);
             try {
@@ -405,15 +399,6 @@ public class AgilityPlusPlugin extends Plugin {
                 service.schedule(() -> scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.seersStartWall, 10, 1), 1, TimeUnit.SECONDS);
             } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
         }
-//            client.setOculusOrbState(0);
-//            client.setOculusOrbNormalSpeed(12);
-//            setCameraZoom(896);
-////            847, 377
-//            try {
-//                service.schedule(() -> scheduledGameObjectPointDelay(new Point(847, 377), AgilityPlusObjectIDs.canfisTallTree, 8, 1), 2, TimeUnit.SECONDS);
-//            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
-//        }
-
     }
 
     private Point generatePointsFromPoint(Point point, int sigma) {
@@ -466,12 +451,10 @@ public class AgilityPlusPlugin extends Plugin {
 
         if(chatBoxMessage.equals("1") && toggleStatus == STATUS.STOP) {
             toggleStatus = STATUS.START;
-            service = new ScheduledThreadPoolExecutor(1);
             System.out.println("status is go");
         } else if (chatBoxMessage.equals("2") && toggleStatus == STATUS.START) {
             toggleStatus = STATUS.STOP;
             service.shutdownNow();
-            service = null;
             scheduledMove = false;
             isIdle = true;
             System.out.println("status is stop");
@@ -523,13 +506,13 @@ public class AgilityPlusPlugin extends Plugin {
     }
 
     private void panCameraToCanfisTree() {
-            setCameraZoom(300);
-            client.setOculusOrbNormalSpeed(40);
-            client.setOculusOrbState(1);
-            pressKey(KeyEvent.VK_S, 500);
-            try {
-                service.schedule(() -> pressKey(KeyEvent.VK_D, 1500), 1, TimeUnit.SECONDS);
-            } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
+        setCameraZoom(300);
+        client.setOculusOrbNormalSpeed(40);
+        client.setOculusOrbState(1);
+        pressKey(KeyEvent.VK_S, 500);
+        try {
+            service.schedule(() -> pressKey(KeyEvent.VK_D, 1500), 1, TimeUnit.SECONDS);
+        } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
     }
 
     private void panCameraToSeersStartFromFail1() {
@@ -553,7 +536,7 @@ public class AgilityPlusPlugin extends Plugin {
     private void panCameraToSeersStartFromFinish() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
-        pressKey(KeyEvent.VK_D, 1500);
+        pressKey(KeyEvent.VK_D, 1600);
         try {
             service.schedule(() -> pressKey(KeyEvent.VK_W, 1200), 2000, TimeUnit.MILLISECONDS);
         } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
@@ -574,14 +557,6 @@ public class AgilityPlusPlugin extends Plugin {
             client.setOculusOrbState(1);
             service.schedule(() -> pressKey(KeyEvent.VK_A, 600), 1, TimeUnit.SECONDS);
         } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
-    }
-
-    private void detachCamera() {
-        client.setOculusOrbState(1);
-    }
-
-    private void reatachCamera() {
-        client.setOculusOrbState(0);
     }
 
     private boolean checkLevelUp() {
@@ -704,11 +679,10 @@ public class AgilityPlusPlugin extends Plugin {
         System.out.println("idle for too long, reset");
         try {
             service.shutdownNow();
-            service = null;
-            service = new ScheduledThreadPoolExecutor(1);
         } catch (Throwable t) { log.debug(":( " + Arrays.toString(t.getStackTrace())); }
         scheduledMove = false;
         isIdle = true;
+        client.setOculusOrbState(0);
         start = System.currentTimeMillis();
     }
 
@@ -718,6 +692,32 @@ public class AgilityPlusPlugin extends Plugin {
 
         return sec >= 10;
     }
+
+    private boolean isNotHealthly() {
+        Widget hpOrbWidget = client.getWidget(10485769);
+        if(hpOrbWidget != null) {
+            String hpOrbText = hpOrbWidget.getText();
+            if(hpOrbText != null) {
+                if(!hpOrbText.isEmpty()) {
+                    return Integer.parseInt(hpOrbText) < 10;
+                }
+            }
+        }
+        return false;
+    }
+
+//    private void eatFood() {
+//        Widget inventoryWidget = client.getWidget(WidgetInfo.INVENTORY);
+//        if(inventoryWidget != null) {
+//            ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
+//            if(inventory.contains(ItemID.SALMON) || inventory.contains(ItemID.CAKE) || inventory.contains(ItemID._23_CAKE) || inventory.contains(ItemID.SLICE_OF_CAKE)) {
+//                List<Item> inventoryList = new ArrayList<>(Arrays.asList(inventory.getItems()));
+//                inventoryList.stream().findFirst().get(
+//            }
+//        } else {
+//            pressKey(KeyEvent.VK_ESCAPE);
+//        }
+//    }
 
     enum STATUS{
         START,
@@ -731,7 +731,6 @@ public class AgilityPlusPlugin extends Plugin {
         {
             toggleStatus = STATUS.STOP;
             service.shutdown();
-            service = null;
             System.out.println("status is stop (login screen)");
         }
     }
