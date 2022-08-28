@@ -270,6 +270,7 @@ public class AgilityPlusPlugin extends Plugin {
         if(checkLevelUp())
             pressKey(KeyEvent.VK_SPACE);
         else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FAIL1) && isIdle && client.getOculusOrbState() == 0) {
+            setCameraZoom(896);
             panCameraToSeersStartFromFail1();
             try {
                 service.schedule(() -> getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.SEERS_START)), 3, TimeUnit.SECONDS);
@@ -553,7 +554,7 @@ public class AgilityPlusPlugin extends Plugin {
     private void panCameraToSeersStartFromFinish() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
-        pressKey(KeyEvent.VK_D, 1500);
+        pressKey(KeyEvent.VK_D, 1600);
         try {
             service.schedule(() -> pressKey(KeyEvent.VK_W, 1200), 2000, TimeUnit.MILLISECONDS);
         } catch (Throwable t) { log.debug(":( " + t.getStackTrace()); }
@@ -709,6 +710,7 @@ public class AgilityPlusPlugin extends Plugin {
         } catch (Throwable t) { log.debug(":( " + Arrays.toString(t.getStackTrace())); }
         scheduledMove = false;
         isIdle = true;
+        client.setOculusOrbState(0);
         start = System.currentTimeMillis();
     }
 
@@ -718,6 +720,31 @@ public class AgilityPlusPlugin extends Plugin {
 
         return sec >= 10;
     }
+
+    private boolean isHealthly() {
+        Widget hpOrbWidget = client.getWidget(10616888);
+        if(hpOrbWidget != null) {
+            String hpOrbText = hpOrbWidget.getText();
+            if(hpOrbText != null) {
+                if(!hpOrbText.isEmpty())
+                    return Integer.parseInt(hpOrbText) < 10;
+            }
+        }
+        return false;
+    }
+
+//    private void eatFood() {
+//        Widget inventoryWidget = client.getWidget(WidgetInfo.INVENTORY);
+//        if(inventoryWidget != null) {
+//            ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
+//            if(inventory.contains(ItemID.SALMON) || inventory.contains(ItemID.CAKE) || inventory.contains(ItemID._23_CAKE) || inventory.contains(ItemID.SLICE_OF_CAKE)) {
+//                List<Item> inventoryList = new ArrayList<>(Arrays.asList(inventory.getItems()));
+//                inventoryList.stream().findFirst().get(
+//            }
+//        } else {
+//            pressKey(KeyEvent.VK_ESCAPE);
+//        }
+//    }
 
     enum STATUS{
         START,
