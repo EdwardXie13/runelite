@@ -29,11 +29,7 @@ public class MouseCoordCalculation {
         }
 
         generatedPoint = randomClusterPicker(points);
-
-        if(!AgilityPlusPlugin.scheduledMove) {
-            AgilityPlusPlugin.scheduledMove = true;
-            mouseMove();
-        }
+        mouseMove();
     }
 
     public static void generateCoord(Point point, GroundObject groundObject, int sigma) {
@@ -49,11 +45,7 @@ public class MouseCoordCalculation {
         }
 
         generatedPoint = randomClusterPicker(points);
-
-        if(!AgilityPlusPlugin.scheduledMove) {
-            AgilityPlusPlugin.scheduledMove = true;
-            mouseMove();
-        }
+        mouseMove();
     }
 
     public static void generateCoord(Point point, DecorativeObject decorativeObject, int sigma) {
@@ -69,11 +61,7 @@ public class MouseCoordCalculation {
         }
 
         generatedPoint = randomClusterPicker(points);
-
-        if(!AgilityPlusPlugin.scheduledMove) {
-            AgilityPlusPlugin.scheduledMove = true;
-            mouseMove();
-        }
+        mouseMove();
     }
 
     public static void generateCoord(Point point, int sigma) {
@@ -86,11 +74,7 @@ public class MouseCoordCalculation {
         }
 
         generatedPoint = randomClusterPicker(points);
-
-        if(!AgilityPlusPlugin.scheduledMove) {
-            AgilityPlusPlugin.scheduledMove = true;
-            mouseMove();
-        }
+        mouseMove();
     }
 
     public static boolean isCoordInClickBox(Shape clickbox, Point point) {
