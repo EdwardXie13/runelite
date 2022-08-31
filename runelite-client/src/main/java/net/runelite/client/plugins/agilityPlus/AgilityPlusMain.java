@@ -26,7 +26,7 @@ public class AgilityPlusMain implements Runnable {
     private final Client client;
     private final ClientThread clientThread;
     public static boolean isIdle = true;
-
+    public static boolean resetOculusOrb = false;
     public long start;
 
     Thread t;
@@ -38,6 +38,7 @@ public class AgilityPlusMain implements Runnable {
 
         t = new Thread(this);
         System.out.println("New thread: " + t);
+        start = System.currentTimeMillis();
         t.start(); // Starting the thread
     }
 
@@ -65,21 +66,6 @@ public class AgilityPlusMain implements Runnable {
     public int getRegionID() {
         return client.getLocalPlayer().getWorldLocation().getRegionID();
     }
-
-//    private static boolean hasStarted = false;
-//    public static boolean scheduledMove = false;
-//    long start;
-//
-//    ScheduledThreadPoolExecutor service = new ScheduledThreadPoolExecutor(1);
-//
-//    int tickTiming = 0;
-//
-//    // if idle for ~10s
-//    // make 'last reset' time to stop repeating resets
-//
-//
-
-//
 
 //
 //    private void doGnomeAgility() {
@@ -284,12 +270,15 @@ public class AgilityPlusMain implements Runnable {
             setCameraZoom(896);
             delay(1000);
             checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1);
+        } else if(isNearWorldTile(new WorldPoint(2721, 3494, 3), 3) && isIdle) {
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIRST_ROOF) && isIdle) {
             pressKey(KeyEvent.VK_UP, 2000);
             changeCameraYaw(0);
             setCameraZoom(355);
             delay(1000);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10);
+            delay(7000);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1, 2) && isIdle) {
             setCameraZoom(434);
             delay(1000);
@@ -321,48 +310,49 @@ public class AgilityPlusMain implements Runnable {
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) && isIdle)) {
             changeCameraYaw(0);
             setCameraZoom(581);
-            delay(1500);
+            delay(1000);
             scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10);
         }
         // right before 2nd roof Tightrope (case of misclick)
         else if(isNearWorldTile(new WorldPoint(2710, 3490, 2), 3) && isIdle) {
             setCameraZoom(896);
-            delay(1000);
+            delay(500);
             scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_THIRD_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3) && isIdle) {
             changeCameraYaw(0);
             setCameraZoom(896);
-            delay(1000);
+            delay(500);
             checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3);
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.SEERS_THIRD_ROOF) || isAtWorldPoint(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3))  && isIdle) {
             setCameraZoom(542);
             changeCameraYaw(0);
-            delay(1000);
-            scheduledGameObjectPointDelay(new Point(494, 905), AgilityPlusObjectIDs.seersThirdRoofGap, 10);
+            delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersThirdRoofGap, 10);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_FOURTH_ROOF, 3) && isIdle && client.getOculusOrbState() == 0) {
             setCameraZoom(600);
             panCameraToSeersFourthRoofGap();
-            delay(1000);
+            delay(500);
             getWorldPointCoords(LocalPoint.fromWorld(client, new WorldPoint(2702, 3470, 3)));
-        } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_FOURTH_ROOF_RUN_POINT, 2) && isIdle) {
-            setCameraZoom(896);
+            delay(500);
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
-            delay(1000);
-            scheduledGameObjectPointDelay(new Point(450, 775), AgilityPlusObjectIDs.seersFourthRoofGap, 12);
+        } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_FOURTH_ROOF_RUN_POINT, 2) && isIdle) {
+            setCameraZoom(896);
+            delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFourthRoofGap, 10);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIFTH_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5)) {
             setCameraZoom(670);
-            delay(1000);
+            delay(500);
             checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5, 2) && isIdle) {
             changeCameraYaw(0);
             setCameraZoom(562);
-            delay(1000);
+            delay(500);
             scheduledGameObjectPointDelay(new Point(895, 575), AgilityPlusObjectIDs.seersFifthRoofGap, 10);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIFTH_ROOF) && isIdle) {
             setCameraZoom(896);
             changeCameraYaw(512);
-            delay(1000);
+            delay(500);
             scheduledGameObjectPointDelay(new Point(350, 742), AgilityPlusObjectIDs.seersFifthRoofGap, 12);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FINISH) && isIdle && client.getOculusOrbState() == 0) {
             changeCameraYaw(0);
@@ -371,11 +361,13 @@ public class AgilityPlusMain implements Runnable {
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_START, 4) && isIdle) {
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
-            pressKey(KeyEvent.VK_DOWN, 3000);
+            pressKey(KeyEvent.VK_DOWN, 2000);
             setCameraZoom(768);
             changeCameraYaw(1928);
             delay(500);
             scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.seersStartWall, 10);
+        } else {
+            delay(500);
         }
     }
 //
@@ -520,6 +512,14 @@ public class AgilityPlusMain implements Runnable {
         return !levelUpMessage.isSelfHidden();
     }
 
+//    private void moveMouse(int x, int y) {
+//        MouseEvent mousePress = new MouseEvent(this.client.getCanvas(), MouseEvent.MOUSE_CLICKED, System.currentTimeMillis(), 0, x, y, 1, false);
+//        this.client.getCanvas().dispatchEvent(mousePress);
+//
+//        MouseEvent mouseRelease = new MouseEvent(this.client.getCanvas(), MouseEvent.MOUSE_RELEASED, System.currentTimeMillis(), 0, x, y, 1, false);
+//        this.client.getCanvas().dispatchEvent(mouseRelease);
+//    }
+
     private void pressKey(int key) {
         KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key);
         this.client.getCanvas().dispatchEvent(keyPress);
@@ -537,45 +537,65 @@ public class AgilityPlusMain implements Runnable {
     }
 
     private void scheduledGroundObjectDelay(GroundObject groundObject, int sigma) {
-        if(groundObject == null)
-            return;
         isIdle = false;
-        getObstacleCenter(groundObject, sigma);
+        try {
+            getObstacleCenter(groundObject, sigma);
+        } catch (Exception e) {
+            e.printStackTrace();
+            isIdle = true;
+        }
     }
 
     private void scheduledGameObjectDelay(GameObject gameObject, int sigma) {
-        if(gameObject == null)
-            return;
         isIdle = false;
-        getObstacleCenter(gameObject, sigma);
+        try {
+            getObstacleCenter(gameObject, sigma);
+        } catch (Exception e) {
+            e.printStackTrace();
+            isIdle = true;
+        }
     }
 //
     private void scheduledDecorativeObjectDelay(DecorativeObject decorativeObject, int sigma) {
-        if(decorativeObject == null)
-            return;
         isIdle = false;
-        getObstacleCenter(decorativeObject, sigma);
+        try {
+            getObstacleCenter(decorativeObject, sigma);
+        } catch (Exception e) {
+            e.printStackTrace();
+            isIdle = true;
+        }
     }
 
     private void scheduledGameObjectPointDelay(Point point, GameObject gameObject, int sigma) {
-        if(gameObject == null)
-            return;
         isIdle = false;
-        Point generatedPoint = generatePointsFromPoint(point, sigma);
-        MouseCoordCalculation.generateCoord(generatedPoint, gameObject, sigma);
+        try {
+            Point generatedPoint = generatePointsFromPoint(point, sigma);
+            MouseCoordCalculation.generateCoord(generatedPoint, gameObject, sigma);
+        } catch (Exception e) {
+            e.printStackTrace();
+            isIdle = true;
+        }
     }
 
     //possible use would be a ground item that has no clickbox (doubt that will happen)
     private void scheduledGroundObjectPointDelay(Point point, GroundObject groundObject, int sigma) {
-        if(groundObject == null)
-            return;
         isIdle = false;
-        MouseCoordCalculation.generateCoord(point, groundObject, sigma);
+        try {
+            MouseCoordCalculation.generateCoord(point, groundObject, sigma);
+        } catch (Exception e) {
+            e.printStackTrace();
+            isIdle = true;
+        }
     }
 
     private void scheduledPointDelay(Point point, int sigma) {
         isIdle = false;
-        MouseCoordCalculation.generateCoord(point, sigma);
+        try {
+            MouseCoordCalculation.generateCoord(point, sigma);
+        } catch (Exception e) {
+            e.printStackTrace();
+            isIdle = true;
+        }
     }
 
     private void getWorldPointCoords(final LocalPoint dest) {
@@ -631,7 +651,8 @@ public class AgilityPlusMain implements Runnable {
     private void reset() {
         System.out.println("idle for too long, reset");
         isIdle = true;
-        client.setOculusOrbState(0);
+        resetOculusOrb = true;
+        delay(200);
         start = System.currentTimeMillis();
     }
 

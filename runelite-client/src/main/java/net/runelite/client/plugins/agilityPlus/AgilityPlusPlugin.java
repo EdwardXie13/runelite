@@ -50,15 +50,7 @@ public class AgilityPlusPlugin extends Plugin {
     @Subscribe
     public void onGameTick(GameTick event) {
         toggleStatus();
-
-        if(toggleStatus == STATUS.START && !hasStarted) {
-            hasStarted = true;
-
-            thread = new AgilityPlusMain(client, clientThread);
-        } else if(toggleStatus == STATUS.STOP && hasStarted) {
-            thread.t.interrupt();
-            hasStarted = false;
-        }
+        checkOculusReset();
     }
 
     private String stripTargetAnchors(String text) {
@@ -71,11 +63,15 @@ public class AgilityPlusPlugin extends Plugin {
         String chatBoxMessage = stripTargetAnchors(chatboxInput.getText());
         if(chatBoxMessage == null) return;
 
-        if(chatBoxMessage.equals("1") && toggleStatus == STATUS.STOP) {
+        if(chatBoxMessage.equals("1") && toggleStatus == STATUS.STOP && !hasStarted) {
             toggleStatus = STATUS.START;
+            hasStarted = true;
+            thread = new AgilityPlusMain(client, clientThread);
             System.out.println("status is go");
-        } else if (chatBoxMessage.equals("2") && toggleStatus == STATUS.START) {
+        } else if (chatBoxMessage.equals("2") && toggleStatus == STATUS.START && hasStarted) {
             toggleStatus = STATUS.STOP;
+            thread.t.interrupt();
+            hasStarted = false;
             System.out.println("status is stop");
         }
     }
@@ -84,11 +80,18 @@ public class AgilityPlusPlugin extends Plugin {
         return client.getLocalPlayer().getWorldLocation().getRegionID();
     }
 
+    private void checkOculusReset() {
+        if(AgilityPlusMain.resetOculusOrb){
+            client.setOculusOrbState(0);
+            AgilityPlusMain.resetOculusOrb = false;
+        }
+    }
+
 
     @Subscribe
     private void onGameStateChanged(GameStateChanged ev)
     {
-        if (ev.getGameState() == GameState.LOGIN_SCREEN)
+        if (ev.getGameState() == GameState.LOGIN_SCREEN && hasStarted)
         {
             toggleStatus = STATUS.STOP;
             System.out.println("status is stop (login screen)");

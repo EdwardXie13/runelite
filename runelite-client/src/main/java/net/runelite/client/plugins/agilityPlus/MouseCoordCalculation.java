@@ -10,6 +10,7 @@ import java.awt.Point;
 import java.awt.Robot;
 import java.awt.Shape;
 import java.awt.event.InputEvent;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
