@@ -1,16 +1,12 @@
-package net.runelite.client.plugins.agilityPlus;
+package net.runelite.client.plugins.rcPlus;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
-import net.runelite.api.events.DecorativeObjectDespawned;
-import net.runelite.api.events.DecorativeObjectSpawned;
 import net.runelite.api.events.GameObjectDespawned;
 import net.runelite.api.events.GameObjectSpawned;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
-import net.runelite.api.events.GroundObjectDespawned;
-import net.runelite.api.events.GroundObjectSpawned;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
@@ -22,10 +18,9 @@ import javax.inject.Inject;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@PluginDescriptor(name = "Agility Plus", enabledByDefault = false)
+@PluginDescriptor(name = "RC Plus", enabledByDefault = false)
 @Slf4j
-public class AgilityPlusPlugin extends Plugin {
-
+public class RCPlusPlugin extends Plugin {
     @Inject
     private Client client;
 
@@ -36,7 +31,7 @@ public class AgilityPlusPlugin extends Plugin {
 
     private boolean hasStarted = false;
 
-    AgilityPlusMain thread;
+    RCPlusMain thread;
 
     enum STATUS{
         START,
@@ -62,7 +57,7 @@ public class AgilityPlusPlugin extends Plugin {
         if(chatBoxMessage.equals("1") && toggleStatus == STATUS.STOP && !hasStarted) {
             toggleStatus = STATUS.START;
             hasStarted = true;
-            thread = new AgilityPlusMain(client, clientThread);
+            thread = new RCPlusMain(client, clientThread);
             System.out.println("status is go");
         } else if (chatBoxMessage.equals("2") && toggleStatus == STATUS.START && hasStarted) {
             toggleStatus = STATUS.STOP;
@@ -77,12 +72,11 @@ public class AgilityPlusPlugin extends Plugin {
     }
 
     private void checkOculusReset() {
-        if(AgilityPlusMain.resetOculusOrb){
+        if(RCPlusMain.resetOculusOrb){
             client.setOculusOrbState(0);
-            AgilityPlusMain.resetOculusOrb = false;
+            RCPlusMain.resetOculusOrb = false;
         }
     }
-
 
     @Subscribe
     private void onGameStateChanged(GameStateChanged ev)
@@ -90,6 +84,8 @@ public class AgilityPlusPlugin extends Plugin {
         if (ev.getGameState() == GameState.LOGIN_SCREEN && hasStarted)
         {
             toggleStatus = STATUS.STOP;
+            thread.t.interrupt();
+            hasStarted = false;
             System.out.println("status is stop (login screen)");
         }
     }
@@ -97,48 +93,12 @@ public class AgilityPlusPlugin extends Plugin {
     @Subscribe
     public void onGameObjectSpawned(GameObjectSpawned event)
     {
-        AgilityPlusObjectIDs.assignObjects(event);
+        RCPlusObjectIDs.assignObjects(event);
     }
 
     @Subscribe
     public void onGameObjectDespawned(GameObjectDespawned event)
     {
-        AgilityPlusObjectIDs.assignObjects(event);
-    }
-
-    @Subscribe
-    public void onGroundObjectSpawned(GroundObjectSpawned event)
-    {
-        AgilityPlusObjectIDs.assignObjects(event);
-    }
-
-    @Subscribe
-    public void onGroundObjectDespawned(GroundObjectDespawned event)
-    {
-        AgilityPlusObjectIDs.assignObjects(event);
-    }
-
-//    @Subscribe
-//    public void onWallObjectSpawned(WallObjectSpawned event)
-//    {
-//        onTileObject(event.getTile(), null, event.getWallObject());
-//    }
-//
-//    @Subscribe
-//    public void onWallObjectDespawned(WallObjectDespawned event)
-//    {
-//        onTileObject(event.getTile(), event.getWallObject(), null);
-//    }
-//
-    @Subscribe
-    public void onDecorativeObjectSpawned(DecorativeObjectSpawned event)
-    {
-        AgilityPlusObjectIDs.assignObjects(event);
-    }
-
-    @Subscribe
-    public void onDecorativeObjectDespawned(DecorativeObjectDespawned event)
-    {
-        AgilityPlusObjectIDs.assignObjects(event);
+        RCPlusObjectIDs.assignObjects(event);
     }
 }

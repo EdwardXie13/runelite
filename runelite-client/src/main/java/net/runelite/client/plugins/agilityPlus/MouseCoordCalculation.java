@@ -10,7 +10,6 @@ import java.awt.Point;
 import java.awt.Robot;
 import java.awt.Shape;
 import java.awt.event.InputEvent;
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -19,6 +18,7 @@ public class MouseCoordCalculation {
     static Point generatedPoint = null;
     public static void generateCoord(Point point, GameObject gameObject, int sigma) {
         Shape clickbox = gameObject.getClickbox();
+        System.out.println("gameobj null: " + (gameObject == null));
 
         //generate 3 more random points
         List<Point> points = new ArrayList<>();
@@ -29,6 +29,7 @@ public class MouseCoordCalculation {
                 points.add(randomCoord(newPoint, sigma));
         }
 
+        System.out.println("gen points: " + generatedPoint);
         generatedPoint = randomClusterPicker(points);
         mouseMove();
     }
@@ -79,6 +80,7 @@ public class MouseCoordCalculation {
     }
 
     public static boolean isCoordInClickBox(Shape clickbox, Point point) {
+        System.out.println("is in box: " + clickbox.contains(point.x, point.y));
         return clickbox.contains(point.x, point.y);
     }
 
