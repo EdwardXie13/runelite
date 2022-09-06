@@ -81,6 +81,8 @@ public class MiningPlusMain implements Runnable {
                 reset();
             else if(isAtWorldPoint(MiningPlusWorldPoints.FALADOR_MINE_COPPER_SPOT)) {
                 doPowerMineCopper();
+            } else if(isAtWorldPoint(MiningPlusWorldPoints.FALADOR_MINE_IRON_SPOT)) {
+                doPowerMineIron();
             }
         }
         System.out.println("Thread has stopped.");
@@ -100,6 +102,23 @@ public class MiningPlusMain implements Runnable {
         } else if(MiningPlusObjectIDs.copperRockL != null && isIdle) {
             dropItemInInventory(new Point(782, 768));
             scheduledGameObjectDelay(MiningPlusObjectIDs.copperRockL, 8);
+        }
+    }
+
+    private void doPowerMineIron() {
+//        setCameraZoom(896);
+//        changeCameraYaw(0);
+
+        if(checkLevelUp()) {
+            pressKey(KeyEvent.VK_SPACE);
+            delay(500);
+            isIdle = true;
+        } else if(MiningPlusObjectIDs.ironRockR != null && isIdle) {
+            dropItemInInventory(new Point(782, 768));
+            scheduledGameObjectDelay(MiningPlusObjectIDs.ironRockR, 8);
+        } else if(MiningPlusObjectIDs.ironRockL != null && isIdle) {
+            dropItemInInventory(new Point(782, 768));
+            scheduledGameObjectDelay(MiningPlusObjectIDs.ironRockL, 8);
         }
     }
 

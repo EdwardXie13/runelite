@@ -8,9 +8,13 @@ import net.runelite.api.events.GameObjectSpawned;
 
 public class MiningPlusObjectIDs {
     public static final int COPPER_ROCK_ID = ObjectID.ROCKS_11161;
+    public static final int IRON_ROCK_ID = ObjectID.ROCKS_11365;
 
     public static GameObject copperRockL = null;
     public static GameObject copperRockR = null;
+    public static GameObject ironRockL = null;
+    public static GameObject ironRockR = null;
+
 
 //    public static final int EMPTY_ROCK_ID = ObjectID.ROCKS_11391;
     public static void assignObjects(GameObjectSpawned event) {
@@ -21,10 +25,18 @@ public class MiningPlusObjectIDs {
         switch (id) {
             case COPPER_ROCK_ID:
                 WorldPoint copperRockWp = event.getTile().getWorldLocation();
-                if(copperRockWp.equals(MiningPlusWorldPoints.FALADOR_RIGHT_COPPER_ROCK)) {
+                if(copperRockWp.equals(MiningPlusWorldPoints.FALADOR_LEFT_COPPER_ROCK)) {
                     copperRockL = obj;
-                } else if(copperRockWp.equals(MiningPlusWorldPoints.FALADOR_LEFT_COPPER_ROCK)) {
+                } else if(copperRockWp.equals(MiningPlusWorldPoints.FALADOR_RIGHT_COPPER_ROCK)) {
                     copperRockR = obj;
+                }
+                break;
+            case IRON_ROCK_ID:
+                WorldPoint ironRockWp = event.getTile().getWorldLocation();
+                if(ironRockWp.equals(MiningPlusWorldPoints.FALADOR_LEFT_IRON_ROCK)) {
+                    ironRockL = obj;
+                } else if(ironRockWp.equals(MiningPlusWorldPoints.FALADOR_RIGHT_IRON_ROCK)) {
+                    ironRockR = obj;
                 }
                 break;
         }
@@ -37,11 +49,19 @@ public class MiningPlusObjectIDs {
 
         switch (id) {
             case COPPER_ROCK_ID:
-                WorldPoint bankBoothWp = event.getTile().getWorldLocation();
-                if(bankBoothWp.equals(new WorldPoint(3038, 9780, 0))) {
+                WorldPoint copperRockWp = event.getTile().getWorldLocation();
+                if(copperRockWp.equals(MiningPlusWorldPoints.FALADOR_LEFT_COPPER_ROCK)) {
                     copperRockL = null;
-                } else if(bankBoothWp.equals(new WorldPoint(3039, 9781, 0))) {
+                } else if(copperRockWp.equals(MiningPlusWorldPoints.FALADOR_RIGHT_COPPER_ROCK)) {
                     copperRockR = null;
+                }
+                break;
+            case IRON_ROCK_ID:
+                WorldPoint ironRockWp = event.getTile().getWorldLocation();
+                if(ironRockWp.equals(MiningPlusWorldPoints.FALADOR_LEFT_IRON_ROCK)) {
+                    ironRockL = null;
+                } else if(ironRockWp.equals(MiningPlusWorldPoints.FALADOR_RIGHT_IRON_ROCK)) {
+                    ironRockR = null;
                 }
                 break;
         }
