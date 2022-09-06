@@ -18,7 +18,6 @@ public class MouseCoordCalculation {
     static Point generatedPoint = null;
     public static void generateCoord(Point point, GameObject gameObject, int sigma) {
         Shape clickbox = gameObject.getClickbox();
-        System.out.println("gameobj null: " + (gameObject == null));
 
         //generate 3 more random points
         List<Point> points = new ArrayList<>();
@@ -29,7 +28,6 @@ public class MouseCoordCalculation {
                 points.add(randomCoord(newPoint, sigma));
         }
 
-        System.out.println("gen points: " + generatedPoint);
         generatedPoint = randomClusterPicker(points);
         mouseMove();
     }

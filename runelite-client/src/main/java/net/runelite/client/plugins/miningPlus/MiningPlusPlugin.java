@@ -1,4 +1,4 @@
-package net.runelite.client.plugins.rcPlus;
+package net.runelite.client.plugins.miningPlus;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
@@ -18,9 +18,9 @@ import javax.inject.Inject;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@PluginDescriptor(name = "RC Plus", enabledByDefault = false)
+@PluginDescriptor(name = "Mining Plus", enabledByDefault = false)
 @Slf4j
-public class RCPlusPlugin extends Plugin {
+public class MiningPlusPlugin extends Plugin {
 
     @Inject
     private Client client;
@@ -32,7 +32,7 @@ public class RCPlusPlugin extends Plugin {
 
     private boolean hasStarted = false;
 
-    RCPlusMain thread;
+    MiningPlusMain thread;
 
     enum STATUS{
         START,
@@ -42,7 +42,6 @@ public class RCPlusPlugin extends Plugin {
     @Subscribe
     public void onGameTick(GameTick event) {
         toggleStatus();
-        checkOculusReset();
     }
 
     private String stripTargetAnchors(String text) {
@@ -56,13 +55,13 @@ public class RCPlusPlugin extends Plugin {
         if(chatBoxMessage == null) return;
 
         if(chatBoxMessage.equals("1") && toggleStatus == STATUS.STOP && !hasStarted) {
-            toggleStatus = STATUS.START;
             hasStarted = true;
-            thread = new RCPlusMain(client, clientThread);
+            toggleStatus = STATUS.START;
+            thread = new MiningPlusMain(client, clientThread);
             System.out.println("status is go");
         } else if (chatBoxMessage.equals("2") && toggleStatus == STATUS.START && hasStarted) {
-            toggleStatus = STATUS.STOP;
             thread.t.interrupt();
+            toggleStatus = STATUS.STOP;
             hasStarted = false;
             System.out.println("status is stop");
         }
@@ -72,21 +71,12 @@ public class RCPlusPlugin extends Plugin {
         return client.getLocalPlayer().getWorldLocation().getRegionID();
     }
 
-    private void checkOculusReset() {
-        if(RCPlusMain.resetOculusOrb){
-            client.setOculusOrbState(0);
-            RCPlusMain.resetOculusOrb = false;
-        }
-    }
-
     @Subscribe
     private void onGameStateChanged(GameStateChanged ev)
     {
         if (ev.getGameState() == GameState.LOGIN_SCREEN && hasStarted)
         {
             toggleStatus = STATUS.STOP;
-            thread.t.interrupt();
-            hasStarted = false;
             System.out.println("status is stop (login screen)");
         }
     }
@@ -94,12 +84,13 @@ public class RCPlusPlugin extends Plugin {
     @Subscribe
     public void onGameObjectSpawned(GameObjectSpawned event)
     {
-        RCPlusObjectIDs.assignObjects(event);
+        MiningPlusObjectIDs.assignObjects(event);
     }
 
     @Subscribe
     public void onGameObjectDespawned(GameObjectDespawned event)
     {
-        RCPlusObjectIDs.assignObjects(event);
+        MiningPlusObjectIDs.assignObjects(event);
     }
+
 }
