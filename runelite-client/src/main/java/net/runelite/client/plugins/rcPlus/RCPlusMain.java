@@ -62,6 +62,8 @@ public class RCPlusMain implements Runnable {
 
             if(airAltarRegions.contains(getRegionID())) {
                 doAirAltar();
+            } else if() {
+                
             }
 
         }
@@ -70,7 +72,6 @@ public class RCPlusMain implements Runnable {
 
     private void doAirAltar() {
         if(isNearWorldTile(RCPlusWorldPoints.INFRONT_OF_BANK_BOOTH_TILE3, 2) && readyForAltar() && client.getOculusOrbState() == 0 && isIdle) {
-            System.out.println("1");
             setCameraZoom(750);
             panCameraToAirAltarPath();
             delay(200);
@@ -82,7 +83,6 @@ public class RCPlusMain implements Runnable {
             //click the altar
         } else if(isNearWorldTile(RCPlusWorldPoints.INFRONT_OF_BANK_BOOTH_TILE3, 2) && !readyForAltar() && isIdle) {
             //click bank
-            System.out.println("2");
             changeCameraYaw(0);
             setCameraZoom(876);
             delay(500);
@@ -101,7 +101,6 @@ public class RCPlusMain implements Runnable {
             isIdle = true;
             delay(500);
         } else if(isNearWorldTile(RCPlusWorldPoints.FROM_BANK_TO_PATH, 2)  && isIdle) {
-            System.out.println("3");
             setCameraZoom(750);
             delay(200);
             panCameraToAirAltar();
@@ -109,15 +108,13 @@ public class RCPlusMain implements Runnable {
             getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusWorldPoints.CENTER_AIR_MYSTERIOUS_RUINS));
             delay(1000);
             client.setOculusOrbState(0);
-        } else if(isNearWorldTile(RCPlusWorldPoints.CENTER_AIR_MYSTERIOUS_RUINS, 2) && isIdle) {
+        } else if(isNearWorldTile(RCPlusWorldPoints.CENTER_AIR_MYSTERIOUS_RUINS, 2) && readyForAltar() && isIdle) {
             //doesnt work, doesnt detect in range
-            System.out.println("near ruins");
             setCameraZoom(800);
             delay(200);
             scheduledGameObjectDelay(RCPlusObjectIDs.airMysteriousRuins, 8);
             delay(1000);
         } else if(isNearWorldTile(RCPlusWorldPoints.INSIDE_AIR_ALTAR, 2) && readyForAltar() && isIdle) {
-            System.out.println("4");
             setCameraZoom(493);
             delay(500);
             bindRunesSequence(false, false, false, false);
@@ -126,7 +123,6 @@ public class RCPlusMain implements Runnable {
             delay(3000);
         } else if(isAtWorldPoint(RCPlusWorldPoints.EXIT_AIR_ALTAR_WORLDPOINT) && !readyForAltar() && isIdle) {
             // pan camera to FROM_AIR_ALTAR_TO_PATH
-            System.out.println("5");
             setCameraZoom(750);
             panCameraToBankPath();
             delay(500);
@@ -134,7 +130,6 @@ public class RCPlusMain implements Runnable {
             delay(1000);
             client.setOculusOrbState(0);
         } else if(isNearWorldTile(RCPlusWorldPoints.FROM_AIR_ALTAR_TO_PATH, 2) && !readyForAltar() && isIdle) {
-            System.out.println("6");
             setCameraZoom(750);
             panCameraToBank();
             delay(500);

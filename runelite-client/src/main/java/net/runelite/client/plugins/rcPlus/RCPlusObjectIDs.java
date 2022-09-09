@@ -28,6 +28,23 @@ public class RCPlusObjectIDs {
     public static GameObject airFaladorBankBooth3 = null;
     public static GameObject airFaladorBankBooth4 = null;
 
+    //=== COSMIC ALTAR ===
+    public static final int JUTTING_WALL_17002 = ObjectID.JUTTING_WALL_17002;
+    public static final int BANK_CHEST_26711 = ObjectID.BANK_CHEST_26711;
+    public static final int COSMIC_MYSTERIOUS_RUINS = 34819;
+    public static final int COSMIC_ALTAR_34766 = ObjectID.ALTAR_34766;
+    public static final int COSMIC_PORTAL = ObjectID.PORTAL_34754;
+
+    public static GameObject juttingWall = null;
+    public static GameObject zanarisBankChest3 = null;
+    public static GameObject zanarisBankChest4 = null;
+    public static GameObject zanarisBankChest5 = null;
+    public static GameObject cosmicAltarAltar = null;
+    public static GameObject cosmicAltarNorthPortal = null;
+    public static GameObject cosmicAltarEastPortal = null;
+    public static GameObject cosmicAltarSouthPortal = null;
+    public static GameObject cosmicAltarWestPortal = null;
+
     public static void assignObjects(GameObjectSpawned event) {
         GameObject obj = event.getGameObject();
 
