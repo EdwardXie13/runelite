@@ -14,10 +14,8 @@ import net.runelite.api.ScriptID;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
+
 import net.runelite.client.callback.ClientThread;
-import net.runelite.client.plugins.agilityPlus.AgilityPlusObjectIDs;
-import net.runelite.client.plugins.agilityPlus.AgilityPlusWorldPoints;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
 
 import java.awt.Point;
@@ -62,9 +60,10 @@ public class RCPlusMain implements Runnable {
 
             if(airAltarRegions.contains(getRegionID())) {
                 doAirAltar();
-            } else if() {
-                
             }
+//            else if() {
+//
+//            }
 
         }
         System.out.println("Thread has stopped.");
