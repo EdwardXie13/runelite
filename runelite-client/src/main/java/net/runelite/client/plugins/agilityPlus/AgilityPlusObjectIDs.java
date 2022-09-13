@@ -70,6 +70,23 @@ public class AgilityPlusObjectIDs {
     public static GameObject seersFourthRoofGap = null;
     public static GameObject seersFifthRoofGap = null;
 
+    //=== RELLEKA ===
+    public static final int ROUGH_WALL_14946 = ObjectID.ROUGH_WALL_14946;
+    public static final int GAP_14947 = ObjectID.GAP_14947;
+    public static final int TIGHTROPE_14987 = ObjectID.TIGHTROPE_14987;
+    public static final int GAP_14990 = ObjectID.GAP_14990;
+    public static final int GAP_14991 = ObjectID.GAP_14991;
+    public static final int TIGHTROPE_14992 = ObjectID.TIGHTROPE_14992;
+    public static final int PILE_OF_FISH = ObjectID.PILE_OF_FISH;
+
+    public static DecorativeObject rellekaStartWall = null;
+    public static GameObject rellekaFirstRoofGap = null;
+    public static GameObject rellekaSecondRoofGap = null;
+    public static GameObject rellekaThirdRoofGap = null;
+    public static GameObject rellekaFourthRoofGap = null;
+    public static GameObject rellekaFifthRoofGap = null;
+    public static GameObject rellekaSixthRoofGap = null;
+
     public static void assignObjects(GameObjectSpawned event) {
         GameObject obj = event.getGameObject();
 
@@ -147,6 +164,26 @@ public class AgilityPlusObjectIDs {
                 break;
             case EDGE_14931:
                 seersFifthRoofGap = obj;
+                break;
+
+            //=== RELLEKA ===
+            case GAP_14947:
+                rellekaFirstRoofGap = obj;
+                break;
+            case TIGHTROPE_14987:
+                rellekaSecondRoofGap = obj;
+                break;
+            case GAP_14990:
+                rellekaThirdRoofGap = obj;
+                break;
+            case GAP_14991:
+                rellekaFourthRoofGap = obj;
+                break;
+            case TIGHTROPE_14992:
+                rellekaFifthRoofGap = obj;
+                break;
+            case PILE_OF_FISH:
+                rellekaSixthRoofGap = obj;
                 break;
 
         }
@@ -230,6 +267,26 @@ public class AgilityPlusObjectIDs {
             case EDGE_14931:
                 seersFifthRoofGap = null;
                 break;
+
+            //=== RELLEKA ===
+            case GAP_14947:
+                rellekaFirstRoofGap = null;
+                break;
+            case TIGHTROPE_14987:
+                rellekaSecondRoofGap = null;
+                break;
+            case GAP_14990:
+                rellekaThirdRoofGap = null;
+                break;
+            case GAP_14991:
+                rellekaFourthRoofGap = null;
+                break;
+            case TIGHTROPE_14992:
+                rellekaFifthRoofGap = null;
+                break;
+            case PILE_OF_FISH:
+                rellekaSixthRoofGap = null;
+                break;
         }
     }
 
@@ -285,6 +342,9 @@ public class AgilityPlusObjectIDs {
             case WALL_14927:
                 seersStartWall = obj;
                 break;
+            case ROUGH_WALL_14946:
+                rellekaStartWall = obj;
+                break;
         }
     }
 
@@ -297,6 +357,9 @@ public class AgilityPlusObjectIDs {
             //=== SEERS ===
             case WALL_14927:
                 seersStartWall = null;
+                break;
+            case ROUGH_WALL_14946:
+                rellekaStartWall = null;
                 break;
         }
     }

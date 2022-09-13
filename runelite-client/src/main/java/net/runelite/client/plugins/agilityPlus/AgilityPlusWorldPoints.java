@@ -55,19 +55,26 @@ public class AgilityPlusWorldPoints {
     public static final WorldPoint SEERS_GRACEFULMARK2_1 = new WorldPoint(2706, 3493, 2); //left
     public static final WorldPoint SEERS_GRACEFULMARK2_2 = new WorldPoint(2709, 3493, 2); //right
     public static final WorldPoint SEERS_GRACEFULMARK3 = new WorldPoint(2712, 3481, 2);
-
-    // last gap, west with zoom 562
     public static final WorldPoint SEERS_GRACEFULMARK5 = new WorldPoint(2698, 3465, 2);
 
-//    public static final WorldPoint DRAYNOR_AFTER_WALL = new WorldPoint(3102, 3279, 3);
-//    public static final WorldPoint DRAYNOR_TIGHTROPE1 = new WorldPoint(3090, 3276, 3);
-//    // failed point here
-//    public static final WorldPoint DRAYNOR_TIGHTROPE2 = new WorldPoint(3092, 3266, 3);
-//    public static final WorldPoint DRAYNOR_NARROW_WALL = new WorldPoint(3088, 3261, 3);
-//    // failed point here
-//    public static final WorldPoint DRAYNOR_JUMP_WALL = new WorldPoint(3088, 3255, 3);
-//    public static final WorldPoint DRAYNOR_JUMP_GAP = new WorldPoint(3096, 3256, 3);
-//    public static final WorldPoint DRAYNOR_JUMP_CRATE = new WorldPoint(3103, 3261, 0);
+    //=== RELLEKA
+    public static final WorldPoint RELLEKA_START = new WorldPoint(2625, 3677, 0);
+    public static final WorldPoint RELLEKA_FIRST_ROOF = new WorldPoint(2625, 3676, 3);
+    public static final WorldPoint RELLEKA_SECOND_ROOF = new WorldPoint(2622, 3668, 3);
+    public static final WorldPoint RELLEKA_THIRD_ROOF = new WorldPoint(2627, 3654, 3);
+    public static final WorldPoint RELLEKA_FOURTH_ROOF = new WorldPoint(2639, 3653, 3);
+    public static final WorldPoint RELLEKA_FIFTH_ROOF = new WorldPoint(2643, 3657, 3);
+    public static final WorldPoint RELLEKA_SIXTH_ROOF = new WorldPoint(2655, 3670, 3);
+    public static final WorldPoint RELLEKA_FINISH = new WorldPoint(2652, 3676, 0);
+
+    public static final WorldPoint RELLEKA_FAIL1 = new WorldPoint(2624, 3656, 0);
+    public static final WorldPoint RELLEKA_FAIL2 = new WorldPoint(2633, 3657, 0);
+
+    public static final WorldPoint RELLEKA_GRACEFULMARK1_1 = new WorldPoint(2629, 3653, 3);
+    public static final WorldPoint RELLEKA_GRACEFULMARK1_2 = new WorldPoint(2628, 3652, 3);
+
+    public static final WorldPoint RELLEKA_GRACEFULMARK2_1 = new WorldPoint(2642, 3651, 3);
+    public static final WorldPoint RELLEKA_GRACEFULMARK2_2 = new WorldPoint(2641, 3650, 3);
 }
 
 
