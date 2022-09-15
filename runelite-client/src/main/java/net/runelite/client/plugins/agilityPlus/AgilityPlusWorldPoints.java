@@ -4,6 +4,7 @@ import net.runelite.api.coords.WorldPoint;
 
 public class AgilityPlusWorldPoints {
     //=== GNOME_STRONGHOLD ===
+    public static final WorldPoint GNOME_START = new WorldPoint(2474, 3436, 0);
     public static final WorldPoint GNOME_AFTER_LOG = new WorldPoint(2474, 3429, 0);
     public static final WorldPoint GNOME_AFTER_CLIMB1 = new WorldPoint(2473, 3423, 1);
     public static final WorldPoint GNOME_AFTER_CLIMB1_MISCLICK_ZONE = new WorldPoint(2473, 3424, 1);

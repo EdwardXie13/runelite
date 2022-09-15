@@ -68,51 +68,88 @@ public class AgilityPlusMain implements Runnable {
     }
 
     private void doGnomeAgility() {
-        setCameraZoom(400);
         if(checkLevelUp()) {
             pressKey(KeyEvent.VK_SPACE);
             delay(500);
-        } else if(isNearWorldTile(new WorldPoint(2474, 3436, 0), 4)) {
-            changeCameraYaw(0);
-            delay(500);
-            scheduledGroundObjectDelay(AgilityPlusObjectIDs.gnomeLogBalance, 10);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_LOG) && isIdle) {
+            setCameraZoom(400);
+            changeCameraYaw(0);
             delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstacleNet1_M, 15);
+            delay(500);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_CLIMB1) && isIdle) {
-            changeCameraYaw(315);
+            changeCameraYaw(206);
             delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeTreeBranch1, 10);
+            delay(500);
+            pressKey(KeyEvent.VK_UP, 2000);
+            delay(500);
         }
-        else if ((isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_CLIMB2) || isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_CLIMB2_MISCLICK_ZONE))  && isIdle) {
+        else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_CLIMB2) && isIdle) {
+            setCameraZoom(896);
             changeCameraYaw(0);
-            delay(1000);
-            scheduledGroundObjectDelay(AgilityPlusObjectIDs.gnomeBalancingRope, 10);
+            delay(500);
+            panCameraOneDirection(KeyEvent.VK_D, 200);
+            delay(500);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.GNOME_AFTER_CLIMB2_MISCLICK_ZONE));
+            delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            delay(500);
         }
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_CLIMB2_MISCLICK_ZONE) && isIdle) {
+            setCameraZoom(896);
+            changeCameraYaw(0);
+            delay(500);
+            scheduledGroundObjectDelay(AgilityPlusObjectIDs.gnomeBalancingRope, 10);
+            delay(500);
+            pressKey(KeyEvent.VK_DOWN, 2000);
+            delay(500);
+        }
+
         else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_TIGHTROPE) && isIdle) {
-            changeCameraYaw(225);
-            delay(1000);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeTreeBranch2, 10);
+            setCameraZoom(706);
+            changeCameraYaw(312);
+            delay(500);
+            scheduledGameObjectPointDelay(new Point(825, 799), AgilityPlusObjectIDs.gnomeTreeBranch2, 10);
+            delay(500);
         }
         else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_DROP) && isIdle) {
-            delay(1000);
+            setCameraZoom(600);
+            changeCameraYaw(37);
+            delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstacleNet2_L, 15);
+            delay(500);
         }
         else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_NET1) && isIdle) {
-            changeCameraYaw(1536);
-            delay(1000);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstaclePipeLeft, 10);
-        }
-        else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_NET2) && isIdle) {
-            changeCameraYaw(1536);
-            delay(1000);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstaclePipeLeft, 10);
+            setCameraZoom(550);
+            changeCameraYaw(1024);
+            delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstaclePipeLeft, 15);
+            delay(500);
+            pressKey(KeyEvent.VK_UP, 2000);
+            delay(7000); //adjust as needed
         }
         else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_LEFT_PIPE) && isIdle) {
-            // rotate camera west to see log balance
-            changeCameraYaw(512);
-            delay(3000);
+            setCameraZoom(896);
+            changeCameraYaw(0);
+            delay(500);
+            panCameraOneDirection(KeyEvent.VK_A, 600);
+            delay(500);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.GNOME_START));
+            delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            delay(500);
+        }
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.GNOME_START) && isIdle) {
+            setCameraZoom(896);
+            changeCameraYaw(0);
+            delay(500);
             scheduledGroundObjectDelay(AgilityPlusObjectIDs.gnomeLogBalance, 10);
+            delay(500);
+            pressKey(KeyEvent.VK_DOWN, 2000);
+            delay(500);
         }
     }
 
@@ -366,12 +403,14 @@ public class AgilityPlusMain implements Runnable {
             setCameraZoom(340);
             delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaSecondRoofGap, 8);
+            // delay some time so no double click
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1_1) && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1_2)) {
             delay(500);
             changeCameraYaw(1024);
             setCameraZoom(547);
             delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaThirdRoofGap, 10);
+            // delay some time so no double click
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1_1)) {
             delay(500);
             changeCameraYaw(1024);
