@@ -76,6 +76,8 @@ public class AgilityPlusWorldPoints {
 
     public static final WorldPoint RELLEKA_GRACEFULMARK2_1 = new WorldPoint(2642, 3651, 3);
     public static final WorldPoint RELLEKA_GRACEFULMARK2_2 = new WorldPoint(2641, 3650, 3);
+
+    public static final WorldPoint RELLEKA_GRACEFULMARK3 = new WorldPoint(2623, 3675, 3);
 }
 
 

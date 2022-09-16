@@ -284,13 +284,20 @@ public class AgilityPlusMain implements Runnable {
             checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1);
         } else if(isNearWorldTile(new WorldPoint(2721, 3494, 3), 3) && isIdle) {
             scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIRST_ROOF) && isIdle) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIRST_ROOF) && isIdle && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3)) {
             pressKey(KeyEvent.VK_UP, 2000);
             changeCameraYaw(0);
             setCameraZoom(355);
             delay(1000);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10);
-            delay(7000);
+            delay(1000);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIRST_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3)) {
+            pressKey(KeyEvent.VK_UP, 2000);
+            changeCameraYaw(0);
+            setCameraZoom(355);
+            delay(1000);
+            checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3);
+            delay(1500);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1, 2) && isIdle) {
             setCameraZoom(434);
             delay(1000);
@@ -393,24 +400,47 @@ public class AgilityPlusMain implements Runnable {
             delay(500);
             scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.rellekaStartWall, 8);
             pressKey(KeyEvent.VK_UP, 2000);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIRST_ROOF) && isIdle) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIRST_ROOF) && isIdle && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3)) {
             changeCameraYaw(0);
             setCameraZoom(404);
             delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFirstRoofGap, 10);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_SECOND_ROOF) && isIdle) {
+        }
+
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIRST_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3)) {
+            changeCameraYaw(0);
+            setCameraZoom(896);
+            delay(500);
+            checkGracefulmark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3);
+            delay(500);
+        }
+
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3) && isIdle) {
+            changeCameraYaw(0);
+            setCameraZoom(404);
+            delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFirstRoofGap, 10);
+        }
+
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_SECOND_ROOF) && isIdle) {
             changeCameraYaw(1024);
             setCameraZoom(340);
             delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaSecondRoofGap, 8);
-            // delay some time so no double click
+            delay(500);
+        } else if(isAtWorldPoint(new WorldPoint(2622, 3658, 3)) && isIdle) {
+            changeCameraYaw(1024);
+            setCameraZoom(896);
+            delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaSecondRoofGap, 10);
+            delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1_1) && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1_2)) {
             delay(500);
             changeCameraYaw(1024);
             setCameraZoom(547);
             delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaThirdRoofGap, 10);
-            // delay some time so no double click
+            delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1_1)) {
             delay(500);
             changeCameraYaw(1024);
