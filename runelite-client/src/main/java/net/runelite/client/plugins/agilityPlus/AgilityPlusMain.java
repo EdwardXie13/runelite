@@ -159,14 +159,21 @@ public class AgilityPlusMain implements Runnable {
             delay(500);
         }
         else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_START) && isIdle) {
-            delay(1500);
-            setCameraZoom(896);
-            changeCameraYaw(1231);
-            delay(500);
-            scheduledGameObjectPointDelay(new Point(431, 631), AgilityPlusObjectIDs.canfisTallTree, 10);
             delay(1000);
-            pressKey(KeyEvent.VK_UP, 2000);
+            setCameraZoom(660);
             delay(500);
+            getWorldPointCoords(LocalPoint.fromWorld(client, new WorldPoint(3506, 3488, 0)));
+            delay(500);
+            pressKey(KeyEvent.VK_DOWN, 2000);
+            delay(500);
+//            delay(1500);
+//            setCameraZoom(896);
+//            changeCameraYaw(1257);
+//            delay(500);
+//            scheduledGameObjectPointDelay(new Point(116, 876), AgilityPlusObjectIDs.canfisTallTree, 10);
+//            delay(1000);
+//            pressKey(KeyEvent.VK_UP, 2000);
+//            delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FAIL1) && isIdle) {
             delay(1000);
             setCameraZoom(896);
@@ -216,7 +223,7 @@ public class AgilityPlusMain implements Runnable {
             delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFirstRoofGap, 10);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK1) && isIdle) {
-            setCameraZoom(660);
+            setCameraZoom(679);
             changeCameraYaw(0);
             delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFirstRoofGap, 10);
@@ -228,12 +235,12 @@ public class AgilityPlusMain implements Runnable {
             delay(1000);
             checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SECOND_ROOF) && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2) && isIdle) {
-            setCameraZoom(535);
+            setCameraZoom(540);
             changeCameraYaw(0);
             delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSecondRoofGap, 10);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2) && isIdle) {
-            setCameraZoom(590);
+            setCameraZoom(597);
             changeCameraYaw(0);
             delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSecondRoofGap, 10);
@@ -247,12 +254,18 @@ public class AgilityPlusMain implements Runnable {
             checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_THIRD_ROOF) && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3) && isIdle) {
             delay(1000);
-            setCameraZoom(470);
+            setCameraZoom(483);
             changeCameraYaw(0);
             delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisThirdRoofGap, 10);
+            delay(2000);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3) && isIdle) {
-            setCameraZoom(581);
+            setCameraZoom(595);
+            changeCameraYaw(0);
+            delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisThirdRoofGap, 10);
+        } else if(isAtWorldPoint(new WorldPoint(3487, 3499, 2)) && isIdle) {
+            setCameraZoom(896);
             changeCameraYaw(0);
             delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisThirdRoofGap, 10);
@@ -327,8 +340,10 @@ public class AgilityPlusMain implements Runnable {
             delay(1000);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSeventhRoofGap, 8);
             delay(1000);
-            pressKey(KeyEvent.VK_DOWN, 2000);
-            delay(500);
+//            pressKey(KeyEvent.VK_DOWN, 2000);
+//            delay(500);
+        } else if(isAtWorldPoint(new WorldPoint(3515, 3486, 0)) && isIdle) {
+            client.stopNow();
         }
     }
 
