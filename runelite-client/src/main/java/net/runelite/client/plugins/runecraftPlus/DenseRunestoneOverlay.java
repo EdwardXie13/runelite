@@ -538,7 +538,7 @@ public class DenseRunestoneOverlay extends Overlay
     private boolean swapWorldItem(MenuEntry e) {
         String target;
         try {
-            target = !e.getTarget().equals("") ? e.getTarget().split(">")[1] : "";
+            target = stripTargetAnchors(e);
         } catch (Exception exception) {
             return false;
         }
@@ -577,20 +577,34 @@ public class DenseRunestoneOverlay extends Overlay
         for (int i = menuEntries.length - 1; i >= 0; --i) {
             MenuEntry entry = menuEntries[i];
             String target = stripTargetAnchors(entry);
+//            System.out.println("target: " + target + ", option: " + entry.getOption() + ", Id: " + entry.getIdentifier());
 
-            if((swapBankItem(entry) && entry.getType() == MenuAction.CC_OP_LOW_PRIORITY && entry.getIdentifier() == 9 && menuEntries.length == 10) &&
-                (RCpouch.contains(target) ||
-                Skillcapes.contains(target) ||
-                (AmuletOfGlory.contains(target) && isUnchargedGloryEquipped()) ||
-                (RingOfDueling.contains(target) && !isRingOfDuelingEquipped()))) {
-                    entry.setType(MenuAction.CC_OP);
+            if(
+                    (RCpouch.contains(target) && entry.getIdentifier() == 9 && menuEntries.length == 9) ||
+                    (RingOfDueling.contains(target) && entry.getIdentifier() == 9 && menuEntries.length == 9 && !isRingOfDuelingEquipped())
+            ) {
+                entry.setType(MenuAction.CC_OP);
 
-                    menuEntries[i] = menuEntries[menuEntries.length - 1];
-                    menuEntries[menuEntries.length - 1] = entry;
+                menuEntries[i] = menuEntries[menuEntries.length - 1];
+                menuEntries[menuEntries.length - 1] = entry;
 
-                    client.setMenuEntries(menuEntries);
-                    break;
+                client.setMenuEntries(menuEntries);
+                break;
             }
+
+//            if((swapBankItem(entry) && entry.getType() == MenuAction.CC_OP_LOW_PRIORITY && entry.getIdentifier() == 9 && menuEntries.length == 10) &&
+//                (RCpouch.contains(target) ||
+//                Skillcapes.contains(target) ||
+//                (AmuletOfGlory.contains(target) && isUnchargedGloryEquipped()) ||
+//                (RingOfDueling.contains(target) && !isRingOfDuelingEquipped()))) {
+//                    entry.setType(MenuAction.CC_OP);
+//
+//                    menuEntries[i] = menuEntries[menuEntries.length - 1];
+//                    menuEntries[menuEntries.length - 1] = entry;
+//
+//                    client.setMenuEntries(menuEntries);
+//                    break;
+//            }
         }
     }
 
@@ -598,14 +612,13 @@ public class DenseRunestoneOverlay extends Overlay
         MenuEntry[] menuEntries = client.getMenuEntries();
         for (int i = menuEntries.length - 1; i >= 0; --i) {
             MenuEntry entry = menuEntries[i];
-            String target = !entry.getTarget().equals("") ? entry.getTarget().split(">")[1] : "";
+            String target = stripTargetAnchors(entry);
             MenuAction targetType = entry.getType();
             if (
-                (RCpouch.contains(target) && targetType == MenuAction.ITEM_SECOND_OPTION && menuEntries.length == 7 && isAtRCAltar()) ||
-                (Capes.contains(target) && targetType == MenuAction.ITEM_THIRD_OPTION && menuEntries.length == 6) ||
-                (UnchargedGlory.contains(target) && targetType == MenuAction.ITEM_USE && menuEntries.length == 6) ||
-                (target.equals("Mage of Zamorak") && entry.getOption().equals("Teleport") &&menuEntries.length == 6)
-            ){
+                    (RCpouch.contains(target) && entry.getIdentifier() == 3 && menuEntries.length == 7 && isAtRCAltar()) ||
+                    (Capes.contains(target) && targetType == MenuAction.ITEM_THIRD_OPTION && menuEntries.length == 6) ||
+                    (UnchargedGlory.contains(target) && targetType == MenuAction.ITEM_USE && menuEntries.length == 6))
+            {
                 menuEntries[i] = menuEntries[menuEntries.length - 1];
                 menuEntries[menuEntries.length - 1] = entry;
 
