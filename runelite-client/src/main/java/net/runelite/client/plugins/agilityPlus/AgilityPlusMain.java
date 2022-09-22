@@ -392,7 +392,7 @@ public class AgilityPlusMain implements Runnable {
             setCameraZoom(365);
             delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10);
-            delay(8000);
+            delay(9000);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1, 2) && isIdle) {
             changeCameraYaw(0);
             setCameraZoom(444);
@@ -403,9 +403,16 @@ public class AgilityPlusMain implements Runnable {
             setCameraZoom(483);
             delay(500);
             checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1);
-        } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1, 2) && isIdle) {
+        }
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1) && isIdle) {
             changeCameraYaw(1024);
             setCameraZoom(660);
+            delay(500);
+            scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10);
+        }
+        else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1, 2) && isIdle && !isAtWorldPoint(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1)) {
+            changeCameraYaw(1024);
+            setCameraZoom(590);
             delay(500);
             scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2)) {
