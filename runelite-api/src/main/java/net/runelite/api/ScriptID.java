@@ -137,24 +137,14 @@ public final class ScriptID
 	public static final int QUEST_STATUS_GET = 4029;
 
 	/**
-	 * Updates the Quest interface's scrollbar
+	 * Updates the Diary/Quest interface's scrollbar
 	 * <ul>
 	 * <li> int (boolean) Reset scroll position </li>
 	 * <li> int Number of lines </li>
 	 * </ul>
 	 */
 	@ScriptArguments(integer = 2)
-	public static final int QUEST_UPDATE_LINECOUNT = 2523;
-
-	/**
-	 * Updates the Diary interface's scrollbar
-	 * <ul>
-	 * <li> int (boolean) Reset scroll position </li>
-	 * <li> int Number of lines </li>
-	 * </ul>
-	 */
-	@ScriptArguments(integer = 2)
-	public static final int DIARY_UPDATE_LINECOUNT = 6845;
+	public static final int DIARY_QUEST_UPDATE_LINECOUNT = 2523;
 
 	/**
 	 * Handles zoom input
