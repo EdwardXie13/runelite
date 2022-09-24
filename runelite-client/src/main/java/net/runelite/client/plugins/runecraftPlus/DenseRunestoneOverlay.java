@@ -283,7 +283,7 @@ public class DenseRunestoneOverlay extends Overlay
 
     private void clickBoxRender(Graphics2D graphics) {
         //after return
-        if(isAtTile(1752, 3854)){
+        if(isAtTile(1752, 3854, 0)){
             changeCameraYaw(cameraReset);
         }
         //Render closer mine Rock
@@ -303,7 +303,7 @@ public class DenseRunestoneOverlay extends Overlay
             renderObject(graphics, darkAltar, Pink_Color, Pink_Color, Pink_Color);
         }
         //if destination is dark altar
-        else if(destinationDarkAltar() && !secondRun) {
+        else if(destinationDarkAltar() && !secondRun && inventoryContainsBlocks()) {
             client.setOculusOrbState(1);
         }
         //if destination is return Area
@@ -349,7 +349,7 @@ public class DenseRunestoneOverlay extends Overlay
     }
 
     private void abyssClickBoxes(Graphics2D graphics) {
-        if (isAtTile(3094, 3491) && !isBankOpen()) {
+        if (isAtTile(3094, 3491, 0) && !isBankOpen()) {
             renderWildernessWall(graphics);
         } else if(isInAbyss()) {
             renderRifts(graphics);
@@ -378,10 +378,11 @@ public class DenseRunestoneOverlay extends Overlay
         return this.client.getLocalPlayer().getWorldLocation().distanceTo2D(target) < range;
     }
 
-    private Boolean isAtTile(final int x, final int y) {
+    private Boolean isAtTile(final int x, final int y, final int z) {
         Boolean playerX = client.getLocalPlayer().getWorldLocation().getX() == x;
         Boolean playerY = client.getLocalPlayer().getWorldLocation().getY() == y;
-        return playerX && playerY;
+        Boolean playerZ = client.getLocalPlayer().getWorldLocation().getPlane() == z;
+        return playerX && playerY && playerZ;
     }
 
     private void northRockClimb(Graphics2D graphics) {
@@ -412,6 +413,13 @@ public class DenseRunestoneOverlay extends Overlay
             return -1;
         else
             return temp.getId();
+    }
+
+    private boolean inventoryContainsBlocks() {
+        //contains unimbued blocks, imbued blocks, or fragments
+        return client.getItemContainer(InventoryID.INVENTORY).contains(13445) ||
+                client.getItemContainer(InventoryID.INVENTORY).contains(13446) ||
+                client.getItemContainer(InventoryID.INVENTORY).contains(7938);
     }
 
     private String closerRock() {
@@ -563,7 +571,14 @@ public class DenseRunestoneOverlay extends Overlay
         } else if(swapWorldItem(entry)) {
             inventorySwap();
         } else if(swapEquipItems(entry)) {
-            equipSwap();
+            // swap dueling ring to duel arena tp
+            if(getRegionID() == 9776)
+                swapDuelingRingToDuelArenaTp();
+            // swap dueling ring to castle wars tp
+            else if(getRegionID() == 10315)
+                swapDuelingRingToCastleWarsTp();
+            else
+                equipSwap();
         }
     }
 
@@ -615,9 +630,9 @@ public class DenseRunestoneOverlay extends Overlay
             String target = stripTargetAnchors(entry);
             MenuAction targetType = entry.getType();
             if (
-                    (RCpouch.contains(target) && entry.getIdentifier() == 3 && menuEntries.length == 7 && isAtRCAltar()) ||
-                    (Capes.contains(target) && targetType == MenuAction.ITEM_THIRD_OPTION && menuEntries.length == 6) ||
-                    (UnchargedGlory.contains(target) && targetType == MenuAction.ITEM_USE && menuEntries.length == 6))
+                (RCpouch.contains(target) && entry.getIdentifier() == 3 && menuEntries.length == 7 && isAtRCAltar()) ||
+                (Capes.contains(target) && targetType == MenuAction.ITEM_THIRD_OPTION && menuEntries.length == 6) ||
+                (UnchargedGlory.contains(target) && targetType == MenuAction.ITEM_USE && menuEntries.length == 6))
             {
                 menuEntries[i] = menuEntries[menuEntries.length - 1];
                 menuEntries[menuEntries.length - 1] = entry;
@@ -637,6 +652,40 @@ public class DenseRunestoneOverlay extends Overlay
 
             if((AmuletOfGlory.contains(target) && entry.getIdentifier() == 2 && menuEntries.length == 7) ||
                (RingOfDueling.contains(target) && entry.getIdentifier() == 4 && menuEntries.length == 6) ) {
+                menuEntries[i] = menuEntries[menuEntries.length - 1];
+                menuEntries[menuEntries.length - 1] = entry;
+
+                client.setMenuEntries(menuEntries);
+                break;
+            }
+        }
+    }
+
+    private void swapDuelingRingToDuelArenaTp() {
+        MenuEntry[] menuEntries = client.getMenuEntries();
+
+        for (int i = menuEntries.length - 1; i >= 0; --i) {
+            MenuEntry entry = menuEntries[i];
+            String target = stripTargetAnchors(entry);
+
+            if(RingOfDueling.contains(target) && entry.getIdentifier() == 2 && menuEntries.length == 6) {
+                menuEntries[i] = menuEntries[menuEntries.length - 1];
+                menuEntries[menuEntries.length - 1] = entry;
+
+                client.setMenuEntries(menuEntries);
+                break;
+            }
+        }
+    }
+
+    private void swapDuelingRingToCastleWarsTp() {
+        MenuEntry[] menuEntries = client.getMenuEntries();
+
+        for (int i = menuEntries.length - 1; i >= 0; --i) {
+            MenuEntry entry = menuEntries[i];
+            String target = stripTargetAnchors(entry);
+
+            if(RingOfDueling.contains(target) && entry.getIdentifier() == 3 && menuEntries.length == 6) {
                 menuEntries[i] = menuEntries[menuEntries.length - 1];
                 menuEntries[menuEntries.length - 1] = entry;
 
