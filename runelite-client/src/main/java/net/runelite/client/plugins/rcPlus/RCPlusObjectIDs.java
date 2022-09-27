@@ -1,16 +1,10 @@
 package net.runelite.client.plugins.rcPlus;
 
-import net.runelite.api.DecorativeObject;
 import net.runelite.api.GameObject;
-import net.runelite.api.GroundObject;
 import net.runelite.api.ObjectID;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.api.events.DecorativeObjectDespawned;
-import net.runelite.api.events.DecorativeObjectSpawned;
 import net.runelite.api.events.GameObjectDespawned;
 import net.runelite.api.events.GameObjectSpawned;
-import net.runelite.api.events.GroundObjectDespawned;
-import net.runelite.api.events.GroundObjectSpawned;
 
 public class RCPlusObjectIDs {
     //=== AIR ALTAR ===
@@ -29,21 +23,14 @@ public class RCPlusObjectIDs {
     public static GameObject airFaladorBankBooth4 = null;
 
     //=== COSMIC ALTAR ===
-    public static final int JUTTING_WALL_17002 = ObjectID.JUTTING_WALL_17002;
     public static final int BANK_CHEST_26711 = ObjectID.BANK_CHEST_26711;
-    public static final int COSMIC_MYSTERIOUS_RUINS = 34819;
-    public static final int COSMIC_ALTAR_34766 = ObjectID.ALTAR_34766;
-    public static final int COSMIC_PORTAL = ObjectID.PORTAL_34754;
-
-    public static GameObject juttingWall = null;
-    public static GameObject zanarisBankChest3 = null;
-    public static GameObject zanarisBankChest4 = null;
-    public static GameObject zanarisBankChest5 = null;
-    public static GameObject cosmicAltarAltar = null;
-    public static GameObject cosmicAltarNorthPortal = null;
-    public static GameObject cosmicAltarEastPortal = null;
-    public static GameObject cosmicAltarSouthPortal = null;
-    public static GameObject cosmicAltarWestPortal = null;
+    public static final int FREEFORALL_PORTAL = ObjectID.FREEFORALL_PORTAL;
+    public static final int FIRE_MYSTERIOUS_RUINS = 34817;
+    public static final int FIRE_ALTAR_34764 = ObjectID.ALTAR_34764;
+    public static GameObject feroxEnclaveBank = null;
+    public static GameObject freeForAllPortal = null;
+    public static GameObject fireMysteriousRuins = null;
+    public static GameObject fireAltarAltar = null;
 
     public static void assignObjects(GameObjectSpawned event) {
         GameObject obj = event.getGameObject();
@@ -55,7 +42,6 @@ public class RCPlusObjectIDs {
                 airAltarPortal = obj;
                 break;
             case AIR_MYSTERIOUS_RUINS:
-                System.out.println("air ruins spawned");
                 airMysteriousRuins = obj;
                 break;
             case AIR_ALTAR_34760:
@@ -70,6 +56,20 @@ public class RCPlusObjectIDs {
                 } else if(bankBoothWp.equals(new WorldPoint(3013, 3354, 0))) {
                     airFaladorBankBooth4 = obj;
                 }
+                break;
+
+            //=== FIRE ALTAR ===
+            case BANK_CHEST_26711:
+                feroxEnclaveBank = obj;
+                break;
+            case FREEFORALL_PORTAL:
+                freeForAllPortal = obj;
+                break;
+            case FIRE_MYSTERIOUS_RUINS:
+                fireMysteriousRuins = obj;
+                break;
+            case FIRE_ALTAR_34764:
+                fireAltarAltar = obj;
                 break;
         }
     }
@@ -93,6 +93,20 @@ public class RCPlusObjectIDs {
                 airFaladorBankBooth2 = null;
                 airFaladorBankBooth3 = null;
                 airFaladorBankBooth4 = null;
+                break;
+
+            //=== FIRE ALTAR ===
+            case BANK_CHEST_26711:
+                feroxEnclaveBank = null;
+                break;
+            case FREEFORALL_PORTAL:
+                freeForAllPortal = null;
+                break;
+            case FIRE_MYSTERIOUS_RUINS:
+                fireMysteriousRuins = null;
+                break;
+            case FIRE_ALTAR_34764:
+                fireAltarAltar = null;
                 break;
         }
     }

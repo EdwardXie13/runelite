@@ -572,11 +572,11 @@ public class DenseRunestoneOverlay extends Overlay
             inventorySwap();
         } else if(swapEquipItems(entry)) {
             // swap dueling ring to duel arena tp
-            if(getRegionID() == 9776)
+            if(getRegionID() == 9776 || getRegionID() == 12344 || getRegionID() == 13130)
                 swapDuelingRingToDuelArenaTp();
             // swap dueling ring to castle wars tp
-            else if(getRegionID() == 10315)
-                swapDuelingRingToCastleWarsTp();
+//            else if(getRegionID() == 10315)
+//                swapDuelingRingToCastleWarsTp();
             else
                 equipSwap();
         }
@@ -595,8 +595,9 @@ public class DenseRunestoneOverlay extends Overlay
 //            System.out.println("target: " + target + ", option: " + entry.getOption() + ", Id: " + entry.getIdentifier());
 
             if(
-                    (RCpouch.contains(target) && entry.getIdentifier() == 9 && menuEntries.length == 9) ||
-                    (RingOfDueling.contains(target) && entry.getIdentifier() == 9 && menuEntries.length == 9 && !isRingOfDuelingEquipped())
+                (RCpouch.contains(target) && entry.getIdentifier() == 9 && menuEntries.length == 9) ||
+                (RingOfDueling.contains(target) && entry.getOption().equals("Withdraw-1") && menuEntries.length == 9 && !isRingOfDuelingEquipped()) ||
+                (RingOfDueling.contains(target) && entry.getOption().equals("Wear") && menuEntries.length == 9 && !isRingOfDuelingEquipped())
             ) {
                 entry.setType(MenuAction.CC_OP);
 

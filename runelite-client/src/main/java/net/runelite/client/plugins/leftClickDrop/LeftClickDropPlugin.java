@@ -22,7 +22,7 @@ public class LeftClickDropPlugin  extends Plugin {
     private Client client;
 
     @Subscribe
-    public void onMenuEntryAdded()
+    public void onMenuEntryAdded(MenuEntryAdded menuEntryAdded)
     {
         swapMenus();
     }

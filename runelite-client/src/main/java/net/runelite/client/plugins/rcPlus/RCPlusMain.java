@@ -15,6 +15,7 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 
+import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
 
@@ -25,9 +26,10 @@ import java.awt.Shape;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class RCPlusMain implements Runnable {
     private final Client client;
@@ -37,6 +39,7 @@ public class RCPlusMain implements Runnable {
     public long start;
                                                                 // falador area,            air altar
     public static Set<Integer> airAltarRegions = ImmutableSet.of(12084, 12083, 11827, 11828, 11339);
+    public static Set<Integer> fireAltarRegions = ImmutableSet.of(12344, 13130, 13106, 10315, 12600);
 
     Thread t;
 
@@ -58,12 +61,10 @@ public class RCPlusMain implements Runnable {
             if (checkIdle() && checkLastReset())
                 reset();
 
-            if(airAltarRegions.contains(getRegionID())) {
+            if(airAltarRegions.contains(getRegionID()))
                 doAirAltar();
-            }
-//            else if() {
-//
-//            }
+            else if(fireAltarRegions.contains(getRegionID()))
+                doFireAltar();
 
         }
         System.out.println("Thread has stopped.");
@@ -93,7 +94,7 @@ public class RCPlusMain implements Runnable {
                 scheduledGameObjectDelay(RCPlusObjectIDs.airFaladorBankBooth4, 10);
             //bank function
             delay(2000);
-            bankingSequence(false, false, false);
+            bankingSequence();
             //deposit
             //refill pouches if needed
             //close bank
@@ -138,9 +139,111 @@ public class RCPlusMain implements Runnable {
         }
     }
 
+    private void doFireAltar() {
+        if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !readyForAltar() && isIdle) {
+            changeCameraYaw(randomChangeCameraYaw());
+            setCameraZoom(896);
+            delay(500);
+            scheduledGameObjectDelay(RCPlusObjectIDs.feroxEnclaveBank, 10);
+            delay(1500);
+            bankingSequence();
+        } else if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !isBankOpen() && readyForAltar() && !hasEnoughStamina(50) && isIdle) {
+            pressKey(KeyEvent.VK_DOWN, 2000);
+            delay(500);
+            changeCameraYaw(0);
+            setCameraZoom(255);
+            delay(500);
+            scheduledGameObjectDelay(RCPlusObjectIDs.freeForAllPortal, 12);
+            delay(1500);
+        } else if(getRegionID() == 13130) { // is in FFA portal
+            // TP to duel arena
+            pressKey(KeyEvent.VK_F4);
+            delay(250);
+            pressKey(KeyEvent.VK_UP, 2000);
+            delay(250);
+            scheduledPointDelay(new Point(899, 924), 4);
+            delay(1000);
+        } else if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !isBankOpen() && readyForAltar() && hasEnoughStamina(50) && isIdle) {
+            // TP to duel arena
+            pressKey(KeyEvent.VK_F4);
+            delay(250);
+            scheduledPointDelay(new Point(899, 924), 4);
+            delay(1000);
+        } else if(getRegionID() == 13106 && isNearWorldTile(new WorldPoint(3315, 3236, 0), 4)) {
+            delay(1000);
+            changeCameraYaw(0);
+            setCameraZoom(500);
+            delay(500);
+            panCameraOneDirection(KeyEvent.VK_W, 1000);
+            delay(500);
+            getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusWorldPoints.FIRE_ALTAR_MYSTERIOUS_RUINS));
+            delay(500);
+            pressKey(KeyEvent.VK_ESCAPE);
+            delay(250);
+            changeCameraYaw(randomChangeCameraYaw());
+            delay(250);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            delay(2500);
+        } else if(isNearWorldTile(RCPlusWorldPoints.FIRE_ALTAR_MYSTERIOUS_RUINS, 3) && isIdle) {
+            scheduledGameObjectDelay(RCPlusObjectIDs.fireMysteriousRuins, 10);
+            delay(500);
+        } else if(isNearWorldTile(RCPlusWorldPoints.FIRE_ALTAR_ENTRANCE, 2)) {
+            changeCameraYaw(1024);
+            setCameraZoom(277);
+            delay(250);
+            client.setOculusOrbNormalSpeed(40);
+            client.setOculusOrbState(1);
+            delay(250);
+            getWorldPointCoords(LocalPoint.fromWorld(client, new WorldPoint(2584, 4840, 0)));
+            delay(500);
+            setCameraZoom(748);
+            delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            delay(1000);
+        } else if(isNearWorldTile(new WorldPoint(2584, 4840, 0), 2) && isIdle) {
+            delay(1000);
+            scheduledGameObjectDelay(RCPlusObjectIDs.fireAltarAltar, 16);
+            delay(700);
+            scheduledPointClick(new Point(782, 804), 6);
+            delay(500);
+            scheduledGameObjectDelay(RCPlusObjectIDs.fireAltarAltar, 16);
+            delay(500);
+            pressKey(KeyEvent.VK_F4);
+            delay(250);
+            scheduledPointDelay(new Point(899, 924), 6);
+            delay(1000);
+        } else if(isNearWorldTile(new WorldPoint(3151, 3634, 0), 4)) {
+            changeCameraYaw(0);
+            setCameraZoom(500);
+            delay(500);
+            panCameraOneDirection(KeyEvent.VK_A, 1200);
+            delay(500);
+            getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE));
+            delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            pressKey(KeyEvent.VK_ESCAPE);
+            delay(4000);
+        }
+        else {
+            delay(500);
+        }
+    }
+
     private List<Item> getInventoryItems() {
         ItemContainer inventoryContainer = client.getItemContainer(InventoryID.INVENTORY);
         return new ArrayList<>(Arrays.asList(inventoryContainer.getItems()));
+    }
+
+    private boolean isBankOpen() {
+        return client.getWidget(WidgetInfo.BANK_CONTAINER) != null;
+    }
+
+    private boolean hasEnoughStamina(int desiredEnergy) {
+        System.out.println("in stam check");
+        return client.getEnergy() >= desiredEnergy;
     }
 
     private boolean readyForAltar() {
@@ -153,31 +256,51 @@ public class RCPlusMain implements Runnable {
         }
     }
 
-    private void bankingSequence(boolean checkHP, boolean checkTps, boolean hasPouches) {
-//        List<Item> inventoryItems = getInventoryItems();
-        if(checkHP) {
-            // eat food
-            System.out.println("eating food");
-        }
+    private int randomChangeCameraYaw() {
+        try {
+            Random random = new Random();
+            int num = random.nextInt(10000);
 
-        if(checkTps) {
-            System.out.println("replenishTps");
+            if (num < 2000) {
+                return 0;
+            } else if (num < 5000) {
+                return 512;
+            } else if (num < 8000){
+                return 1024;
+            } else {
+                return 1536;
+            }
+        } catch (Exception e) {
+            return 0;
         }
+    }
 
-        if(hasPouches) {
-            System.out.println("filling pouches");
-            // count pouches
-            // withdraw ess and refill per pouch
-
-        }
+    private void bankingSequence() {
         // cheese by always having slot 1 empty so the bound runes go there
         // deposit non pouches (click slot 1)
-        scheduledPointClick(new Point(782, 768), 3);
+        scheduledPointClick(new Point(782, 768), 4);
+        delay(500);
+
+        //does have duel ring?
+        if(!isRingOfDuelingEquipped()) {
+            scheduledPointClick(new Point(428, 721), 4);
+            delay(500);
+            scheduledPointClick(new Point(782, 768), 4);
+            delay(500);
+        }
+
+        // withdraw ess
+        scheduledPointClick(new Point(476, 721), 4);
+        delay(500);
+        // fill small pouch
+        scheduledPointClick(new Point(782, 804), 4);
         delay(500);
         // withdraw ess
-        scheduledPointClick(new Point(524, 757), 3);
+        scheduledPointClick(new Point(476, 721), 4);
         delay(500);
         pressKey(KeyEvent.VK_ESCAPE);
+        delay(1000);
+        isIdle = true;
     }
 
     private void bindRunesSequence(boolean smallPouch, boolean mediumPouch, boolean largePouch, boolean giantPouch) {
@@ -201,6 +324,18 @@ public class RCPlusMain implements Runnable {
         }
 
         delay(4000);
+    }
+
+    private boolean isRingOfDuelingEquipped() {
+        List<Item> equipItems = new ArrayList<>(Arrays.asList(client.getItemContainer(InventoryID.EQUIPMENT).getItems()));
+        Set<Integer> rod = new HashSet<>(Arrays.asList(2552, 2554, 2556, 2558, 2560, 2562, 2564, 2566));
+
+        for(Item i : equipItems) {
+            if(rod.contains(i.getId()))
+                return true;
+        }
+
+        return false;
     }
 
 //    private Point getRunesInInventoryLocation(List<Item> inventory) {
@@ -264,6 +399,12 @@ public class RCPlusMain implements Runnable {
         client.setOculusOrbState(1);
         pressKey(KeyEvent.VK_D, 500);
         pressKey(KeyEvent.VK_W, 900);
+    }
+
+    private void panCameraOneDirection(int keyEvent, int ms) {
+        client.setOculusOrbNormalSpeed(40);
+        client.setOculusOrbState(1);
+        pressKey(keyEvent, ms);
     }
 
     public int getRegionID() {

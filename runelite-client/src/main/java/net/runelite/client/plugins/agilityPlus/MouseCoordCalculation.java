@@ -78,7 +78,6 @@ public class MouseCoordCalculation {
     }
 
     public static boolean isCoordInClickBox(Shape clickbox, Point point) {
-        System.out.println("is in box: " + clickbox.contains(point.x, point.y));
         return clickbox.contains(point.x, point.y);
     }
 
