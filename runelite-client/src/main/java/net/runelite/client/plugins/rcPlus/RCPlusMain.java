@@ -140,37 +140,48 @@ public class RCPlusMain implements Runnable {
     }
 
     private void doFireAltar() {
-        if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !readyForAltar() && isIdle) {
-            changeCameraYaw(randomChangeCameraYaw());
-            setCameraZoom(896);
+        if(checkLevelUp()) {
+            pressKey(KeyEvent.VK_SPACE);
             delay(500);
+        } else if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !readyForAltar() && isIdle) {
             scheduledGameObjectDelay(RCPlusObjectIDs.feroxEnclaveBank, 10);
             delay(1500);
-            bankingSequence();
-        } else if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !isBankOpen() && readyForAltar() && !hasEnoughStamina(50) && isIdle) {
+            if(isBankOpen())
+                bankingSequence();
+        } else if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !isBankOpen() && readyForAltar() && !hasEnoughStamina() && isIdle) {
             pressKey(KeyEvent.VK_DOWN, 2000);
             delay(500);
             changeCameraYaw(0);
             setCameraZoom(255);
-            delay(500);
+            delay(1000);
             scheduledGameObjectDelay(RCPlusObjectIDs.freeForAllPortal, 12);
             delay(1500);
-        } else if(getRegionID() == 13130) { // is in FFA portal
+        } else if(getRegionID() == 13130 && isIdle) { // is in FFA portal
             // TP to duel arena
-            pressKey(KeyEvent.VK_F4);
-            delay(250);
+            isIdle = false;
             pressKey(KeyEvent.VK_UP, 2000);
             delay(250);
+            pressKey(KeyEvent.VK_F4);
+            delay(250);
             scheduledPointDelay(new Point(899, 924), 4);
-            delay(1000);
-        } else if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !isBankOpen() && readyForAltar() && hasEnoughStamina(50) && isIdle) {
+            delay(500);
+            pressKey(KeyEvent.VK_ESCAPE);
+            delay(3000);
+            isIdle = true;
+            // need to fix double click to TP
+        } else if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !isBankOpen() && readyForAltar() && hasEnoughStamina() && isIdle) {
             // TP to duel arena
             pressKey(KeyEvent.VK_F4);
             delay(250);
             scheduledPointDelay(new Point(899, 924), 4);
+            delay(500);
+            pressKey(KeyEvent.VK_ESCAPE);
             delay(1000);
         } else if(getRegionID() == 13106 && isNearWorldTile(new WorldPoint(3315, 3236, 0), 4)) {
             delay(1000);
+            pressKey(KeyEvent.VK_ESCAPE);
+            if(client.getCameraPitch() != 512)
+                pressKey(KeyEvent.VK_UP, 2000);
             changeCameraYaw(0);
             setCameraZoom(500);
             delay(500);
@@ -178,14 +189,13 @@ public class RCPlusMain implements Runnable {
             delay(500);
             getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusWorldPoints.FIRE_ALTAR_MYSTERIOUS_RUINS));
             delay(500);
-            pressKey(KeyEvent.VK_ESCAPE);
-            delay(250);
             changeCameraYaw(randomChangeCameraYaw());
             delay(250);
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
             delay(2500);
         } else if(isNearWorldTile(RCPlusWorldPoints.FIRE_ALTAR_MYSTERIOUS_RUINS, 3) && isIdle) {
+            delay(500);
             scheduledGameObjectDelay(RCPlusObjectIDs.fireMysteriousRuins, 10);
             delay(500);
         } else if(isNearWorldTile(RCPlusWorldPoints.FIRE_ALTAR_ENTRANCE, 2)) {
@@ -213,7 +223,9 @@ public class RCPlusMain implements Runnable {
             pressKey(KeyEvent.VK_F4);
             delay(250);
             scheduledPointDelay(new Point(899, 924), 6);
-            delay(1000);
+            delay(500);
+            pressKey(KeyEvent.VK_ESCAPE);
+            delay(2000);
         } else if(isNearWorldTile(new WorldPoint(3151, 3634, 0), 4)) {
             changeCameraYaw(0);
             setCameraZoom(500);
@@ -224,11 +236,10 @@ public class RCPlusMain implements Runnable {
             delay(500);
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
-            pressKey(KeyEvent.VK_ESCAPE);
-            delay(4000);
-        }
-        else {
             delay(500);
+            changeCameraYaw(randomChangeCameraYaw());
+            setCameraZoom(896);
+            delay(10000);
         }
     }
 
@@ -241,9 +252,8 @@ public class RCPlusMain implements Runnable {
         return client.getWidget(WidgetInfo.BANK_CONTAINER) != null;
     }
 
-    private boolean hasEnoughStamina(int desiredEnergy) {
-        System.out.println("in stam check");
-        return client.getEnergy() >= desiredEnergy;
+    private boolean hasEnoughStamina() {
+        return client.getEnergy() >= 40;
     }
 
     private boolean readyForAltar() {
@@ -252,6 +262,7 @@ public class RCPlusMain implements Runnable {
                     .filter(item -> item.getId() == ItemID.RUNE_ESSENCE || item.getId() == ItemID.PURE_ESSENCE)
                     .count() >= 20;
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
     }
@@ -271,6 +282,7 @@ public class RCPlusMain implements Runnable {
                 return 1536;
             }
         } catch (Exception e) {
+            e.printStackTrace();
             return 0;
         }
     }
