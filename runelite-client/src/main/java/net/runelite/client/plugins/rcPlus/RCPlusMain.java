@@ -12,7 +12,6 @@ import net.runelite.api.ScriptID;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
-
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
@@ -78,13 +77,11 @@ public class RCPlusMain implements Runnable {
             pressKey(KeyEvent.VK_ESCAPE);
             delay(500);
         } else if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !isBankOpen() && !readyForAltar() && isIdle) {
-            System.out.println("banking");
             scheduledGameObjectDelay(RCPlusObjectIDs.feroxEnclaveBank, 10);
             delay(1500);
             if(isBankOpen())
                 bankingSequence();
         } else if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !isBankOpen() && readyForAltar() && !hasEnoughStamina() && isIdle) {
-            System.out.println("heading to FFA portal");
             pressKey(KeyEvent.VK_DOWN, 2000);
             delay(500);
             changeCameraYaw(0);
@@ -94,7 +91,6 @@ public class RCPlusMain implements Runnable {
             delay(1500);
         } else if(getRegionID() == 13130 && isIdle) { // is in FFA portal
             // TP to duel arena
-            System.out.println("ready to tp to duel arena FFA portal");
             isIdle = false;
             pressKey(KeyEvent.VK_UP, 2000);
             delay(250);
@@ -108,7 +104,6 @@ public class RCPlusMain implements Runnable {
             // need to fix double click to TP
         } else if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !isBankOpen() && readyForAltar() && hasEnoughStamina() && isIdle) {
             // TP to duel arena
-            System.out.println("ready to tp to duel arena bank tile");
             pressKey(KeyEvent.VK_F4);
             delay(250);
             scheduledPointDelay(new Point(899, 924), 4);
@@ -116,7 +111,6 @@ public class RCPlusMain implements Runnable {
             pressKey(KeyEvent.VK_ESCAPE);
             delay(1000);
         } else if(getRegionID() == 13106 && isNearWorldTile(new WorldPoint(3315, 3236, 0), 4)) {
-            System.out.println("at duel arena");
             delay(1000);
             pressKey(KeyEvent.VK_ESCAPE);
             if(client.getCameraPitch() != 512)
@@ -128,23 +122,28 @@ public class RCPlusMain implements Runnable {
             delay(500);
             getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusWorldPoints.FIRE_ALTAR_MYSTERIOUS_RUINS));
             delay(500);
-            changeCameraYaw(randomChangeCameraYaw());
-            delay(250);
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
+            delay(500);
+            changeCameraYaw(0);
+            setCameraZoom(700);
             delay(2500);
         } else if(isNearWorldTile(RCPlusWorldPoints.FIRE_ALTAR_MYSTERIOUS_RUINS, 3) && isIdle) {
-            System.out.println("mysteriousRuins");
             isIdle = false;
-            delay(600);
-            scheduledGameObjectDelay(RCPlusObjectIDs.fireMysteriousRuins, 8);
-            delay(1000);
+            delay(500);
+            scheduledPointDelay(new Point(627, 278), 12);
+            delay(2000);
+            isIdle = true;
+        } else if(isAtWorldPoint(RCPlusWorldPoints.FIRE_ALTAR_MYSTERIOUS_RUINS_TWO) && isIdle) {
+            isIdle = false;
+            delay(500);
+            scheduledPointDelay(new Point(331, 815), 12);
+            delay(2000);
             isIdle = true;
         } else if(isNearWorldTile(RCPlusWorldPoints.FIRE_ALTAR_ENTRANCE, 2) && isIdle) {
-            System.out.println("fireAltarEntrance");
             changeCameraYaw(1024);
             setCameraZoom(277);
-            delay(250);
+            delay(500);
             client.setOculusOrbNormalSpeed(40);
             client.setOculusOrbState(1);
             delay(250);
@@ -156,19 +155,16 @@ public class RCPlusMain implements Runnable {
             client.setOculusOrbNormalSpeed(12);
             delay(1000);
         } else if(isNearWorldTile(new WorldPoint(2584, 4840, 0), 2) && isIdle) {
-            System.out.println("fireAltar");
             if(readyForAltar()) {
                 isIdle = false;
-                System.out.println("should bind runes");
                 scheduledGameObjectDelay(RCPlusObjectIDs.fireAltarAltar, 12);
                 delay(750);
-                scheduledPointClick(new Point(782, 804), 6);
+                scheduledPointDelay(new Point(782, 804), 6);
                 delay(300);
                 scheduledGameObjectDelay(RCPlusObjectIDs.fireAltarAltar, 12);
                 isIdle = true;
             } else {
                 isIdle = false;
-                System.out.println("should tp");
                 delay(250);
                 pressKey(KeyEvent.VK_F4);
                 delay(250);
@@ -179,7 +175,6 @@ public class RCPlusMain implements Runnable {
                 isIdle = true;
             }
         } else if(isNearWorldTile(new WorldPoint(3151, 3634, 0), 4)) {
-            System.out.println("at Ferox Enclave");
             changeCameraYaw(0);
             setCameraZoom(500);
             delay(500);
@@ -210,6 +205,7 @@ public class RCPlusMain implements Runnable {
     }
 
     private boolean readyForAltar() {
+        if(!isRingOfDuelingEquipped()) return false;
         try {
             return getInventoryItems().stream()
                     .filter(item -> item.getId() == ItemID.RUNE_ESSENCE || item.getId() == ItemID.PURE_ESSENCE)
@@ -262,25 +258,25 @@ public class RCPlusMain implements Runnable {
     private void bankingSequence() {
         // cheese by always having slot 1 empty so the bound runes go there
         // deposit non pouches (click slot 1)
-        scheduledPointClick(new Point(782, 768), 4);
+        scheduledPointDelay(new Point(782, 768), 4);
         delay(500);
 
         //does have duel ring?
         if(!isRingOfDuelingEquipped()) {
-            scheduledPointClick(new Point(428, 721), 4);
+            scheduledPointDelay(new Point(428, 721), 4);
             delay(500);
-            scheduledPointClick(new Point(782, 768), 4);
+            scheduledPointDelay(new Point(782, 768), 4);
             delay(500);
         }
 
         // withdraw ess
-        scheduledPointClick(new Point(476, 721), 4);
+        scheduledPointDelay(new Point(476, 721), 4);
         delay(500);
         // fill small pouch
-        scheduledPointClick(new Point(782, 804), 4);
+        scheduledPointDelay(new Point(782, 804), 4);
         delay(500);
         // withdraw ess
-        scheduledPointClick(new Point(476, 721), 4);
+        scheduledPointDelay(new Point(476, 721), 4);
         delay(500);
         pressKey(KeyEvent.VK_ESCAPE);
         delay(1000);
@@ -361,10 +357,7 @@ public class RCPlusMain implements Runnable {
 
     private void getObstacleCenter(GameObject gameObject, int sigma) {
         final Shape groundObjectConvexHull = gameObject.getConvexHull();
-        if(groundObjectConvexHull == null) {
-            System.out.println("hull is null");
-            return;
-        }
+        if(groundObjectConvexHull == null) return;
 
         Rectangle groundObjectRectangle = groundObjectConvexHull.getBounds();
 
@@ -443,15 +436,6 @@ public class RCPlusMain implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
             isIdle = true;
-        }
-    }
-
-    private void scheduledPointClick(Point canvasPoint, int sigma) {
-        Point actualPoint = new Point(canvasPoint.x, canvasPoint.y);
-        try {
-            MouseCoordCalculation.generateCoord(actualPoint, sigma);
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 

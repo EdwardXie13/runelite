@@ -2,7 +2,9 @@ package net.runelite.client.plugins.rcPlus;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.GameObject;
 import net.runelite.api.GameState;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameObjectDespawned;
 import net.runelite.api.events.GameObjectSpawned;
 import net.runelite.api.events.GameStateChanged;
@@ -13,8 +15,12 @@ import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
 
 import javax.inject.Inject;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.Shape;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,10 +37,6 @@ public class RCPlusPlugin extends Plugin {
 
     private boolean hasStarted = false;
 
-    private Thread.State previousState = null;
-
-    public static int countRunnables = 0;
-
     RCPlusMain thread;
 
     enum STATUS{
@@ -46,22 +48,6 @@ public class RCPlusPlugin extends Plugin {
     public void onGameTick(GameTick event) {
         toggleStatus();
         checkOculusReset();
-        if(thread != null) {
-            Thread.State currentState = thread.t.getState();
-            System.out.println(previousState + " " + currentState + " " + countRunnables);
-            if(currentState == previousState && previousState == Thread.State.RUNNABLE) {
-                countRunnables++;
-                if(countRunnables >= 15) {
-                    System.out.println("in new runnables");
-                    thread.t.stop();
-                    countRunnables = 0;
-                    thread = new RCPlusMain(client, clientThread);
-                }
-            } else {
-                countRunnables = 0;
-                previousState = currentState;
-            }
-        }
     }
 
     private String stripTargetAnchors(String text) {
@@ -97,6 +83,42 @@ public class RCPlusPlugin extends Plugin {
             RCPlusMain.resetOculusOrb = false;
         }
     }
+
+    private boolean isNearWorldTile(final WorldPoint target, final int range) {
+        return this.client.getLocalPlayer().getWorldLocation().distanceTo2D(target) < range;
+    }
+
+    private boolean isAtWorldPoint(WorldPoint worldPoint) {
+        boolean playerX = client.getLocalPlayer().getWorldLocation().getX() == worldPoint.getX();
+        boolean playerY = client.getLocalPlayer().getWorldLocation().getY() == worldPoint.getY();
+        return playerX && playerY;
+    }
+    private void scheduledGameObjectDelay(GameObject gameObject, int sigma) {
+        RCPlusMain.isIdle = false;
+        try {
+            getObstacleCenter(gameObject, sigma);
+        } catch (Exception e) {
+            e.printStackTrace();
+            RCPlusMain.isIdle = true;
+        }
+    }
+
+    private void getObstacleCenter(GameObject gameObject, int sigma) {
+        final Shape groundObjectConvexHull = gameObject.getConvexHull();
+        if(groundObjectConvexHull == null) return;
+
+        Rectangle groundObjectRectangle = groundObjectConvexHull.getBounds();
+
+        Point obstacleCenter = getCenterOfRectangle(groundObjectRectangle);
+
+        MouseCoordCalculation.generateCoord(obstacleCenter, gameObject, sigma);
+    }
+
+    private Point getCenterOfRectangle(Rectangle rectangle) {
+        // +26 to the Y coordinate because calculations are taken from canvas, not window
+        return new Point((int) rectangle.getCenterX(), (int) rectangle.getCenterY() + 26);
+    }
+
 
     @Subscribe
     private void onGameStateChanged(GameStateChanged ev)

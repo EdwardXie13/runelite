@@ -595,9 +595,9 @@ public class DenseRunestoneOverlay extends Overlay
 //            System.out.println("target: " + target + ", option: " + entry.getOption() + ", Id: " + entry.getIdentifier());
 
             if(
-                (RCpouch.contains(target) && entry.getIdentifier() == 9 && menuEntries.length == 9) ||
-                (RingOfDueling.contains(target) && entry.getOption().equals("Withdraw-1") && menuEntries.length == 9 && !isRingOfDuelingEquipped()) ||
-                (RingOfDueling.contains(target) && entry.getOption().equals("Wear") && menuEntries.length == 9 && !isRingOfDuelingEquipped())
+                (RCpouch.contains(target) && entry.getIdentifier() == 9 && (menuEntries.length == 9 || menuEntries.length == 10)) ||
+                (RingOfDueling.contains(target) && entry.getOption().equals("Withdraw-1") && (menuEntries.length == 9 || menuEntries.length == 10) && !isRingOfDuelingEquipped()) ||
+                (RingOfDueling.contains(target) && entry.getOption().equals("Wear") && (menuEntries.length == 9 || menuEntries.length == 10) && !isRingOfDuelingEquipped())
             ) {
                 entry.setType(MenuAction.CC_OP);
 

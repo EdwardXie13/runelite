@@ -16,6 +16,7 @@ public class RCPlusWorldPoints {
     //=== FIRE ALTAR ===
     public static final WorldPoint FEROX_ENCLAVE_BANK_TILE = new WorldPoint(3130, 3631, 0);
     public static final WorldPoint FIRE_ALTAR_MYSTERIOUS_RUINS = new WorldPoint(3312, 3253, 0);
+    public static final WorldPoint FIRE_ALTAR_MYSTERIOUS_RUINS_TWO = new WorldPoint(3314, 3257, 0);
     public static final WorldPoint FIRE_ALTAR_ENTRANCE = new WorldPoint(2576, 4848, 0);
 
     //=== BLOOD ALTAR ===
