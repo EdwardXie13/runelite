@@ -466,6 +466,11 @@ public class AgilityPlusMain implements Runnable {
             setCameraZoom(896);
             delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFourthRoofGap, 10);
+        } else if(isAtWorldPoint(new WorldPoint(2704, 3470, 3)) && isIdle) {
+            changeCameraYaw(0);
+            setCameraZoom(896);
+            delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFourthRoofGap, 10);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIFTH_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5)) {
             changeCameraYaw(0);
             setCameraZoom(670);

@@ -2,9 +2,7 @@ package net.runelite.client.plugins.rcPlus;
 
 import com.google.common.collect.ImmutableSet;
 import net.runelite.api.Client;
-import net.runelite.api.DecorativeObject;
 import net.runelite.api.GameObject;
-import net.runelite.api.GroundObject;
 import net.runelite.api.InventoryID;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
@@ -37,8 +35,7 @@ public class RCPlusMain implements Runnable {
     public static boolean isIdle = true;
     public static boolean resetOculusOrb = false;
     public long start;
-                                                                // falador area,            air altar
-    public static Set<Integer> airAltarRegions = ImmutableSet.of(12084, 12083, 11827, 11828, 11339);
+
     public static Set<Integer> fireAltarRegions = ImmutableSet.of(12344, 13130, 13106, 10315, 12600);
 
     Thread t;
@@ -61,94 +58,33 @@ public class RCPlusMain implements Runnable {
             if (checkIdle() && checkLastReset())
                 reset();
 
-            if(airAltarRegions.contains(getRegionID()))
-                doAirAltar();
-            else if(fireAltarRegions.contains(getRegionID()))
-                doFireAltar();
-
+            try {
+                if (fireAltarRegions.contains(getRegionID()))
+                    doFireAltar();
+            } catch (Exception e) {
+                System.out.println("stuff happened");
+            }
         }
         System.out.println("Thread has stopped.");
-    }
-
-    private void doAirAltar() {
-        if(isNearWorldTile(RCPlusWorldPoints.INFRONT_OF_BANK_BOOTH_TILE3, 2) && readyForAltar() && client.getOculusOrbState() == 0 && isIdle) {
-            setCameraZoom(750);
-            panCameraToAirAltarPath();
-            delay(200);
-            getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusWorldPoints.FROM_BANK_TO_PATH));
-            delay(500);
-            client.setOculusOrbState(0);
-            delay(1000);
-            //pan to altar
-            //click the altar
-        } else if(isNearWorldTile(RCPlusWorldPoints.INFRONT_OF_BANK_BOOTH_TILE3, 2) && !readyForAltar() && isIdle) {
-            //click bank
-            changeCameraYaw(0);
-            setCameraZoom(876);
-            delay(500);
-            if(isAtWorldPoint(RCPlusWorldPoints.INFRONT_OF_BANK_BOOTH_TILE2))
-                scheduledGameObjectDelay(RCPlusObjectIDs.airFaladorBankBooth2, 10);
-            else if(isAtWorldPoint(RCPlusWorldPoints.INFRONT_OF_BANK_BOOTH_TILE3))
-                scheduledGameObjectDelay(RCPlusObjectIDs.airFaladorBankBooth3, 10);
-            else if(isAtWorldPoint(RCPlusWorldPoints.INFRONT_OF_BANK_BOOTH_TILE4))
-                scheduledGameObjectDelay(RCPlusObjectIDs.airFaladorBankBooth4, 10);
-            //bank function
-            delay(2000);
-            bankingSequence();
-            //deposit
-            //refill pouches if needed
-            //close bank
-            isIdle = true;
-            delay(500);
-        } else if(isNearWorldTile(RCPlusWorldPoints.FROM_BANK_TO_PATH, 2)  && isIdle) {
-            setCameraZoom(750);
-            delay(200);
-            panCameraToAirAltar();
-            delay(500);
-            getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusWorldPoints.CENTER_AIR_MYSTERIOUS_RUINS));
-            delay(1000);
-            client.setOculusOrbState(0);
-        } else if(isNearWorldTile(RCPlusWorldPoints.CENTER_AIR_MYSTERIOUS_RUINS, 2) && readyForAltar() && isIdle) {
-            //doesnt work, doesnt detect in range
-            setCameraZoom(800);
-            delay(200);
-            scheduledGameObjectDelay(RCPlusObjectIDs.airMysteriousRuins, 8);
-            delay(1000);
-        } else if(isNearWorldTile(RCPlusWorldPoints.INSIDE_AIR_ALTAR, 2) && readyForAltar() && isIdle) {
-            setCameraZoom(493);
-            delay(500);
-            bindRunesSequence(false, false, false, false);
-            // click exit portal
-            scheduledGameObjectDelay(RCPlusObjectIDs.airAltarPortal, 8);
-            delay(3000);
-        } else if(isAtWorldPoint(RCPlusWorldPoints.EXIT_AIR_ALTAR_WORLDPOINT) && !readyForAltar() && isIdle) {
-            // pan camera to FROM_AIR_ALTAR_TO_PATH
-            setCameraZoom(750);
-            panCameraToBankPath();
-            delay(500);
-            getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusWorldPoints.FROM_AIR_ALTAR_TO_PATH));
-            delay(1000);
-            client.setOculusOrbState(0);
-        } else if(isNearWorldTile(RCPlusWorldPoints.FROM_AIR_ALTAR_TO_PATH, 2) && !readyForAltar() && isIdle) {
-            setCameraZoom(750);
-            panCameraToBank();
-            delay(500);
-            getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusWorldPoints.INFRONT_OF_BANK_BOOTH_TILE3));
-            delay(1000);
-            client.setOculusOrbState(0);
-        }
     }
 
     private void doFireAltar() {
         if(checkLevelUp()) {
             pressKey(KeyEvent.VK_SPACE);
             delay(500);
-        } else if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !readyForAltar() && isIdle) {
+        } else if(isBankOpen() && !readyForAltar() && isIdle) {
+            bankingSequence();
+        } else if(isBankOpen() && readyForAltar() && isIdle) {
+            pressKey(KeyEvent.VK_ESCAPE);
+            delay(500);
+        } else if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !isBankOpen() && !readyForAltar() && isIdle) {
+            System.out.println("banking");
             scheduledGameObjectDelay(RCPlusObjectIDs.feroxEnclaveBank, 10);
             delay(1500);
             if(isBankOpen())
                 bankingSequence();
         } else if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !isBankOpen() && readyForAltar() && !hasEnoughStamina() && isIdle) {
+            System.out.println("heading to FFA portal");
             pressKey(KeyEvent.VK_DOWN, 2000);
             delay(500);
             changeCameraYaw(0);
@@ -158,6 +94,7 @@ public class RCPlusMain implements Runnable {
             delay(1500);
         } else if(getRegionID() == 13130 && isIdle) { // is in FFA portal
             // TP to duel arena
+            System.out.println("ready to tp to duel arena FFA portal");
             isIdle = false;
             pressKey(KeyEvent.VK_UP, 2000);
             delay(250);
@@ -171,6 +108,7 @@ public class RCPlusMain implements Runnable {
             // need to fix double click to TP
         } else if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !isBankOpen() && readyForAltar() && hasEnoughStamina() && isIdle) {
             // TP to duel arena
+            System.out.println("ready to tp to duel arena bank tile");
             pressKey(KeyEvent.VK_F4);
             delay(250);
             scheduledPointDelay(new Point(899, 924), 4);
@@ -178,6 +116,7 @@ public class RCPlusMain implements Runnable {
             pressKey(KeyEvent.VK_ESCAPE);
             delay(1000);
         } else if(getRegionID() == 13106 && isNearWorldTile(new WorldPoint(3315, 3236, 0), 4)) {
+            System.out.println("at duel arena");
             delay(1000);
             pressKey(KeyEvent.VK_ESCAPE);
             if(client.getCameraPitch() != 512)
@@ -195,10 +134,14 @@ public class RCPlusMain implements Runnable {
             client.setOculusOrbNormalSpeed(12);
             delay(2500);
         } else if(isNearWorldTile(RCPlusWorldPoints.FIRE_ALTAR_MYSTERIOUS_RUINS, 3) && isIdle) {
-            delay(500);
-            scheduledGameObjectDelay(RCPlusObjectIDs.fireMysteriousRuins, 10);
-            delay(500);
-        } else if(isNearWorldTile(RCPlusWorldPoints.FIRE_ALTAR_ENTRANCE, 2)) {
+            System.out.println("mysteriousRuins");
+            isIdle = false;
+            delay(600);
+            scheduledGameObjectDelay(RCPlusObjectIDs.fireMysteriousRuins, 8);
+            delay(1000);
+            isIdle = true;
+        } else if(isNearWorldTile(RCPlusWorldPoints.FIRE_ALTAR_ENTRANCE, 2) && isIdle) {
+            System.out.println("fireAltarEntrance");
             changeCameraYaw(1024);
             setCameraZoom(277);
             delay(250);
@@ -213,20 +156,30 @@ public class RCPlusMain implements Runnable {
             client.setOculusOrbNormalSpeed(12);
             delay(1000);
         } else if(isNearWorldTile(new WorldPoint(2584, 4840, 0), 2) && isIdle) {
-            delay(1000);
-            scheduledGameObjectDelay(RCPlusObjectIDs.fireAltarAltar, 16);
-            delay(700);
-            scheduledPointClick(new Point(782, 804), 6);
-            delay(500);
-            scheduledGameObjectDelay(RCPlusObjectIDs.fireAltarAltar, 16);
-            delay(500);
-            pressKey(KeyEvent.VK_F4);
-            delay(250);
-            scheduledPointDelay(new Point(899, 924), 6);
-            delay(500);
-            pressKey(KeyEvent.VK_ESCAPE);
-            delay(2000);
+            System.out.println("fireAltar");
+            if(readyForAltar()) {
+                isIdle = false;
+                System.out.println("should bind runes");
+                scheduledGameObjectDelay(RCPlusObjectIDs.fireAltarAltar, 12);
+                delay(750);
+                scheduledPointClick(new Point(782, 804), 6);
+                delay(300);
+                scheduledGameObjectDelay(RCPlusObjectIDs.fireAltarAltar, 12);
+                isIdle = true;
+            } else {
+                isIdle = false;
+                System.out.println("should tp");
+                delay(250);
+                pressKey(KeyEvent.VK_F4);
+                delay(250);
+                scheduledPointDelay(new Point(899, 924), 6);
+                delay(500);
+                pressKey(KeyEvent.VK_ESCAPE);
+                delay(3000);
+                isIdle = true;
+            }
         } else if(isNearWorldTile(new WorldPoint(3151, 3634, 0), 4)) {
+            System.out.println("at Ferox Enclave");
             changeCameraYaw(0);
             setCameraZoom(500);
             delay(500);
@@ -237,9 +190,9 @@ public class RCPlusMain implements Runnable {
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
             delay(500);
-            changeCameraYaw(randomChangeCameraYaw());
+            changeCameraYaw(randomChangeCameraYawExceptWest());
             setCameraZoom(896);
-            delay(10000);
+            delay(9000);
         }
     }
 
@@ -286,6 +239,25 @@ public class RCPlusMain implements Runnable {
             return 0;
         }
     }
+
+    private int randomChangeCameraYawExceptWest() {
+        try {
+            Random random = new Random();
+            int num = random.nextInt(10000);
+
+            if (num < 2000) {
+                return 0;
+            } else if (num < 5000){
+                return 1024;
+            } else {
+                return 1536;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
 
     private void bankingSequence() {
         // cheese by always having slot 1 empty so the bound runes go there
@@ -349,42 +321,6 @@ public class RCPlusMain implements Runnable {
 
         return false;
     }
-
-//    private Point getRunesInInventoryLocation(List<Item> inventory) {
-//        List<Item> foodSet = inventory.stream().filter(
-//                (item) -> item.getId() == ItemID.CAKE ||
-//                        item.getId() == ItemID._23_CAKE ||
-//                        item.getId() == ItemID.SLICE_OF_CAKE
-//        ).collect(Collectors.toList());
-//
-//        int indexOfFood = Integer.MAX_VALUE;
-//
-//        for(Item food : foodSet) {
-//            int idx = inventory.indexOf(food);
-//            if(idx < indexOfFood)
-//                indexOfFood = idx;
-//        }
-//
-//        Point rowByCol = new Point((indexOfFood /4), (indexOfFood % 4));
-//
-//        Point foodPoint = new Point((798 + (rowByCol.y * 42)), (764 + (rowByCol.x * 36)));
-//        System.out.println("location of food: " + foodPoint.x + ", " + foodPoint.y);
-//
-//        return foodPoint;
-//    }
-
-//    private void eatFood() {
-//        Widget inventoryWidget = client.getWidget(WidgetInfo.INVENTORY);
-//        if(inventoryWidget != null) {
-//            ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
-//            if(inventory.contains(ItemID.SALMON) || inventory.contains(ItemID.CAKE) || inventory.contains(ItemID._23_CAKE) || inventory.contains(ItemID.SLICE_OF_CAKE)) {
-//                List<Item> inventoryList = new ArrayList<>(Arrays.asList(inventory.getItems()));
-//                inventoryList.stream().findFirst().get(
-//            }
-//        } else {
-//            pressKey(KeyEvent.VK_ESCAPE);
-//        }
-//    }
     
     private void panCameraToAirAltarPath() {
         client.setOculusOrbNormalSpeed(40);
@@ -423,42 +359,18 @@ public class RCPlusMain implements Runnable {
         return client.getLocalPlayer().getWorldLocation().getRegionID();
     }
 
-    private Point generatePointsFromPoint(Point point, int sigma) {
-        List<Point> points = new ArrayList<>();
-
-        while(points.size() < 3) {
-            Point newPoint = MouseCoordCalculation.randomCoord(point, sigma);
-            points.add(MouseCoordCalculation.randomCoord(newPoint, sigma));
+    private void getObstacleCenter(GameObject gameObject, int sigma) {
+        final Shape groundObjectConvexHull = gameObject.getConvexHull();
+        if(groundObjectConvexHull == null) {
+            System.out.println("hull is null");
+            return;
         }
 
-        return MouseCoordCalculation.randomClusterPicker(points);
-    }
-
-    private void getObstacleCenter(GameObject gameObject, int sigma) {
-        Shape groundObjectConvexHull = gameObject.getConvexHull();
         Rectangle groundObjectRectangle = groundObjectConvexHull.getBounds();
 
         Point obstacleCenter = getCenterOfRectangle(groundObjectRectangle);
 
         MouseCoordCalculation.generateCoord(obstacleCenter, gameObject, sigma);
-    }
-
-    private void getObstacleCenter(GroundObject groundObject, int sigma) {
-        Shape groundObjectConvexHull = groundObject.getConvexHull();
-        Rectangle groundObjectRectangle = groundObjectConvexHull.getBounds();
-
-        Point obstacleCenter = getCenterOfRectangle(groundObjectRectangle);
-
-        MouseCoordCalculation.generateCoord(obstacleCenter, groundObject, sigma);
-    }
-
-    private void getObstacleCenter(DecorativeObject decorativeObject, int sigma) {
-        Shape groundObjectConvexHull = decorativeObject.getConvexHull();
-        Rectangle groundObjectRectangle = groundObjectConvexHull.getBounds();
-
-        Point obstacleCenter = getCenterOfRectangle(groundObjectRectangle);
-
-        MouseCoordCalculation.generateCoord(obstacleCenter, decorativeObject, sigma);
     }
 
     private Point getCenterOfRectangle(Rectangle rectangle) {
@@ -489,7 +401,8 @@ public class RCPlusMain implements Runnable {
     private void delay(int ms) {
         try {
             Thread.sleep(ms);
-        } catch (Exception e) { e.getStackTrace(); }
+        } catch (Exception e) {
+            e.getStackTrace(); }
     }
 
     private boolean checkLevelUp() {
@@ -513,52 +426,10 @@ public class RCPlusMain implements Runnable {
         this.client.getCanvas().dispatchEvent(keyRelease);
     }
 
-    private void scheduledGroundObjectDelay(GroundObject groundObject, int sigma) {
-        isIdle = false;
-        try {
-            getObstacleCenter(groundObject, sigma);
-        } catch (Exception e) {
-            e.printStackTrace();
-            isIdle = true;
-        }
-    }
-
     private void scheduledGameObjectDelay(GameObject gameObject, int sigma) {
         isIdle = false;
         try {
             getObstacleCenter(gameObject, sigma);
-        } catch (Exception e) {
-            e.printStackTrace();
-            isIdle = true;
-        }
-    }
-
-    private void scheduledDecorativeObjectDelay(DecorativeObject decorativeObject, int sigma) {
-        isIdle = false;
-        try {
-            getObstacleCenter(decorativeObject, sigma);
-        } catch (Exception e) {
-            e.printStackTrace();
-            isIdle = true;
-        }
-    }
-
-    private void scheduledGameObjectPointDelay(Point point, GameObject gameObject, int sigma) {
-        isIdle = false;
-        try {
-            Point generatedPoint = generatePointsFromPoint(point, sigma);
-            MouseCoordCalculation.generateCoord(generatedPoint, gameObject, sigma);
-        } catch (Exception e) {
-            e.printStackTrace();
-            isIdle = true;
-        }
-    }
-
-    //possible use would be a ground item that has no clickbox (doubt that will happen)
-    private void scheduledGroundObjectPointDelay(Point point, GroundObject groundObject, int sigma) {
-        isIdle = false;
-        try {
-            MouseCoordCalculation.generateCoord(point, groundObject, sigma);
         } catch (Exception e) {
             e.printStackTrace();
             isIdle = true;
@@ -626,6 +497,6 @@ public class RCPlusMain implements Runnable {
         long end = System.currentTimeMillis();
         double sec = (end - start) / 1000F;
 
-        return sec >= 20;
+        return sec >= 10;
     }
 }

@@ -21,7 +21,6 @@ import java.util.regex.Pattern;
 @PluginDescriptor(name = "RC Plus", enabledByDefault = false)
 @Slf4j
 public class RCPlusPlugin extends Plugin {
-
     @Inject
     private Client client;
 
@@ -31,6 +30,10 @@ public class RCPlusPlugin extends Plugin {
     private STATUS toggleStatus = STATUS.STOP;
 
     private boolean hasStarted = false;
+
+    private Thread.State previousState = null;
+
+    public static int countRunnables = 0;
 
     RCPlusMain thread;
 
@@ -43,6 +46,22 @@ public class RCPlusPlugin extends Plugin {
     public void onGameTick(GameTick event) {
         toggleStatus();
         checkOculusReset();
+        if(thread != null) {
+            Thread.State currentState = thread.t.getState();
+            System.out.println(previousState + " " + currentState + " " + countRunnables);
+            if(currentState == previousState && previousState == Thread.State.RUNNABLE) {
+                countRunnables++;
+                if(countRunnables >= 15) {
+                    System.out.println("in new runnables");
+                    thread.t.stop();
+                    countRunnables = 0;
+                    thread = new RCPlusMain(client, clientThread);
+                }
+            } else {
+                countRunnables = 0;
+                previousState = currentState;
+            }
+        }
     }
 
     private String stripTargetAnchors(String text) {

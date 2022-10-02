@@ -83,7 +83,6 @@ public class AgilityPlusPlugin extends Plugin {
         }
     }
 
-
     @Subscribe
     private void onGameStateChanged(GameStateChanged ev)
     {

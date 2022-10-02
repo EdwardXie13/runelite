@@ -29,6 +29,7 @@ public class MouseCoordCalculation {
         }
 
         generatedPoint = randomClusterPicker(points);
+
         mouseMove();
     }
 
@@ -125,7 +126,9 @@ public class MouseCoordCalculation {
             fastGamerMotion.move(generatedPoint.x, generatedPoint.y);
             robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
             robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-        } catch (Exception ignored) { }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static long randomPos(int mu, int sigma, int min, int max) {
