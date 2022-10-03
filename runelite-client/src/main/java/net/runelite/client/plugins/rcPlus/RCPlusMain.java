@@ -87,7 +87,8 @@ public class RCPlusMain implements Runnable {
             changeCameraYaw(0);
             setCameraZoom(255);
             delay(1000);
-            scheduledGameObjectDelay(RCPlusObjectIDs.freeForAllPortal, 12);
+            scheduledPointDelay(new Point(154, 726), 12);
+//            scheduledGameObjectDelay(RCPlusObjectIDs.freeForAllPortal, 12);
             delay(1500);
         } else if(getRegionID() == 13130 && isIdle) { // is in FFA portal
             // TP to duel arena
