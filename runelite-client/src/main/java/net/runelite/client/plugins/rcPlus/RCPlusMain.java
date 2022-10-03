@@ -143,26 +143,25 @@ public class RCPlusMain implements Runnable {
             isIdle = true;
         } else if(isNearWorldTile(RCPlusWorldPoints.FIRE_ALTAR_ENTRANCE, 2) && isIdle) {
             changeCameraYaw(1024);
-            setCameraZoom(277);
+            setCameraZoom(896);
             delay(500);
-            client.setOculusOrbNormalSpeed(40);
-            client.setOculusOrbState(1);
-            delay(250);
+            panCameraToFireAltar();
+            delay(500);
             getWorldPointCoords(LocalPoint.fromWorld(client, new WorldPoint(2584, 4840, 0)));
-            delay(500);
-            setCameraZoom(748);
             delay(500);
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
+            delay(500);
+            setCameraZoom(778);
             delay(1000);
         } else if(isNearWorldTile(new WorldPoint(2584, 4840, 0), 2) && isIdle) {
             if(readyForAltar()) {
                 isIdle = false;
-                scheduledGameObjectDelay(RCPlusObjectIDs.fireAltarAltar, 12);
-                delay(750);
+                scheduledPointDelay(new Point(341, 228), 12);
+                delay(300);
                 scheduledPointDelay(new Point(782, 804), 6);
                 delay(300);
-                scheduledGameObjectDelay(RCPlusObjectIDs.fireAltarAltar, 12);
+                scheduledPointDelay(new Point(341, 228), 12);
                 isIdle = true;
             } else {
                 isIdle = false;
@@ -177,9 +176,9 @@ public class RCPlusMain implements Runnable {
             }
         } else if(isNearWorldTile(new WorldPoint(3151, 3634, 0), 4)) {
             changeCameraYaw(0);
-            setCameraZoom(500);
+            setCameraZoom(780);
             delay(500);
-            panCameraOneDirection(KeyEvent.VK_A, 1200);
+            panCameraToFeroxBank();
             delay(500);
             getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE));
             delay(500);
@@ -214,26 +213,6 @@ public class RCPlusMain implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
-        }
-    }
-
-    private int randomChangeCameraYaw() {
-        try {
-            Random random = new Random();
-            int num = random.nextInt(10000);
-
-            if (num < 2000) {
-                return 0;
-            } else if (num < 5000) {
-                return 512;
-            } else if (num < 8000){
-                return 1024;
-            } else {
-                return 1536;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return 0;
         }
     }
 
@@ -318,32 +297,19 @@ public class RCPlusMain implements Runnable {
 
         return false;
     }
-    
-    private void panCameraToAirAltarPath() {
+
+    private void panCameraToFireAltar() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
-        pressKey(KeyEvent.VK_S, 2800);
+        pressKey(KeyEvent.VK_A, 600);
+        pressKey(KeyEvent.VK_W, 400);
     }
 
-    private void panCameraToAirAltar() {
+    private void panCameraToFeroxBank() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
-        pressKey(KeyEvent.VK_S, 1300);
-        pressKey(KeyEvent.VK_A, 1500);
-    }
-
-    private void panCameraToBankPath() {
-        client.setOculusOrbNormalSpeed(40);
-        client.setOculusOrbState(1);
-        pressKey(KeyEvent.VK_D, 1600);
-        pressKey(KeyEvent.VK_W, 3300);
-    }
-
-    private void panCameraToBank() {
-        client.setOculusOrbNormalSpeed(40);
-        client.setOculusOrbState(1);
-        pressKey(KeyEvent.VK_D, 500);
-        pressKey(KeyEvent.VK_W, 900);
+        pressKey(KeyEvent.VK_A, 1400);
+        pressKey(KeyEvent.VK_S, 100);
     }
 
     private void panCameraOneDirection(int keyEvent, int ms) {

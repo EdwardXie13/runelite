@@ -19,6 +19,8 @@ public class RCPlusWorldPoints {
     public static final WorldPoint FIRE_ALTAR_MYSTERIOUS_RUINS_TWO = new WorldPoint(3314, 3257, 0);
     public static final WorldPoint FIRE_ALTAR_ENTRANCE = new WorldPoint(2576, 4848, 0);
 
+    public static final WorldPoint FEROX_ENCLAVE_RETURN_TP1 = new WorldPoint(3151, 3637, 0);
+
     //=== BLOOD ALTAR ===
     public static final WorldPoint NORTH_RUNESTONE = new WorldPoint(1762, 3855, 0);
     public static final WorldPoint SOUTH_RUNESTONE_INSIDE = new WorldPoint(1762, 3849, 0);
