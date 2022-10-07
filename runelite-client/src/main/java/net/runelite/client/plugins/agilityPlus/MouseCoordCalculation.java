@@ -6,6 +6,8 @@ import net.runelite.api.DecorativeObject;
 import net.runelite.api.GameObject;
 import net.runelite.api.GroundObject;
 
+import java.awt.AWTException;
+import java.awt.Color;
 import java.awt.Point;
 import java.awt.Robot;
 import java.awt.Shape;
@@ -142,5 +144,10 @@ public class MouseCoordCalculation {
             g = max;
 
         return Math.round(g);
+    }
+
+    public static Color getPixel(int x, int y) throws AWTException {
+        Robot robot = new Robot();
+        return robot.getPixelColor(x, y);
     }
 }

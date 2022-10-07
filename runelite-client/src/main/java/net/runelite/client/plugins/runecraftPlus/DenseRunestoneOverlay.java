@@ -42,6 +42,7 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.client.plugins.rcPlusBloods.RCPlusBloodsPlugin;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -59,6 +60,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -303,7 +305,7 @@ public class DenseRunestoneOverlay extends Overlay
             renderObject(graphics, darkAltar, Pink_Color, Pink_Color, Pink_Color);
         }
         //if destination is dark altar
-        else if(destinationDarkAltar() && !secondRun && inventoryContainsBlocks()) {
+        else if(destinationDarkAltar() && !secondRun && inventoryContainsBlocks() && !RCPlusBloodsPlugin.hasStarted) {
             client.setOculusOrbState(1);
         }
         //if destination is return Area
@@ -313,7 +315,7 @@ public class DenseRunestoneOverlay extends Overlay
         }
         //if at altar after imbue but NO fragments / YES fragments
         else if(isInArea(darkAltarArea) && getInventorySlotID(27) == 13446) {
-            if(secondRun) {
+            if(secondRun && !RCPlusBloodsPlugin.hasStarted) {
                 changeCameraYaw(cameraRunZone);
                 renderTileArea(graphics, LocalPoint.fromWorld(client, runZone), 3);
             } else {
@@ -592,7 +594,6 @@ public class DenseRunestoneOverlay extends Overlay
         for (int i = menuEntries.length - 1; i >= 0; --i) {
             MenuEntry entry = menuEntries[i];
             String target = stripTargetAnchors(entry);
-//            System.out.println("target: " + target + ", option: " + entry.getOption() + ", Id: " + entry.getIdentifier());
 
             if(
                 (RCpouch.contains(target) && entry.getIdentifier() == 9 && (menuEntries.length == 9 || menuEntries.length == 10)) ||

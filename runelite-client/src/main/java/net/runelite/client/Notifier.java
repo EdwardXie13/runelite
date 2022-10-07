@@ -71,6 +71,7 @@ import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.events.NotificationFired;
 import net.runelite.client.plugins.agilityPlus.AgilityPlusMain;
 import net.runelite.client.plugins.rcPlus.RCPlusMain;
+import net.runelite.client.plugins.rcPlusBloods.RCPlusBloodsMain;
 import net.runelite.client.ui.ClientUI;
 import net.runelite.client.util.OSType;
 
@@ -157,6 +158,7 @@ public class Notifier
 //		notify(message, TrayIcon.MessageType.NONE);
 		AgilityPlusMain.isIdle = true;
 		RCPlusMain.isIdle = true;
+		RCPlusBloodsMain.isIdle = true;
 //		MiningPlusMain.isIdle = true;
 	}
 

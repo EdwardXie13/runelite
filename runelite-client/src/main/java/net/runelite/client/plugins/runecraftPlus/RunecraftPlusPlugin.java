@@ -74,7 +74,6 @@ public class RunecraftPlusPlugin extends Plugin
     private static final int WRATH_ALTAR_ENTRANCE = ObjectID.MYSTERIOUS_RUINS_34824;
     private static final int WRATH_ALTAR = ObjectID.ALTAR_34772;
 
-
     public static final int ABYSS_OBJECT_26187 = 26187;
     public static final int ABYSS_OBJECT_26188 = 26188;
     public static final int ABYSS_OBJECT_26189 = 26189;
