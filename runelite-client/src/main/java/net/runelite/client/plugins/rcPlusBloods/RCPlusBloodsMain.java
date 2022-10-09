@@ -253,19 +253,21 @@ public class RCPlusBloodsMain implements Runnable {
             scheduledPointDelay(new Point(665, 510), 10);
             delay(1500);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.AFTER_RETURN_ROCKSLIDE) && hasEnoughStamina(15) && isIdle) {
-            setCameraZoom(560);
+            setCameraZoom(700);
             delay(500);
-            panCameraOneDirection(KeyEvent.VK_D, 500);
-            delay(500);
+            panCameraOneDirection(KeyEvent.VK_D, 600);
             if(RCPlusBloodsPlugin.denseRunestoneNorthMineable) {
+                delay(500);
                 getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusBloodsWorldPoints.NORTH_RUNESTONE));
             } else {
+                panCameraOneDirection(KeyEvent.VK_S, 200);
+                delay(500);
                 getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusBloodsWorldPoints.SOUTH_RUNESTONE_INSIDE));
             }
             delay(500);
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
-            delay(1000);
+            delay(500);
         }
     }
 
