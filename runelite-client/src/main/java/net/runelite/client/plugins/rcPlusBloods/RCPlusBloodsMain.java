@@ -333,6 +333,11 @@ public class RCPlusBloodsMain implements Runnable {
             e.printStackTrace();
             return;
         }
+        scheduledPointDelay(new Point(908, 948), 4);
+        delay(20);
+        scheduledPointDelay(new Point(908, 984), 4);
+        delay(20);
+
         System.out.println("done chisel");
         delay(500);
     }
