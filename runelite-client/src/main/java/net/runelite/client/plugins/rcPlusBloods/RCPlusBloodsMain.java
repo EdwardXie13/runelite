@@ -138,7 +138,7 @@ public class RCPlusBloodsMain implements Runnable {
             System.out.println("run to venerate");
             isIdle = false;
             changeCameraYaw(0);
-            setCameraZoom(650);
+            setCameraZoom(800);
             delay(500);
             panCameraOneDirection(KeyEvent.VK_W, 2100);
             panCameraOneDirection(KeyEvent.VK_A, 1900);
