@@ -3,10 +3,6 @@ package net.runelite.client.plugins.rcPlusBloods;
 import com.google.common.collect.ImmutableSet;
 import net.runelite.api.Client;
 import net.runelite.api.GameObject;
-import net.runelite.api.InventoryID;
-import net.runelite.api.Item;
-import net.runelite.api.ItemContainer;
-import net.runelite.api.ItemID;
 import net.runelite.api.Perspective;
 import net.runelite.api.ScriptID;
 import net.runelite.api.coords.LocalPoint;
@@ -14,21 +10,14 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
-import net.runelite.client.plugins.rcPlus.RCPlusWorldPoints;
 
 import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Rectangle;
-import java.awt.Robot;
 import java.awt.Shape;
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 
 public class RCPlusBloodsMain implements Runnable {

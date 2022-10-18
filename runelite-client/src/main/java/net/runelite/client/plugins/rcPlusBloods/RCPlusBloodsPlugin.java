@@ -1,15 +1,10 @@
 package net.runelite.client.plugins.rcPlusBloods;
 
-import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
-import net.runelite.api.GameObject;
 import net.runelite.api.GameState;
+import net.runelite.api.Skill;
 import net.runelite.api.Varbits;
-import net.runelite.api.coords.WorldPoint;
-import net.runelite.api.events.GameObjectDespawned;
-import net.runelite.api.events.GameObjectSpawned;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.VarbitChanged;
@@ -19,12 +14,8 @@ import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
 
 import javax.inject.Inject;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Shape;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,6 +27,8 @@ public class RCPlusBloodsPlugin extends Plugin {
 
     @Inject
     private ClientThread clientThread;
+
+    public int lastRcExp = 0;
 
     static boolean denseRunestoneSouthMineable;
 
@@ -54,6 +47,7 @@ public class RCPlusBloodsPlugin extends Plugin {
 
     @Subscribe
     public void onGameTick(GameTick event) {
+        lastRcExp = client.getSkillExperience(Skill.RUNECRAFT);
         toggleStatus();
         checkOculusReset();
     }
@@ -73,11 +67,13 @@ public class RCPlusBloodsPlugin extends Plugin {
             hasStarted = true;
             thread = new RCPlusBloodsMain(client, clientThread);
             System.out.println("status is go");
+            sendSlackMessage("starting RC exp = " + lastRcExp);
         } else if (chatBoxMessage.equals("2") && toggleStatus == STATUS.START && hasStarted) {
             toggleStatus = STATUS.STOP;
             thread.t.interrupt();
             hasStarted = false;
             System.out.println("status is stop");
+            sendSlackMessage("stopping RC exp = " + lastRcExp);
         }
     }
 
@@ -92,39 +88,11 @@ public class RCPlusBloodsPlugin extends Plugin {
         }
     }
 
-    private boolean isNearWorldTile(final WorldPoint target, final int range) {
-        return this.client.getLocalPlayer().getWorldLocation().distanceTo2D(target) < range;
-    }
-
-    private boolean isAtWorldPoint(WorldPoint worldPoint) {
-        boolean playerX = client.getLocalPlayer().getWorldLocation().getX() == worldPoint.getX();
-        boolean playerY = client.getLocalPlayer().getWorldLocation().getY() == worldPoint.getY();
-        return playerX && playerY;
-    }
-    private void scheduledGameObjectDelay(GameObject gameObject, int sigma) {
-        RCPlusBloodsMain.isIdle = false;
-        try {
-            getObstacleCenter(gameObject, sigma);
-        } catch (Exception e) {
-            e.printStackTrace();
-            RCPlusBloodsMain.isIdle = true;
-        }
-    }
-
-    private void getObstacleCenter(GameObject gameObject, int sigma) {
-        final Shape groundObjectConvexHull = gameObject.getConvexHull();
-        if(groundObjectConvexHull == null) return;
-
-        Rectangle groundObjectRectangle = groundObjectConvexHull.getBounds();
-
-        Point obstacleCenter = getCenterOfRectangle(groundObjectRectangle);
-
-        MouseCoordCalculation.generateCoord(obstacleCenter, gameObject, sigma);
-    }
-
-    private Point getCenterOfRectangle(Rectangle rectangle) {
-        // +26 to the Y coordinate because calculations are taken from canvas, not window
-        return new Point((int) rectangle.getCenterX(), (int) rectangle.getCenterY() + 26);
+    private void sendSlackMessage(String text) {
+        SlackMessage slackMessage = SlackMessage.builder()
+                .text(text)
+                .build();
+        SlackUtils.sendMessage(slackMessage);
     }
 
 
@@ -137,20 +105,9 @@ public class RCPlusBloodsPlugin extends Plugin {
             thread.t.interrupt();
             hasStarted = false;
             System.out.println("status is stop (login screen)");
+            sendSlackMessage("logged out RC exp = " + lastRcExp);
         }
     }
-
-//    @Subscribe
-//    public void onGameObjectSpawned(GameObjectSpawned event)
-//    {
-//        RCPlusBloodsObjectIDs.assignObjects(event);
-//    }
-//
-//    @Subscribe
-//    public void onGameObjectDespawned(GameObjectDespawned event)
-//    {
-//        RCPlusBloodsObjectIDs.assignObjects(event);
-//    }
 
     @Subscribe
     public void onVarbitChanged(VarbitChanged event)

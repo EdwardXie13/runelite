@@ -12,3 +12,4 @@ project.properties
 .factorypath
 *.txt
 .DS_Store
+*.env
