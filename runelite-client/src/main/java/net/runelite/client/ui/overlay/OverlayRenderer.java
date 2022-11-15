@@ -223,6 +223,18 @@ public class OverlayRenderer extends MouseAdapter
 		}
 	}
 
+	public void tickOverlayLayer(Widget layer)
+	{
+		final Collection<Overlay> overlays = overlayManager.getForLayer(layer.getId());
+		overlays.forEach(Overlay::widgetTick);
+	}
+
+	public void tickOverlayInterface(int interfaceId)
+	{
+		Collection<Overlay> overlays = overlayManager.getForInterface(interfaceId);
+		overlays.forEach(Overlay::widgetTick);
+	}
+
 	public void renderOverlayLayer(Graphics2D graphics, final OverlayLayer layer)
 	{
 		final Collection<Overlay> overlays = overlayManager.getLayer(layer);
@@ -369,7 +381,7 @@ public class OverlayRenderer extends MouseAdapter
 					graphics.setPaint(paint);
 				}
 
-				if (!client.isMenuOpen() && !client.getSpellSelected() && bounds.contains(mousePosition))
+				if (!client.isMenuOpen() && !client.isWidgetSelected() && bounds.contains(mousePosition))
 				{
 					curHoveredOverlay = overlay;
 					overlay.onMouseOver();

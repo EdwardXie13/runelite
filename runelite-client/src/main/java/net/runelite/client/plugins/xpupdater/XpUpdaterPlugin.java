@@ -43,11 +43,11 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.FormBody;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.FormBody;
 import okhttp3.Response;
 
 @PluginDescriptor(
@@ -137,7 +137,7 @@ public class XpUpdaterPlugin extends Plugin
 		username = username.replace(" ", "_");
 		updateCml(username, worldTypes);
 		updateTempleosrs(accountHash, username, worldTypes);
-		updateWom(username, worldTypes);
+		updateWom(accountHash, username, worldTypes);
 	}
 
 	private void updateCml(String username, EnumSet<WorldType> worldTypes)
@@ -195,7 +195,7 @@ public class XpUpdaterPlugin extends Plugin
 		}
 	}
 
-	private void updateWom(String username, EnumSet<WorldType> worldTypes)
+	private void updateWom(long accountHash, String username, EnumSet<WorldType> worldTypes)
 	{
 		if (config.wiseoldman()
 			&& !worldTypes.contains(WorldType.DEADMAN)
@@ -204,16 +204,15 @@ public class XpUpdaterPlugin extends Plugin
 			HttpUrl url = new HttpUrl.Builder()
 				.scheme("https")
 				.host(
-					worldTypes.contains(WorldType.SEASONAL) ? "seasonal.wiseoldman.net" :
-					worldTypes.contains(WorldType.FRESH_START_WORLD) ? "fsw.wiseoldman.net" :
-						"wiseoldman.net")
-				.addPathSegment("api")
+					worldTypes.contains(WorldType.SEASONAL) ? "seasonal.api.wiseoldman.net" :
+						"api.wiseoldman.net")
+				.addPathSegment("v2")
 				.addPathSegment("players")
-				.addPathSegment("track")
+				.addPathSegment(username)
 				.build();
 
 			RequestBody formBody = new FormBody.Builder()
-				.add("username", username)
+				.add("accountHash", Long.toString(accountHash))
 				.build();
 
 			Request request = new Request.Builder()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Tomas Slusny <slusnucky@gmail.com>
+ * Copyright (c) 2022, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,20 +22,31 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.api.events;
+package net.runelite.client.game;
 
-/**
- * Posted every client tick (20ms).
- *
- * Client ticks are roughly broken down into
- * 1. packet processing
- * 2. interface tick
- * 3. client tick (this event)
- * 4. clientscript execution
- * 5. menu sorting (see {@link PostMenuSort})
- * 6. menu click detection and drag handling
- * 7. {@link PostClientTick} event
- */
-public class ClientTick
+import com.google.common.collect.Multimap;
+import com.google.common.graph.GraphBuilder;
+import com.google.common.graph.Graphs;
+import com.google.common.graph.MutableGraph;
+import java.util.Map;
+import static org.junit.Assert.assertFalse;
+import org.junit.Test;
+
+public class ItemMappingTest
 {
+	@Test
+	public void testCycles()
+	{
+		Multimap<Integer, ItemMapping> mappings = ItemMapping.MAPPINGS;
+
+		MutableGraph<Integer> graph = GraphBuilder
+			.directed()
+			.build();
+		for (Map.Entry<Integer, ItemMapping> entry : mappings.entries())
+		{
+			graph.putEdge(entry.getKey(), entry.getValue().getTradeableItem());
+		}
+
+		assertFalse("item mapping contains a cycle", Graphs.hasCycle(graph));
+	}
 }
