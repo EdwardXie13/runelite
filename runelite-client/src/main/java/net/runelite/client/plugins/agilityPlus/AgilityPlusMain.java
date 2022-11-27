@@ -51,16 +51,13 @@ public class AgilityPlusMain implements Runnable {
 
             if(isNotHealthly()) {
                 delay(1000);
-                return;
-            }
-
-            if(getRegionID() == 9781)
+            } else if (getRegionID() == 9781)
                 doGnomeAgility();
-            else if(getRegionID() == 13878)
+            else if (getRegionID() == 13878)
                 doCanfisAgility();
-            else if(getRegionID() == 10806)
+            else if (getRegionID() == 10806)
                 doSeersAgility();
-            else if(getRegionID() == 10553 || getRegionID() == 10297)
+            else if (getRegionID() == 10553 || getRegionID() == 10297)
                 doRellekaAgility();
         }
         System.out.println("Thread has stopped.");
@@ -169,14 +166,6 @@ public class AgilityPlusMain implements Runnable {
             delay(500);
             pressKey(KeyEvent.VK_DOWN, 2000);
             delay(500);
-//            delay(1500);
-//            setCameraZoom(896);
-//            changeCameraYaw(1257);
-//            delay(500);
-//            scheduledGameObjectPointDelay(new Point(116, 876), AgilityPlusObjectIDs.canfisTallTree, 10);
-//            delay(1000);
-//            pressKey(KeyEvent.VK_UP, 2000);
-//            delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FAIL1) && isIdle) {
             delay(1000);
             setCameraZoom(896);
@@ -343,8 +332,6 @@ public class AgilityPlusMain implements Runnable {
             delay(1000);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSeventhRoofGap, 8);
             delay(1000);
-//            pressKey(KeyEvent.VK_DOWN, 2000);
-//            delay(500);
         } else if(isAtWorldPoint(new WorldPoint(3515, 3486, 0)) && isIdle) {
             client.stopNow();
         }
