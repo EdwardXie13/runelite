@@ -9,14 +9,11 @@ import net.runelite.api.ItemContainer;
 import net.runelite.api.ItemID;
 import net.runelite.api.Perspective;
 import net.runelite.api.ScriptID;
-import net.runelite.api.Varbits;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.api.events.VarbitChanged;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
-import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
 
 import java.awt.Point;
@@ -90,8 +87,7 @@ public class RCPlusMain implements Runnable {
             changeCameraYaw(0);
             setCameraZoom(255);
             delay(1000);
-            scheduledPointDelay(new Point(154, 726), 12);
-//            scheduledGameObjectDelay(RCPlusObjectIDs.freeForAllPortal, 12);
+            scheduledPointDelay(new Point(154, 726), 24);
             delay(1500);
         } else if(getRegionID() == 13130 && isIdle) { // is in FFA portal
             // TP to duel arena
@@ -100,7 +96,7 @@ public class RCPlusMain implements Runnable {
             delay(250);
             pressKey(KeyEvent.VK_F4);
             delay(250);
-            scheduledPointDelay(new Point(899, 924), 4);
+            scheduledPointDelay(new Point(899, 924), 6);
             delay(500);
             pressKey(KeyEvent.VK_ESCAPE);
             delay(3000);
@@ -110,7 +106,7 @@ public class RCPlusMain implements Runnable {
             // TP to duel arena
             pressKey(KeyEvent.VK_F4);
             delay(250);
-            scheduledPointDelay(new Point(899, 924), 4);
+            scheduledPointDelay(new Point(899, 924), 6);
             delay(500);
             pressKey(KeyEvent.VK_ESCAPE);
             delay(1000);
@@ -241,52 +237,29 @@ public class RCPlusMain implements Runnable {
     private void bankingSequence() {
         // cheese by always having slot 1 empty so the bound runes go there
         // deposit non pouches (click slot 1)
-        scheduledPointDelay(new Point(782, 768), 4);
+        scheduledPointDelay(new Point(782, 768), 6);
         delay(500);
 
         //does have duel ring?
         if(!isRingOfDuelingEquipped()) {
-            scheduledPointDelay(new Point(428, 721), 4);
+            scheduledPointDelay(new Point(428, 721), 6);
             delay(500);
-            scheduledPointDelay(new Point(782, 768), 4);
+            scheduledPointDelay(new Point(782, 768), 6);
             delay(500);
         }
 
         // withdraw ess
-        scheduledPointDelay(new Point(476, 721), 4);
+        scheduledPointDelay(new Point(476, 721), 6);
         delay(500);
         // fill small pouch
-        scheduledPointDelay(new Point(782, 804), 4);
+        scheduledPointDelay(new Point(782, 804), 6);
         delay(500);
         // withdraw ess
-        scheduledPointDelay(new Point(476, 721), 4);
+        scheduledPointDelay(new Point(476, 721), 6);
         delay(500);
         pressKey(KeyEvent.VK_ESCAPE);
         delay(1000);
         isIdle = true;
-    }
-
-    private void bindRunesSequence(boolean smallPouch, boolean mediumPouch, boolean largePouch, boolean giantPouch) {
-        scheduledGameObjectDelay(RCPlusObjectIDs.airAltarAltar, 6);
-        delay(2000);
-
-        if(smallPouch) {
-            System.out.println("binding small pouch");
-        }
-
-        if(mediumPouch) {
-            System.out.println("binding medium pouch");
-        }
-
-        if(largePouch) {
-            System.out.println("binding large pouch");
-        }
-
-        if(giantPouch) {
-            System.out.println("binding giant pouch");
-        }
-
-        delay(4000);
     }
 
     private boolean isRingOfDuelingEquipped() {

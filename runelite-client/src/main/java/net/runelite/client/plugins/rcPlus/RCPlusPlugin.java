@@ -84,25 +84,6 @@ public class RCPlusPlugin extends Plugin {
         }
     }
 
-    private boolean isNearWorldTile(final WorldPoint target, final int range) {
-        return this.client.getLocalPlayer().getWorldLocation().distanceTo2D(target) < range;
-    }
-
-    private boolean isAtWorldPoint(WorldPoint worldPoint) {
-        boolean playerX = client.getLocalPlayer().getWorldLocation().getX() == worldPoint.getX();
-        boolean playerY = client.getLocalPlayer().getWorldLocation().getY() == worldPoint.getY();
-        return playerX && playerY;
-    }
-    private void scheduledGameObjectDelay(GameObject gameObject, int sigma) {
-        RCPlusMain.isIdle = false;
-        try {
-            getObstacleCenter(gameObject, sigma);
-        } catch (Exception e) {
-            e.printStackTrace();
-            RCPlusMain.isIdle = true;
-        }
-    }
-
     private void getObstacleCenter(GameObject gameObject, int sigma) {
         final Shape groundObjectConvexHull = gameObject.getConvexHull();
         if(groundObjectConvexHull == null) return;
