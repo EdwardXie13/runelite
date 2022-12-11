@@ -156,11 +156,11 @@ public class RCPlusMain implements Runnable {
         } else if(isNearWorldTile(new WorldPoint(2584, 4840, 0), 2) && isIdle) {
             if(readyForAltar()) {
                 isIdle = false;
-                scheduledPointDelay(new Point(341, 228), 12);
+                scheduledPointDelay(new Point(341, 228), 18);
                 delay(300);
-                scheduledPointDelay(new Point(782, 804), 6);
+                clickInventoryPoint(new Point(782, 804));
                 delay(300);
-                scheduledPointDelay(new Point(341, 228), 12);
+                scheduledPointDelay(new Point(341, 228), 18);
                 isIdle = true;
             } else {
                 isIdle = false;
@@ -237,25 +237,25 @@ public class RCPlusMain implements Runnable {
     private void bankingSequence() {
         // cheese by always having slot 1 empty so the bound runes go there
         // deposit non pouches (click slot 1)
-        scheduledPointDelay(new Point(782, 768), 6);
+        clickInventoryPoint(new Point(782, 768));
         delay(500);
 
         //does have duel ring?
         if(!isRingOfDuelingEquipped()) {
-            scheduledPointDelay(new Point(428, 721), 6);
+            clickInventoryPoint(new Point(428, 721));
             delay(500);
-            scheduledPointDelay(new Point(782, 768), 6);
+            clickInventoryPoint(new Point(782, 768));
             delay(500);
         }
 
         // withdraw ess
-        scheduledPointDelay(new Point(476, 721), 6);
+        clickInventoryPoint(new Point(476, 721));
         delay(500);
         // fill small pouch
-        scheduledPointDelay(new Point(782, 804), 6);
+        clickInventoryPoint(new Point(782, 804));
         delay(500);
         // withdraw ess
-        scheduledPointDelay(new Point(476, 721), 6);
+        clickInventoryPoint(new Point(476, 721));
         delay(500);
         pressKey(KeyEvent.VK_ESCAPE);
         delay(1000);
@@ -376,6 +376,16 @@ public class RCPlusMain implements Runnable {
         isIdle = false;
         try {
             MouseCoordCalculation.generateCoord(point, sigma);
+        } catch (Exception e) {
+            e.printStackTrace();
+            isIdle = true;
+        }
+    }
+
+    private void clickInventoryPoint(Point point) {
+        isIdle = false;
+        try {
+            MouseCoordCalculation.generateInventoryCoords(point);
         } catch (Exception e) {
             e.printStackTrace();
             isIdle = true;
