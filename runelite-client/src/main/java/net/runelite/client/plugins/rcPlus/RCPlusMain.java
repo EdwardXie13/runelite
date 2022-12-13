@@ -200,7 +200,8 @@ public class RCPlusMain implements Runnable {
     }
 
     private boolean hasEnoughStamina() {
-        return client.getEnergy() >= 40;
+        double energy = client.getEnergy() / 100.0;
+        return energy >= 40.0;
     }
 
     private boolean readyForAltar() {
