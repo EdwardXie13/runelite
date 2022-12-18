@@ -22,6 +22,7 @@ public class AgilityPlusWorldPoints {
 
     public static final WorldPoint CANFIS_START = new WorldPoint(3510, 3485, 0);
     public static final WorldPoint CANFIS_FIRST_ROOF = new WorldPoint(3506, 3492, 2);
+    public static final WorldPoint CANFIS_FIRST_ROOF_INFRONT = new WorldPoint(3505, 3497, 2);
     public static final WorldPoint CANFIS_SECOND_ROOF = new WorldPoint(3502, 3504, 2);
     public static final WorldPoint CANFIS_THIRD_ROOF = new WorldPoint(3492, 3504, 2);
     public static final WorldPoint CANFIS_FOURTH_ROOF = new WorldPoint(3479, 3499, 3);

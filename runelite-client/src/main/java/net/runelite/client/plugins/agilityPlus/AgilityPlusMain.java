@@ -179,7 +179,6 @@ public class AgilityPlusMain implements Runnable {
             delay(500);
             pressKey(KeyEvent.VK_DOWN, 2000);
             delay(500);
-
         } else if(isAtWorldPoint(new WorldPoint(3506, 3488, 0)) && isIdle) {
             delay(500);
             setCameraZoom(896);
@@ -219,6 +218,13 @@ public class AgilityPlusMain implements Runnable {
             changeCameraYaw(0);
             delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFirstRoofGap, 10);
+            delay(2000);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIRST_ROOF_INFRONT) && isIdle) {
+            setCameraZoom(800);
+            changeCameraYaw(0);
+            delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFirstRoofGap, 10);
+            delay(500);
         }
         // 2 roof
         else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SECOND_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2) && isIdle) {
