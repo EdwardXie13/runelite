@@ -338,7 +338,13 @@ public class AgilityPlusMain implements Runnable {
             delay(1000);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSeventhRoofGap, 8);
             delay(1000);
-        } else if(isAtWorldPoint(new WorldPoint(3515, 3486, 0)) && isIdle) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SEVENTH_ROOF_INFRONT) && isIdle) {
+            setCameraZoom(896);
+            delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSeventhRoofGap, 10);
+            delay(1000);
+        }
+        else if(isAtWorldPoint(new WorldPoint(3515, 3486, 0)) && isIdle) {
             client.stopNow();
         }
     }
