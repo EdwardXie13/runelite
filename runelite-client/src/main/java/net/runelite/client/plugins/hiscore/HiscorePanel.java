@@ -105,17 +105,18 @@ public class HiscorePanel extends PluginPanel
 		KALPHITE_QUEEN, KING_BLACK_DRAGON, KRAKEN,
 		KREEARRA, KRIL_TSUTSAROTH, MIMIC,
 		NEX, NIGHTMARE, PHOSANIS_NIGHTMARE,
-		OBOR, SARACHNIS, SCORPIA,
-		SKOTIZO, TEMPOROSS, THE_GAUNTLET,
-		THE_CORRUPTED_GAUNTLET, THEATRE_OF_BLOOD, THEATRE_OF_BLOOD_HARD_MODE,
-		THERMONUCLEAR_SMOKE_DEVIL, TOMBS_OF_AMASCUT, TOMBS_OF_AMASCUT_EXPERT,
-		TZKAL_ZUK, TZTOK_JAD, VENENATIS,
-		VETION, VORKATH, WINTERTODT,
-		ZALCANO, ZULRAH
+		OBOR, PHANTOM_MUSPAH, SARACHNIS,
+		SCORPIA, SKOTIZO, TEMPOROSS,
+		THE_GAUNTLET, THE_CORRUPTED_GAUNTLET, THEATRE_OF_BLOOD,
+		THEATRE_OF_BLOOD_HARD_MODE, THERMONUCLEAR_SMOKE_DEVIL, TOMBS_OF_AMASCUT,
+		TOMBS_OF_AMASCUT_EXPERT, TZKAL_ZUK, TZTOK_JAD,
+		VENENATIS, VETION, VORKATH,
+		WINTERTODT, ZALCANO, ZULRAH
 	);
 
 	private static final HiscoreEndpoint[] ENDPOINTS = {
-		HiscoreEndpoint.NORMAL, HiscoreEndpoint.IRONMAN, HiscoreEndpoint.HARDCORE_IRONMAN, HiscoreEndpoint.ULTIMATE_IRONMAN, HiscoreEndpoint.DEADMAN, HiscoreEndpoint.FRESH_START_WORLD
+		HiscoreEndpoint.NORMAL, HiscoreEndpoint.IRONMAN, HiscoreEndpoint.HARDCORE_IRONMAN, HiscoreEndpoint.ULTIMATE_IRONMAN,
+		HiscoreEndpoint.DEADMAN, HiscoreEndpoint.PURE, HiscoreEndpoint.LEVEL_3_SKILLER, HiscoreEndpoint.FRESH_START_WORLD
 	};
 
 	private final HiscorePlugin plugin;
@@ -199,7 +200,7 @@ public class HiscorePanel extends PluginPanel
 		c.gridy++;
 
 		tabGroup = new MaterialTabGroup();
-		tabGroup.setLayout(new GridLayout(1, 5, 7, 7));
+		tabGroup.setLayout(new GridLayout(2, 4, 7, 7));
 
 		for (HiscoreEndpoint endpoint : ENDPOINTS)
 		{

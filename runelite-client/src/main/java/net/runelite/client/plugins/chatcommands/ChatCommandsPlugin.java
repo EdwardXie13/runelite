@@ -2332,7 +2332,7 @@ public class ChatCommandsPlugin extends Plugin
 			case "al-kharid agility":
 			case "alkharid":
 			case "alkharid agility":
-				return "Al-Kharid Rooftop";
+				return "Al Kharid Rooftop";
 
 			// Varrock Rooftop Course
 			case "varrock":
@@ -2450,6 +2450,12 @@ public class ChatCommandsPlugin extends Plugin
 			case "fishingtodt":
 			case "fishtodt":
 				return "Tempoross";
+
+			// Phantom Muspah
+			case "phantom":
+			case "muspah":
+			case "pm":
+				return "Phantom Muspah";
 
 			default:
 				return WordUtils.capitalize(boss);
