@@ -552,7 +552,7 @@ public class DenseRunestoneOverlay extends Overlay
         } catch (Exception exception) {
             return false;
         }
-        return RCpouch.contains(target) || Capes.contains(target) || UnchargedGlory.contains(target) || target.equals("Mage of Zamorak");
+        return RCpouch.contains(target) || Capes.contains(target) || UnchargedGlory.contains(target) || isZammyMage(e);
     }
 
     private boolean swapEquipItems(MenuEntry e) {
@@ -589,6 +589,10 @@ public class DenseRunestoneOverlay extends Overlay
         return m.find() ? m.group(1) : "";
     }
 
+    private boolean isZammyMage(MenuEntry menuEntries) {
+        return menuEntries.getTarget().contains("Mage of Zamorak");
+    }
+
     private void bankModeSwap() {
         MenuEntry[] menuEntries = client.getMenuEntries();
         for (int i = menuEntries.length - 1; i >= 0; --i) {
@@ -598,7 +602,12 @@ public class DenseRunestoneOverlay extends Overlay
             if(
                 (RCpouch.contains(target) && entry.getIdentifier() == 9 && (menuEntries.length == 9 || menuEntries.length == 10)) ||
                 (RingOfDueling.contains(target) && entry.getOption().equals("Withdraw-1") && (menuEntries.length == 9 || menuEntries.length == 10) && !isRingOfDuelingEquipped()) ||
-                (RingOfDueling.contains(target) && entry.getOption().equals("Wear") && (menuEntries.length == 9 || menuEntries.length == 10) && !isRingOfDuelingEquipped())
+                (RingOfDueling.contains(target) && entry.getOption().equals("Wear") && (menuEntries.length == 9 || menuEntries.length == 10) && !isRingOfDuelingEquipped()) ||
+
+                (AmuletOfGlory.contains(target) && entry.getOption().equals("Withdraw-1") && (menuEntries.length == 9 || menuEntries.length == 10) && !isRingOfDuelingEquipped()) ||
+                (AmuletOfGlory.contains(target) && entry.getOption().equals("Wear") && (menuEntries.length == 9 || menuEntries.length == 10) && isUnchargedGloryEquipped()) ||
+
+                (Skillcapes.contains(target) && entry.getOption().equals("Wear") && (menuEntries.length == 9 || menuEntries.length == 10))
             ) {
                 entry.setType(MenuAction.CC_OP);
 
@@ -633,8 +642,10 @@ public class DenseRunestoneOverlay extends Overlay
             MenuAction targetType = entry.getType();
             if (
                 (RCpouch.contains(target) && entry.getIdentifier() == 3 && menuEntries.length == 7 && isAtRCAltar()) ||
-                (Capes.contains(target) && targetType == MenuAction.ITEM_THIRD_OPTION && menuEntries.length == 6) ||
-                (UnchargedGlory.contains(target) && targetType == MenuAction.ITEM_USE && menuEntries.length == 6))
+                (Capes.contains(target) && entry.getIdentifier() == 4 && menuEntries.length == 6) ||
+                (UnchargedGlory.contains(target) && entry.getIdentifier() == 6 && menuEntries.length == 6) ||
+                (isZammyMage(entry) && targetType == MenuAction.NPC_FOURTH_OPTION && menuEntries.length == 6)
+            )
             {
                 menuEntries[i] = menuEntries[menuEntries.length - 1];
                 menuEntries[menuEntries.length - 1] = entry;
