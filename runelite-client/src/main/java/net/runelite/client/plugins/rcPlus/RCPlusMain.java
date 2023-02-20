@@ -19,7 +19,9 @@ import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Rectangle;
+import java.awt.Robot;
 import java.awt.Shape;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -383,10 +385,24 @@ public class RCPlusMain implements Runnable {
         }
     }
 
+//    private void clickInventoryPoint(Point point) {
+//        isIdle = false;
+//        try {
+//            MouseCoordCalculation.generateInventoryCoords(point);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            isIdle = true;
+//        }
+//    }
+
     private void clickInventoryPoint(Point point) {
         isIdle = false;
         try {
-            MouseCoordCalculation.generateInventoryCoords(point);
+            Robot robot = new Robot();
+            robot.mouseMove(point.x, point.y);
+            delay(100);
+            robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
+            robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
         } catch (Exception e) {
             e.printStackTrace();
             isIdle = true;
