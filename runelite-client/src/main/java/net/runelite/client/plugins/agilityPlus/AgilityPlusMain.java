@@ -81,7 +81,7 @@ public class AgilityPlusMain implements Runnable {
             delay(500);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_CLIMB1) && isIdle) {
             // click compass
-            clickPoint(804, 48);
+            clickCompass();
             delay(100);
             changeCameraYaw(230);
             delay(500);
@@ -952,11 +952,11 @@ public class AgilityPlusMain implements Runnable {
 ////    }
 //
 
-    private void clickPoint(int x, int y) {
+    private void clickCompass() {
         isIdle = false;
         try {
             Robot robot = new Robot();
-            robot.mouseMove(x, y);
+            robot.mouseMove(804, 48);
             delay(100);
             robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
             robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
