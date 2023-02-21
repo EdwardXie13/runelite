@@ -17,7 +17,9 @@ import net.runelite.client.callback.ClientThread;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Rectangle;
+import java.awt.Robot;
 import java.awt.Shape;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -78,7 +80,10 @@ public class AgilityPlusMain implements Runnable {
             scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstacleNet1_M, 15);
             delay(500);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_CLIMB1) && isIdle) {
-            changeCameraYaw(206);
+            // click compass
+            clickPoint(804, 48);
+            delay(100);
+            changeCameraYaw(230);
             delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeTreeBranch1, 10);
             delay(500);
@@ -946,4 +951,18 @@ public class AgilityPlusMain implements Runnable {
 ////        }
 ////    }
 //
+
+    private void clickPoint(int x, int y) {
+        isIdle = false;
+        try {
+            Robot robot = new Robot();
+            robot.mouseMove(x, y);
+            delay(100);
+            robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
+            robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            isIdle = true;
+        }
+    }
 }

@@ -604,7 +604,7 @@ public class DenseRunestoneOverlay extends Overlay
                 (RingOfDueling.contains(target) && entry.getOption().equals("Withdraw-1") && (menuEntries.length == 9 || menuEntries.length == 10) && !isRingOfDuelingEquipped()) ||
                 (RingOfDueling.contains(target) && entry.getOption().equals("Wear") && (menuEntries.length == 9 || menuEntries.length == 10) && !isRingOfDuelingEquipped()) ||
 
-                (AmuletOfGlory.contains(target) && entry.getOption().equals("Withdraw-1") && (menuEntries.length == 9 || menuEntries.length == 10) && !isRingOfDuelingEquipped()) ||
+                (AmuletOfGlory.contains(target) && entry.getOption().equals("Withdraw-1") && (menuEntries.length == 9 || menuEntries.length == 10) && isUnchargedGloryEquipped()) ||
                 (AmuletOfGlory.contains(target) && entry.getOption().equals("Wear") && (menuEntries.length == 9 || menuEntries.length == 10) && isUnchargedGloryEquipped()) ||
 
                 (Skillcapes.contains(target) && entry.getOption().equals("Wear") && (menuEntries.length == 9 || menuEntries.length == 10))

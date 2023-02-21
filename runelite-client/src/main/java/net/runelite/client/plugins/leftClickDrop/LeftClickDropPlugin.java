@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 
 @PluginDescriptor(name = "Left Click Drop")
 public class LeftClickDropPlugin  extends Plugin {
-    private static final Set<String> powerMineOres = new HashSet<>(Arrays.asList("Iron ore"));
+    private static final Set<String> powerSet = new HashSet<>(Arrays.asList("Iron ore", "Leaping salmon", "Leaping trout", "Leaping sturgeon"));
 
     @Inject
     private Client client;
@@ -29,18 +29,18 @@ public class LeftClickDropPlugin  extends Plugin {
 
     public void swapMenus() {
         MenuEntry entry = client.getMenuEntries()[client.getMenuEntries().length - 1];
-        if (powerMine(entry))
+        if (powerDrop(entry))
             powerMineSwap();
     }
 
-    public boolean powerMine(MenuEntry e) {
+    public boolean powerDrop(MenuEntry e) {
         String target;
         try {
             target = stripTargetAnchors(e);
         } catch (Exception exception) {
             return false;
         }
-        return powerMineOres.contains(target);
+        return powerSet.contains(target);
     }
 
     private void powerMineSwap() {
@@ -49,7 +49,7 @@ public class LeftClickDropPlugin  extends Plugin {
             MenuEntry entry = menuEntries[i];
             String target = stripTargetAnchors(entry);
 
-            if(powerMineOres.contains(target) && entry.getIdentifier() == 7 && menuEntries.length == 4) {
+            if(powerSet.contains(target) && entry.getIdentifier() == 7 && menuEntries.length == 4) {
                 menuEntries[i] = menuEntries[menuEntries.length - 1];
                 menuEntries[menuEntries.length - 1] = entry;
 
