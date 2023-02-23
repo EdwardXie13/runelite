@@ -21,6 +21,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
+import java.awt.AWTException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,7 +47,7 @@ public class AgilityPlusPlugin extends Plugin {
     }
 
     @Subscribe
-    public void onGameTick(GameTick event) {
+    public void onGameTick(GameTick event) throws AWTException {
         toggleStatus();
         checkOculusReset();
     }
@@ -56,7 +57,7 @@ public class AgilityPlusPlugin extends Plugin {
         return m.find() ? m.group(1) : "";
     }
 
-    private void toggleStatus() {
+    private void toggleStatus() throws AWTException {
         Widget chatboxInput = client.getWidget(WidgetInfo.CHATBOX_INPUT);
         String chatBoxMessage = stripTargetAnchors(chatboxInput.getText());
         if(chatBoxMessage == null) return;
@@ -141,23 +142,5 @@ public class AgilityPlusPlugin extends Plugin {
     public void onDecorativeObjectDespawned(DecorativeObjectDespawned event)
     {
         AgilityPlusObjectIDs.assignObjects(event);
-    }
-
-    @Subscribe
-    public void onScriptCallbackEvent(ScriptCallbackEvent event)
-    {
-        int[] intStack = client.getIntStack();
-        int intStackSize = client.getIntStackSize();
-
-        // for Gnome agility 1st floor weird hitbox
-        if ("lookPreservePitch".equals(event.getEventName()) && isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_CLIMB1))
-            intStack[intStackSize - 1] = 230;
-    }
-
-    private boolean isAtWorldPoint(WorldPoint worldPoint) {
-        boolean playerX = client.getLocalPlayer().getWorldLocation().getX() == worldPoint.getX();
-        boolean playerY = client.getLocalPlayer().getWorldLocation().getY() == worldPoint.getY();
-        boolean playerPlane = client.getLocalPlayer().getWorldLocation().getPlane() == worldPoint.getPlane();
-        return playerX && playerY && playerPlane;
     }
 }
