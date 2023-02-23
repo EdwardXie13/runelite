@@ -92,15 +92,28 @@ public class AgilityPlusMain implements Runnable {
             scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstacleNet1_M, 15);
             robot.delay(500);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_CLIMB1) && isIdle) {
+            robot.delay(1000);
             setCameraZoom(896);
             client.setCameraPitchTarget(150);
             changeCameraYaw(220);
-            robot.delay(500);
+            robot.delay(1000);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeTreeBranch1, 10);
             robot.delay(500);
             client.setCameraPitchTarget(512);
             robot.delay(1000);
-        } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_CLIMB2) && isIdle) {
+        }
+        else if (isAtWorldPoint(new WorldPoint(2471, 3424, 1)) && isIdle) {
+            robot.delay(1000);
+            setCameraZoom(752);
+            client.setCameraPitchTarget(125);
+            changeCameraYaw(225);
+            robot.delay(1000);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeTreeBranch1, 10);
+            robot.delay(500);
+            client.setCameraPitchTarget(512);
+            robot.delay(1000);
+        }
+        else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_CLIMB2) && isIdle) {
             setCameraZoom(140);
             client.setCameraPitchTarget(20);
             changeCameraYaw(512);
