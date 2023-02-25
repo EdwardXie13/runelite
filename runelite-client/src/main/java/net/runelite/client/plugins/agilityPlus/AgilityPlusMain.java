@@ -169,12 +169,12 @@ public class AgilityPlusMain implements Runnable {
             scheduledPointDelay(new Point(804, 157), 4);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_START) && isIdle) {
-            robot.delay(1000);
-            setCameraZoom(842);
-            client.setCameraPitchTarget(98);
-            changeCameraYaw(1337);
+            pressKey(KeyEvent.VK_DOWN, 2000);
+            setCameraZoom(783);
+//            client.setCameraPitchTarget(98);
+            changeCameraYaw(42);
             robot.delay(500);
-            scheduledPointDelay(new Point(459, 453), 12);
+            scheduledPointDelay(new Point(70, 162), 10);
             robot.delay(500);
             client.setCameraPitchTarget(512);
             robot.delay(500);
@@ -189,24 +189,11 @@ public class AgilityPlusMain implements Runnable {
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
             robot.delay(1500);
-        }
-        // tile with plant
-//        else if(isAtWorldPoint(new WorldPoint(3506, 3488, 0)) && isIdle) {
-//            setCameraZoom(1004);
-//            client.setCameraPitchTarget(84);
-//            changeCameraYaw(729);
-//            robot.delay(1300);
-//            scheduledGameObjectPointDelay(new Point(160, 489), AgilityPlusObjectIDs.canfisTallTree, 10);
-//            robot.delay(500);
-//            client.setCameraPitchTarget(512);
-//            robot.delay(500);
-//        }
-        else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FAIL2) && isIdle) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FAIL2) && isIdle) {
             setCameraZoom(896);
             changeCameraYaw(0);
             robot.delay(500);
             panCameraToCanfisStart2();
-//            panCameraOneDirection(KeyEvent.VK_W, 550);
             robot.delay(500);
             getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.CANFIS_START));
             robot.delay(500);
