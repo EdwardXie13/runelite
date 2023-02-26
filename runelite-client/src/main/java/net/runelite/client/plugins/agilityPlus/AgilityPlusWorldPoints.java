@@ -42,7 +42,7 @@ public class AgilityPlusWorldPoints {
 
     //=== SEERS ===
     public static final WorldPoint SEERS_FINISH = new WorldPoint(2704, 3464, 0);
-    public static final WorldPoint SEERS_START = new WorldPoint(2729, 3485, 0);
+    public static final WorldPoint SEERS_START = new WorldPoint(2729, 3488, 0);
 
     public static final WorldPoint SEERS_FIRST_ROOF = new WorldPoint(2729, 3491, 3);
     public static final WorldPoint SEERS_SECOND_ROOF = new WorldPoint(2713, 3494, 2);
