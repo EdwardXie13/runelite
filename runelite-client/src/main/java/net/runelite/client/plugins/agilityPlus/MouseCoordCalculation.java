@@ -122,11 +122,10 @@ public class MouseCoordCalculation {
     }
 
     public static Point randomCoord(Point point, int sigma) {
-        int a = (int) Math.floor(sigma/2);
-        int minXCoord = point.x-a*a;
-        int maxXCoord = point.x+a*a;
-        int minYCoord = point.y-a*a;
-        int maxYCoord = point.y+a*a;
+        int minXCoord = point.x-sigma*sigma;
+        int maxXCoord = point.x+sigma*sigma;
+        int minYCoord = point.y-sigma*sigma;
+        int maxYCoord = point.y+sigma*sigma;
         // sigma tweaks the spread
         int newXCoord = (int) randomPos(point.x, sigma, minXCoord, maxXCoord);
         int newYCoord = (int) randomPos(point.y, sigma, minYCoord, maxYCoord);
