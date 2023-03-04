@@ -160,7 +160,7 @@ public class RCPlusMain implements Runnable {
                 isIdle = false;
                 scheduledPointDelay(new Point(341, 228), 18);
                 delay(300);
-                clickInventoryPoint(new Point(782, 804));
+                scheduledPointDelay(new Point(782, 804), 3);
                 delay(300);
                 scheduledPointDelay(new Point(341, 228), 18);
                 isIdle = true;
@@ -240,25 +240,25 @@ public class RCPlusMain implements Runnable {
     private void bankingSequence() {
         // cheese by always having slot 1 empty so the bound runes go there
         // deposit non pouches (click slot 1)
-        clickInventoryPoint(new Point(782, 768));
+        scheduledPointDelay(new Point(782, 768), 3);
         delay(500);
 
         //does have duel ring?
         if(!isRingOfDuelingEquipped()) {
-            clickInventoryPoint(new Point(428, 721));
+            scheduledPointDelay(new Point(428, 721), 3);
             delay(500);
-            clickInventoryPoint(new Point(782, 768));
+            scheduledPointDelay(new Point(782, 768), 3);
             delay(500);
         }
 
         // withdraw ess
-        clickInventoryPoint(new Point(476, 721));
+        scheduledPointDelay(new Point(476, 721), 3);
         delay(500);
         // fill small pouch
-        clickInventoryPoint(new Point(782, 804));
+        scheduledPointDelay(new Point(782, 804), 3);
         delay(500);
         // withdraw ess
-        clickInventoryPoint(new Point(476, 721));
+        scheduledPointDelay(new Point(476, 721), 3);
         delay(500);
         pressKey(KeyEvent.VK_ESCAPE);
         delay(1000);
@@ -395,19 +395,19 @@ public class RCPlusMain implements Runnable {
 //        }
 //    }
 
-    private void clickInventoryPoint(Point point) {
-        isIdle = false;
-        try {
-            Robot robot = new Robot();
-            robot.mouseMove(point.x, point.y);
-            delay(100);
-            robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
-            robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-        } catch (Exception e) {
-            e.printStackTrace();
-            isIdle = true;
-        }
-    }
+//    private void clickInventoryPoint(Point point) {
+//        isIdle = false;
+//        try {
+//            Robot robot = new Robot();
+//            robot.mouseMove(point.x, point.y);
+//            delay(100);
+//            robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
+//            robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            isIdle = true;
+//        }
+//    }
 
     private void getWorldPointCoords(final LocalPoint dest) {
         Polygon poly = Perspective.getCanvasTileAreaPoly(this.client, dest, 1);
