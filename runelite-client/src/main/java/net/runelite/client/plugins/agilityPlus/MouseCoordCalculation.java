@@ -81,17 +81,17 @@ public class MouseCoordCalculation {
         mouseMove();
     }
 
-    public static void generateInventoryCoords(Point point) {
-        List<Point> points = new ArrayList<>();
-
-        while(points.size() < 3) {
-            Point newPoint = InvRandomCoord(point);
-            points.add(InvRandomCoord(newPoint));
-        }
-
-        generatedPoint = randomClusterPicker(points);
-        mouseMove();
-    }
+//    public static void generateInventoryCoords(Point point) {
+//        List<Point> points = new ArrayList<>();
+//
+//        while(points.size() < 3) {
+//            Point newPoint = InvRandomCoord(point);
+//            points.add(InvRandomCoord(newPoint));
+//        }
+//
+//        generatedPoint = randomClusterPicker(points);
+//        mouseMove();
+//    }
 
     public static boolean isCoordInClickBox(Shape clickbox, Point point) {
         return clickbox.contains(point.x, point.y);
@@ -133,18 +133,18 @@ public class MouseCoordCalculation {
         return new Point(newXCoord, newYCoord);
     }
 
-    public static Point InvRandomCoord(Point point) {
-
-        int minXCoord = point.x-16*16;
-        int maxXCoord = point.x+16*16;
-        int minYCoord = point.y-12*12;
-        int maxYCoord = point.y+12*12;
-        // sigma tweaks the spread
-        int newXCoord = (int) randomPos(point.x, 4, minXCoord, maxXCoord);
-        int newYCoord = (int) randomPos(point.y, 4, minYCoord, maxYCoord);
-
-        return new Point(newXCoord, newYCoord);
-    }
+//    public static Point InvRandomCoord(Point point) {
+//
+//        int minXCoord = point.x-16*16;
+//        int maxXCoord = point.x+16*16;
+//        int minYCoord = point.y-12*12;
+//        int maxYCoord = point.y+12*12;
+//        // sigma tweaks the spread
+//        int newXCoord = (int) randomPos(point.x, 4, minXCoord, maxXCoord);
+//        int newYCoord = (int) randomPos(point.y, 4, minYCoord, maxYCoord);
+//
+//        return new Point(newXCoord, newYCoord);
+//    }
 
     public static void mouseMove() {
         MouseMotionFactory fastGamerMotion = FactoryTemplates.createFastGamerMotionFactory();
