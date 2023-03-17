@@ -7,8 +7,8 @@ import net.runelite.api.events.GameObjectDespawned;
 import net.runelite.api.events.GameObjectSpawned;
 
 public class MiningPlusObjectIDs {
-    public static final int COPPER_ROCK_ID = ObjectID.ROCKS_11161;
-    public static final int IRON_ROCK_ID = ObjectID.ROCKS_11365;
+    public static final int COPPER_ROCK_ID = ObjectID.COPPER_ROCKS_11161;
+    public static final int IRON_ROCK_ID = ObjectID.IRON_ROCKS_11365;
 
     public static GameObject copperRockL = null;
     public static GameObject copperRockR = null;
