@@ -1,24 +1,24 @@
 package net.runelite.client.plugins.agilityPlus;
 
-import com.github.joonasvali.naturalmouse.api.MouseMotionFactory;
-import com.github.joonasvali.naturalmouse.util.FactoryTemplates;
 import net.runelite.api.DecorativeObject;
 import net.runelite.api.GameObject;
 import net.runelite.api.GroundObject;
 
 import java.awt.AWTException;
 import java.awt.Color;
+import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Robot;
 import java.awt.Shape;
 import java.awt.event.InputEvent;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Function;
 
 public class MouseCoordCalculation {
     static Point generatedPoint = null;
+
     public static void generateCoord(Point point, GameObject gameObject, int sigma) {
         Shape clickbox = gameObject.getClickbox();
 
@@ -61,7 +61,7 @@ public class MouseCoordCalculation {
         while(points.size() < 3) {
             Point newPoint = randomCoord(point, sigma);
             if(isCoordInClickBox(clickbox, newPoint) && isInGame(newPoint))
-                points.add(randomCoord(newPoint, sigma));
+                points.add(newPoint);
         }
 
         generatedPoint = randomClusterPicker(points);
@@ -74,24 +74,13 @@ public class MouseCoordCalculation {
 
         while(points.size() < 3) {
             Point newPoint = randomCoord(point, sigma);
-            points.add(randomCoord(newPoint, sigma));
+            if(isInGame(newPoint))
+                points.add(newPoint);
         }
 
         generatedPoint = randomClusterPicker(points);
         mouseMove();
     }
-
-//    public static void generateInventoryCoords(Point point) {
-//        List<Point> points = new ArrayList<>();
-//
-//        while(points.size() < 3) {
-//            Point newPoint = InvRandomCoord(point);
-//            points.add(InvRandomCoord(newPoint));
-//        }
-//
-//        generatedPoint = randomClusterPicker(points);
-//        mouseMove();
-//    }
 
     public static boolean isCoordInClickBox(Shape clickbox, Point point) {
         return clickbox.contains(point.x, point.y);
@@ -133,29 +122,24 @@ public class MouseCoordCalculation {
         return new Point(newXCoord, newYCoord);
     }
 
-//    public static Point InvRandomCoord(Point point) {
-//
-//        int minXCoord = point.x-16*16;
-//        int maxXCoord = point.x+16*16;
-//        int minYCoord = point.y-12*12;
-//        int maxYCoord = point.y+12*12;
-//        // sigma tweaks the spread
-//        int newXCoord = (int) randomPos(point.x, 4, minXCoord, maxXCoord);
-//        int newYCoord = (int) randomPos(point.y, 4, minYCoord, maxYCoord);
-//
-//        return new Point(newXCoord, newYCoord);
-//    }
-
     public static void mouseMove() {
-        MouseMotionFactory fastGamerMotion = FactoryTemplates.createFastGamerMotionFactory();
         try {
             Robot robot = new Robot();
-            fastGamerMotion.move(generatedPoint.x, generatedPoint.y);
-            robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
-            robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
+            windMouse(robot, generatedPoint.x, generatedPoint.y);
+            mouseClick(robot);
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static void mouseClick(Robot robot) {
+        int minDelay = 75;
+        int maxDelay = 95;
+        Random random = new Random();
+
+        robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
+        robot.delay(random.nextInt(maxDelay - minDelay) + minDelay);
+        robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
     }
 
     public static long randomPos(int mu, int sigma, int min, int max) {
@@ -174,5 +158,78 @@ public class MouseCoordCalculation {
     public static Color getPixel(int x, int y) throws AWTException {
         Robot robot = new Robot();
         return robot.getPixelColor(x, y);
+    }
+
+    /**
+     * Internal mouse movement algorithm from SMART. Do not use this without credit to either
+     * Benjamin J. Land or BenLand100. This was originally synchronized to prevent multiple
+     * motions and bannage but functions poorly with DB3.
+     *
+     * BEST USED IN FIXED MODE
+     *
+     * @param xs         The x start
+     * @param ys         The y start
+     * @param xe         The x destination
+     * @param ye         The y destination
+     * @param gravity    Strength pulling the position towards the destination
+     * @param wind       Strength pulling the position in random directions
+     * @param minWait    Minimum relative time per step
+     * @param maxWait    Maximum relative time per step
+     * @param maxStep    Maximum size of a step, prevents out of control motion
+     * @param targetArea Radius of area around the destination that should
+     *                   trigger slowing, prevents spiraling
+     */
+    private static void windMouseImpl(Robot robot, double xs, double ys, double xe, double ye, double gravity, double wind, double minWait, double maxWait, double maxStep, double targetArea) {
+        final double sqrt3 = Math.sqrt(3);
+        final double sqrt5 = Math.sqrt(5);
+
+        double dist, veloX = 0, veloY = 0, windX = 0, windY = 0;
+        while ((dist = Math.hypot(xs - xe, ys - ye)) >= 1) {
+            wind = Math.min(wind, dist);
+            if (dist >= targetArea) {
+                windX = windX / sqrt3 + (2D * Math.random() - 1D) * wind / sqrt5;
+                windY = windY / sqrt3 + (2D * Math.random() - 1D) * wind / sqrt5;
+            } else {
+                windX /= sqrt3;
+                windY /= sqrt3;
+                if (maxStep < 3) {
+                    maxStep = Math.random() * 3D + 3D;
+                } else {
+                    maxStep /= sqrt5;
+                }
+            }
+            veloX += windX + gravity * (xe - xs) / dist;
+            veloY += windY + gravity * (ye - ys) / dist;
+            double veloMag = Math.hypot(veloX, veloY);
+            if (veloMag > maxStep) {
+                double randomDist = maxStep / 2D + Math.random() * maxStep / 2D;
+                veloX = (veloX / veloMag) * randomDist;
+                veloY = (veloY / veloMag) * randomDist;
+            }
+            int lastX = ((int) (Math.round(xs)));
+            int lastY = ((int) (Math.round(ys)));
+            xs += veloX;
+            ys += veloY;
+            if ((lastX != Math.round(xs)) || (lastY != Math.round(ys))) {
+                robot.mouseMove((int) Math.round(xs), (int) Math.round(ys));
+            }
+            double step = Math.hypot(xs - lastX, ys - lastY);
+            robot.delay((int) Math.round((maxWait - minWait) * (step / maxStep) + minWait));
+        }
+        new Point((int) xs, (int) ys);
+    }
+
+    /**
+     * Moves the mouse from the current position to the specified position.
+     * Approximates human movement in a way where smoothness and accuracy are
+     * relative to speed, as it should be.
+     *
+     * @param x The x destination
+     * @param y The y destination
+     */
+    public static void windMouse(Robot robot, int x, int y) {
+        Point c = MouseInfo.getPointerInfo().getLocation();
+        double speed = (Math.random() * 15D + 15D) / 10D;
+        windMouseImpl(robot, c.x, c.y, x, y, 9D, 3D, 5D / speed, 10D / speed, 10D * speed, 8D * speed);
     }
 }

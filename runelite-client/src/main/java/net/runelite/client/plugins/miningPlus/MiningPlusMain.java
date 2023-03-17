@@ -91,9 +91,6 @@ public class MiningPlusMain implements Runnable {
     }
 
     private void doPowerMineCopper() {
-//        setCameraZoom(896);
-//        changeCameraYaw(0);
-
         if(checkLevelUp()) {
             pressKey(KeyEvent.VK_SPACE);
             robot.delay(500);
@@ -108,10 +105,6 @@ public class MiningPlusMain implements Runnable {
     }
 
     private void doPowerMineIron() {
-//        setCameraZoom(1004);
-//        client.setCameraPitchTarget(512);
-//        changeCameraYaw(0);
-
         if(checkLevelUp()) {
             pressKey(KeyEvent.VK_SPACE);
             robot.delay(500);

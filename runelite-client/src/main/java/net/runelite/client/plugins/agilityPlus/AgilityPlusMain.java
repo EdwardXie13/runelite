@@ -466,7 +466,6 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
             scheduledPointDelay(new Point(468, 799), 10);
             robot.delay(1500);
-//            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersThirdRoofGap, 10);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_THIRD_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3) && isIdle) {
             changeCameraYaw(0);
             setCameraZoom(896);
@@ -479,7 +478,6 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
             scheduledPointDelay(new Point(470, 759), 10);
             robot.delay(1500);
-//            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersThirdRoofGap, 10);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_FOURTH_ROOF, 4) && isIdle && client.getOculusOrbState() == 0) {
             setCameraZoom(600);
             client.setCameraPitchTarget(512);
@@ -515,7 +513,6 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
             scheduledPointDelay(new Point(296, 768), 10);
             robot.delay(1500);
-//            scheduledGameObjectPointDelay(new Point(895, 575), AgilityPlusObjectIDs.seersFifthRoofGap, 10);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIFTH_ROOF) && isIdle) {
             setCameraZoom(704);
             client.setCameraPitchTarget(48);
@@ -523,7 +520,6 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
             scheduledPointDelay(new Point(324, 738), 10);
             robot.delay(1500);
-//            scheduledGameObjectPointDelay(new Point(350, 742), AgilityPlusObjectIDs.seersFifthRoofGap, 12);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FINISH) && isIdle && client.getOculusOrbState() == 0) {
             setCameraZoom(1004);
             client.setCameraPitchTarget(512);
@@ -543,9 +539,6 @@ public class AgilityPlusMain implements Runnable {
             scheduledPointDelay(new Point(496, 654), 10);
             robot.delay(500);
         }
-//        else {
-//            robot.delay(500);
-//        }
     }
 //
 //    private void doRellekaAgility() {
@@ -754,12 +747,6 @@ public class AgilityPlusMain implements Runnable {
     private void setCameraZoom(int zoom) {
         clientThread.invokeLater(() -> client.runScript(ScriptID.CAMERA_DO_ZOOM, zoom, zoom));
     }
-
-//    private void delay(int ms) {
-//        try {
-//            Thread.sleep(ms);
-//        } catch (Exception e) { e.getStackTrace(); }
-//    }
 
     private void panCameraToCanfisStart() {
         client.setOculusOrbNormalSpeed(40);
