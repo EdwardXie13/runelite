@@ -526,6 +526,7 @@ public class AgilityPlusMain implements Runnable {
             scheduledPointDelay(new Point(324, 738), 10);
             robot.delay(1500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FINISH) && isIdle && client.getOculusOrbState() == 0) {
+            robot.delay(1500);
             setCameraZoom(1004);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
@@ -947,10 +948,10 @@ public class AgilityPlusMain implements Runnable {
 
     private void reset() {
         System.out.println("idle for too long, reset");
-        isIdle = true;
-        resetOculusOrb = true;
         client.setOculusOrbState(0);
         client.setOculusOrbNormalSpeed(12);
+        isIdle = true;
+        resetOculusOrb = true;
         robot.delay(200);
         start = System.currentTimeMillis();
     }
