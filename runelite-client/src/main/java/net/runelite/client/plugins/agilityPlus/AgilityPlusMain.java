@@ -949,6 +949,8 @@ public class AgilityPlusMain implements Runnable {
         System.out.println("idle for too long, reset");
         isIdle = true;
         resetOculusOrb = true;
+        client.setOculusOrbState(0);
+        client.setOculusOrbNormalSpeed(12);
         robot.delay(200);
         start = System.currentTimeMillis();
     }
