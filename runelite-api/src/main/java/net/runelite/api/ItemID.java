@@ -11743,15 +11743,6 @@ public final class ItemID
 	public static final int BLOODY_NOTES = 25476;
 	public static final int RUNESCROLL_OF_SWAMPBARK = 25478;
 	public static final int RUNESCROLL_OF_BLOODBARK = 25481;
-	public static final int WEBWEAVER_BOW_U = 25484;
-	public static final int WEBWEAVER_BOW = 25485;
-	public static final int URSINE_CHAINMACE_U = 25486;
-	public static final int URSINE_CHAINMACE = 25487;
-	public static final int ACCURSED_SCEPTRE_U = 25488;
-	public static final int ACCURSED_SCEPTRE = 25489;
-	public static final int VOIDWAKER = 25490;
-	public static final int TOXIC_BLOWPIPE_BETA__DRAGON = 25491;
-	public static final int BLACK_DHIDE_BODY_BETA = 25492;
 	public static final int SOULREAPER_AXE = 25484;
 	public static final int RING_OF_TRUE_BLOOD = 25485;
 	public static final int RING_OF_TRUE_ICE = 25486;
@@ -13025,6 +13016,12 @@ public final class ItemID
 	public static final int CALLISTO_CUB_27649 = 27649;
 	public static final int VETION_JR_27650 = 27650;
 	public static final int VETION_JR_27651 = 27651;
+	public static final int WEBWEAVER_BOW_U = 27652;
+	public static final int WEBWEAVER_BOW = 27655;
+	public static final int URSINE_CHAINMACE_U = 27657;
+	public static final int URSINE_CHAINMACE = 27660;
+	public static final int ACCURSED_SCEPTRE_U = 27662;
+	public static final int ACCURSED_SCEPTRE = 27665;
 	public static final int CLAWS_OF_CALLISTO = 27667;
 	public static final int FANGS_OF_VENENATIS = 27670;
 	public static final int SKULL_OF_VETION = 27673;
@@ -13033,6 +13030,7 @@ public final class ItemID
 	public static final int VOIDWAKER_HILT = 27681;
 	public static final int VOIDWAKER_BLADE = 27684;
 	public static final int VOIDWAKER_GEM = 27687;
+	public static final int VOIDWAKER = 27690;
 	public static final int ORE_PACK_27693 = 27693;
 	public static final int DRAGON_PICKAXE_BROKEN = 27695;
 	public static final int CRYSTAL_BODY_27697 = 27697;
