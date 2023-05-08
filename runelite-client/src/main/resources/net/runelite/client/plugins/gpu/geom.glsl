@@ -23,8 +23,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define PI 3.1415926535897932384626433832795f
-#define UNIT PI / 1024.0f
+#version 330
+
+// smallest unit of the texture which can be moved per tick. textures are all
+// 128x128px - so this is equivalent to +1px
+#define TEXTURE_ANIM_UNIT (1.0f / 128.0f)
+
+layout(triangles) in;
+layout(triangle_strip, max_vertices = 3) out;
 
 layout(std140) uniform uniforms {
   int cameraYaw;
@@ -38,41 +44,52 @@ layout(std140) uniform uniforms {
   ivec2 sinCosTable[2048];
 };
 
-struct modelinfo {
-  int offset;   // offset into vertex buffer
-  int toffset;  // offset into texture buffer
-  int size;     // length in faces
-  int idx;      // write idx in target buffer
-  int flags;    // buffer, radius, orientation
-  int x;        // scene position x
-  int y;        // scene position y
-  int z;        // scene position z
-};
+#include "uv.glsl"
 
-layout(std430, binding = 0) readonly buffer modelbuffer_in {
-  modelinfo ol[];
-};
+uniform vec2 textureAnimations[128];
+uniform int tick;
+uniform mat4 projectionMatrix;
 
-layout(std430, binding = 1) readonly buffer vertexbuffer_in {
-  ivec4 vb[];
-};
+in ivec3 gVertex[3];
+in vec4 gColor[3];
+in float gHsl[3];
+in int gTextureId[3];
+in vec3 gTexPos[3];
+in float gFogAmount[3];
 
-layout(std430, binding = 2) readonly buffer tempvertexbuffer_in {
-  ivec4 tempvb[];
-};
+out vec4 fColor;
+noperspective centroid out float fHsl;
+flat out int fTextureId;
+out vec2 fUv;
+out float fFogAmount;
 
-layout(std430, binding = 3) writeonly buffer vertex_out {
-  ivec4 vout[];
-};
+void main() {
+  int textureId = gTextureId[0];
+  vec2 uv[3];
 
-layout(std430, binding = 4) writeonly buffer uv_out {
-  vec4 uvout[];
-};
+  if (textureId > 0) {
+    ivec3 cameraPos = ivec3(cameraX, cameraY, cameraZ);
+    compute_uv(cameraPos, gVertex[0], gVertex[1], gVertex[2], gTexPos[0], gTexPos[1], gTexPos[2], uv[0], uv[1], uv[2]);
 
-layout(std430, binding = 5) readonly buffer texturebuffer_in {
-  vec4 texb[];
-};
+    vec2 textureAnim = textureAnimations[textureId - 1];
+    for (int i = 0; i < 3; ++i) {
+      uv[i] += tick * textureAnim * TEXTURE_ANIM_UNIT;
+    }
+  } else {
+    uv[0] = vec2(0);
+    uv[1] = vec2(0);
+    uv[2] = vec2(0);
+  }
 
-layout(std430, binding = 6) readonly buffer temptexturebuffer_in {
-  vec4 temptexb[];
-};
+  for (int i = 0; i < 3; ++i) {
+    fColor = gColor[i];
+    fHsl = gHsl[i];
+    fTextureId = gTextureId[i];
+    fUv = uv[i];
+    fFogAmount = gFogAmount[i];
+    gl_Position = projectionMatrix * vec4(gVertex[i], 1);
+    EmitVertex();
+  }
+
+  EndPrimitive();
+}

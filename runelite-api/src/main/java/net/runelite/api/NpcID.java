@@ -10150,6 +10150,8 @@ public final class NpcID
 	public static final int ELIAS_WHITE = 12105;
 	public static final int SKELETON_HELLHOUND_12107 = 12107;
 	public static final int GREATER_SKELETON_HELLHOUND_12108 = 12108;
+	public static final int EMMA = 12116;
+	public static final int SUZIE = 12117;
 	public static final int SIR_PEAR_VISOR = 12121;
 	public static final int SIR_PEAR_VISOR_12122 = 12122;
 	public static final int CRYSTALLINE_HUNLLEF_12123 = 12123;
