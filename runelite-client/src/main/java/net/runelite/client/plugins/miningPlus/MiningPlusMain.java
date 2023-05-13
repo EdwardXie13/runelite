@@ -96,10 +96,10 @@ public class MiningPlusMain implements Runnable {
             robot.delay(500);
             isIdle = true;
         } else if(MiningPlusObjectIDs.copperRockR != null && isIdle) {
-            dropItemInInventory(new Point(782, 768));
+//            dropItemInInventory(new Point(782, 768));
             scheduledGameObjectDelay(MiningPlusObjectIDs.copperRockR, 8);
         } else if(MiningPlusObjectIDs.copperRockL != null && isIdle) {
-            dropItemInInventory(new Point(822, 768));
+//            dropItemInInventory(new Point(822, 768));
             scheduledGameObjectDelay(MiningPlusObjectIDs.copperRockL, 8);
         }
     }
@@ -121,7 +121,7 @@ public class MiningPlusMain implements Runnable {
     private void dropItemInInventory(Point coord) {
         keyDown(KeyEvent.VK_SHIFT);
         scheduledPointClick(coord, 3);
-        robot.delay(100);
+        robot.delay(500);
         keyUp(KeyEvent.VK_SHIFT);
         isIdle = true;
     }

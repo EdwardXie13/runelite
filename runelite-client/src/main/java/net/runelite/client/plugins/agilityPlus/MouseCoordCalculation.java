@@ -14,7 +14,6 @@ import java.awt.event.InputEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.function.Function;
 
 public class MouseCoordCalculation {
     static Point generatedPoint = null;
@@ -33,7 +32,7 @@ public class MouseCoordCalculation {
 
         generatedPoint = randomClusterPicker(points);
 
-        mouseMove();
+        moveWindow();
     }
 
     public static void generateCoord(Point point, GroundObject groundObject, int sigma) {
@@ -49,7 +48,7 @@ public class MouseCoordCalculation {
         }
 
         generatedPoint = randomClusterPicker(points);
-        mouseMove();
+        moveWindow();
     }
 
     public static void generateCoord(Point point, DecorativeObject decorativeObject, int sigma) {
@@ -65,7 +64,7 @@ public class MouseCoordCalculation {
         }
 
         generatedPoint = randomClusterPicker(points);
-        mouseMove();
+        moveWindow();
     }
 
     public static void generateCoord(Point point, int sigma) {
@@ -79,7 +78,7 @@ public class MouseCoordCalculation {
         }
 
         generatedPoint = randomClusterPicker(points);
-        mouseMove();
+        moveWindow();
     }
 
     public static boolean isCoordInClickBox(Shape clickbox, Point point) {
@@ -122,14 +121,34 @@ public class MouseCoordCalculation {
         return new Point(newXCoord, newYCoord);
     }
 
-    public static void mouseMove() {
+    public static void moveWindow() {
         try {
             Robot robot = new Robot();
-            windMouse(robot, generatedPoint.x, generatedPoint.y);
+
+            Point displacement = moveWinTo();
+
+            Runtime.getRuntime().exec("cmd /c start cmd.exe /c \"python C:\\Users\\Main\\Documents\\GitHub\\botTest\\src\\main\\java\\moveWin.py " +
+                    displacement.x + " " + displacement.y);
+            robot.delay(300);
             mouseClick(robot);
+            robot.delay(200);
+            Runtime.getRuntime().exec("cmd /c start cmd.exe /c \"python C:\\Users\\Main\\Documents\\GitHub\\botTest\\src\\main\\java\\moveWin.py " +
+                    (-displacement.x) + " " + (-displacement.y));
+            robot.delay(200);
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static Point moveWinTo() {
+        Point currentMousePos = MouseInfo.getPointerInfo().getLocation();
+        int currentX = currentMousePos.x;
+        int currentY = currentMousePos.y;
+
+        int displacementX = currentX - generatedPoint.x;
+        int displacementY = currentY - generatedPoint.y;
+
+        return new Point(displacementX, displacementY);
     }
 
     private static void mouseClick(Robot robot) {
