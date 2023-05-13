@@ -46,7 +46,6 @@ import net.runelite.api.ItemID;
 import net.runelite.api.IterableHashTable;
 import net.runelite.api.MessageNode;
 import net.runelite.api.Player;
-import net.runelite.api.Scene;
 import net.runelite.api.Skill;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
@@ -111,10 +110,6 @@ public class LootTrackerPluginTest
 
 	@Mock
 	@Bind
-	private Scene scene;
-
-	@Mock
-	@Bind
 	private SpriteManager spriteManager;
 
 	@Inject
@@ -148,8 +143,6 @@ public class LootTrackerPluginTest
 	public void setUp()
 	{
 		Guice.createInjector(BoundFieldModule.of(this)).injectMembers(this);
-
-		when(client.getScene()).thenReturn(scene);
 
 		Player player = mock(Player.class);
 		when(player.getWorldLocation()).thenReturn(new WorldPoint(0, 0, 0));
@@ -293,8 +286,8 @@ public class LootTrackerPluginTest
 		when(itemManager.getItemComposition(ItemID.MAHOGANY_SEED)).thenReturn(compSeed);
 		when(compSeed.getHaPrice()).thenReturn(2_102);
 
-		when(scene.getBaseX()).thenReturn(3232);
-		when(scene.getBaseY()).thenReturn(4320);
+		when(client.getBaseX()).thenReturn(3232);
+		when(client.getBaseY()).thenReturn(4320);
 		LocalPoint localPoint = new LocalPoint(0, 0);
 		when(client.getLocalPlayer().getLocalLocation()).thenReturn(localPoint);
 
