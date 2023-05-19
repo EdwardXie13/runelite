@@ -67,13 +67,13 @@ public class RCPlusBloodsPlugin extends Plugin {
             hasStarted = true;
             thread = new RCPlusBloodsMain(client, clientThread);
             System.out.println("status is go");
-            sendSlackMessage("starting RC exp = " + lastRcExp);
+//            sendSlackMessage("starting RC exp = " + lastRcExp);
         } else if (chatBoxMessage.equals("2") && toggleStatus == STATUS.START && hasStarted) {
             toggleStatus = STATUS.STOP;
             thread.t.interrupt();
             hasStarted = false;
             System.out.println("status is stop");
-            sendSlackMessage("stopping RC exp = " + lastRcExp);
+//            sendSlackMessage("stopping RC exp = " + lastRcExp);
         }
     }
 
@@ -88,12 +88,12 @@ public class RCPlusBloodsPlugin extends Plugin {
         }
     }
 
-    private void sendSlackMessage(String text) {
-        SlackMessage slackMessage = SlackMessage.builder()
-                .text(text)
-                .build();
-        SlackUtils.sendMessage(slackMessage);
-    }
+//    private void sendSlackMessage(String text) {
+//        SlackMessage slackMessage = SlackMessage.builder()
+//                .text(text)
+//                .build();
+//        SlackUtils.sendMessage(slackMessage);
+//    }
 
 
     @Subscribe
@@ -105,7 +105,7 @@ public class RCPlusBloodsPlugin extends Plugin {
             thread.t.interrupt();
             hasStarted = false;
             System.out.println("status is stop (login screen)");
-            sendSlackMessage("logged out RC exp = " + lastRcExp);
+//            sendSlackMessage("logged out RC exp = " + lastRcExp);
         }
     }
 

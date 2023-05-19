@@ -1,5 +1,6 @@
 package net.runelite.client.plugins.agilityPlus;
 
+import com.fazecast.jSerialComm.SerialPort;
 import net.runelite.api.DecorativeObject;
 import net.runelite.api.GameObject;
 import net.runelite.api.GroundObject;
@@ -10,7 +11,7 @@ import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Robot;
 import java.awt.Shape;
-import java.awt.event.InputEvent;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -31,8 +32,8 @@ public class MouseCoordCalculation {
         }
 
         generatedPoint = randomClusterPicker(points);
-
-        moveWindow();
+//        moveWindow();
+        mouseMove();
     }
 
     public static void generateCoord(Point point, GroundObject groundObject, int sigma) {
@@ -48,7 +49,8 @@ public class MouseCoordCalculation {
         }
 
         generatedPoint = randomClusterPicker(points);
-        moveWindow();
+//        moveWindow();
+        mouseMove();
     }
 
     public static void generateCoord(Point point, DecorativeObject decorativeObject, int sigma) {
@@ -64,7 +66,8 @@ public class MouseCoordCalculation {
         }
 
         generatedPoint = randomClusterPicker(points);
-        moveWindow();
+//        moveWindow();
+        mouseMove();
     }
 
     public static void generateCoord(Point point, int sigma) {
@@ -78,7 +81,8 @@ public class MouseCoordCalculation {
         }
 
         generatedPoint = randomClusterPicker(points);
-        moveWindow();
+//        moveWindow();
+        mouseMove();
     }
 
     public static boolean isCoordInClickBox(Shape clickbox, Point point) {
@@ -124,17 +128,27 @@ public class MouseCoordCalculation {
     public static void moveWindow() {
         try {
             Robot robot = new Robot();
-
+            windMouse(robot, generatedPoint.x, generatedPoint.y);
             Point displacement = moveWinTo();
 
             Runtime.getRuntime().exec("cmd /c start cmd.exe /c \"python C:\\Users\\Main\\Documents\\GitHub\\botTest\\src\\main\\java\\moveWin.py " +
                     displacement.x + " " + displacement.y);
             robot.delay(300);
-            mouseClick(robot);
+            mouseClick();
             robot.delay(200);
             Runtime.getRuntime().exec("cmd /c start cmd.exe /c \"python C:\\Users\\Main\\Documents\\GitHub\\botTest\\src\\main\\java\\moveWin.py " +
                     (-displacement.x) + " " + (-displacement.y));
             robot.delay(200);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void mouseMove() {
+        try {
+            Robot robot = new Robot();
+            windMouse(robot, generatedPoint.x, generatedPoint.y);
+            mouseClick();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -151,15 +165,29 @@ public class MouseCoordCalculation {
         return new Point(displacementX, displacementY);
     }
 
-    private static void mouseClick(Robot robot) {
-        int minDelay = 75;
-        int maxDelay = 95;
-        Random random = new Random();
+    private static void mouseClick() throws IOException {
+        SerialPort sp = SerialPort.getCommPort("COM17"); // device name TODO: must be changed
+        sp.setComPortParameters(9600, 8, 1, 0); // default connection settings for Arduino
+        sp.setComPortTimeouts(SerialPort.TIMEOUT_WRITE_BLOCKING, 0, 0); // block until bytes can be written
 
-        robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
-        robot.delay(random.nextInt(maxDelay - minDelay) + minDelay);
-        robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
+        if(!sp.openPort()) {
+            System.out.println("\nCOM port NOT available\n"); return;
+        }
+
+        sp.getOutputStream().write((byte) 1);
+//        System.out.println("Sent number: " + 1);
+        sp.closePort();
     }
+
+//    private static void mouseClick(Robot robot) {
+//        int minDelay = 75;
+//        int maxDelay = 95;
+//        Random random = new Random();
+//
+//        robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
+//        robot.delay(random.nextInt(maxDelay - minDelay) + minDelay);
+//        robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
+//    }
 
     public static long randomPos(int mu, int sigma, int min, int max) {
         Random random = new Random();
