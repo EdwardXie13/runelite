@@ -130,8 +130,8 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_DROP) && isIdle) {
             setCameraZoom(-47);
-//            client.setCameraPitchTarget(90);
-            client.setCameraPitchTarget(205);
+            client.setCameraPitchTarget(90);
+//            client.setCameraPitchTarget(205);
             changeCameraYaw(1185);
             robot.delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstacleNet2_L, 15);
@@ -454,7 +454,7 @@ public class AgilityPlusMain implements Runnable {
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) && isIdle)) {
             changeCameraYaw(0);
             client.setCameraPitchTarget(512);
-            setCameraZoom(582);
+            setCameraZoom(577);
             robot.delay(1000);
             scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10);
         }
