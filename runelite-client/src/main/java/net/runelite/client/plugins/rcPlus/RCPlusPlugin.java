@@ -4,11 +4,14 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameObject;
 import net.runelite.api.GameState;
+import net.runelite.api.InventoryID;
+import net.runelite.api.Item;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameObjectDespawned;
 import net.runelite.api.events.GameObjectSpawned;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
@@ -21,6 +24,9 @@ import javax.inject.Inject;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Shape;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -123,5 +129,12 @@ public class RCPlusPlugin extends Plugin {
     public void onGameObjectDespawned(GameObjectDespawned event)
     {
         RCPlusObjectIDs.assignObjects(event);
+    }
+
+    @Subscribe
+    public void onItemContainerChanged(ItemContainerChanged event) {
+        if (event.getItemContainer() == client.getItemContainer(InventoryID.INVENTORY)) {
+            RCPlusMain.inventoryItems = Arrays.asList(event.getItemContainer().getItems());
+        }
     }
 }

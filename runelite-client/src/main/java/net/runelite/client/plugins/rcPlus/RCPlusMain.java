@@ -38,6 +38,7 @@ public class RCPlusMain implements Runnable {
     public long start;
 
     public static Set<Integer> fireAltarRegions = ImmutableSet.of(12344, 13130, 13106, 10315, 12600);
+    public static List<Item> inventoryItems = new ArrayList<>();
 
     Thread t;
 
@@ -84,17 +85,16 @@ public class RCPlusMain implements Runnable {
             if(isBankOpen())
                 bankingSequence();
         } else if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !isBankOpen() && readyForAltar() && !hasEnoughStamina() && isIdle) {
-            pressKey(KeyEvent.VK_DOWN, 2000);
-            delay(500);
-            changeCameraYaw(0);
-            setCameraZoom(255);
+            client.setCameraPitchTarget(60);
+            changeCameraYaw(1934);
+            setCameraZoom(45);
             delay(1000);
-            scheduledPointDelay(new Point(154, 726), 24);
+            scheduledPointDelay(new Point(437, 553), 24);
             delay(1500);
         } else if(getRegionID() == 13130 && isIdle) { // is in FFA portal
             // TP to duel arena
             isIdle = false;
-            pressKey(KeyEvent.VK_UP, 2000);
+            client.setCameraPitchTarget(512);
             delay(250);
             pressKey(KeyEvent.VK_F4);
             delay(250);
@@ -111,12 +111,11 @@ public class RCPlusMain implements Runnable {
             scheduledPointDelay(new Point(899, 924), 6);
             delay(500);
             pressKey(KeyEvent.VK_ESCAPE);
-            delay(1000);
+            delay(3000);
         } else if(getRegionID() == 13106 && isNearWorldTile(new WorldPoint(3315, 3236, 0), 4)) {
             delay(1000);
             pressKey(KeyEvent.VK_ESCAPE);
-            if(client.getCameraPitch() != 512)
-                pressKey(KeyEvent.VK_UP, 2000);
+            client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(500);
             delay(500);
@@ -159,10 +158,10 @@ public class RCPlusMain implements Runnable {
             if(readyForAltar()) {
                 isIdle = false;
                 scheduledPointDelay(new Point(341, 228), 18);
-                delay(300);
-                scheduledPointDelay(new Point(782, 804), 3);
-                delay(300);
-                scheduledPointDelay(new Point(341, 228), 18);
+                delay(500);
+//                scheduledPointDelay(new Point(782, 804), 3);
+//                delay(300);
+//                scheduledPointDelay(new Point(341, 228), 18);
                 isIdle = true;
             } else {
                 isIdle = false;
@@ -186,16 +185,16 @@ public class RCPlusMain implements Runnable {
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
             delay(500);
-            changeCameraYaw(randomChangeCameraYawExceptWest());
+//            changeCameraYaw(randomChangeCameraYawExceptWest());
             setCameraZoom(896);
             delay(9000);
         }
     }
 
-    private List<Item> getInventoryItems() {
-        ItemContainer inventoryContainer = client.getItemContainer(InventoryID.INVENTORY);
-        return new ArrayList<>(Arrays.asList(inventoryContainer.getItems()));
-    }
+//    private List<Item> getInventoryItems() {
+//        ItemContainer inventoryContainer = client.getItemContainer(InventoryID.INVENTORY);
+//        return new ArrayList<>(Arrays.asList(inventoryContainer.getItems()));
+//    }
 
     private boolean isBankOpen() {
         return client.getWidget(WidgetInfo.BANK_CONTAINER) != null;
@@ -209,7 +208,7 @@ public class RCPlusMain implements Runnable {
     private boolean readyForAltar() {
         if(!isRingOfDuelingEquipped()) return false;
         try {
-            return getInventoryItems().stream()
+            return inventoryItems.stream()
                     .filter(item -> item.getId() == ItemID.RUNE_ESSENCE || item.getId() == ItemID.PURE_ESSENCE)
                     .count() >= 20;
         } catch (Exception e) {
@@ -251,12 +250,12 @@ public class RCPlusMain implements Runnable {
             delay(500);
         }
 
-        // withdraw ess
-        scheduledPointDelay(new Point(476, 721), 3);
-        delay(500);
-        // fill small pouch
-        scheduledPointDelay(new Point(782, 804), 3);
-        delay(500);
+//        // withdraw ess
+//        scheduledPointDelay(new Point(476, 721), 3);
+//        delay(500);
+//        // fill small pouch
+//        scheduledPointDelay(new Point(782, 804), 3);
+//        delay(500);
         // withdraw ess
         scheduledPointDelay(new Point(476, 721), 3);
         delay(500);
