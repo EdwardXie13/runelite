@@ -485,15 +485,17 @@ public class AgilityPlusMain implements Runnable {
             scheduledPointDelay(new Point(470, 759), 10);
             robot.delay(1500);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_FOURTH_ROOF, 4) && isIdle && client.getOculusOrbState() == 0) {
-            setCameraZoom(600);
+            setCameraZoom(255);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
-            panCameraToSeersFourthRoofGap();
+//            panCameraToSeersFourthRoofGap();
             robot.delay(500);
-            getWorldPointCoords(LocalPoint.fromWorld(client, new WorldPoint(2702, 3470, 3)));
-            robot.delay(500);
-            client.setOculusOrbState(0);
-            client.setOculusOrbNormalSpeed(12);
+//            getWorldPointCoords(LocalPoint.fromWorld(client, new WorldPoint(2702, 3470, 3)));
+//            robot.delay(500);
+//            client.setOculusOrbState(0);
+//            client.setOculusOrbNormalSpeed(12);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFourthRoofGap, 5);
+            robot.delay(7000);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_FOURTH_ROOF_RUN_POINT, 2) && isIdle) {
             setCameraZoom(896);
             client.setCameraPitchTarget(512);
@@ -539,11 +541,11 @@ public class AgilityPlusMain implements Runnable {
             client.setOculusOrbNormalSpeed(12);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_START) && isIdle) {
-            setCameraZoom(1004);
-            client.setCameraPitchTarget(47);
+            setCameraZoom(760);
+            client.setCameraPitchTarget(80);
             changeCameraYaw(1024);
             robot.delay(500);
-            scheduledPointDelay(new Point(496, 654), 10);
+            scheduledPointDelay(new Point(478, 666), 10);
             robot.delay(500);
         }
     }
