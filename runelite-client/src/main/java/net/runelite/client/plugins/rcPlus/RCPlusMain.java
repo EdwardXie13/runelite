@@ -113,7 +113,6 @@ public class RCPlusMain implements Runnable {
             pressKey(KeyEvent.VK_ESCAPE);
             delay(3000);
         } else if(getRegionID() == 13106 && isNearWorldTile(new WorldPoint(3315, 3236, 0), 4)) {
-            delay(1000);
             pressKey(KeyEvent.VK_ESCAPE);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
@@ -135,13 +134,15 @@ public class RCPlusMain implements Runnable {
             scheduledPointDelay(new Point(627, 278), 12);
             delay(2000);
             isIdle = true;
-        } else if(isAtWorldPoint(RCPlusWorldPoints.FIRE_ALTAR_MYSTERIOUS_RUINS_TWO) && isIdle) {
-            isIdle = false;
-            delay(500);
-            scheduledPointDelay(new Point(331, 815), 12);
-            delay(2000);
-            isIdle = true;
-        } else if(isNearWorldTile(RCPlusWorldPoints.FIRE_ALTAR_ENTRANCE, 2) && isIdle) {
+        }
+//        else if(isAtWorldPoint(RCPlusWorldPoints.FIRE_ALTAR_MYSTERIOUS_RUINS_TWO) && isIdle) {
+//            isIdle = false;
+//            delay(500);
+//            scheduledPointDelay(new Point(331, 815), 12);
+//            delay(2000);
+//            isIdle = true;
+//        }
+        else if(isNearWorldTile(RCPlusWorldPoints.FIRE_ALTAR_ENTRANCE, 2) && isIdle) {
             changeCameraYaw(1024);
             setCameraZoom(896);
             delay(500);
@@ -239,7 +240,10 @@ public class RCPlusMain implements Runnable {
     private void bankingSequence() {
         // cheese by always having slot 1 empty so the bound runes go there
         // deposit non pouches (click slot 1)
-        scheduledPointDelay(new Point(782, 768), 3);
+//        scheduledPointDelay(new Point(782, 768), 3);
+
+        scheduledPointDelay(new Point(540, 827), 3);
+
         delay(500);
 
         //does have duel ring?
