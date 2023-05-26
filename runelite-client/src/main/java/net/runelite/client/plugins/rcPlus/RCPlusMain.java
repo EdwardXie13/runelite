@@ -192,11 +192,6 @@ public class RCPlusMain implements Runnable {
         }
     }
 
-//    private List<Item> getInventoryItems() {
-//        ItemContainer inventoryContainer = client.getItemContainer(InventoryID.INVENTORY);
-//        return new ArrayList<>(Arrays.asList(inventoryContainer.getItems()));
-//    }
-
     private boolean isBankOpen() {
         return client.getWidget(WidgetInfo.BANK_CONTAINER) != null;
     }
