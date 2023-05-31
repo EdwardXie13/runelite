@@ -111,7 +111,7 @@ public class RCPlusMain implements Runnable {
             scheduledPointDelay(new Point(899, 924), 6);
             delay(500);
             pressKey(KeyEvent.VK_ESCAPE);
-            delay(3000);
+            delay(5000);
         } else if(getRegionID() == 13106 && isNearWorldTile(new WorldPoint(3315, 3236, 0), 4)) {
             pressKey(KeyEvent.VK_ESCAPE);
             client.setCameraPitchTarget(512);
@@ -238,15 +238,14 @@ public class RCPlusMain implements Runnable {
 //        scheduledPointDelay(new Point(782, 768), 3);
 
         scheduledPointDelay(new Point(540, 827), 3);
-
-        delay(500);
+        delay(700);
 
         //does have duel ring?
         if(!isRingOfDuelingEquipped()) {
             scheduledPointDelay(new Point(428, 721), 3);
-            delay(500);
+            delay(700);
             scheduledPointDelay(new Point(782, 768), 3);
-            delay(500);
+            delay(700);
         }
 
 //        // withdraw ess
@@ -257,7 +256,7 @@ public class RCPlusMain implements Runnable {
 //        delay(500);
         // withdraw ess
         scheduledPointDelay(new Point(476, 721), 3);
-        delay(500);
+        delay(700);
         pressKey(KeyEvent.VK_ESCAPE);
         delay(1000);
         isIdle = true;
