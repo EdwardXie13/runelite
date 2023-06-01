@@ -3,6 +3,7 @@ package net.runelite.client.plugins.rcPlusBloods;
 import com.google.common.collect.ImmutableSet;
 import net.runelite.api.Client;
 import net.runelite.api.GameObject;
+import net.runelite.api.Item;
 import net.runelite.api.Perspective;
 import net.runelite.api.ScriptID;
 import net.runelite.api.coords.LocalPoint;
@@ -11,13 +12,13 @@ import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
 
-import java.awt.AWTException;
-import java.awt.Color;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class RCPlusBloodsMain implements Runnable {
@@ -33,6 +34,8 @@ public class RCPlusBloodsMain implements Runnable {
             6971, // altar outcrop region
             6715 // blood altar
     );
+
+    public static List<Item> inventoryItems = new ArrayList<>();
 
     Thread t;
 
@@ -76,9 +79,9 @@ public class RCPlusBloodsMain implements Runnable {
             setCameraZoom(290);
             delay(250);
             if(RCPlusBloodsPlugin.denseRunestoneNorthMineable)
-                scheduledPointDelay(new Point(575, 399), 12);
+                scheduledPointDelay(new Point(575, 399), 10);
             else
-                scheduledPointDelay(new Point(563, 910), 12);
+                scheduledPointDelay(new Point(563, 910), 10);
             delay(1000);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.SOUTH_RUNESTONE_INSIDE) && RCPlusBloodsPlugin.denseRunestoneNorthMineable && (determineStatus()==STATUS.NOT_READY || determineStatus()==STATUS.RETURN_TO_ROCK || determineStatus()==STATUS.READY_TO_BLOOD2) && hasEnoughStamina(5) && isIdle) {
             System.out.println("click north");
@@ -87,9 +90,9 @@ public class RCPlusBloodsMain implements Runnable {
             setCameraZoom(286);
             delay(250);
             if(RCPlusBloodsPlugin.denseRunestoneSouthMineable)
-                scheduledPointDelay(new Point(574, 662), 12);
+                scheduledPointDelay(new Point(574, 662), 10);
             else
-                scheduledPointDelay(new Point(561, 158), 12);
+                scheduledPointDelay(new Point(561, 158), 10);
             delay(1000);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.NORTH_RUNESTONE) && determineStatus()==STATUS.READY_TO_VENERATE && hasEnoughStamina(60) && isIdle) {
             System.out.println("click rock");
@@ -121,7 +124,7 @@ public class RCPlusBloodsMain implements Runnable {
             changeCameraYaw(0);
             setCameraZoom(896);
             delay(500);
-            scheduledPointDelay(new Point(525, 303), 12);
+            scheduledPointDelay(new Point(525, 303), 10);
             delay(2500);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.AFTER_ROCKS) && determineStatus()==STATUS.READY_TO_VENERATE && hasEnoughStamina(17) && isIdle) {
             System.out.println("run to venerate");
@@ -202,8 +205,8 @@ public class RCPlusBloodsMain implements Runnable {
             changeCameraYaw(0);
             setCameraZoom(278);
             delay(500);
-            scheduledPointDelay(new Point(53, 434), 12);
-            delay(5000);
+            scheduledPointDelay(new Point(53, 434), 10);
+            delay(4000);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.BLOOD_ALTAR_BIND_ESS) && isIdle) {
             if(determineStatus()==STATUS.READY_TO_BLOOD) {
                 System.out.println("bind frags");
@@ -235,10 +238,10 @@ public class RCPlusBloodsMain implements Runnable {
             }
             isIdle = true;
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.BEFORE_RETURN_ROCKSLIDE) && isIdle) {
-            delay(1000);
+            delay(1200);
             changeCameraYaw(0);
             setCameraZoom(896);
-            delay(500);
+            delay(700);
             scheduledPointDelay(new Point(665, 510), 10);
             delay(1500);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.AFTER_RETURN_ROCKSLIDE) && hasEnoughStamina(15) && isIdle) {
@@ -265,38 +268,39 @@ public class RCPlusBloodsMain implements Runnable {
     }
 
     private STATUS determineStatus() {
-        // fragments 0, 0, 1
-        // dark block 130, 122, 112
-        // dense block 153, 152, 154
-        // empty 62, 53, 41
-        try {
-            // first slot empty, last slot block
-            if((MouseCoordCalculation.getPixel(782, 768).equals(new Color(62, 53, 41)) || MouseCoordCalculation.getPixel(782, 768).equals(new Color(43, 43, 43))) &&
-                    MouseCoordCalculation.getPixel(908, 984).equals(new Color(130, 122, 112)))
-                return STATUS.CHISEL_AT_BLOOD;
-            // first slot empty, last slot empty
-            else if((MouseCoordCalculation.getPixel(782, 768).equals(new Color(62, 53, 41)) || MouseCoordCalculation.getPixel(782, 768).equals(new Color(43, 43, 43))) &&
-                    (MouseCoordCalculation.getPixel(908, 984).equals(new Color(62, 53, 41)) || MouseCoordCalculation.getPixel(908, 984).equals(new Color(43, 43, 43))))
-                return STATUS.RETURN_TO_ROCK;
-            //first slot frags, last slot block
-            else if(MouseCoordCalculation.getPixel(782, 768).equals(new Color(0, 0, 1)) && MouseCoordCalculation.getPixel(908, 984).equals(new Color(130, 122, 112)))
-                return STATUS.READY_TO_BLOOD;
-            //first slot frags, last slot empty
-            else if(MouseCoordCalculation.getPixel(782, 768).equals(new Color(0, 0, 1)) &&
-                    MouseCoordCalculation.getPixel(908, 984).equals(new Color(62, 53, 41)) || MouseCoordCalculation.getPixel(908, 984).equals(new Color(43, 43, 43)))
-                return STATUS.READY_TO_BLOOD2;
-            // last slot check for full inv
-            else if(MouseCoordCalculation.getPixel(908, 984).equals(new Color(153, 152, 154)))
-                return STATUS.READY_TO_VENERATE;
-            //first slot has block
-            else if(MouseCoordCalculation.getPixel(782, 768).equals(new Color(130, 122, 112)))
-                return STATUS.READY_TO_RUN_BACK;
-            // last slot empty
-            else if(MouseCoordCalculation.getPixel(908, 984).equals(new Color(62, 53, 41)) || MouseCoordCalculation.getPixel(908, 984).equals(new Color(43, 43, 43)))
-                return STATUS.NOT_READY;
-        } catch (AWTException e) {
-            e.printStackTrace();
+        // first slot empty, last slot block
+        if(inventoryItems.get(0).equals(new Item(-1, 0)) && inventoryItems.get(27).equals(new Item(13446, 1))) {
+            return STATUS.CHISEL_AT_BLOOD;
         }
+        // first slot empty, last slot empty
+        else if(inventoryItems.get(0).equals(new Item(-1, 0)) && inventoryItems.get(27).equals(new Item(-1, 0))) {
+            return STATUS.RETURN_TO_ROCK;
+        }
+        // first slot blocks, last slot blocks
+        else if(inventoryItems.get(0).equals(new Item(13446, 1)) && inventoryItems.get(27).equals(new Item(13446, 1))) {
+            return STATUS.READY_TO_RUN_BACK;
+        }
+        // first slot frags, last slot block
+        else if(inventoryItems.get(0).equals(new Item(7938, 1)) && inventoryItems.get(27).equals(new Item(13446, 1))) {
+            return STATUS.READY_TO_BLOOD;
+        }
+        // first slot frags, last slot empty
+        else if(inventoryItems.get(0).equals(new Item(7938, 1)) && inventoryItems.get(27).equals(new Item(-1, 0))) {
+            return STATUS.READY_TO_BLOOD2;
+        }
+        // first and last slot check for full inv
+        else if(inventoryItems.get(0).equals(new Item(13445, 1)) && inventoryItems.get(27).equals(new Item(13445, 1))) {
+            return STATUS.READY_TO_VENERATE;
+        }
+        // first frags and last slot has block
+        else if(inventoryItems.get(0).equals(new Item(7938, 1)) && inventoryItems.get(27).equals(new Item(13445, 1))) {
+            return STATUS.READY_TO_VENERATE;
+        }
+        // last slot empty
+        else if(inventoryItems.get(27).equals(new Item(-1, 0))) {
+            return STATUS.NOT_READY;
+        }
+
         return STATUS.UNDEFINED;
     }
 
@@ -312,22 +316,16 @@ public class RCPlusBloodsMain implements Runnable {
     }
 
     private void chisel() {
-        try {
-            // mouse blocks scanning
-            while(MouseCoordCalculation.getPixel(908, 984).equals(new Color(130, 122, 112)) || MouseCoordCalculation.getPixel(866, 984).equals(new Color(130, 122, 112))) {
-                scheduledPointDelay(new Point(908, 948), 4);
-                delay(20);
-                scheduledPointDelay(new Point(908, 984), 4);
-                delay(20);
-            }
-        } catch (AWTException e) {
-            e.printStackTrace();
-            return;
+        while(inventoryItems.get(27).equals(new Item(13446, 1))) {
+            scheduledPointDelay(new Point(908, 948), 4);
+            delay(13);
+            scheduledPointDelay(new Point(908, 984), 4);
+            delay(13);
         }
         scheduledPointDelay(new Point(908, 948), 4);
-        delay(20);
+        delay(13);
         scheduledPointDelay(new Point(908, 984), 4);
-        delay(20);
+        delay(13);
 
         System.out.println("done chisel");
         delay(500);
@@ -459,6 +457,6 @@ public class RCPlusBloodsMain implements Runnable {
         long end = System.currentTimeMillis();
         double sec = (end - start) / 1000F;
 
-        return sec >= 60;
+        return sec >= 90;
     }
 }
