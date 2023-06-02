@@ -75,6 +75,7 @@ public class RCPlusBloodsMain implements Runnable {
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.NORTH_RUNESTONE) && RCPlusBloodsPlugin.denseRunestoneSouthMineable && (determineStatus()==STATUS.NOT_READY || determineStatus()==STATUS.RETURN_TO_ROCK || determineStatus()==STATUS.READY_TO_BLOOD2) && hasEnoughStamina(5) && isIdle) {
             System.out.println("click south");
             isIdle = false;
+            client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(290);
             delay(250);
@@ -86,6 +87,7 @@ public class RCPlusBloodsMain implements Runnable {
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.SOUTH_RUNESTONE_INSIDE) && RCPlusBloodsPlugin.denseRunestoneNorthMineable && (determineStatus()==STATUS.NOT_READY || determineStatus()==STATUS.RETURN_TO_ROCK || determineStatus()==STATUS.READY_TO_BLOOD2) && hasEnoughStamina(5) && isIdle) {
             System.out.println("click north");
             isIdle = false;
+            client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(286);
             delay(250);
@@ -97,6 +99,7 @@ public class RCPlusBloodsMain implements Runnable {
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.NORTH_RUNESTONE) && determineStatus()==STATUS.READY_TO_VENERATE && hasEnoughStamina(60) && isIdle) {
             System.out.println("click rock");
             isIdle = false;
+            client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(650);
             delay(250);
@@ -144,7 +147,7 @@ public class RCPlusBloodsMain implements Runnable {
             System.out.println("climb the rock");
             changeCameraYaw(0);
             setCameraZoom(896);
-            delay(500);
+            delay(1500);
             scheduledPointDelay(new Point(497, 731), 12);
             delay(2500);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.BEFORE_ROCKS) && (determineStatus()==STATUS.NOT_READY || determineStatus()==STATUS.READY_TO_BLOOD2) && hasEnoughStamina(15) && isIdle) {
@@ -204,7 +207,7 @@ public class RCPlusBloodsMain implements Runnable {
             isIdle = false;
             changeCameraYaw(0);
             setCameraZoom(278);
-            delay(500);
+            delay(1500);
             scheduledPointDelay(new Point(53, 434), 10);
             delay(4000);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.BLOOD_ALTAR_BIND_ESS) && isIdle) {
