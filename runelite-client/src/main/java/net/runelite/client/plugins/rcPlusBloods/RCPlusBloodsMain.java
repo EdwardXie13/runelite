@@ -112,6 +112,7 @@ public class RCPlusBloodsMain implements Runnable {
         } else if(isNearWorldTile(RCPlusBloodsWorldPoints.SOUTH_RUNESTONE_OUTSIDE, 2) && determineStatus()==STATUS.READY_TO_VENERATE && hasEnoughStamina(60) && isIdle) {
             System.out.println("click rock");
             isIdle = false;
+            client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(650);
             delay(250);
@@ -124,6 +125,7 @@ public class RCPlusBloodsMain implements Runnable {
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.BEFORE_ROCKS) && determineStatus()==STATUS.READY_TO_VENERATE && isIdle) {
             System.out.println("climb rock");
             isIdle = false;
+            client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(896);
             delay(500);
@@ -132,6 +134,7 @@ public class RCPlusBloodsMain implements Runnable {
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.AFTER_ROCKS) && determineStatus()==STATUS.READY_TO_VENERATE && hasEnoughStamina(17) && isIdle) {
             System.out.println("run to venerate");
             isIdle = false;
+            client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(800);
             delay(500);
@@ -145,6 +148,7 @@ public class RCPlusBloodsMain implements Runnable {
             delay(1500);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.AFTER_ROCKS) && (determineStatus()==STATUS.NOT_READY || determineStatus()==STATUS.READY_TO_BLOOD2)) {
             System.out.println("climb the rock");
+            client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(896);
             delay(1500);
@@ -153,6 +157,7 @@ public class RCPlusBloodsMain implements Runnable {
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.BEFORE_ROCKS) && (determineStatus()==STATUS.NOT_READY || determineStatus()==STATUS.READY_TO_BLOOD2) && hasEnoughStamina(15) && isIdle) {
             System.out.println("run to runestone");
             isIdle = false;
+            client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(650);
             delay(500);
@@ -173,6 +178,7 @@ public class RCPlusBloodsMain implements Runnable {
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.VENERATE_ALTAR_TILE) && determineStatus()==STATUS.READY_TO_VENERATE && isIdle) {
             System.out.println("venerate rocks");
             isIdle = false;
+            client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(720);
             delay(500);
@@ -182,6 +188,7 @@ public class RCPlusBloodsMain implements Runnable {
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.VENERATE_ALTAR_TILE) && determineStatus()==STATUS.READY_TO_RUN_BACK && hasEnoughStamina(17) && isIdle) {
             System.out.println("run back to rocks");
             isIdle = false;
+            client.setCameraPitchTarget(512);
             panCameraOneDirection(KeyEvent.VK_D, 3000);
             panCameraOneDirection(KeyEvent.VK_S, 400);
             delay(500);
@@ -195,6 +202,7 @@ public class RCPlusBloodsMain implements Runnable {
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.VENERATE_ALTAR_TILE) && determineStatus()==STATUS.READY_TO_BLOOD && hasEnoughStamina(60) && isIdle) {
             System.out.println("to the blood altar");
             isIdle = false;
+            client.setCameraPitchTarget(512);
             panCameraOneDirection(KeyEvent.VK_S, 3000);
             delay(500);
             getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusBloodsWorldPoints.RUN_TO_BLOOD_ALTAR_SPOT));
@@ -205,6 +213,7 @@ public class RCPlusBloodsMain implements Runnable {
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.RUN_TO_BLOOD_ALTAR) && determineStatus()==STATUS.READY_TO_BLOOD && isIdle) {
             System.out.println("bind first inventory");
             isIdle = false;
+            client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(278);
             delay(1500);
@@ -242,12 +251,15 @@ public class RCPlusBloodsMain implements Runnable {
             isIdle = true;
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.BEFORE_RETURN_ROCKSLIDE) && isIdle) {
             delay(1200);
+            client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(896);
             delay(700);
             scheduledPointDelay(new Point(665, 510), 10);
             delay(1500);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.AFTER_RETURN_ROCKSLIDE) && hasEnoughStamina(15) && isIdle) {
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
             setCameraZoom(700);
             delay(500);
             panCameraOneDirection(KeyEvent.VK_D, 600);
