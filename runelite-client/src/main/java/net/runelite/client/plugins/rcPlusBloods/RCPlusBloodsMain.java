@@ -19,6 +19,7 @@ import java.awt.Shape;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class RCPlusBloodsMain implements Runnable {
@@ -72,6 +73,10 @@ public class RCPlusBloodsMain implements Runnable {
             pressKey(KeyEvent.VK_SPACE);
             delay(500);
             isIdle = true;
+        } else if(turnRunOn()) {
+            delay(500);
+            scheduledPointDelay(new Point(804, 157), 4);
+            delay(500);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.NORTH_RUNESTONE) && RCPlusBloodsPlugin.denseRunestoneSouthMineable && (determineStatus()==STATUS.NOT_READY || determineStatus()==STATUS.RETURN_TO_ROCK || determineStatus()==STATUS.READY_TO_BLOOD2) && hasEnoughStamina(5) && isIdle) {
             System.out.println("click south");
             isIdle = false;
@@ -138,6 +143,7 @@ public class RCPlusBloodsMain implements Runnable {
             changeCameraYaw(0);
             setCameraZoom(800);
             delay(500);
+            // correct this as the camera moves diagonally because of the RCPlus plugin
             panCameraOneDirection(KeyEvent.VK_W, 2100);
             panCameraOneDirection(KeyEvent.VK_A, 1900);
             delay(500);
@@ -276,6 +282,19 @@ public class RCPlusBloodsMain implements Runnable {
             client.setOculusOrbNormalSpeed(12);
             delay(500);
         }
+    }
+
+    private boolean turnRunOn() {
+        Widget runWidget = client.getWidget(10485789);
+
+        if(runWidget != null) {
+            // 1065 is on
+            // 1064 is off
+            int runWidgetSpriteId = runWidget.getSpriteId();
+            return runWidgetSpriteId == 1064;
+        }
+
+        return false;
     }
 
     private boolean hasEnoughStamina(int stamina) {
