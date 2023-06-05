@@ -18,6 +18,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
+import java.awt.*;
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,7 +50,7 @@ public class RCPlusBloodsPlugin extends Plugin {
     }
 
     @Subscribe
-    public void onGameTick(GameTick event) {
+    public void onGameTick(GameTick event) throws AWTException {
         lastRcExp = client.getSkillExperience(Skill.RUNECRAFT);
         toggleStatus();
         checkOculusReset();
@@ -60,7 +61,7 @@ public class RCPlusBloodsPlugin extends Plugin {
         return m.find() ? m.group(1) : "";
     }
 
-    private void toggleStatus() {
+    private void toggleStatus() throws AWTException {
         Widget chatboxInput = client.getWidget(WidgetInfo.CHATBOX_INPUT);
         String chatBoxMessage = stripTargetAnchors(chatboxInput.getText());
         if(chatBoxMessage == null) return;
