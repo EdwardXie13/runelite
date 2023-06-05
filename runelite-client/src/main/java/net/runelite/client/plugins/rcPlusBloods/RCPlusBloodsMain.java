@@ -298,7 +298,7 @@ public class RCPlusBloodsMain implements Runnable {
     }
 
     private boolean hasEnoughStamina(int stamina) {
-        return client.getEnergy() >= stamina;
+        return client.getEnergy()/100 >= stamina;
     }
 
     private STATUS determineStatus() {
