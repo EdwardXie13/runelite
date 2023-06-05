@@ -78,6 +78,7 @@ public class RCPlusBloodsMain implements Runnable {
         // BLOOD_ESSENCE = 26390;
         // BLOOD_ESSENCE_ACTIVE = 26392;
         else if(inventoryContains(26390) && !inventoryContains(26392) && determineStatus()==STATUS.READY_TO_BLOOD2 && isIdle) {
+            System.out.println("activate blood essence");
             robot.delay(500);
             scheduledPointDelay(new Point(866, 984), 4);
             robot.delay(500);
