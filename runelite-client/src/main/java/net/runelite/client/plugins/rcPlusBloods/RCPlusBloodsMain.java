@@ -68,50 +68,50 @@ public class RCPlusBloodsMain implements Runnable {
     private void doBloodRunes() {
         if(checkLevelUp()) {
             pressKey(KeyEvent.VK_SPACE);
-            delay(500);
+            robot.delay(500);
             isIdle = true;
         } else if(turnRunOn()) {
-            delay(500);
+            robot.delay(500);
             scheduledPointDelay(new Point(804, 157), 4);
-            delay(500);
+            robot.delay(500);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.NORTH_RUNESTONE) && RCPlusBloodsPlugin.denseRunestoneSouthMineable && (determineStatus()==STATUS.NOT_READY || determineStatus()==STATUS.RETURN_TO_ROCK || determineStatus()==STATUS.READY_TO_BLOOD2) && hasEnoughStamina(5) && isIdle) {
             System.out.println("click south");
             isIdle = false;
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(290);
-            delay(250);
+            robot.delay(250);
             if(RCPlusBloodsPlugin.denseRunestoneNorthMineable)
                 scheduledPointDelay(new Point(575, 399), 10);
             else
                 scheduledPointDelay(new Point(563, 910), 10);
-            delay(1000);
+            robot.delay(1000);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.SOUTH_RUNESTONE_INSIDE) && RCPlusBloodsPlugin.denseRunestoneNorthMineable && (determineStatus()==STATUS.NOT_READY || determineStatus()==STATUS.RETURN_TO_ROCK || determineStatus()==STATUS.READY_TO_BLOOD2) && hasEnoughStamina(5) && isIdle) {
             System.out.println("click north");
             isIdle = false;
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(286);
-            delay(250);
+            robot.delay(250);
             if(RCPlusBloodsPlugin.denseRunestoneSouthMineable)
                 scheduledPointDelay(new Point(574, 662), 10);
             else
                 scheduledPointDelay(new Point(561, 158), 10);
-            delay(1000);
+            robot.delay(1000);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.NORTH_RUNESTONE) && determineStatus()==STATUS.READY_TO_VENERATE && hasEnoughStamina(60) && isIdle) {
             System.out.println("click rock N");
             isIdle = false;
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(650);
-            delay(500);
+            robot.delay(500);
             panCameraOneDirection(KeyEvent.VK_W, 1000);
-            delay(500);
+            robot.delay(500);
             getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusBloodsWorldPoints.BEFORE_ROCKS));
-            delay(500);
+            robot.delay(500);
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
-            delay(2000);
+            robot.delay(2000);
             isIdle = true;
         } else if(isNearWorldTile(RCPlusBloodsWorldPoints.SOUTH_RUNESTONE_OUTSIDE, 2) && determineStatus()==STATUS.READY_TO_VENERATE && hasEnoughStamina(60) && isIdle) {
             System.out.println("click rock S");
@@ -119,66 +119,66 @@ public class RCPlusBloodsMain implements Runnable {
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(650);
-            delay(500);
+            robot.delay(500);
             panCameraOneDirection(KeyEvent.VK_W, 1400);
-            delay(500);
+            robot.delay(500);
             getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusBloodsWorldPoints.BEFORE_ROCKS));
-            delay(500);
+            robot.delay(500);
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
-            delay(2000);
+            robot.delay(2000);
             isIdle = true;
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.BEFORE_ROCKS) && determineStatus()==STATUS.READY_TO_VENERATE && isIdle) {
             System.out.println("climb rock");
-            delay(1500);
+            robot.delay(1500);
             isIdle = false;
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(896);
-            delay(500);
+            robot.delay(500);
             scheduledPointDelay(new Point(525, 303), 10);
-            delay(2500);
+            robot.delay(2500);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.AFTER_ROCKS) && determineStatus()==STATUS.READY_TO_VENERATE && hasEnoughStamina(17) && isIdle) {
             System.out.println("run to venerate");
             isIdle = false;
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(800);
-            delay(500);
+            robot.delay(500);
             // correct this as the camera moves diagonally because of the RCPlus plugin
             panCameraOneDirection(KeyEvent.VK_W, 2100);
             panCameraOneDirection(KeyEvent.VK_A, 1900);
-            delay(500);
+            robot.delay(500);
             getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusBloodsWorldPoints.VENERATE_ALTAR_TILE));
-            delay(500);
+            robot.delay(500);
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
-            delay(1500);
+            robot.delay(1500);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.AFTER_ROCKS) && (determineStatus()==STATUS.NOT_READY || determineStatus()==STATUS.READY_TO_BLOOD2)) {
             System.out.println("climb the rock");
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(896);
-            delay(1500);
+            robot.delay(1500);
             scheduledPointDelay(new Point(497, 731), 12);
-            delay(2500);
+            robot.delay(2500);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.BEFORE_ROCKS) && (determineStatus()==STATUS.NOT_READY || determineStatus()==STATUS.READY_TO_BLOOD2) && hasEnoughStamina(15) && isIdle) {
             System.out.println("run to runestone");
             isIdle = false;
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(650);
-            delay(500);
+            robot.delay(500);
             if(RCPlusBloodsPlugin.denseRunestoneNorthMineable) {
                 panCameraOneDirection(KeyEvent.VK_S, 1000);
-                delay(500);
+                robot.delay(500);
                 getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusBloodsWorldPoints.NORTH_RUNESTONE));
             } else {
                 panCameraOneDirection(KeyEvent.VK_S, 1400);
-                delay(500);
+                robot.delay(500);
                 getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusBloodsWorldPoints.SOUTH_RUNESTONE_INSIDE));
             }
-            delay(500);
+            robot.delay(500);
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
             // if north up, pan north
@@ -189,9 +189,9 @@ public class RCPlusBloodsMain implements Runnable {
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(720);
-            delay(500);
+            robot.delay(500);
             scheduledPointDelay(new Point(181, 385), 14);
-            delay(2500);
+            robot.delay(2500);
             isIdle = true;
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.VENERATE_ALTAR_TILE) && determineStatus()==STATUS.READY_TO_RUN_BACK && hasEnoughStamina(17) && isIdle) {
             System.out.println("run back to rocks");
@@ -199,9 +199,9 @@ public class RCPlusBloodsMain implements Runnable {
             client.setCameraPitchTarget(512);
             panCameraOneDirection(KeyEvent.VK_D, 3000);
             panCameraOneDirection(KeyEvent.VK_S, 400);
-            delay(500);
+            robot.delay(500);
             getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusBloodsWorldPoints.AFTER_ROCKS));
-            delay(500);
+            robot.delay(500);
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
             chisel();
@@ -212,77 +212,77 @@ public class RCPlusBloodsMain implements Runnable {
             isIdle = false;
             client.setCameraPitchTarget(512);
             panCameraOneDirection(KeyEvent.VK_S, 3000);
-            delay(500);
+            robot.delay(500);
             getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusBloodsWorldPoints.RUN_TO_BLOOD_ALTAR_SPOT));
-            delay(500);
+            robot.delay(500);
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
-            delay(1500);
+            robot.delay(1500);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.RUN_TO_BLOOD_ALTAR) && determineStatus()==STATUS.READY_TO_BLOOD && isIdle) {
             System.out.println("bind first inventory");
             isIdle = false;
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(278);
-            delay(1500);
+            robot.delay(1500);
             scheduledPointDelay(new Point(53, 434), 10);
-            delay(4000);
+            robot.delay(4000);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.BLOOD_ALTAR_BIND_ESS) && isIdle) {
             if(determineStatus()==STATUS.READY_TO_BLOOD) {
                 System.out.println("bind frags");
                 scheduledPointDelay(new Point(174, 333), 14);
-                delay(1000);
+                robot.delay(1000);
             } else if(determineStatus()==STATUS.READY_TO_BLOOD2) {
                 System.out.println("bind frags 2");
                 scheduledPointDelay(new Point(174, 333), 14);
-                delay(1000);
+                robot.delay(1000);
             } else if(determineStatus()==STATUS.CHISEL_AT_BLOOD) {
                 System.out.println("chisel blocks");
                 changeCameraYaw(0);
                 setCameraZoom(684);
-                delay(500);
+                robot.delay(500);
                 chisel();
-                delay(500);
+                robot.delay(500);
             } else if(determineStatus()==STATUS.RETURN_TO_ROCK && hasEnoughStamina(30)) {
                 System.out.println("run back to slide");
                 setCameraZoom(700);
-                delay(500);
+                robot.delay(500);
                 panCameraOneDirection(KeyEvent.VK_W, 1700);
                 panCameraOneDirection(KeyEvent.VK_A, 1400);
-                delay(500);
+                robot.delay(500);
                 getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusBloodsWorldPoints.BEFORE_RETURN_ROCKSLIDE));
-                delay(500);
+                robot.delay(500);
                 client.setOculusOrbState(0);
                 client.setOculusOrbNormalSpeed(12);
-                delay(2000);
+                robot.delay(2000);
             }
             isIdle = true;
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.BEFORE_RETURN_ROCKSLIDE) && isIdle) {
-            delay(1200);
+            robot.delay(1200);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(896);
-            delay(700);
+            robot.delay(700);
             scheduledPointDelay(new Point(665, 510), 10);
-            delay(1500);
+            robot.delay(1500);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.AFTER_RETURN_ROCKSLIDE) && hasEnoughStamina(15) && isIdle) {
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(700);
-            delay(500);
+            robot.delay(500);
             panCameraOneDirection(KeyEvent.VK_D, 600);
             if(RCPlusBloodsPlugin.denseRunestoneNorthMineable) {
-                delay(500);
+                robot.delay(500);
                 getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusBloodsWorldPoints.NORTH_RUNESTONE));
             } else {
                 panCameraOneDirection(KeyEvent.VK_S, 200);
-                delay(500);
+                robot.delay(500);
                 getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusBloodsWorldPoints.SOUTH_RUNESTONE_INSIDE));
             }
-            delay(500);
+            robot.delay(500);
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
-            delay(500);
+            robot.delay(500);
         }
     }
 
@@ -354,17 +354,17 @@ public class RCPlusBloodsMain implements Runnable {
     private void chisel() {
         while(inventoryItems.get(27).equals(new Item(13446, 1))) {
             scheduledPointDelay(new Point(908, 948), 4);
-            delay(13);
+            robot.delay(13);
             scheduledPointDelay(new Point(908, 984), 4);
-            delay(13);
+            robot.delay(13);
         }
         scheduledPointDelay(new Point(908, 948), 4);
-        delay(13);
+        robot.delay(13);
         scheduledPointDelay(new Point(908, 984), 4);
-        delay(13);
+        robot.delay(13);
 
         System.out.println("done chisel");
-        delay(500);
+        robot.delay(500);
     }
 
     private void panCameraOneDirection(int keyEvent, int ms) {
@@ -411,13 +411,6 @@ public class RCPlusBloodsMain implements Runnable {
 
     private void setCameraZoom(int zoom) {
         clientThread.invokeLater(() -> client.runScript(ScriptID.CAMERA_DO_ZOOM, zoom, zoom));
-    }
-
-    private void delay(int ms) {
-        try {
-            Thread.sleep(ms);
-        } catch (Exception e) {
-            e.getStackTrace(); }
     }
 
     private boolean checkLevelUp() {
@@ -485,7 +478,7 @@ public class RCPlusBloodsMain implements Runnable {
         System.out.println("idle for too long, reset");
         isIdle = true;
         resetOculusOrb = true;
-        delay(200);
+        robot.delay(200);
         start = System.currentTimeMillis();
     }
 
