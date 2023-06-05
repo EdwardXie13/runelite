@@ -11,6 +11,6 @@ void loop() {
   {
     inByte = Serial.read();
     Mouse.click();
-    delay(200);
+    delay(150);
   }
 }
