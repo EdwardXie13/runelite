@@ -74,6 +74,13 @@ public class RCPlusBloodsMain implements Runnable {
             robot.delay(500);
             scheduledPointDelay(new Point(804, 157), 4);
             robot.delay(500);
+        }
+        // BLOOD_ESSENCE = 26390;
+        // BLOOD_ESSENCE_ACTIVE = 26392;
+        else if(inventoryContains(26390) && !inventoryContains(26392) && determineStatus()==STATUS.READY_TO_BLOOD2 && isIdle) {
+            robot.delay(500);
+            scheduledPointDelay(new Point(866, 984), 4);
+            robot.delay(500);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.NORTH_RUNESTONE) && RCPlusBloodsPlugin.denseRunestoneSouthMineable && (determineStatus()==STATUS.NOT_READY || determineStatus()==STATUS.RETURN_TO_ROCK || determineStatus()==STATUS.READY_TO_BLOOD2) && hasEnoughStamina(5) && isIdle) {
             System.out.println("click south");
             isIdle = false;
@@ -299,13 +306,22 @@ public class RCPlusBloodsMain implements Runnable {
         return false;
     }
 
+    private boolean inventoryContains(int id) {
+        return inventoryItems.stream().anyMatch(
+                items -> items.getId() == id
+        );
+    }
+
     private boolean hasEnoughStamina(int stamina) {
         return client.getEnergy()/100 >= stamina;
     }
 
     private STATUS determineStatus() {
+        if(inventoryItems.size() != 28) {
+            return STATUS.NOT_READY;
+        }
         // first slot empty, last slot block
-        if(inventoryItems.get(0).equals(new Item(-1, 0)) && inventoryItems.get(27).equals(new Item(13446, 1))) {
+        else if(inventoryItems.get(0).equals(new Item(-1, 0)) && inventoryItems.get(27).equals(new Item(13446, 1))) {
             return STATUS.CHISEL_AT_BLOOD;
         }
         // first slot empty, last slot empty
