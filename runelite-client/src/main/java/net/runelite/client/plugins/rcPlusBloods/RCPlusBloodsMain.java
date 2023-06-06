@@ -10,6 +10,7 @@ import net.runelite.api.ScriptID;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
 
@@ -20,9 +21,6 @@ import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.Shape;
 import java.awt.event.KeyEvent;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -76,7 +74,7 @@ public class RCPlusBloodsMain implements Runnable {
 
     private void doBloodRunes() {
         if(checkLevelUp()) {
-            pressKey(KeyEvent.VK_SPACE);
+            pressKey(KeyEvent.VK_SPACE, 100);
             robot.delay(500);
             isIdle = true;
         } else if(turnRunOn() && hasEnoughStamina(5)) {
@@ -246,11 +244,10 @@ public class RCPlusBloodsMain implements Runnable {
             robot.delay(4000);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.BLOOD_ALTAR_BIND_ESS) && isIdle) {
             if(closeToLogout()) {
-                try {
-                    resetLoginTimer();
-                } catch (Exception e) {
-                    System.out.println("reset nerd time error");
-                }
+                resetLoginTimerByWorldHopping();
+                changeCameraYaw(0);
+                setCameraZoom(684);
+                robot.delay(1500);
             } else if(determineStatus()==STATUS.READY_TO_BLOOD) {
                 System.out.println("bind frags");
                 scheduledPointDelay(new Point(174, 333), 14);
@@ -462,13 +459,6 @@ public class RCPlusBloodsMain implements Runnable {
         return !levelUpMessage.isSelfHidden();
     }
 
-    private void pressKey(int key) {
-        KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key);
-        this.client.getCanvas().dispatchEvent(keyPress);
-        KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key);
-        this.client.getCanvas().dispatchEvent(keyRelease);
-    }
-
     private void pressKey(int key, int ms) {
         KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key);
         this.client.getCanvas().dispatchEvent(keyPress);
@@ -533,36 +523,49 @@ public class RCPlusBloodsMain implements Runnable {
         return sec >= 90;
     }
 
-    private void resetLoginTimer() throws IOException {
-        scheduledPointDelay(new Point(843, 1022), 4);
+    private void resetLoginTimerByWorldHopping() {
         robot.delay(1000);
+        if(client.getWorld() == 338) {
+            worldHop(KeyEvent.VK_RIGHT);
+        } else { // world 339
+            worldHop(KeyEvent.VK_LEFT);
+        }
 
-        scheduledPointDelay(new Point(843, 970), 4);
-        robot.delay(1000);
-
-        scheduledPointDelay(new Point(560, 316), 4);
-        robot.delay(1000);
-
-        // type password
-        client.setPassword(Files.readString(Paths.get("password.env")));
-        robot.delay(1000);
-
-        pressKey(KeyEvent.VK_ENTER);
-        robot.delay(1000);
-
-        // wait until logged in
         while(client.getGameState() != GameState.LOGGED_IN) {
             robot.delay(1000);
         }
-        robot.delay(2000);
+        robot.delay(10000);
 
-        System.out.println("click play");
-        scheduledPointDelay(new Point(485, 365), 4);
-        robot.delay(3000);
+        while(client.getGameState() == GameState.LOGGED_IN && !client.getWidget(WidgetInfo.INVENTORY).isHidden()) {
+            pressKey(KeyEvent.VK_ESCAPE, 100);
+            robot.delay(100);
+        }
+        robot.delay(1000);
+    }
 
-        client.setCameraPitchTarget(512);
-        changeCameraYaw(0);
-        setCameraZoom(278);
-        robot.delay(1500);
+    private void worldHop(int key) {
+        // ctrl down
+        this.client.getCanvas().dispatchEvent(new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, KeyEvent.VK_CONTROL));
+        robot.delay(100);
+
+        // shift down
+        this.client.getCanvas().dispatchEvent(new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, KeyEvent.VK_SHIFT));
+        robot.delay(100);
+
+        // direction key down
+        this.client.getCanvas().dispatchEvent(new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key));
+        robot.delay(100);
+
+        // direction key up
+        this.client.getCanvas().dispatchEvent(new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key));
+        robot.delay(100);
+
+        // shift up
+        this.client.getCanvas().dispatchEvent(new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, KeyEvent.VK_SHIFT));
+        robot.delay(100);
+
+        // ctrl up
+        this.client.getCanvas().dispatchEvent(new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, KeyEvent.VK_CONTROL));
+        robot.delay(100);
     }
 }
