@@ -15,10 +15,7 @@ import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
 
-import java.awt.Point;
-import java.awt.Polygon;
-import java.awt.Rectangle;
-import java.awt.Shape;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,14 +30,14 @@ public class RCPlusMain implements Runnable {
     public static boolean isIdle = true;
     public static boolean resetOculusOrb = false;
     public long start;
+    Robot robot = new Robot();
 
     public static Set<Integer> fireAltarRegions = ImmutableSet.of(12344, 13130, 13106, 10315, 12600);
     public static List<Item> inventoryItems = new ArrayList<>();
 
     Thread t;
 
-    RCPlusMain(Client client, ClientThread clientThread)
-    {
+    RCPlusMain(Client client, ClientThread clientThread) throws AWTException {
         this.client = client;
         this.clientThread = clientThread;
 
@@ -69,12 +66,12 @@ public class RCPlusMain implements Runnable {
 
     private void doFireAltar() {
         if(checkLevelUp()) {
-            pressKey(KeyEvent.VK_SPACE);
+            pressKey(KeyEvent.VK_SPACE, 100);
             delay(500);
         } else if(isBankOpen() && !readyForAltar() && isIdle) {
             bankingSequence();
         } else if(isBankOpen() && readyForAltar() && isIdle) {
-            pressKey(KeyEvent.VK_ESCAPE);
+            pressKey(KeyEvent.VK_ESCAPE, 100);
             delay(500);
         } else if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !isBankOpen() && !readyForAltar() && isIdle) {
             scheduledGameObjectDelay(RCPlusObjectIDs.feroxEnclaveBank, 10);
@@ -93,24 +90,24 @@ public class RCPlusMain implements Runnable {
             isIdle = false;
             client.setCameraPitchTarget(512);
             delay(250);
-            pressKey(KeyEvent.VK_F4);
+            pressKey(KeyEvent.VK_F4, 100);
             delay(250);
             scheduledPointDelay(new Point(899, 924), 6);
             delay(500);
-            pressKey(KeyEvent.VK_ESCAPE);
+            pressKey(KeyEvent.VK_ESCAPE, 100);
             delay(3000);
             isIdle = true;
             // need to fix double click to TP
         } else if(isNearWorldTile(RCPlusWorldPoints.FEROX_ENCLAVE_BANK_TILE, 2) && !isBankOpen() && readyForAltar() && hasEnoughStamina() && isIdle) {
             // TP to duel arena
-            pressKey(KeyEvent.VK_F4);
+            pressKey(KeyEvent.VK_F4, 100);
             delay(250);
             scheduledPointDelay(new Point(899, 924), 6);
             delay(500);
-            pressKey(KeyEvent.VK_ESCAPE);
+            pressKey(KeyEvent.VK_ESCAPE, 100);
             delay(5000);
         } else if(getRegionID() == 13106 && isNearWorldTile(new WorldPoint(3315, 3236, 0), 4)) {
-            pressKey(KeyEvent.VK_ESCAPE);
+            pressKey(KeyEvent.VK_ESCAPE, 100);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(500);
@@ -164,11 +161,11 @@ public class RCPlusMain implements Runnable {
             } else {
                 isIdle = false;
                 delay(250);
-                pressKey(KeyEvent.VK_F4);
+                pressKey(KeyEvent.VK_F4, 100);
                 delay(250);
                 scheduledPointDelay(new Point(899, 924), 6);
                 delay(500);
-                pressKey(KeyEvent.VK_ESCAPE);
+                pressKey(KeyEvent.VK_ESCAPE, 100);
                 delay(3000);
                 isIdle = true;
             }
@@ -254,7 +251,7 @@ public class RCPlusMain implements Runnable {
         // withdraw ess
         scheduledPointDelay(new Point(476, 721), 3);
         delay(700);
-        pressKey(KeyEvent.VK_ESCAPE);
+        pressKey(KeyEvent.VK_ESCAPE, 100);
         delay(1000);
         isIdle = true;
     }
@@ -343,20 +340,10 @@ public class RCPlusMain implements Runnable {
         return !levelUpMessage.isSelfHidden();
     }
 
-    private void pressKey(int key) {
-        KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key);
-        this.client.getCanvas().dispatchEvent(keyPress);
-        KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key);
-        this.client.getCanvas().dispatchEvent(keyRelease);
-    }
-
     private void pressKey(int key, int ms) {
-        KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key);
-        this.client.getCanvas().dispatchEvent(keyPress);
-
-        KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key);
-        delay(ms);
-        this.client.getCanvas().dispatchEvent(keyRelease);
+        robot.keyPress(key);
+        robot.delay(ms);
+        robot.keyRelease(key);
     }
 
     private void scheduledGameObjectDelay(GameObject gameObject, int sigma) {
@@ -378,30 +365,6 @@ public class RCPlusMain implements Runnable {
             isIdle = true;
         }
     }
-
-//    private void clickInventoryPoint(Point point) {
-//        isIdle = false;
-//        try {
-//            MouseCoordCalculation.generateInventoryCoords(point);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            isIdle = true;
-//        }
-//    }
-
-//    private void clickInventoryPoint(Point point) {
-//        isIdle = false;
-//        try {
-//            Robot robot = new Robot();
-//            robot.mouseMove(point.x, point.y);
-//            delay(100);
-//            robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
-//            robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            isIdle = true;
-//        }
-//    }
 
     private void getWorldPointCoords(final LocalPoint dest) {
         Polygon poly = Perspective.getCanvasTileAreaPoly(this.client, dest, 1);

@@ -19,9 +19,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
 
 import javax.inject.Inject;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Shape;
+import java.awt.*;
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,7 +45,7 @@ public class RCPlusPlugin extends Plugin {
     }
 
     @Subscribe
-    public void onGameTick(GameTick event) {
+    public void onGameTick(GameTick event) throws AWTException {
         toggleStatus();
         checkOculusReset();
     }
@@ -57,7 +55,7 @@ public class RCPlusPlugin extends Plugin {
         return m.find() ? m.group(1) : "";
     }
 
-    private void toggleStatus() {
+    private void toggleStatus() throws AWTException {
         Widget chatboxInput = client.getWidget(WidgetInfo.CHATBOX_INPUT);
         String chatBoxMessage = stripTargetAnchors(chatboxInput.getText());
         if(chatBoxMessage == null) return;

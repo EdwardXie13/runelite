@@ -312,8 +312,18 @@ public class RCPlusBloodsMain implements Runnable {
         if(runWidget != null) {
             // 1065 is on
             // 1064 is off
-            int runWidgetSpriteId = runWidget.getSpriteId();
-            return runWidgetSpriteId == 1064;
+            return runWidget.getSpriteId() == 1064;
+        }
+
+        return false;
+    }
+
+    private boolean isLogoutPanelOpen() {
+        Widget logoutPanel = client.getWidget(10551341);
+
+        if(logoutPanel != null) {
+            // 1030 means panel is open / selected
+            return logoutPanel.getSpriteId() == 1030;
         }
 
         return false;
@@ -325,6 +335,7 @@ public class RCPlusBloodsMain implements Runnable {
         if(timeWidget != null) {
             String timeWidgetTime = timeWidget.getText();
             List<String> timeSplit = Arrays.asList(timeWidgetTime.split(":"));
+            // at 5 hr mark
             return Integer.parseInt(timeSplit.get(0)) == 5;
         }
 
@@ -460,12 +471,9 @@ public class RCPlusBloodsMain implements Runnable {
     }
 
     private void pressKey(int key, int ms) {
-        KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key);
-        this.client.getCanvas().dispatchEvent(keyPress);
-
-        KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key);
+        robot.keyPress(key);
         robot.delay(ms);
-        this.client.getCanvas().dispatchEvent(keyRelease);
+        robot.keyRelease(key);
     }
 
     private void scheduledPointDelay(Point point, int sigma) {
@@ -534,9 +542,9 @@ public class RCPlusBloodsMain implements Runnable {
         while(client.getGameState() != GameState.LOGGED_IN) {
             robot.delay(1000);
         }
-        robot.delay(10000);
+        robot.delay(20000);
 
-        while(client.getGameState() == GameState.LOGGED_IN && !client.getWidget(WidgetInfo.INVENTORY).isHidden()) {
+        while(client.getGameState() == GameState.LOGGED_IN && isLogoutPanelOpen()) {
             pressKey(KeyEvent.VK_ESCAPE, 100);
             robot.delay(100);
         }
@@ -545,27 +553,27 @@ public class RCPlusBloodsMain implements Runnable {
 
     private void worldHop(int key) {
         // ctrl down
-        this.client.getCanvas().dispatchEvent(new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, KeyEvent.VK_CONTROL));
-        robot.delay(100);
+        robot.keyPress(KeyEvent.VK_CONTROL);
+        robot.delay(200);
 
         // shift down
-        this.client.getCanvas().dispatchEvent(new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, KeyEvent.VK_SHIFT));
-        robot.delay(100);
+        robot.keyPress(KeyEvent.VK_SHIFT);
+        robot.delay(200);
 
         // direction key down
-        this.client.getCanvas().dispatchEvent(new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key));
-        robot.delay(100);
+        robot.keyPress(key);
+        robot.delay(200);
 
         // direction key up
-        this.client.getCanvas().dispatchEvent(new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key));
-        robot.delay(100);
+        robot.keyRelease(key);
+        robot.delay(200);
 
         // shift up
-        this.client.getCanvas().dispatchEvent(new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, KeyEvent.VK_SHIFT));
-        robot.delay(100);
+        robot.keyRelease( KeyEvent.VK_SHIFT);
+        robot.delay(200);
 
         // ctrl up
-        this.client.getCanvas().dispatchEvent(new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, KeyEvent.VK_CONTROL));
-        robot.delay(100);
+        robot.keyRelease(KeyEvent.VK_CONTROL);
+        robot.delay(200);
     }
 }
