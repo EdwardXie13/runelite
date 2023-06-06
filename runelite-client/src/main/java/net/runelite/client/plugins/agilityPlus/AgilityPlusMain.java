@@ -72,7 +72,7 @@ public class AgilityPlusMain implements Runnable {
 
     private void doGnomeAgility() {
         if(checkLevelUp()) {
-            pressKey(KeyEvent.VK_SPACE);
+            pressKey(KeyEvent.VK_SPACE, 100);
             robot.delay(500);
         } else if(turnRunOn()) {
             robot.delay(500);
@@ -163,7 +163,7 @@ public class AgilityPlusMain implements Runnable {
     private void doCanfisAgility() {
         healthyThreshold = 9;
         if(checkLevelUp()) {
-            pressKey(KeyEvent.VK_SPACE);
+            pressKey(KeyEvent.VK_SPACE, 100);
             robot.delay(500);
         } else if(turnRunOn()) {
             robot.delay(500);
@@ -366,7 +366,7 @@ public class AgilityPlusMain implements Runnable {
     private void doSeersAgility() {
         healthyThreshold = 9;
         if(checkLevelUp()) {
-            pressKey(KeyEvent.VK_SPACE);
+            pressKey(KeyEvent.VK_SPACE, 100);
             robot.delay(500);
         } else if(turnRunOn()) {
             robot.delay(500);
@@ -819,20 +819,10 @@ public class AgilityPlusMain implements Runnable {
 //        this.client.getCanvas().dispatchEvent(mouseRelease);
 //    }
 
-    private void pressKey(int key) {
-        KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key);
-        this.client.getCanvas().dispatchEvent(keyPress);
-        KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key);
-        this.client.getCanvas().dispatchEvent(keyRelease);
-    }
-
     private void pressKey(int key, int ms) {
-        KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key);
-        this.client.getCanvas().dispatchEvent(keyPress);
-
-        KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key);
+        robot.keyPress(key);
         robot.delay(ms);
-        this.client.getCanvas().dispatchEvent(keyRelease);
+        robot.keyRelease(key);
     }
 
     private void scheduledGroundObjectDelay(GroundObject groundObject, int sigma) {

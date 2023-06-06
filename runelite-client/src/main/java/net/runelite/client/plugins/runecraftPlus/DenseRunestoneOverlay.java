@@ -49,12 +49,7 @@ import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.OverlayUtil;
 
 import javax.inject.Inject;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.Polygon;
-import java.awt.Rectangle;
-import java.awt.Shape;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,6 +68,8 @@ public class DenseRunestoneOverlay extends Overlay
     private static final Color CLICKBOX_BORDER_HOVER_COLOR = CLICKBOX_BORDER_COLOR.darker();
 
     private static final Color Pink_Color = new Color(255,128,255, 255);
+
+    Robot robot = new Robot();
 
     boolean northStoneMineable;
     boolean southStoneMineable;
@@ -203,7 +200,7 @@ public class DenseRunestoneOverlay extends Overlay
     private final RunecraftPlusConfig config;
 
     @Inject
-    private DenseRunestoneOverlay(Client client, RunecraftPlusPlugin plugin, RunecraftPlusConfig config) {
+    private DenseRunestoneOverlay(Client client, RunecraftPlusPlugin plugin, RunecraftPlusConfig config) throws AWTException {
         this.client = client;
         this.plugin = plugin;
         this.config = config;
@@ -361,9 +358,7 @@ public class DenseRunestoneOverlay extends Overlay
     }
 
     private void changeCameraYaw(int yaw) {
-        if(client.getMapAngle() != yaw) {
-            client.setCameraYawTarget(yaw);
-        }
+        client.setCameraYawTarget(yaw);
     }
 
     private boolean isInArea(WorldPoint[] area) {
@@ -480,7 +475,7 @@ public class DenseRunestoneOverlay extends Overlay
         if(config.disableEmoteMenu() && isInChiselRegion()) {
             Widget emoteMenu = client.getWidget(WidgetInfo.EMOTE_CONTAINER);
             if(!emoteMenu.isHidden()) {
-                pressKey(KeyEvent.VK_ESCAPE);
+                pressKey(KeyEvent.VK_ESCAPE, 100);
             }
         }
     }
@@ -489,7 +484,7 @@ public class DenseRunestoneOverlay extends Overlay
         if(config.disableMusicMenu() && isInChiselRegion()) {
             Widget musicMenu = client.getWidget(WidgetInfo.MUSIC_WINDOW);
             if(!musicMenu.isHidden()) {
-                pressKey(KeyEvent.VK_ESCAPE);
+                pressKey(KeyEvent.VK_ESCAPE, 100);
             }
         }
     }
@@ -770,11 +765,10 @@ public class DenseRunestoneOverlay extends Overlay
         }
     }
 
-    private void pressKey(int key) {
-        KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key);
-        this.client.getCanvas().dispatchEvent(keyPress);
-        KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key);
-        this.client.getCanvas().dispatchEvent(keyRelease);
+    private void pressKey(int key, int ms) {
+        robot.keyPress(key);
+        robot.delay(ms);
+        robot.keyRelease(key);
     }
 
     private boolean isAtRCAltar() {

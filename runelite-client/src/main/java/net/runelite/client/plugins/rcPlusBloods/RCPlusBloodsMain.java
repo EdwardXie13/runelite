@@ -10,6 +10,7 @@ import net.runelite.api.ScriptID;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
 
@@ -20,9 +21,6 @@ import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.Shape;
 import java.awt.event.KeyEvent;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -74,46 +72,12 @@ public class RCPlusBloodsMain implements Runnable {
         System.out.println("Thread has stopped.");
     }
 
-    private void resetLoginTimer() throws IOException {
-        scheduledPointDelay(new Point(843, 1022), 4);
-        robot.delay(1000);
-
-        scheduledPointDelay(new Point(843, 970), 4);
-        robot.delay(1000);
-
-        scheduledPointDelay(new Point(560, 316), 4);
-        robot.delay(1000);
-
-        // type password
-        client.setPassword(Files.readString(Paths.get("password.env")));
-        robot.delay(1000);
-
-        pressKey(KeyEvent.VK_ENTER);
-        robot.delay(1000);
-
-        // wait until logged in
-        while(client.getGameState() != GameState.LOGGED_IN) {
-            robot.delay(1000);
-        }
-        robot.delay(2000);
-
-        System.out.println("click play");
-        scheduledPointDelay(new Point(485, 365), 4);
-        robot.delay(3000);
-    }
-
     private void doBloodRunes() {
         if(checkLevelUp()) {
-            pressKey(KeyEvent.VK_SPACE);
+            pressKey(KeyEvent.VK_SPACE, 100);
             robot.delay(500);
             isIdle = true;
-        } else if(closeToLogout() && isIdle) {
-            try {
-                resetLoginTimer();
-            } catch (Exception e) {
-                System.out.println("reset nerd time error");
-            }
-        } else if(turnRunOn()) {
+        } else if(turnRunOn() && hasEnoughStamina(5)) {
             robot.delay(500);
             scheduledPointDelay(new Point(804, 157), 4);
             robot.delay(500);
@@ -279,7 +243,12 @@ public class RCPlusBloodsMain implements Runnable {
             scheduledPointDelay(new Point(53, 434), 10);
             robot.delay(4000);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.BLOOD_ALTAR_BIND_ESS) && isIdle) {
-            if(determineStatus()==STATUS.READY_TO_BLOOD) {
+            if(closeToLogout()) {
+                resetLoginTimerByWorldHopping();
+                changeCameraYaw(0);
+                setCameraZoom(684);
+                robot.delay(1500);
+            } else if(determineStatus()==STATUS.READY_TO_BLOOD) {
                 System.out.println("bind frags");
                 scheduledPointDelay(new Point(174, 333), 14);
                 robot.delay(1000);
@@ -343,8 +312,18 @@ public class RCPlusBloodsMain implements Runnable {
         if(runWidget != null) {
             // 1065 is on
             // 1064 is off
-            int runWidgetSpriteId = runWidget.getSpriteId();
-            return runWidgetSpriteId == 1064;
+            return runWidget.getSpriteId() == 1064;
+        }
+
+        return false;
+    }
+
+    private boolean isLogoutPanelOpen() {
+        Widget logoutPanel = client.getWidget(10551341);
+
+        if(logoutPanel != null) {
+            // 1030 means panel is open / selected
+            return logoutPanel.getSpriteId() == 1030;
         }
 
         return false;
@@ -356,6 +335,7 @@ public class RCPlusBloodsMain implements Runnable {
         if(timeWidget != null) {
             String timeWidgetTime = timeWidget.getText();
             List<String> timeSplit = Arrays.asList(timeWidgetTime.split(":"));
+            // at 5 hr mark
             return Integer.parseInt(timeSplit.get(0)) == 5;
         }
 
@@ -490,20 +470,10 @@ public class RCPlusBloodsMain implements Runnable {
         return !levelUpMessage.isSelfHidden();
     }
 
-    private void pressKey(int key) {
-        KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key);
-        this.client.getCanvas().dispatchEvent(keyPress);
-        KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key);
-        this.client.getCanvas().dispatchEvent(keyRelease);
-    }
-
     private void pressKey(int key, int ms) {
-        KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key);
-        this.client.getCanvas().dispatchEvent(keyPress);
-
-        KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key);
+        robot.keyPress(key);
         robot.delay(ms);
-        this.client.getCanvas().dispatchEvent(keyRelease);
+        robot.keyRelease(key);
     }
 
     private void scheduledPointDelay(Point point, int sigma) {
@@ -559,5 +529,51 @@ public class RCPlusBloodsMain implements Runnable {
         double sec = (end - start) / 1000F;
 
         return sec >= 90;
+    }
+
+    private void resetLoginTimerByWorldHopping() {
+        robot.delay(1000);
+        if(client.getWorld() == 338) {
+            worldHop(KeyEvent.VK_RIGHT);
+        } else { // world 339
+            worldHop(KeyEvent.VK_LEFT);
+        }
+
+        while(client.getGameState() != GameState.LOGGED_IN) {
+            robot.delay(1000);
+        }
+        robot.delay(20000);
+
+        while(client.getGameState() == GameState.LOGGED_IN && isLogoutPanelOpen()) {
+            pressKey(KeyEvent.VK_ESCAPE, 100);
+            robot.delay(100);
+        }
+        robot.delay(1000);
+    }
+
+    private void worldHop(int key) {
+        // ctrl down
+        robot.keyPress(KeyEvent.VK_CONTROL);
+        robot.delay(200);
+
+        // shift down
+        robot.keyPress(KeyEvent.VK_SHIFT);
+        robot.delay(200);
+
+        // direction key down
+        robot.keyPress(key);
+        robot.delay(200);
+
+        // direction key up
+        robot.keyRelease(key);
+        robot.delay(200);
+
+        // shift up
+        robot.keyRelease( KeyEvent.VK_SHIFT);
+        robot.delay(200);
+
+        // ctrl up
+        robot.keyRelease(KeyEvent.VK_CONTROL);
+        robot.delay(200);
     }
 }
