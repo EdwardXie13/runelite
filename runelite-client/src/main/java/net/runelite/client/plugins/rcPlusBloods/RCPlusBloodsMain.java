@@ -3,6 +3,7 @@ package net.runelite.client.plugins.rcPlusBloods;
 import com.google.common.collect.ImmutableSet;
 import net.runelite.api.Client;
 import net.runelite.api.GameObject;
+import net.runelite.api.GameState;
 import net.runelite.api.Item;
 import net.runelite.api.Perspective;
 import net.runelite.api.ScriptID;
@@ -12,11 +13,19 @@ import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
 
-import java.awt.*;
+import java.awt.AWTException;
+import java.awt.Point;
+import java.awt.Polygon;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.Shape;
 import java.awt.event.KeyEvent;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 public class RCPlusBloodsMain implements Runnable {
@@ -65,11 +74,45 @@ public class RCPlusBloodsMain implements Runnable {
         System.out.println("Thread has stopped.");
     }
 
+    private void resetLoginTimer() throws IOException {
+        scheduledPointDelay(new Point(843, 1022), 4);
+        robot.delay(1000);
+
+        scheduledPointDelay(new Point(843, 970), 4);
+        robot.delay(1000);
+
+        scheduledPointDelay(new Point(560, 316), 4);
+        robot.delay(1000);
+
+        // type password
+        client.setPassword(Files.readString(Paths.get("password.env")));
+        robot.delay(1000);
+
+        pressKey(KeyEvent.VK_ENTER);
+        robot.delay(1000);
+
+        // wait until logged in
+        while(client.getGameState() != GameState.LOGGED_IN) {
+            robot.delay(1000);
+        }
+        robot.delay(2000);
+
+        System.out.println("click play");
+        scheduledPointDelay(new Point(485, 365), 4);
+        robot.delay(3000);
+    }
+
     private void doBloodRunes() {
         if(checkLevelUp()) {
             pressKey(KeyEvent.VK_SPACE);
             robot.delay(500);
             isIdle = true;
+        } else if(closeToLogout() && isIdle) {
+            try {
+                resetLoginTimer();
+            } catch (Exception e) {
+                System.out.println("reset nerd time error");
+            }
         } else if(turnRunOn()) {
             robot.delay(500);
             scheduledPointDelay(new Point(804, 157), 4);
@@ -301,6 +344,18 @@ public class RCPlusBloodsMain implements Runnable {
             // 1064 is off
             int runWidgetSpriteId = runWidget.getSpriteId();
             return runWidgetSpriteId == 1064;
+        }
+
+        return false;
+    }
+
+    private boolean closeToLogout() {
+        Widget timeWidget = client.getWidget(10616865);
+
+        if(timeWidget != null) {
+            String timeWidgetTime = timeWidget.getText();
+            List<String> timeSplit = Arrays.asList(timeWidgetTime.split(":"));
+            return Integer.parseInt(timeSplit.get(0)) == 5;
         }
 
         return false;

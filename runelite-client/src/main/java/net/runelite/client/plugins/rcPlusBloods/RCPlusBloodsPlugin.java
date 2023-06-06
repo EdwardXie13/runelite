@@ -103,7 +103,7 @@ public class RCPlusBloodsPlugin extends Plugin {
     @Subscribe
     private void onGameStateChanged(GameStateChanged ev)
     {
-        if (ev.getGameState() == GameState.LOGIN_SCREEN && hasStarted)
+        if (ev.getGameState() == GameState.CONNECTION_LOST && hasStarted)
         {
             toggleStatus = STATUS.STOP;
             thread.t.interrupt();
