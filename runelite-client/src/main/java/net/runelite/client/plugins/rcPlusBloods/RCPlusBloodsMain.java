@@ -79,13 +79,7 @@ public class RCPlusBloodsMain implements Runnable {
             pressKey(KeyEvent.VK_SPACE);
             robot.delay(500);
             isIdle = true;
-        } else if(closeToLogout() && isIdle) {
-            try {
-                resetLoginTimer();
-            } catch (Exception e) {
-                System.out.println("reset nerd time error");
-            }
-        } else if(turnRunOn()) {
+        } else if(turnRunOn() && hasEnoughStamina(5)) {
             robot.delay(500);
             scheduledPointDelay(new Point(804, 157), 4);
             robot.delay(500);
@@ -251,7 +245,13 @@ public class RCPlusBloodsMain implements Runnable {
             scheduledPointDelay(new Point(53, 434), 10);
             robot.delay(4000);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.BLOOD_ALTAR_BIND_ESS) && isIdle) {
-            if(determineStatus()==STATUS.READY_TO_BLOOD) {
+            if(closeToLogout()) {
+                try {
+                    resetLoginTimer();
+                } catch (Exception e) {
+                    System.out.println("reset nerd time error");
+                }
+            } else if(determineStatus()==STATUS.READY_TO_BLOOD) {
                 System.out.println("bind frags");
                 scheduledPointDelay(new Point(174, 333), 14);
                 robot.delay(1000);
@@ -559,5 +559,10 @@ public class RCPlusBloodsMain implements Runnable {
         System.out.println("click play");
         scheduledPointDelay(new Point(485, 365), 4);
         robot.delay(3000);
+
+        client.setCameraPitchTarget(512);
+        changeCameraYaw(0);
+        setCameraZoom(278);
+        robot.delay(1500);
     }
 }
