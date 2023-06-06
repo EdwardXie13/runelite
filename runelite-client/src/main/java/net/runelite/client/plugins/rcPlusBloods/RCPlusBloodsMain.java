@@ -74,34 +74,6 @@ public class RCPlusBloodsMain implements Runnable {
         System.out.println("Thread has stopped.");
     }
 
-    private void resetLoginTimer() throws IOException {
-        scheduledPointDelay(new Point(843, 1022), 4);
-        robot.delay(1000);
-
-        scheduledPointDelay(new Point(843, 970), 4);
-        robot.delay(1000);
-
-        scheduledPointDelay(new Point(560, 316), 4);
-        robot.delay(1000);
-
-        // type password
-        client.setPassword(Files.readString(Paths.get("password.env")));
-        robot.delay(1000);
-
-        pressKey(KeyEvent.VK_ENTER);
-        robot.delay(1000);
-
-        // wait until logged in
-        while(client.getGameState() != GameState.LOGGED_IN) {
-            robot.delay(1000);
-        }
-        robot.delay(2000);
-
-        System.out.println("click play");
-        scheduledPointDelay(new Point(485, 365), 4);
-        robot.delay(3000);
-    }
-
     private void doBloodRunes() {
         if(checkLevelUp()) {
             pressKey(KeyEvent.VK_SPACE);
@@ -559,5 +531,33 @@ public class RCPlusBloodsMain implements Runnable {
         double sec = (end - start) / 1000F;
 
         return sec >= 90;
+    }
+
+    private void resetLoginTimer() throws IOException {
+        scheduledPointDelay(new Point(843, 1022), 4);
+        robot.delay(1000);
+
+        scheduledPointDelay(new Point(843, 970), 4);
+        robot.delay(1000);
+
+        scheduledPointDelay(new Point(560, 316), 4);
+        robot.delay(1000);
+
+        // type password
+        client.setPassword(Files.readString(Paths.get("password.env")));
+        robot.delay(1000);
+
+        pressKey(KeyEvent.VK_ENTER);
+        robot.delay(1000);
+
+        // wait until logged in
+        while(client.getGameState() != GameState.LOGGED_IN) {
+            robot.delay(1000);
+        }
+        robot.delay(2000);
+
+        System.out.println("click play");
+        scheduledPointDelay(new Point(485, 365), 4);
+        robot.delay(3000);
     }
 }
