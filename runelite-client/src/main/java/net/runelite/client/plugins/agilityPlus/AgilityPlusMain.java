@@ -58,8 +58,8 @@ public class AgilityPlusMain implements Runnable {
                 doGnomeAgility();
             else if (getRegionID() == 13878)
                 doCanfisAgility();
-                else if (getRegionID() == 10806)
-                    doSeersAgility();
+            else if (getRegionID() == 10806)
+                doSeersAgility();
 //            else if (getRegionID() == 10553 || getRegionID() == 10297)
 //                doRellekaAgility();
         }

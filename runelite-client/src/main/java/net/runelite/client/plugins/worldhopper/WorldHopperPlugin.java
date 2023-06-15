@@ -110,7 +110,7 @@ public class WorldHopperPlugin extends Plugin
 	private static final ImmutableList<String> AFTER_OPTIONS = ImmutableList.of("Message");
 
 	@Inject
-	private Client client;
+	private static Client client;
 
 	@Inject
 	private ClientThread clientThread;
@@ -125,10 +125,10 @@ public class WorldHopperPlugin extends Plugin
 	private KeyManager keyManager;
 
 	@Inject
-	private ChatMessageManager chatMessageManager;
+	private static ChatMessageManager chatMessageManager;
 
 	@Inject
-	private WorldHopperConfig config;
+	private static WorldHopperConfig config;
 
 	@Inject
 	private OverlayManager overlayManager;
@@ -137,15 +137,15 @@ public class WorldHopperPlugin extends Plugin
 	private WorldHopperPingOverlay worldHopperOverlay;
 
 	@Inject
-	private WorldService worldService;
+	private static WorldService worldService;
 
 	private ScheduledExecutorService hopperExecutorService;
 
 	private NavigationButton navButton;
 	private WorldSwitcherPanel panel;
 
-	private net.runelite.api.World quickHopTargetWorld;
-	private int displaySwitcherAttempts = 0;
+	private static net.runelite.api.World quickHopTargetWorld;
+	private static int displaySwitcherAttempts = 0;
 
 	@Getter
 	private int lastWorld;
@@ -506,7 +506,7 @@ public class WorldHopperPlugin extends Plugin
 		}
 	}
 
-	private void hop(boolean previous)
+	public static void hop(boolean previous)
 	{
 		WorldResult worldResult = worldService.getWorlds();
 		if (worldResult == null || client.getGameState() != GameState.LOGGED_IN)
@@ -637,7 +637,7 @@ public class WorldHopperPlugin extends Plugin
 		}
 	}
 
-	private void hop(int worldId)
+	private static void hop(int worldId)
 	{
 		WorldResult worldResult = worldService.getWorlds();
 		// Don't try to hop if the world doesn't exist
@@ -656,7 +656,7 @@ public class WorldHopperPlugin extends Plugin
 		clientThread.invoke(() -> hop(world));
 	}
 
-	private void hop(World world)
+	private static void hop(World world)
 	{
 		assert client.isClientThread();
 

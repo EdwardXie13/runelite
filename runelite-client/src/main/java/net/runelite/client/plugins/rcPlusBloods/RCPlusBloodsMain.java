@@ -10,9 +10,9 @@ import net.runelite.api.ScriptID;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
+import net.runelite.client.plugins.worldhopper.WorldHopperPlugin;
 
 import java.awt.AWTException;
 import java.awt.Point;
@@ -161,8 +161,8 @@ public class RCPlusBloodsMain implements Runnable {
             setCameraZoom(800);
             robot.delay(500);
             // correct this as the camera moves diagonally because of the RCPlus plugin
-            panCameraOneDirection(KeyEvent.VK_W, 2100);
-            panCameraOneDirection(KeyEvent.VK_A, 1900);
+            panCameraOneDirection(KeyEvent.VK_A, 2800);
+            panCameraOneDirection(KeyEvent.VK_W, 400);
             robot.delay(500);
             getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusBloodsWorldPoints.VENERATE_ALTAR_TILE));
             robot.delay(500);
@@ -313,17 +313,6 @@ public class RCPlusBloodsMain implements Runnable {
             // 1065 is on
             // 1064 is off
             return runWidget.getSpriteId() == 1064;
-        }
-
-        return false;
-    }
-
-    private boolean isLogoutPanelOpen() {
-        Widget logoutPanel = client.getWidget(10551341);
-
-        if(logoutPanel != null) {
-            // 1030 means panel is open / selected
-            return logoutPanel.getSpriteId() == 1030;
         }
 
         return false;
@@ -533,47 +522,52 @@ public class RCPlusBloodsMain implements Runnable {
 
     private void resetLoginTimerByWorldHopping() {
         robot.delay(1000);
-        if(client.getWorld() == 338) {
-            worldHop(KeyEvent.VK_RIGHT);
-        } else { // world 339
-            worldHop(KeyEvent.VK_LEFT);
-        }
-
-        while(client.getGameState() != GameState.LOGGED_IN) {
-            robot.delay(1000);
-        }
-        robot.delay(20000);
-
-        while(client.getGameState() == GameState.LOGGED_IN && isLogoutPanelOpen()) {
-            pressKey(KeyEvent.VK_ESCAPE, 100);
-            robot.delay(100);
-        }
+        // world 339
+        WorldHopperPlugin.hop(client.getWorld() != 338);
         robot.delay(1000);
+
+//        if(client.getWorld() == 338) {
+//            WorldHopperPlugin.hop(false);
+//        } else { // world 339
+//            WorldHopperPlugin.hop(true);
+//        }
+
+//        while(client.getGameState() != GameState.LOGGED_IN) {
+//            robot.delay(1000);
+//        }
+//        robot.delay(20000);
+//
+//        while(client.getGameState() == GameState.LOGGED_IN && isLogoutPanelOpen()) {
+//            pressKey(KeyEvent.VK_ESCAPE, 100);
+//            robot.delay(100);
+//        }
+//        robot.delay(1000);
     }
 
-    private void worldHop(int key) {
-        // ctrl down
-        robot.keyPress(KeyEvent.VK_CONTROL);
-        robot.delay(200);
-
-        // shift down
-        robot.keyPress(KeyEvent.VK_SHIFT);
-        robot.delay(200);
-
-        // direction key down
-        robot.keyPress(key);
-        robot.delay(200);
-
-        // direction key up
-        robot.keyRelease(key);
-        robot.delay(200);
-
-        // shift up
-        robot.keyRelease( KeyEvent.VK_SHIFT);
-        robot.delay(200);
-
-        // ctrl up
-        robot.keyRelease(KeyEvent.VK_CONTROL);
-        robot.delay(200);
-    }
+//    private void worldHop(int key) {
+//        WorldHopperPlugin.hop(true);
+//        // ctrl down
+//        robot.keyPress(KeyEvent.VK_CONTROL);
+//        robot.delay(200);
+//
+//        // shift down
+//        robot.keyPress(KeyEvent.VK_SHIFT);
+//        robot.delay(200);
+//
+//        // direction key down
+//        robot.keyPress(key);
+//        robot.delay(200);
+//
+//        // direction key up
+//        robot.keyRelease(key);
+//        robot.delay(200);
+//
+//        // shift up
+//        robot.keyRelease( KeyEvent.VK_SHIFT);
+//        robot.delay(200);
+//
+//        // ctrl up
+//        robot.keyRelease(KeyEvent.VK_CONTROL);
+//        robot.delay(200);
+//    }
 }
