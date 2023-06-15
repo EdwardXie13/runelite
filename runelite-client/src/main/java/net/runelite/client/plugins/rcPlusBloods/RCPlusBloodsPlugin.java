@@ -18,7 +18,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
-import java.awt.*;
+import java.awt.AWTException;
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -98,7 +98,6 @@ public class RCPlusBloodsPlugin extends Plugin {
 //                .build();
 //        SlackUtils.sendMessage(slackMessage);
 //    }
-
 
     @Subscribe
     private void onGameStateChanged(GameStateChanged ev)

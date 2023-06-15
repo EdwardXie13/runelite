@@ -81,6 +81,9 @@ public class RCPlusBloodsMain implements Runnable {
             robot.delay(500);
             scheduledPointDelay(new Point(804, 157), 4);
             robot.delay(500);
+        } else if(client.getGameState() == GameState.LOGGED_IN && isLogoutPanelOpen()) {
+            pressKey(KeyEvent.VK_ESCAPE, 100);
+            robot.delay(1000);
         }
         // BLOOD_ESSENCE = 26390;
         // BLOOD_ESSENCE_ACTIVE = 26392;
@@ -161,8 +164,8 @@ public class RCPlusBloodsMain implements Runnable {
             setCameraZoom(800);
             robot.delay(500);
             // correct this as the camera moves diagonally because of the RCPlus plugin
-            panCameraOneDirection(KeyEvent.VK_W, 2100);
-            panCameraOneDirection(KeyEvent.VK_A, 1900);
+            panCameraOneDirection(KeyEvent.VK_A, 2800);
+            panCameraOneDirection(KeyEvent.VK_W, 400);
             robot.delay(500);
             getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusBloodsWorldPoints.VENERATE_ALTAR_TILE));
             robot.delay(500);
@@ -542,13 +545,6 @@ public class RCPlusBloodsMain implements Runnable {
         while(client.getGameState() != GameState.LOGGED_IN) {
             robot.delay(1000);
         }
-        robot.delay(20000);
-
-        while(client.getGameState() == GameState.LOGGED_IN && isLogoutPanelOpen()) {
-            pressKey(KeyEvent.VK_ESCAPE, 100);
-            robot.delay(100);
-        }
-        robot.delay(1000);
     }
 
     private void worldHop(int key) {
