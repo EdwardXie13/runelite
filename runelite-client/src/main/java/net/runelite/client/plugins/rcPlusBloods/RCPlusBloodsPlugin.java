@@ -19,8 +19,6 @@ import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
 import java.awt.AWTException;
-import java.awt.Robot;
-import java.awt.event.KeyEvent;
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -94,34 +92,12 @@ public class RCPlusBloodsPlugin extends Plugin {
         }
     }
 
-    public boolean isLogoutPanelOpen() {
-        Widget logoutPanel = client.getWidget(10551341);
-
-        if(logoutPanel != null) {
-            // 1030 means panel is open / selected
-            return logoutPanel.getSpriteId() == 1030;
-        }
-
-        return false;
-    }
-
 //    private void sendSlackMessage(String text) {
 //        SlackMessage slackMessage = SlackMessage.builder()
 //                .text(text)
 //                .build();
 //        SlackUtils.sendMessage(slackMessage);
 //    }
-    private void pressEsc() {
-        try {
-            Robot robot = new Robot();
-            robot.keyPress(KeyEvent.VK_ESCAPE);
-            robot.delay(100);
-            robot.keyRelease(KeyEvent.VK_ESCAPE);
-            robot.delay(100);
-        } catch (AWTException e) {
-            e.printStackTrace();
-        }
-    }
 
     @Subscribe
     private void onGameStateChanged(GameStateChanged ev)
@@ -133,8 +109,6 @@ public class RCPlusBloodsPlugin extends Plugin {
             hasStarted = false;
             System.out.println("status is stop (login screen)");
 //            sendSlackMessage("logged out RC exp = " + lastRcExp);
-        } else if(ev.getGameState() == GameState.LOGGED_IN && isLogoutPanelOpen() && hasStarted) {
-            pressEsc();
         }
     }
 
