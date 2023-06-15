@@ -297,7 +297,7 @@ public class DenseRunestoneOverlay extends Overlay
             northRockClimb(graphics);
         }
         //after rock climb then render the altar
-        else if(getInventorySlotID(27) == 13445 && isNearWorldTile(afterNorthRock,1)) {
+        else if(getInventorySlotID(27) == 13445 && isNearWorldTile(afterNorthRock,1) && !RCPlusBloodsPlugin.hasStarted) {
             changeCameraYaw(cameraHeadingAltar);
             renderObject(graphics, darkAltar, Pink_Color, Pink_Color, Pink_Color);
         }
