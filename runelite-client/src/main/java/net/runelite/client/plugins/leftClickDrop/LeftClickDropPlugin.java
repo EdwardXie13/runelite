@@ -15,8 +15,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @PluginDescriptor(name = "Left Click Drop")
-public class LeftClickDropPlugin  extends Plugin {
-    private static final Set<String> powerSet = new HashSet<>(Arrays.asList("Iron ore", "Leaping salmon", "Leaping trout", "Leaping sturgeon"));
+public class LeftClickDropPlugin extends Plugin {
+    private final Set<String> powerSet = new HashSet<>(Arrays.asList("Iron ore", "Leaping salmon", "Leaping trout", "Leaping sturgeon"));
 
     @Inject
     private Client client;
