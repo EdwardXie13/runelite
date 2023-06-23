@@ -10,7 +10,6 @@ import net.runelite.api.ScriptID;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
 
@@ -24,6 +23,7 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 public class RCPlusBloodsMain implements Runnable {
@@ -32,6 +32,8 @@ public class RCPlusBloodsMain implements Runnable {
     public static boolean isIdle = true;
     public static boolean resetOculusOrb = false;
     public long start;
+    public long botStartTimer;
+    public int botStopTimer;
     Robot robot = new Robot();
 
     public static Set<Integer> bloodAltarRegions = ImmutableSet.of(
@@ -52,6 +54,9 @@ public class RCPlusBloodsMain implements Runnable {
         t = new Thread(this);
         System.out.println("New thread: " + t);
         start = System.currentTimeMillis();
+        botStartTimer = System.currentTimeMillis();
+        botStopTimer = generateStopTimer();
+//        System.out.println("botStopTimer: " + botStopTimer);
         t.start(); // Starting the thread
     }
 
@@ -61,6 +66,12 @@ public class RCPlusBloodsMain implements Runnable {
         while (!Thread.interrupted()) {
             if (checkIdle() && checkLastReset())
                 reset();
+
+            // 12 - 13.89hr run time
+            if(checkBotTimer()) {
+                System.out.println("stop the count");
+                client.stopNow();
+            }
 
             try {
                 if (bloodAltarRegions.contains(getRegionID()))
@@ -532,6 +543,19 @@ public class RCPlusBloodsMain implements Runnable {
         double sec = (end - start) / 1000F;
 
         return sec >= 90;
+    }
+
+    private boolean checkBotTimer() {
+        long end = System.currentTimeMillis();
+        double sec = (end - botStartTimer) / 1000F;
+
+        return sec > botStopTimer;
+    }
+
+    private int generateStopTimer() {
+        Random random = new Random();
+
+        return random.nextInt(50000 - 43200 + 1) + 43200;
     }
 
     private void resetLoginTimerByWorldHopping() {
