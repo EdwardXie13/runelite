@@ -56,7 +56,7 @@ public class RCPlusBloodsMain implements Runnable {
         start = System.currentTimeMillis();
         botStartTimer = System.currentTimeMillis();
         botStopTimer = generateStopTimer();
-//        System.out.println("botStopTimer: " + botStopTimer);
+        System.out.println("botStopTimer: " + botStopTimer);
         t.start(); // Starting the thread
     }
 
@@ -559,19 +559,16 @@ public class RCPlusBloodsMain implements Runnable {
     }
 
     private void resetLoginTimerByWorldHopping() {
+        System.out.println("timeToWorldHop");
         robot.delay(1000);
-        if(client.getWorld() == 338) {
-            worldHop(KeyEvent.VK_RIGHT);
-        } else { // world 339
-            worldHop(KeyEvent.VK_LEFT);
-        }
 
-        while(client.getGameState() != GameState.LOGGED_IN) {
-            robot.delay(1000);
-        }
+        worldHop();
+
+        robot.delay(20000);
     }
 
-    private void worldHop(int key) {
+    private void worldHop() {
+        System.out.println("worldHop to: " + client.getWorld() + 1);
         // ctrl down
         robot.keyPress(KeyEvent.VK_CONTROL);
         robot.delay(200);
@@ -581,11 +578,11 @@ public class RCPlusBloodsMain implements Runnable {
         robot.delay(200);
 
         // direction key down
-        robot.keyPress(key);
+        robot.keyPress(KeyEvent.VK_RIGHT);
         robot.delay(200);
 
         // direction key up
-        robot.keyRelease(key);
+        robot.keyRelease(KeyEvent.VK_RIGHT);
         robot.delay(200);
 
         // shift up
