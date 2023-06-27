@@ -238,6 +238,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraYaw(0);
             robot.delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSecondRoofGap, 10);
+            robot.delay(3500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2) && isIdle) {
             setCameraZoom(597);
             changeCameraYaw(0);
