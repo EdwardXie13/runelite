@@ -60,8 +60,8 @@ public class AgilityPlusMain implements Runnable {
                 doCanfisAgility();
             else if (getRegionID() == 10806)
                 doSeersAgility();
-//            else if (getRegionID() == 10553 || getRegionID() == 10297)
-//                doRellekaAgility();
+            else if (getRegionID() == 10553 || getRegionID() == 10297)
+                doRellekaAgility();
         }
         System.out.println("Thread has stopped.");
     }
@@ -488,12 +488,7 @@ public class AgilityPlusMain implements Runnable {
             setCameraZoom(255);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
-//            panCameraToSeersFourthRoofGap();
             robot.delay(500);
-//            getWorldPointCoords(LocalPoint.fromWorld(client, new WorldPoint(2702, 3470, 3)));
-//            robot.delay(500);
-//            client.setOculusOrbState(0);
-//            client.setOculusOrbNormalSpeed(12);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFourthRoofGap, 5);
             robot.delay(7000);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_FOURTH_ROOF_RUN_POINT, 2) && isIdle) {
@@ -549,149 +544,211 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
         }
     }
-//
-//    private void doRellekaAgility() {
-//        if(checkLevelUp()) {
-//            pressKey(KeyEvent.VK_SPACE);
-//            delay(500);
-//        } else if(isNearWorldTile(AgilityPlusWorldPoints.RELLEKA_START, 2) && isIdle) {
-//            setCameraZoom(1004);
+
+    private void doRellekaAgility() {
+        healthyThreshold = 9;
+        if(checkLevelUp()) {
+            pressKey(KeyEvent.VK_SPACE, 100);
+            robot.delay(500);
+        } else if(turnRunOn()) {
+            robot.delay(500);
+            scheduledPointDelay(new Point(804, 157), 4);
+            robot.delay(500);
+        } else if(isNearWorldTile(AgilityPlusWorldPoints.RELLEKA_START, 2) && isIdle) {
+            System.out.println("relleka start");
+            robot.delay(500);
+            setCameraZoom(1004);
+            client.setCameraPitchTarget(75);
+            changeCameraYaw(0);
+            robot.delay(500);
+            scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.rellekaStartWall, 10);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIRST_ROOF) && isIdle && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1)) {
+            System.out.println("relleka 1st roof");
+            robot.delay(500);
+            changeCameraYaw(0);
+            client.setCameraPitchTarget(512);
+            setCameraZoom(390);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFirstRoofGap, 10);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIRST_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1)) {
+            System.out.println("relleka pick up GM 1");
+            robot.delay(500);
+            changeCameraYaw(0);
+            client.setCameraPitchTarget(512);
+            setCameraZoom(850);
+            robot.delay(500);
+            checkGracefulmark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1) && isIdle) {
+            System.out.println("relleka 1st roof");
+            changeCameraYaw(0);
+            client.setCameraPitchTarget(512);
+            setCameraZoom(460);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFirstRoofGap, 10);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_SECOND_ROOF) && isIdle) {
+            System.out.println("relleka 2ndd roof");
+            robot.delay(500);
+            setCameraZoom(1004);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            panCameraOneDirection(KeyEvent.VK_S, 550);
+            robot.delay(500);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.RELLEKA_SECOND_ROOF_RUN_POINT));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_SECOND_ROOF_RUN_POINT) && isIdle) {
+            System.out.println("relleka 2nd roof run point");
+            robot.delay(500);
+            setCameraZoom(1004);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaSecondRoofGap, 10);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_1) && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_2)) {
+            System.out.println("relleka 3rd roof");
+            robot.delay(500);
+            setCameraZoom(540);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaThirdRoofGap, 10);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_1)) {
+            System.out.println("relleka pick up GM 3_1");
+            robot.delay(500);
+            setCameraZoom(880);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            checkGracefulmark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_1);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_2)) {
+            System.out.println("relleka pick up GM 3_2");
+            robot.delay(500);
+            setCameraZoom(880);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            checkGracefulmark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_2);
+            robot.delay(500);
+        } else if((isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_1) || isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_2)) && isIdle) {
+            System.out.println("relleka pick up GM 4_2");
+            robot.delay(500);
+            setCameraZoom(570);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(1024);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaThirdRoofGap, 10);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FOURTH_ROOF) && isIdle && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_1) && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_2)) {
+            System.out.println("relleka 4th roof");
+            robot.delay(500);
+            setCameraZoom(540);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFourthRoofGap, 10);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FOURTH_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_1)) {
+            System.out.println("relleka pick up GM 4_1");
+            robot.delay(500);
+            setCameraZoom(715);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(1024);
+            robot.delay(500);
+            checkGracefulmark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_1);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FOURTH_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_2)) {
+            System.out.println("relleka pick up GM 4_2");
+            robot.delay(500);
+            setCameraZoom(715);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(1024);
+            robot.delay(500);
+            checkGracefulmark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_2);
+            robot.delay(500);
+        } else if((isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_1) || isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_2)) && isIdle) {
+            System.out.println("relleka 4th roof");
+            robot.delay(500);
+            setCameraZoom(570);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(1024);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFourthRoofGap, 10);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIFTH_ROOF) && isIdle) {
+            System.out.println("relleka 5th roof");
+            // TODO: multiple ways
+            // 1. face east
+            robot.delay(500);
+            setCameraZoom(500);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(1536);
+            robot.delay(500);
+//            // 2. face south
 //            changeCameraYaw(1024);
-//            delay(500);
-//            scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.rellekaStartWall, 8);
-//            pressKey(KeyEvent.VK_UP, 2000);
-//        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIRST_ROOF) && isIdle && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3)) {
-//            changeCameraYaw(0);
-//            setCameraZoom(404);
-//            delay(500);
-//            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFirstRoofGap, 10);
-//        }
-//
-//        else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIRST_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3)) {
-//            changeCameraYaw(0);
-//            setCameraZoom(896);
-//            delay(500);
-//            checkGracefulmark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3);
-//            delay(500);
-//        }
-//
-//        else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3) && isIdle) {
-//            changeCameraYaw(0);
-//            setCameraZoom(404);
-//            delay(500);
-//            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFirstRoofGap, 10);
-//        }
-//
-//        else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_SECOND_ROOF) && isIdle) {
-//            changeCameraYaw(1024);
-//            setCameraZoom(340);
-//            delay(500);
-//            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaSecondRoofGap, 8);
-//            delay(500);
-//        } else if(isAtWorldPoint(new WorldPoint(2622, 3658, 3)) && isIdle) {
-//            changeCameraYaw(1024);
-//            setCameraZoom(896);
-//            delay(500);
-//            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaSecondRoofGap, 10);
-//            delay(500);
-//        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1_1) && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1_2)) {
-//            delay(500);
-//            changeCameraYaw(1024);
-//            setCameraZoom(547);
-//            delay(500);
-//            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaThirdRoofGap, 10);
-//            delay(500);
-//        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1_1)) {
-//            delay(500);
-//            changeCameraYaw(1024);
-//            setCameraZoom(896);
-//            delay(500);
-//            checkGracefulmark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1_1);
-//            delay(1500);
-//        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1_2)) {
-//            delay(500);
-//            changeCameraYaw(1024);
-//            setCameraZoom(896);
-//            delay(500);
-//            checkGracefulmark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1_2);
-//            delay(1500);
-//        } else if(isNearWorldTile(new WorldPoint(2629, 3652, 3), 2) && isIdle) {
-//            changeCameraYaw(1024);
-//            setCameraZoom(591);
-//            delay(500);
-//            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaThirdRoofGap, 10);
-//        }
-//
-//        else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FOURTH_ROOF) && isIdle && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK2_1) && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK2_2)) {
-//            changeCameraYaw(1024);
-//            setCameraZoom(547);
-//            delay(500);
-//            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFourthRoofGap, 10);
-//        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FOURTH_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK2_1)) {
-//            changeCameraYaw(1024);
-//            setCameraZoom(738);
-//            delay(500);
-//            checkGracefulmark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK2_1);
-//            delay(1500);
-//        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FOURTH_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK2_2)) {
-//            changeCameraYaw(1024);
-//            setCameraZoom(768);
-//            delay(500);
-//            checkGracefulmark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK2_2);
-//            delay(1500);
-//        } else if(isNearWorldTile(new WorldPoint(2642,3650, 3), 2) && isIdle) {
-//            changeCameraYaw(1024);
-//            setCameraZoom(591);
-//            delay(500);
-//            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFourthRoofGap, 10);
-//        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIFTH_ROOF) && isIdle) {
-//            changeCameraYaw(1536);
-//            setCameraZoom(510);
-//            delay(500);
-//            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFifthRoofGap, 8);
-//        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_SIXTH_ROOF) && isIdle) {
-//            delay(1000);
-//            changeCameraYaw(1536);
-//            setCameraZoom(432);
-//            delay(500);
-//            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaSixthRoofGap, 10);
-//        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FINISH) && isIdle) {
-//            changeCameraYaw(1024);
-//            setCameraZoom(896);
-//            delay(500);
-//            panCameraOneDirection(KeyEvent.VK_D, 1700);
-//            delay(500);
-//            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.RELLEKA_START));
-//            delay(500);
-//            client.setOculusOrbState(0);
-//            client.setOculusOrbNormalSpeed(12);
-//            pressKey(KeyEvent.VK_DOWN, 2000);
-//        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FAIL1) && isIdle) {
-//            changeCameraYaw(1024);
-//            setCameraZoom(896);
-//            delay(2000);
-//            panCameraOneDirection(KeyEvent.VK_S, 1200);
-//            delay(500);
-//            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.RELLEKA_START));
-//            delay(500);
-//            client.setOculusOrbState(0);
-//            client.setOculusOrbNormalSpeed(12);
-//            pressKey(KeyEvent.VK_DOWN, 2000);
-//        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FAIL2) && isIdle) {
-//            changeCameraYaw(1024);
-//            setCameraZoom(896);
-//            delay(2000);
-//            panCameraOneDirection(KeyEvent.VK_D, 500);
-//            delay(500);
-//            panCameraOneDirection(KeyEvent.VK_S, 1200);
-//            delay(500);
-//            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.RELLEKA_START));
-//            delay(500);
-//            client.setOculusOrbState(0);
-//            client.setOculusOrbNormalSpeed(12);
-//            pressKey(KeyEvent.VK_DOWN, 2000);
-//        }
-//    }
+//            setCameraZoom(500);
+//            // 3. pan to tile (2647, 3662, 3) then click the gap
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFifthRoofGap, 8);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_SIXTH_ROOF) && isIdle) {
+            System.out.println("relleka 6th roof");
+            robot.delay(1000);
+            setCameraZoom(450);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaSixthRoofGap, 10);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FINISH) && isIdle) {
+            System.out.println("relleka finish");
+            robot.delay(500);
+            setCameraZoom(1004);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            panCameraOneDirection(KeyEvent.VK_A, 1700);
+            robot.delay(500);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.RELLEKA_START));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FAIL1) && isIdle) {
+            System.out.println("relleka fail 1");
+            robot.delay(500);
+            setCameraZoom(1004);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            panCameraOneDirection(KeyEvent.VK_W, 1200);
+            robot.delay(500);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.RELLEKA_START));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FAIL2) && isIdle) {
+            System.out.println("relleka fail 2");
+            robot.delay(500);
+            setCameraZoom(1004);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            panCameraToRellekaStartFromFail2();
+            robot.delay(500);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.RELLEKA_START));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            robot.delay(500);
+        }
+    }
 
     private Point generatePointsFromPoint(Point point, int sigma) {
         List<Point> points = new ArrayList<>();
@@ -798,6 +855,13 @@ public class AgilityPlusMain implements Runnable {
         client.setOculusOrbState(1);
         robot.delay(1000);
         pressKey(KeyEvent.VK_A, 600);
+    }
+
+    private void panCameraToRellekaStartFromFail2() {
+        client.setOculusOrbNormalSpeed(40);
+        client.setOculusOrbState(1);
+        pressKey(KeyEvent.VK_A, 600);
+        pressKey(KeyEvent.VK_W, 1100);
     }
 
     private void panCameraOneDirection(int keyEvent, int ms) {
