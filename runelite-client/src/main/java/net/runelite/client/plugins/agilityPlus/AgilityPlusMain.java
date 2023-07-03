@@ -537,6 +537,7 @@ public class AgilityPlusMain implements Runnable {
             client.setOculusOrbNormalSpeed(12);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_START) && isIdle) {
+            robot.delay(500);
             setCameraZoom(760);
             client.setCameraPitchTarget(80);
             changeCameraYaw(1024);
@@ -591,7 +592,7 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_SECOND_ROOF) && isIdle) {
             System.out.println("relleka 2ndd roof");
-            robot.delay(500);
+            robot.delay(1000);
             setCameraZoom(1004);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
