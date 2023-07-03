@@ -26,7 +26,6 @@ public class TwoClickCraftingMain implements Runnable {
     public static boolean isIdle = true;
     public static boolean resetOculusOrb = false;
     public long start;
-    Robot robot = new Robot();
 
     public static List<Item> inventoryItems = new ArrayList<>();
 
@@ -144,16 +143,6 @@ public class TwoClickCraftingMain implements Runnable {
             e.getStackTrace(); }
     }
 
-    private void scheduledGameObjectDelay(GameObject gameObject, int sigma) {
-        isIdle = false;
-        try {
-            getObstacleCenter(gameObject, sigma);
-        } catch (Exception e) {
-            e.printStackTrace();
-            isIdle = true;
-        }
-    }
-
     private void scheduledPointDelay(Point point, int sigma) {
         isIdle = false;
         try {
@@ -162,22 +151,6 @@ public class TwoClickCraftingMain implements Runnable {
             e.printStackTrace();
             isIdle = true;
         }
-    }
-
-    private void getObstacleCenter(GameObject gameObject, int sigma) {
-        final Shape groundObjectConvexHull = gameObject.getConvexHull();
-        if(groundObjectConvexHull == null) return;
-
-        Rectangle groundObjectRectangle = groundObjectConvexHull.getBounds();
-
-        Point obstacleCenter = getCenterOfRectangle(groundObjectRectangle);
-
-        MouseCoordCalculation.generateCoord(obstacleCenter, gameObject, sigma);
-    }
-
-    private Point getCenterOfRectangle(Rectangle rectangle) {
-        // +26 to the Y coordinate because calculations are taken from canvas, not window
-        return new Point((int) rectangle.getCenterX(), (int) rectangle.getCenterY() + 26);
     }
 
     private boolean isBankOpen() {
