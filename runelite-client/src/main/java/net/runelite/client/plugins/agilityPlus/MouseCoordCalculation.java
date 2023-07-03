@@ -4,6 +4,7 @@ import com.fazecast.jSerialComm.SerialPort;
 import net.runelite.api.DecorativeObject;
 import net.runelite.api.GameObject;
 import net.runelite.api.GroundObject;
+import net.runelite.api.NPC;
 
 import java.awt.AWTException;
 import java.awt.Color;
@@ -18,6 +19,23 @@ import java.util.Random;
 
 public class MouseCoordCalculation {
     static Point generatedPoint = null;
+
+    public static void generateCoord(Point point, NPC npc, int sigma) {
+        Shape clickbox = npc.getConvexHull();
+
+        //generate 3 more random points
+        List<Point> points = new ArrayList<>();
+
+        while(points.size() < 3) {
+            Point newPoint = randomCoord(point, sigma);
+            if(isCoordInClickBox(clickbox, newPoint) && isInGame(newPoint))
+                points.add(randomCoord(newPoint, sigma));
+        }
+
+        generatedPoint = randomClusterPicker(points);
+//        moveWindow();
+        mouseMove();
+    }
 
     public static void generateCoord(Point point, GameObject gameObject, int sigma) {
         Shape clickbox = gameObject.getClickbox();
@@ -166,7 +184,7 @@ public class MouseCoordCalculation {
     }
 
     private static void mouseClick() throws IOException {
-        SerialPort sp = SerialPort.getCommPort("COM3"); // device name TODO: must be changed
+        SerialPort sp = SerialPort.getCommPort("COM17"); // device name TODO: must be changed
         sp.setComPortParameters(9600, 8, 1, 0); // default connection settings for Arduino
         sp.setComPortTimeouts(SerialPort.TIMEOUT_WRITE_BLOCKING, 0, 0); // block until bytes can be written
 
