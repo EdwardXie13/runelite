@@ -62,7 +62,8 @@ public class TwoClickCraftingMain implements Runnable {
                 reset();
 
             try {
-                if (isAtWorldPoint(new WorldPoint(3094, 3489, 0)))
+                if (isAtWorldPoint(new WorldPoint(3094, 3489, 0))
+                || isAtWorldPoint(new WorldPoint(3185, 3444, 0)))
                     doCrafting();
             } catch (Exception e) {
                 System.out.println("stuff happened");
@@ -77,16 +78,16 @@ public class TwoClickCraftingMain implements Runnable {
             changeCameraYaw(0);
             setCameraZoom(977);
             delay(500);
-            scheduledPointDelay(new Point(768, 569), 10);
+            scheduledPointDelay(new Point(691, 539), 10);
         } else if(isBankOpen() && checkInventoryCount(dragonHideBodies, 8) && isIdle) {
-            delay(500);
+            delay(300);
             bankingSequence();
         } else if(!isBankOpen() && checkInventoryCount(dragonLeather, 26) && isIdle) {
-            delay(500);
+            delay(300);
             scheduledPointDelay(new Point(782, 768), 3); // row 1 col 1
-            delay(500);
+            delay(300);
             scheduledPointDelay(new Point(782, 804), 3); // row 2 col 1
-            delay(500);
+            delay(300);
         }
     }
 
