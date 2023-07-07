@@ -76,11 +76,13 @@ public class TanningPlusPlugin extends Plugin {
             toggleStatus = STATUS.START;
             hasStarted = true;
             thread = new TanningPlusMain(client, clientThread);
+            TanningPlusMain.pause = false;
             System.out.println("status is go");
         } else if (chatBoxMessage.equals("2") && toggleStatus == STATUS.START && hasStarted) {
             toggleStatus = STATUS.STOP;
             thread.t.interrupt();
             hasStarted = false;
+            TanningPlusMain.pause = true;
             System.out.println("status is stop");
         }
     }

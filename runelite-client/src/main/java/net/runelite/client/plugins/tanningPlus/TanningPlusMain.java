@@ -31,6 +31,8 @@ public class TanningPlusMain implements Runnable {
     public long start;
     Robot robot = new Robot();
 
+    public static boolean pause = false;
+
     private static final Set<Integer> dragonHides = ImmutableSet.of(
             ItemID.GREEN_DRAGONHIDE,
             ItemID.BLUE_DRAGONHIDE
@@ -62,7 +64,7 @@ public class TanningPlusMain implements Runnable {
     // execution of thread starts from run() method
     public void run()
     {
-        while (!Thread.interrupted()) {
+        while (!Thread.interrupted() && !pause) {
             if (checkIdle() && checkLastReset())
                 reset();
 
@@ -92,7 +94,9 @@ public class TanningPlusMain implements Runnable {
             delay(500);
             scheduledPointDelay(new Point(117, 283), 12);
             delay(1500);
-        } else if((isAtWorldPoint(TANNER_STAIR_TILE) || client.getLocalPlayer().getWorldLocation().getPlane() == 1) && readyForTanner() && !isTanningOpen()) {
+        } else if((isAtWorldPoint(TANNER_STAIR_TILE) || client.getLocalPlayer().getWorldLocation().getPlane() == 1) && readyForTanner() && !isTanningOpen() && !isIdle) {
+            isIdle = true;
+        } else if((isAtWorldPoint(TANNER_STAIR_TILE) || client.getLocalPlayer().getWorldLocation().getPlane() == 1) && readyForTanner() && !isTanningOpen() && isIdle) {
             System.out.println("click tanner");
             delay(500);
             client.setCameraPitchTarget(512);
@@ -121,7 +125,7 @@ public class TanningPlusMain implements Runnable {
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(640);
-            delay(500);
+            delay(750);
             scheduledGameObjectDelay(TanningPlusPlugin.bankChest, 6);
             delay(500);
         }
@@ -170,12 +174,25 @@ public class TanningPlusMain implements Runnable {
         scheduledPointDelay(new Point(782, 768), 3);
         delay(700);
 
+        if(!hasEnoughStamina(20)) {
+            // withdraw strange fruit
+            scheduledPointDelay(new Point(476, 777), 3);
+            delay(700);
+            // eat
+            scheduledPointDelay(new Point(782, 768), 3);
+            delay(700);
+        }
+
         // withdraw hides
         scheduledPointDelay(new Point(524, 793), 3);
         delay(700);
         pressKey(KeyEvent.VK_ESCAPE, 100);
         delay(1000);
         isIdle = true;
+    }
+
+    private boolean hasEnoughStamina(int stamina) {
+        return client.getEnergy()/100 >= stamina;
     }
 
     public int getRegionID() {
