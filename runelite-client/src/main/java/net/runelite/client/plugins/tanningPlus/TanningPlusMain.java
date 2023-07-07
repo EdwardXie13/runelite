@@ -92,18 +92,16 @@ public class TanningPlusMain implements Runnable {
             delay(500);
             scheduledPointDelay(new Point(117, 283), 12);
             delay(1500);
-        } else if(isAtWorldPoint(TANNER_STAIR_TILE) && readyForBank()) {
-            System.out.println("mistake tile");
-            delay(500);
         } else if((isAtWorldPoint(TANNER_STAIR_TILE) || client.getLocalPlayer().getWorldLocation().getPlane() == 1) && readyForTanner() && !isTanningOpen()) {
             System.out.println("click tanner");
+            delay(500);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(520);
             delay(500);
             // assume tanner was clicked correctly
             scheduledNPCDelay(TanningPlusPlugin.tanner, 4);
-            delay(1000);
+            delay(2000);
             isIdle = true;
         } else if(isTanningOpen() && readyForTanner() && isIdle) {
             System.out.println("click dragonhide");
@@ -114,9 +112,9 @@ public class TanningPlusMain implements Runnable {
             isIdle = true;
         } else if(readyForBank() && client.getLocalPlayer().getWorldLocation().getPlane() == 1 && isIdle) {
             System.out.println("click top stairs");
-            // find stars
             scheduledGameObjectDelay(TanningPlusPlugin.topStair, 6);
-            delay(1000);
+            delay(2000);
+        } else if(readyForBank() && client.getLocalPlayer().getWorldLocation().getPlane() == 0 && !isIdle) {
             isIdle = true;
         } else if(isAtWorldPoint(BOTTOM_STAIR_TILE) && readyForBank() && isIdle) {
             System.out.println("click bank");
