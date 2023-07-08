@@ -37,10 +37,6 @@ public class TanningPlusPlugin extends Plugin {
     @Inject
     private ClientThread clientThread;
 
-    private STATUS toggleStatus = STATUS.STOP;
-
-    private boolean hasStarted = false;
-
     TanningPlusMain thread;
 
     public static NPC tanner = null;
@@ -48,11 +44,6 @@ public class TanningPlusPlugin extends Plugin {
     public static GameObject bankChest = null;
     public static GameObject bottomStair = null;
     public static GameObject topStair = null;
-
-    enum STATUS{
-        START,
-        STOP
-    }
 
     @Subscribe
     public void onGameTick(GameTick event) throws AWTException {

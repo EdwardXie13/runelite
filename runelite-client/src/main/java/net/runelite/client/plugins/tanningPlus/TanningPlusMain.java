@@ -48,6 +48,40 @@ public class TanningPlusMain implements Runnable {
     private final WorldPoint TANNER_STAIR_TILE = new WorldPoint(2933, 3282, 1);
     private final WorldPoint BOTTOM_STAIR_TILE = new WorldPoint(2932, 3281, 0);
 
+    private final WorldPoint[] TANNER_AREA = {
+      new WorldPoint(2935, 3288, 1),
+            new WorldPoint(2930, 3287, 1),
+            new WorldPoint(2933, 3287, 1),
+            new WorldPoint(2934, 3287, 1),
+            new WorldPoint(2935, 3287, 1),
+            new WorldPoint(2930, 3286, 1),
+            new WorldPoint(2931, 3286, 1),
+            new WorldPoint(2932, 3286, 1),
+            new WorldPoint(2933, 3286, 1),
+            new WorldPoint(2934, 3286, 1),
+            new WorldPoint(2935, 3286, 1),
+            new WorldPoint(2936, 3286, 1),
+            new WorldPoint(2931, 3285, 1),
+            new WorldPoint(2933, 3285, 1),
+            new WorldPoint(2934, 3285, 1),
+            new WorldPoint(2935, 3285, 1),
+            new WorldPoint(2930, 3284, 1),
+            new WorldPoint(2931, 3284, 1),
+            new WorldPoint(2933, 3284, 1),
+            new WorldPoint(2934, 3284, 1),
+            new WorldPoint(2935, 3284, 1),
+            new WorldPoint(2936, 3284, 1),
+            new WorldPoint(2930, 3283, 1),
+            new WorldPoint(2933, 3283, 1),
+            new WorldPoint(2934, 3283, 1),
+            new WorldPoint(2930, 3282, 1),
+            new WorldPoint(2933, 3282, 1),
+            new WorldPoint(2934, 3282, 1),
+            new WorldPoint(2931, 3281, 1),
+            new WorldPoint(2932, 3281, 1),
+            new WorldPoint(2933, 3281, 1),
+    };
+
     Thread t;
 
     TanningPlusMain(Client client, ClientThread clientThread) throws AWTException {
@@ -64,15 +98,12 @@ public class TanningPlusMain implements Runnable {
     public void run()
     {
         while (isRunning) {
+            System.out.println("running");
             if (checkIdle() && checkLastReset())
                 reset();
 
-            try {
-                if (getRegionID() == 11571)
-                    doTanning();
-            } catch (Exception e) {
-                System.out.println("stuff happened");
-            }
+            if (getRegionID() == 11571)
+                doTanning();
         }
         System.out.println("Thread has stopped.");
     }
@@ -85,6 +116,16 @@ public class TanningPlusMain implements Runnable {
             System.out.println("close bank");
             pressKey(KeyEvent.VK_ESCAPE, 100);
             delay(250);
+            isIdle = true;
+        } else if(isAtWorldPoint(BOTTOM_STAIR_TILE) && readyForBank() && isIdle) {
+            System.out.println("click bank");
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            setCameraZoom(640);
+            delay(750);
+            scheduledGameObjectDelay(TanningPlusPlugin.bankChest, 5);
+            delay(650);
+            isIdle = true;
         } else if(isAtWorldPoint(BANK_TILE) && !isBankOpen() && readyForTanner() && isIdle) {
             System.out.println("click bottom stairs");
             client.setCameraPitchTarget(512);
@@ -93,9 +134,8 @@ public class TanningPlusMain implements Runnable {
             delay(500);
             scheduledPointDelay(new Point(117, 283), 12);
             delay(1500);
-        } else if((isAtWorldPoint(TANNER_STAIR_TILE) || client.getLocalPlayer().getWorldLocation().getPlane() == 1) && readyForTanner() && !isTanningOpen() && !isIdle) {
             isIdle = true;
-        } else if((isAtWorldPoint(TANNER_STAIR_TILE) || client.getLocalPlayer().getWorldLocation().getPlane() == 1) && readyForTanner() && !isTanningOpen() && isIdle) {
+        } else if(isInArea(TANNER_AREA) && readyForTanner() && !isTanningOpen() && isIdle) {
             System.out.println("click tanner");
             delay(500);
             client.setCameraPitchTarget(512);
@@ -113,20 +153,10 @@ public class TanningPlusMain implements Runnable {
             scheduledPointDelay(new Point(189, 532), 12);
             delay(1000);
             isIdle = true;
-        } else if(readyForBank() && client.getLocalPlayer().getWorldLocation().getPlane() == 1 && isIdle) {
+        } else if(readyForBank() && isInArea(TANNER_AREA) && isIdle) {
             System.out.println("click top stairs");
             scheduledGameObjectDelay(TanningPlusPlugin.topStair, 6);
             delay(2000);
-        } else if(readyForBank() && client.getLocalPlayer().getWorldLocation().getPlane() == 0 && !isIdle) {
-            isIdle = true;
-        } else if(isAtWorldPoint(BOTTOM_STAIR_TILE) && readyForBank() && isIdle) {
-            System.out.println("click bank");
-            client.setCameraPitchTarget(512);
-            changeCameraYaw(0);
-            setCameraZoom(640);
-            delay(750);
-            scheduledGameObjectDelay(TanningPlusPlugin.bankChest, 5);
-            delay(500);
         }
     }
 
@@ -231,6 +261,16 @@ public class TanningPlusMain implements Runnable {
         return playerX && playerY;
     }
 
+    private boolean isInArea(WorldPoint[] area) {
+        for (WorldPoint worldPoint : area) {
+            if (worldPoint.getX() == client.getLocalPlayer().getWorldLocation().getX() &&
+                    worldPoint.getY() == client.getLocalPlayer().getWorldLocation().getY()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void changeCameraYaw(int yaw) {
         if(client.getCameraYaw() == yaw)
             return;
@@ -290,6 +330,7 @@ public class TanningPlusMain implements Runnable {
 
     private boolean checkIdle()
     {
+        System.out.println("checkingIdle");
         int idleClientTicks = client.getKeyboardIdleTicks();
 
         if (client.getMouseIdleTicks() < idleClientTicks)
@@ -311,6 +352,7 @@ public class TanningPlusMain implements Runnable {
         long end = System.currentTimeMillis();
         double sec = (end - start) / 1000F;
 
+        System.out.println("sec: " + sec);
         return sec >= 5;
     }
 }
