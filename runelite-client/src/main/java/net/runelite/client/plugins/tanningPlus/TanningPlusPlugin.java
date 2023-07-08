@@ -24,9 +24,6 @@ import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
 import java.awt.AWTException;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Shape;
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -72,17 +69,13 @@ public class TanningPlusPlugin extends Plugin {
         String chatBoxMessage = stripTargetAnchors(chatboxInput.getText());
         if(chatBoxMessage == null) return;
 
-        if(chatBoxMessage.equals("1") && toggleStatus == STATUS.STOP && !hasStarted) {
-            toggleStatus = STATUS.START;
-            hasStarted = true;
+        if(chatBoxMessage.equals("1") && !TanningPlusMain.isRunning) {
             thread = new TanningPlusMain(client, clientThread);
-            TanningPlusMain.pause = false;
+            TanningPlusMain.isRunning = true;
             System.out.println("status is go");
-        } else if (chatBoxMessage.equals("2") && toggleStatus == STATUS.START && hasStarted) {
-            toggleStatus = STATUS.STOP;
+        } else if (chatBoxMessage.equals("2") && TanningPlusMain.isRunning) {
             thread.t.interrupt();
-            hasStarted = false;
-            TanningPlusMain.pause = true;
+            TanningPlusMain.isRunning = false;
             System.out.println("status is stop");
         }
     }
@@ -94,11 +87,9 @@ public class TanningPlusPlugin extends Plugin {
     @Subscribe
     private void onGameStateChanged(GameStateChanged event)
     {
-        if (event.getGameState() == GameState.LOGIN_SCREEN && hasStarted)
+        if (event.getGameState() == GameState.LOGIN_SCREEN && TanningPlusMain.isRunning)
         {
-            toggleStatus = STATUS.STOP;
-            thread.t.interrupt();
-            hasStarted = false;
+            TanningPlusMain.isRunning = false;
             System.out.println("status is stop (login screen)");
         }
     }

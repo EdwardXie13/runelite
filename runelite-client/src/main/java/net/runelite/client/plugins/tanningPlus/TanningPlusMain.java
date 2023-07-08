@@ -27,11 +27,10 @@ public class TanningPlusMain implements Runnable {
     private final Client client;
     private final ClientThread clientThread;
     public static boolean isIdle = true;
-    public static boolean resetOculusOrb = false;
     public long start;
     Robot robot = new Robot();
 
-    public static boolean pause = false;
+    public static boolean isRunning = false;
 
     private static final Set<Integer> dragonHides = ImmutableSet.of(
             ItemID.GREEN_DRAGONHIDE,
@@ -64,7 +63,7 @@ public class TanningPlusMain implements Runnable {
     // execution of thread starts from run() method
     public void run()
     {
-        while (!Thread.interrupted() && !pause) {
+        while (isRunning) {
             if (checkIdle() && checkLastReset())
                 reset();
 
@@ -126,7 +125,7 @@ public class TanningPlusMain implements Runnable {
             changeCameraYaw(0);
             setCameraZoom(640);
             delay(750);
-            scheduledGameObjectDelay(TanningPlusPlugin.bankChest, 6);
+            scheduledGameObjectDelay(TanningPlusPlugin.bankChest, 5);
             delay(500);
         }
     }
@@ -304,7 +303,6 @@ public class TanningPlusMain implements Runnable {
     private void reset() {
         System.out.println("idle for too long, reset");
         isIdle = true;
-        resetOculusOrb = true;
         delay(200);
         start = System.currentTimeMillis();
     }
