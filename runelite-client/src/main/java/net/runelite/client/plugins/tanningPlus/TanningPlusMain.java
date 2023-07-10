@@ -21,6 +21,7 @@ import java.awt.Shape;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class TanningPlusMain implements Runnable {
@@ -47,6 +48,8 @@ public class TanningPlusMain implements Runnable {
     private final WorldPoint BANK_TILE = new WorldPoint(2935, 3280, 0);
     private final WorldPoint TANNER_STAIR_TILE = new WorldPoint(2933, 3282, 1);
     private final WorldPoint BOTTOM_STAIR_TILE = new WorldPoint(2932, 3281, 0);
+
+    public NPC tanner = null;
 
     private final WorldPoint[] TANNER_AREA = {
       new WorldPoint(2935, 3288, 1),
@@ -123,7 +126,7 @@ public class TanningPlusMain implements Runnable {
             changeCameraYaw(0);
             setCameraZoom(640);
             delay(750);
-            scheduledGameObjectDelay(TanningPlusPlugin.bankChest, 5);
+            scheduledGameObjectDelay(TanningPlusPlugin.bankChest, 4);
             delay(650);
             isIdle = true;
         } else if(isAtWorldPoint(BANK_TILE) && !isBankOpen() && readyForTanner() && isIdle) {
@@ -133,17 +136,23 @@ public class TanningPlusMain implements Runnable {
             setCameraZoom(640);
             delay(500);
             scheduledPointDelay(new Point(117, 283), 12);
-            delay(1500);
+            delay(500);
+
+            while(!isInArea(TANNER_AREA)) {
+                System.out.println("waiting to be upstairs");
+                delay(500);
+            }
+            delay(1000);
             isIdle = true;
         } else if(isInArea(TANNER_AREA) && readyForTanner() && !isTanningOpen() && isIdle) {
             System.out.println("click tanner");
-            delay(500);
+            delay(1500);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             setCameraZoom(520);
-            delay(500);
-            // assume tanner was clicked correctly
-            scheduledNPCDelay(TanningPlusPlugin.tanner, 4);
+            delay(500); // 750 no crash?
+            // find tanner
+            scheduledNPCDelay(findTanner(), 3);
             delay(2000);
             isIdle = true;
         } else if(isTanningOpen() && readyForTanner() && isIdle) {
@@ -153,7 +162,7 @@ public class TanningPlusMain implements Runnable {
             scheduledPointDelay(new Point(189, 532), 12);
             delay(1000);
             isIdle = true;
-        } else if(readyForBank() && isInArea(TANNER_AREA) && isIdle) {
+        } else if(readyForBank() && isInArea(TANNER_AREA) && findNPCID(5809) && isIdle) {
             System.out.println("click top stairs");
             scheduledGameObjectDelay(TanningPlusPlugin.topStair, 6);
             delay(2000);
@@ -205,7 +214,7 @@ public class TanningPlusMain implements Runnable {
 
         if(!hasEnoughStamina(20)) {
             // withdraw strange fruit
-            scheduledPointDelay(new Point(476, 777), 3);
+            scheduledPointDelay(new Point(475, 792), 3);
             delay(700);
             // eat
             scheduledPointDelay(new Point(782, 768), 3);
@@ -247,7 +256,7 @@ public class TanningPlusMain implements Runnable {
 
         Point obstacleCenter = getCenterOfRectangle(groundObjectRectangle);
 
-        MouseCoordCalculation.generateCoord(obstacleCenter, npc, sigma);
+        MouseCoordCalculation.generateCoord(obstacleCenter, sigma);
     }
 
     private Point getCenterOfRectangle(Rectangle rectangle) {
@@ -269,6 +278,16 @@ public class TanningPlusMain implements Runnable {
             }
         }
         return false;
+    }
+
+    private NPC findTanner() {
+        List<NPC> npcs = client.getNpcs();
+        return npcs.stream().filter(npc -> npc.getId() == 5809).findFirst().get();
+    }
+
+    private boolean findNPCID(int id) {
+        List<NPC> npcs = client.getNpcs();
+        return npcs.stream().anyMatch(npc -> npc.getId() == id);
     }
 
     private void changeCameraYaw(int yaw) {

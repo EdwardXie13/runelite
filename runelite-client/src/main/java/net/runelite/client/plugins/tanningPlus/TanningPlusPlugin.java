@@ -39,7 +39,7 @@ public class TanningPlusPlugin extends Plugin {
 
     TanningPlusMain thread;
 
-    public static NPC tanner = null;
+//    public static NPC tanner = null;
 
     public static GameObject bankChest = null;
     public static GameObject bottomStair = null;
@@ -85,27 +85,28 @@ public class TanningPlusPlugin extends Plugin {
         }
     }
 
-    @Subscribe
-    public void onNpcSpawned(NpcSpawned event)
-    {
-        final NPC npc = event.getNpc();
-
-        if (npc.getId() == NpcID.TANNER)
-        {
-            tanner = npc;
-        }
-    }
-
-    @Subscribe
-    public void onNpcDespawned(NpcDespawned event)
-    {
-        final NPC npc = event.getNpc();
-
-        if (npc.getId() == NpcID.TANNER)
-        {
-            tanner = null;
-        }
-    }
+//    @Subscribe
+//    public void onNpcSpawned(NpcSpawned event)
+//    {
+//        final NPC npc = event.getNpc();
+//
+//        if (npc.getId() == NpcID.TANNER)
+//        {
+//            System.out.println("tanner spawned");
+//            tanner = npc;
+//        }
+//    }
+//
+//    @Subscribe
+//    public void onNpcDespawned(NpcDespawned event)
+//    {
+//        final NPC npc = event.getNpc();
+//
+//        if (npc.getId() == NpcID.TANNER)
+//        {
+//            tanner = null;
+//        }
+//    }
 
     @Subscribe
     public void onGameObjectSpawned(GameObjectSpawned event)

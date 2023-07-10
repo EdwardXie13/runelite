@@ -20,23 +20,6 @@ import java.util.Random;
 public class MouseCoordCalculation {
     static Point generatedPoint = null;
 
-    public static void generateCoord(Point point, NPC npc, int sigma) {
-        Shape clickbox = npc.getConvexHull();
-
-        //generate 3 more random points
-        List<Point> points = new ArrayList<>();
-
-        while(points.size() < 3) {
-            Point newPoint = randomCoord(point, sigma);
-            if(isCoordInClickBox(clickbox, newPoint) && isInGame(newPoint))
-                points.add(randomCoord(newPoint, sigma));
-        }
-
-        generatedPoint = randomClusterPicker(points);
-//        moveWindow();
-        mouseMove();
-    }
-
     public static void generateCoord(Point point, GameObject gameObject, int sigma) {
         Shape clickbox = gameObject.getClickbox();
 
