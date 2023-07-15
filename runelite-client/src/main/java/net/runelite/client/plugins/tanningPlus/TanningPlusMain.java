@@ -2,26 +2,19 @@ package net.runelite.client.plugins.tanningPlus;
 
 import com.google.common.collect.ImmutableSet;
 import net.runelite.api.Client;
-import net.runelite.api.GameObject;
 import net.runelite.api.Item;
 import net.runelite.api.ItemID;
-import net.runelite.api.NPC;
 import net.runelite.api.ScriptID;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
 
-import java.awt.AWTException;
 import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Robot;
-import java.awt.Shape;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 
 public class TanningPlusMain implements Runnable {
@@ -33,6 +26,8 @@ public class TanningPlusMain implements Runnable {
     public static boolean isRunning = false;
 
     public static List<Item> inventoryItems = new ArrayList<>();
+
+    Random random = new Random();
 
     private static final Set<Integer> dragonLeather = ImmutableSet.of(
             ItemID.GREEN_DRAGON_LEATHER,
@@ -82,6 +77,8 @@ public class TanningPlusMain implements Runnable {
             setCameraZoom(977);
             delay(500);
             scheduledPointDelay(new Point(691, 539), 10);
+            delay(500);
+            isIdle = true;
         }
         // bank is open and bank sequence
         else if(isBankOpen() && checkInventoryCount(dragonLeather, 25) && isIdle) {
@@ -90,12 +87,22 @@ public class TanningPlusMain implements Runnable {
         }
         // click tan if have atleast 5 hide
         else if(!isBankOpen() && checkInventoryCount(dragonHide, 5) && isIdle) {
+            System.out.println("press tan");
             delay(300);
-            pressKey(KeyEvent.VK_F3);
-            delay(100);
+            pressKey(KeyEvent.VK_F6);
+            delay(300);
             // + 20, +20 from top left of sprite
-            scheduledPointDelay(new Point(843, 864), 4); // row 1 col 1
-            delay(300);
+            if(checkInventoryCount(dragonHide, 25))
+                scheduledPointDelay(new Point(843, 864), 4); // row 1 col 1
+            else
+                try {
+                    MouseCoordCalculation.mouseClick();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            delay(random.nextInt(700 - 400) + 400);
+            isIdle = true;
         }
     }
 
