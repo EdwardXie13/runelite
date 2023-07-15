@@ -24,8 +24,9 @@ public class TwoClickCraftingMain implements Runnable {
     private final Client client;
     private final ClientThread clientThread;
     public static boolean isIdle = true;
-    public static boolean resetOculusOrb = false;
     public long start;
+
+    public static boolean isRunning = false;
 
     public static List<Item> inventoryItems = new ArrayList<>();
 
@@ -57,17 +58,13 @@ public class TwoClickCraftingMain implements Runnable {
 
     public void run()
     {
-        while (!Thread.interrupted()) {
+        while (isRunning) {
             if (checkIdle() && checkLastReset())
                 reset();
 
-            try {
-                if (isAtWorldPoint(new WorldPoint(3094, 3489, 0))
+            if (isAtWorldPoint(new WorldPoint(3094, 3489, 0))
                 || isAtWorldPoint(new WorldPoint(3185, 3444, 0)))
                     doCrafting();
-            } catch (Exception e) {
-                System.out.println("stuff happened");
-            }
         }
         System.out.println("Thread has stopped.");
     }
@@ -171,9 +168,7 @@ public class TwoClickCraftingMain implements Runnable {
     }
 
     private void reset() {
-        System.out.println("idle for too long, reset");
         isIdle = true;
-        resetOculusOrb = true;
         delay(200);
         start = System.currentTimeMillis();
     }

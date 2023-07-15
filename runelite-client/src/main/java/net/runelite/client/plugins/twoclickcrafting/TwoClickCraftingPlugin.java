@@ -2,7 +2,6 @@ package net.runelite.client.plugins.twoclickcrafting;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
-import net.runelite.api.GameObject;
 import net.runelite.api.GameState;
 import net.runelite.api.InventoryID;
 
@@ -31,16 +30,7 @@ public class TwoClickCraftingPlugin extends Plugin {
     @Inject
     private ClientThread clientThread;
 
-    private STATUS toggleStatus = STATUS.STOP;
-
-    private boolean hasStarted = false;
-
     TwoClickCraftingMain thread;
-
-    enum STATUS{
-        START,
-        STOP
-    }
 
     @Subscribe
     public void onGameTick(GameTick event) throws AWTException {
@@ -57,31 +47,23 @@ public class TwoClickCraftingPlugin extends Plugin {
         String chatBoxMessage = stripTargetAnchors(chatboxInput.getText());
         if(chatBoxMessage == null) return;
 
-        if(chatBoxMessage.equals("1") && toggleStatus == STATUS.STOP && !hasStarted) {
-            toggleStatus = STATUS.START;
-            hasStarted = true;
+        if(chatBoxMessage.equals("1") && !TwoClickCraftingMain.isRunning) {
             thread = new TwoClickCraftingMain(client, clientThread);
+            TwoClickCraftingMain.isRunning = true;
             System.out.println("status is go");
-        } else if (chatBoxMessage.equals("2") && toggleStatus == STATUS.START && hasStarted) {
-            toggleStatus = STATUS.STOP;
+        } else if (chatBoxMessage.equals("2") && TwoClickCraftingMain.isRunning) {
             thread.t.interrupt();
-            hasStarted = false;
+            TwoClickCraftingMain.isRunning = false;
             System.out.println("status is stop");
         }
-    }
-
-    public int getRegionID() {
-        return client.getLocalPlayer().getWorldLocation().getRegionID();
     }
 
     @Subscribe
     private void onGameStateChanged(GameStateChanged event)
     {
-        if (event.getGameState() == GameState.LOGIN_SCREEN && hasStarted)
+        if (event.getGameState() == GameState.LOGIN_SCREEN && TwoClickCraftingMain.isRunning)
         {
-            toggleStatus = STATUS.STOP;
-            thread.t.interrupt();
-            hasStarted = false;
+            TwoClickCraftingMain.isRunning = false;
             System.out.println("status is stop (login screen)");
         }
     }

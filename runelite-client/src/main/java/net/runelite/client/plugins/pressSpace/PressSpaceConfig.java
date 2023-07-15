@@ -67,11 +67,21 @@ public interface PressSpaceConfig extends Config {
     }
 
     @ConfigItem(
-            keyName = "dragonhide",
-            name = "Dragonhide",
+            keyName = "dragonhideBody",
+            name = "DragonhideBody",
             description = "close bank needle + thread + dragonhide"
     )
     default boolean craftDragonhide()
+    {
+        return true;
+    }
+
+    @ConfigItem(
+            keyName = "dragonhideTanning",
+            name = "DragonhideTanning",
+            description = "close bank runes + dragonhide"
+    )
+    default boolean tanDragonhide()
     {
         return true;
     }

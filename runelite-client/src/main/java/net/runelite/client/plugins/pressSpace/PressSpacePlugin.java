@@ -85,6 +85,8 @@ public class PressSpacePlugin extends Plugin {
                         countItem(ItemID.BLACK_DRAGON_LEATHER) == 26)
         )
             return Recipe.Dragonhide.getId();
+        else if(config.tanDragonhide() && containsItem(ItemID.NATURE_RUNE) && containsItem(ItemID.ASTRAL_RUNE) && containsItem(ItemID.JUG))
+            return Recipe.Dragonhide.getId();
         else
             return Recipe.None.getId();
     }

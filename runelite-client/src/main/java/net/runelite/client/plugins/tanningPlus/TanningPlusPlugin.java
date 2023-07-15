@@ -5,16 +5,12 @@ import net.runelite.api.Client;
 import net.runelite.api.GameObject;
 import net.runelite.api.GameState;
 import net.runelite.api.InventoryID;
-import net.runelite.api.NPC;
-import net.runelite.api.NpcID;
 import net.runelite.api.ObjectID;
 import net.runelite.api.events.GameObjectDespawned;
 import net.runelite.api.events.GameObjectSpawned;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
-import net.runelite.api.events.NpcDespawned;
-import net.runelite.api.events.NpcSpawned;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
@@ -38,12 +34,6 @@ public class TanningPlusPlugin extends Plugin {
     private ClientThread clientThread;
 
     TanningPlusMain thread;
-
-//    public static NPC tanner = null;
-
-    public static GameObject bankChest = null;
-    public static GameObject bottomStair = null;
-    public static GameObject topStair = null;
 
     @Subscribe
     public void onGameTick(GameTick event) throws AWTException {
@@ -71,10 +61,6 @@ public class TanningPlusPlugin extends Plugin {
         }
     }
 
-    public int getRegionID() {
-        return client.getLocalPlayer().getWorldLocation().getRegionID();
-    }
-
     @Subscribe
     private void onGameStateChanged(GameStateChanged event)
     {
@@ -82,57 +68,6 @@ public class TanningPlusPlugin extends Plugin {
         {
             TanningPlusMain.isRunning = false;
             System.out.println("status is stop (login screen)");
-        }
-    }
-
-//    @Subscribe
-//    public void onNpcSpawned(NpcSpawned event)
-//    {
-//        final NPC npc = event.getNpc();
-//
-//        if (npc.getId() == NpcID.TANNER)
-//        {
-//            System.out.println("tanner spawned");
-//            tanner = npc;
-//        }
-//    }
-//
-//    @Subscribe
-//    public void onNpcDespawned(NpcDespawned event)
-//    {
-//        final NPC npc = event.getNpc();
-//
-//        if (npc.getId() == NpcID.TANNER)
-//        {
-//            tanner = null;
-//        }
-//    }
-
-    @Subscribe
-    public void onGameObjectSpawned(GameObjectSpawned event)
-    {
-        final GameObject gameObject = event.getGameObject();
-        int gameobjectID = gameObject.getId();
-        if(gameobjectID == ObjectID.BANK_CHEST_14886) {
-            bankChest = gameObject;
-        } else if(gameobjectID == ObjectID.STAIRCASE_9582) {
-            bottomStair = gameObject;
-        } else if(gameobjectID == ObjectID.STAIRCASE_9584) {
-            topStair = gameObject;
-        }
-    }
-
-    @Subscribe
-    public void onGameObjectDespawned(GameObjectDespawned event)
-    {
-        final GameObject gameObject = event.getGameObject();
-        int gameobjectID = gameObject.getId();
-        if(gameobjectID == ObjectID.BANK_CHEST_14886) {
-            bankChest = null;
-        } else if(gameobjectID == ObjectID.STAIRCASE_9582) {
-            bottomStair = null;
-        } else if(gameobjectID == ObjectID.STAIRCASE_9584) {
-            topStair = null;
         }
     }
 
