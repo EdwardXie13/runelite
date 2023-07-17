@@ -42,6 +42,7 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.client.plugins.rcPlusBloods.RCPlusBloodsMain;
 import net.runelite.client.plugins.rcPlusBloods.RCPlusBloodsPlugin;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
@@ -297,12 +298,12 @@ public class DenseRunestoneOverlay extends Overlay
             northRockClimb(graphics);
         }
         //after rock climb then render the altar
-        else if(getInventorySlotID(27) == 13445 && isNearWorldTile(afterNorthRock,1) && !RCPlusBloodsPlugin.hasStarted) {
+        else if(getInventorySlotID(27) == 13445 && isNearWorldTile(afterNorthRock,1) && !RCPlusBloodsMain.isRunning) {
             changeCameraYaw(cameraHeadingAltar);
             renderObject(graphics, darkAltar, Pink_Color, Pink_Color, Pink_Color);
         }
         //if destination is dark altar
-        else if(destinationDarkAltar() && !secondRun && inventoryContainsBlocks() && !RCPlusBloodsPlugin.hasStarted) {
+        else if(destinationDarkAltar() && !secondRun && inventoryContainsBlocks() && !RCPlusBloodsMain.isRunning) {
             client.setOculusOrbState(1);
         }
         //if destination is return Area
@@ -312,7 +313,7 @@ public class DenseRunestoneOverlay extends Overlay
         }
         //if at altar after imbue but NO fragments / YES fragments
         else if(isInArea(darkAltarArea) && getInventorySlotID(27) == 13446) {
-            if(secondRun && !RCPlusBloodsPlugin.hasStarted) {
+            if(secondRun && !RCPlusBloodsMain.isRunning) {
                 changeCameraYaw(cameraRunZone);
                 renderTileArea(graphics, LocalPoint.fromWorld(client, runZone), 3);
             } else {
