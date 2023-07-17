@@ -12,7 +12,6 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.GroundObjectDespawned;
 import net.runelite.api.events.GroundObjectSpawned;
-import net.runelite.api.events.ScriptCallbackEvent;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
@@ -35,16 +34,7 @@ public class AgilityPlusPlugin extends Plugin {
     @Inject
     private ClientThread clientThread;
 
-    private STATUS toggleStatus = STATUS.STOP;
-
-    private boolean hasStarted = false;
-
     AgilityPlusMain thread;
-
-    enum STATUS{
-        START,
-        STOP
-    }
 
     @Subscribe
     public void onGameTick(GameTick event) throws AWTException {
@@ -62,15 +52,13 @@ public class AgilityPlusPlugin extends Plugin {
         String chatBoxMessage = stripTargetAnchors(chatboxInput.getText());
         if(chatBoxMessage == null) return;
 
-        if(chatBoxMessage.equals("1") && toggleStatus == STATUS.STOP && !hasStarted) {
-            toggleStatus = STATUS.START;
-            hasStarted = true;
+        if(chatBoxMessage.equals("1") && !AgilityPlusMain.isRunning) {
             thread = new AgilityPlusMain(client, clientThread);
+            AgilityPlusMain.isRunning = true;
             System.out.println("status is go");
-        } else if (chatBoxMessage.equals("2") && toggleStatus == STATUS.START && hasStarted) {
-            toggleStatus = STATUS.STOP;
+        } else if (chatBoxMessage.equals("2") && AgilityPlusMain.isRunning) {
             thread.t.interrupt();
-            hasStarted = false;
+            AgilityPlusMain.isRunning = false;
             System.out.println("status is stop");
         }
     }
@@ -87,11 +75,11 @@ public class AgilityPlusPlugin extends Plugin {
     }
 
     @Subscribe
-    private void onGameStateChanged(GameStateChanged ev)
+    private void onGameStateChanged(GameStateChanged event)
     {
-        if (ev.getGameState() == GameState.LOGIN_SCREEN && hasStarted)
+        if (event.getGameState() == GameState.LOGIN_SCREEN && AgilityPlusMain.isRunning)
         {
-            toggleStatus = STATUS.STOP;
+            AgilityPlusMain.isRunning = false;
             System.out.println("status is stop (login screen)");
         }
     }

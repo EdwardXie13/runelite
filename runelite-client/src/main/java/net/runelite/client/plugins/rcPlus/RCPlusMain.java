@@ -15,7 +15,12 @@ import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
 
-import java.awt.*;
+import java.awt.AWTException;
+import java.awt.Point;
+import java.awt.Polygon;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.Shape;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +35,7 @@ public class RCPlusMain implements Runnable {
     public static boolean isIdle = true;
     public static boolean resetOculusOrb = false;
     public long start;
+    public static boolean isRunning = false;
     Robot robot = new Robot();
 
     public static Set<Integer> fireAltarRegions = ImmutableSet.of(12344, 13130, 13106, 10315, 12600);
@@ -50,16 +56,12 @@ public class RCPlusMain implements Runnable {
     // execution of thread starts from run() method
     public void run()
     {
-        while (!Thread.interrupted()) {
+        while (isRunning) {
             if (checkIdle() && checkLastReset())
                 reset();
 
-            try {
-                if (fireAltarRegions.contains(getRegionID()))
+            if (fireAltarRegions.contains(getRegionID()))
                     doFireAltar();
-            } catch (Exception e) {
-                System.out.println("stuff happened");
-            }
         }
         System.out.println("Thread has stopped.");
     }

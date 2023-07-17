@@ -34,6 +34,7 @@ public class RCPlusBloodsMain implements Runnable {
     public long start;
     public long botStartTimer;
     public int botStopTimer;
+    public static boolean isRunning = false;
     Robot robot = new Robot();
 
     public static Set<Integer> bloodAltarRegions = ImmutableSet.of(
@@ -63,7 +64,7 @@ public class RCPlusBloodsMain implements Runnable {
     // execution of thread starts from run() method
     public void run()
     {
-        while (!Thread.interrupted()) {
+        while (isRunning) {
             if (checkIdle() && checkLastReset())
                 reset();
 
@@ -73,12 +74,8 @@ public class RCPlusBloodsMain implements Runnable {
                 client.stopNow();
             }
 
-            try {
-                if (bloodAltarRegions.contains(getRegionID()))
-                    doBloodRunes();
-            } catch (Exception e) {
-                System.out.println("stuff happened");
-            }
+            if (bloodAltarRegions.contains(getRegionID()))
+                doBloodRunes();
         }
         System.out.println("Thread has stopped.");
     }

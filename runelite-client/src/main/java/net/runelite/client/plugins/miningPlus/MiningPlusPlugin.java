@@ -1,12 +1,9 @@
 package net.runelite.client.plugins.miningPlus;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.InventoryID;
-import net.runelite.api.Item;
-import net.runelite.api.ItemContainer;
 import net.runelite.api.events.GameObjectDespawned;
 import net.runelite.api.events.GameObjectSpawned;
 import net.runelite.api.events.GameStateChanged;
@@ -27,27 +24,15 @@ import java.util.regex.Pattern;
 @PluginDescriptor(name = "Mining Plus", enabledByDefault = false)
 @Slf4j
 public class MiningPlusPlugin extends Plugin {
-
     @Inject
     private Client client;
 
     @Inject
     private ClientThread clientThread;
-
-    private STATUS toggleStatus = STATUS.STOP;
-
-    private boolean hasStarted = false;
-
+    
     MiningPlusMain thread;
 
     private int currentInvCount = 0;
-
-    private Item[] inventoryItems;
-
-    enum STATUS{
-        START,
-        STOP
-    }
 
     @Subscribe
     public void onGameTick(GameTick event) throws AWTException {
@@ -64,15 +49,13 @@ public class MiningPlusPlugin extends Plugin {
         String chatBoxMessage = stripTargetAnchors(chatboxInput.getText());
         if(chatBoxMessage == null) return;
 
-        if(chatBoxMessage.equals("1") && toggleStatus == STATUS.STOP && !hasStarted) {
-            hasStarted = true;
-            toggleStatus = STATUS.START;
+        if(chatBoxMessage.equals("1") && !MiningPlusMain.isRunning) {
             thread = new MiningPlusMain(client, clientThread);
+            MiningPlusMain.isRunning = true;
             System.out.println("status is go");
-        } else if (chatBoxMessage.equals("2") && toggleStatus == STATUS.START && hasStarted) {
+        } else if (chatBoxMessage.equals("2") && MiningPlusMain.isRunning) {
             thread.t.interrupt();
-            toggleStatus = STATUS.STOP;
-            hasStarted = false;
+            MiningPlusMain.isRunning = false;
             System.out.println("status is stop");
         }
     }
@@ -82,11 +65,11 @@ public class MiningPlusPlugin extends Plugin {
     }
 
     @Subscribe
-    private void onGameStateChanged(GameStateChanged ev)
+    private void onGameStateChanged(GameStateChanged event)
     {
-        if (ev.getGameState() == GameState.LOGIN_SCREEN && hasStarted)
+        if (event.getGameState() == GameState.LOGIN_SCREEN && MiningPlusMain.isRunning)
         {
-            toggleStatus = STATUS.STOP;
+            MiningPlusMain.isRunning = false;
             System.out.println("status is stop (login screen)");
         }
     }

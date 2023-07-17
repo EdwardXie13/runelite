@@ -3,17 +3,12 @@ package net.runelite.client.plugins.miningPlus;
 import com.google.common.collect.ImmutableList;
 import net.runelite.api.Client;
 import net.runelite.api.GameObject;
-import net.runelite.api.InventoryID;
-import net.runelite.api.ItemContainer;
 import net.runelite.api.ScriptID;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.awt.AWTException;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -22,14 +17,13 @@ import java.awt.Shape;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class MiningPlusMain implements Runnable {
     private final Client client;
     private final ClientThread clientThread;
     public static boolean isIdle = true;
     public long start;
+    public static boolean isRunning = false;
     Robot robot = new Robot();
 
     private static final List<Point> inventoryCoords = new ArrayList(ImmutableList.of(
@@ -78,7 +72,7 @@ public class MiningPlusMain implements Runnable {
     // execution of thread starts from run() method
     public void run()
     {
-        while (!Thread.interrupted()) {
+        while (isRunning) {
             if (checkIdle() && checkLastReset())
                 reset();
             else if(isAtWorldPoint(MiningPlusWorldPoints.FALADOR_MINE_COPPER_SPOT)) {

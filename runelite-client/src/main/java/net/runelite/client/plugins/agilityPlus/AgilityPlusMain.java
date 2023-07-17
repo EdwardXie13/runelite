@@ -32,6 +32,7 @@ public class AgilityPlusMain implements Runnable {
     public long start;
     Robot robot = new Robot();
     private int healthyThreshold = 1;
+    public static boolean isRunning = false;
 
     Thread t;
 
@@ -48,13 +49,13 @@ public class AgilityPlusMain implements Runnable {
     // execution of thread starts from run() method
     public void run()
     {
-        while (!Thread.interrupted()) {
+        while (isRunning) {
             if (checkIdle() && checkLastReset())
                 reset();
 
-            if(isNotHealthly()) {
+            if(isNotHealthly())
                 robot.delay(1000);
-            } else if (getRegionID() == 9781)
+            else if (getRegionID() == 9781)
                 doGnomeAgility();
             else if (getRegionID() == 13878)
                 doCanfisAgility();
@@ -71,10 +72,7 @@ public class AgilityPlusMain implements Runnable {
     }
 
     private void doGnomeAgility() {
-        if(checkLevelUp()) {
-            pressKey(KeyEvent.VK_SPACE, 100);
-            robot.delay(500);
-        } else if(turnRunOn()) {
+        if(turnRunOn()) {
             robot.delay(500);
             scheduledPointDelay(new Point(804, 157), 4);
             robot.delay(500);
@@ -162,17 +160,13 @@ public class AgilityPlusMain implements Runnable {
 
     private void doCanfisAgility() {
         healthyThreshold = 9;
-        if(checkLevelUp()) {
-            pressKey(KeyEvent.VK_SPACE, 100);
-            robot.delay(500);
-        } else if(turnRunOn()) {
+        if(turnRunOn()) {
             robot.delay(500);
             scheduledPointDelay(new Point(804, 157), 4);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_START) && isIdle) {
             pressKey(KeyEvent.VK_DOWN, 2000);
             setCameraZoom(783);
-//            client.setCameraPitchTarget(98);
             changeCameraYaw(42);
             robot.delay(500);
             scheduledPointDelay(new Point(70, 162), 10);
@@ -366,10 +360,7 @@ public class AgilityPlusMain implements Runnable {
 
     private void doSeersAgility() {
         healthyThreshold = 9;
-        if(checkLevelUp()) {
-            pressKey(KeyEvent.VK_SPACE, 100);
-            robot.delay(500);
-        } else if(turnRunOn()) {
+        if(turnRunOn()) {
             robot.delay(500);
             scheduledPointDelay(new Point(804, 157), 4);
             robot.delay(500);
@@ -549,10 +540,7 @@ public class AgilityPlusMain implements Runnable {
 
     private void doRellekaAgility() {
         healthyThreshold = 9;
-        if(checkLevelUp()) {
-            pressKey(KeyEvent.VK_SPACE, 100);
-            robot.delay(500);
-        } else if(turnRunOn()) {
+        if(turnRunOn()) {
             robot.delay(500);
             scheduledPointDelay(new Point(804, 157), 4);
             robot.delay(500);
@@ -852,13 +840,6 @@ public class AgilityPlusMain implements Runnable {
         robot.delay(1000);
     }
 
-    private void panCameraToSeersFourthRoofGap() {
-        client.setOculusOrbNormalSpeed(40);
-        client.setOculusOrbState(1);
-        robot.delay(1000);
-        pressKey(KeyEvent.VK_A, 600);
-    }
-
     private void panCameraToRellekaStartFromFail2() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
@@ -871,19 +852,6 @@ public class AgilityPlusMain implements Runnable {
         client.setOculusOrbState(1);
         pressKey(keyEvent, ms);
     }
-
-    private boolean checkLevelUp() {
-        Widget levelUpMessage = client.getWidget(10617391);
-        return !levelUpMessage.isSelfHidden();
-    }
-
-//    private void moveMouse(int x, int y) {
-//        MouseEvent mousePress = new MouseEvent(this.client.getCanvas(), MouseEvent.MOUSE_CLICKED, System.currentTimeMillis(), 0, x, y, 1, false);
-//        this.client.getCanvas().dispatchEvent(mousePress);
-//
-//        MouseEvent mouseRelease = new MouseEvent(this.client.getCanvas(), MouseEvent.MOUSE_RELEASED, System.currentTimeMillis(), 0, x, y, 1, false);
-//        this.client.getCanvas().dispatchEvent(mouseRelease);
-//    }
 
     private void pressKey(int key, int ms) {
         robot.keyPress(key);
@@ -926,17 +894,6 @@ public class AgilityPlusMain implements Runnable {
         try {
             Point generatedPoint = generatePointsFromPoint(point, sigma);
             MouseCoordCalculation.generateCoord(generatedPoint, gameObject, sigma);
-        } catch (Exception e) {
-            e.printStackTrace();
-            isIdle = true;
-        }
-    }
-
-    //possible use would be a ground item that has no clickbox (doubt that will happen)
-    private void scheduledGroundObjectPointDelay(Point point, GroundObject groundObject, int sigma) {
-        isIdle = false;
-        try {
-            MouseCoordCalculation.generateCoord(point, groundObject, sigma);
         } catch (Exception e) {
             e.printStackTrace();
             isIdle = true;
