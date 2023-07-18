@@ -687,7 +687,7 @@ public class AgilityPlusMain implements Runnable {
 //            changeCameraYaw(1024);
 //            setCameraZoom(500);
 //            // 3. pan to tile (2647, 3662, 3) then click the gap
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFifthRoofGap, 8);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFifthRoofGap, 6);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_SIXTH_ROOF) && isIdle) {
             System.out.println("relleka 6th roof");

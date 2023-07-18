@@ -246,7 +246,7 @@ public class MouseCoordCalculation {
      */
     private void windMouse(Robot robot, int x, int y) {
         Point c = MouseInfo.getPointerInfo().getLocation();
-        double speed = (Math.random() * 15D + 15D) / 10D;
+        double speed = (Math.random() * 15D + 15D) / 9D;
         windMouseImpl(robot, c.x, c.y, x, y, 9D, 3D, 5D / speed, 10D / speed, 10D * speed, 8D * speed);
     }
 }
