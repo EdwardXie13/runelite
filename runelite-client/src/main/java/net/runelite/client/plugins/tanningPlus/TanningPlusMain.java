@@ -6,6 +6,7 @@ import net.runelite.api.Item;
 import net.runelite.api.ItemID;
 import net.runelite.api.ScriptID;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
@@ -74,10 +75,10 @@ public class TanningPlusMain implements Runnable {
         if(!isBankOpen() && checkInventoryCount(dragonLeather, 25) && isIdle) {
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
-            setCameraZoom(977);
+            setCameraZoom(1004);
             delay(500);
-            scheduledPointDelay(new Point(691, 539), 10);
-            delay(500);
+            scheduledPointDelay(new Point(760, 533), 8);
+            delay(1000);
             isIdle = true;
         }
         // bank is open and bank sequence
