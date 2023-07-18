@@ -63,6 +63,8 @@ public class AgilityPlusMain implements Runnable {
                 doSeersAgility();
             else if (getRegionID() == 10553 || getRegionID() == 10297)
                 doRellekaAgility();
+            else if (getRegionID() == 10547)
+                doArdyAgility();
         }
         System.out.println("Thread has stopped.");
     }
@@ -359,7 +361,7 @@ public class AgilityPlusMain implements Runnable {
     }
 
     private void doSeersAgility() {
-        healthyThreshold = 9;
+        healthyThreshold = 5;
         if(turnRunOn()) {
             robot.delay(500);
             scheduledPointDelay(new Point(804, 157), 4);
@@ -740,6 +742,173 @@ public class AgilityPlusMain implements Runnable {
         }
     }
 
+    private void doArdyAgility() {
+        healthyThreshold = 9;
+        if(turnRunOn()) {
+            robot.delay(500);
+            scheduledPointDelay(new Point(804, 157), 4);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_START) && isIdle) {
+            System.out.println("ardy start");
+            robot.delay(500);
+            setCameraZoom(730);
+            client.setCameraPitchTarget(0);
+            changeCameraYaw(1024);
+            robot.delay(500);
+            scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.ardyStartWall, 10);
+            robot.delay(500);
+        }
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_FIRST_ROOF) && isIdle) {
+            System.out.println("ardy 1st roof");
+            robot.delay(500);
+            setCameraZoom(1004);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            panCameraOneDirection(KeyEvent.VK_W, 600);
+            robot.delay(500);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.ARDY_FIRST_ROOF_RUN_POINT));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            robot.delay(500);
+        }
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_FIRST_ROOF_RUN_POINT) && isIdle) {
+            System.out.println("ardy 1st roof run point");
+            setCameraZoom(900);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.ardyFirstRoofGap, 10);
+            robot.delay(500);
+        }
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_SECOND_ROOF) && isIdle) {
+            System.out.println("ardy 2nd roof");
+            robot.delay(500);
+            setCameraZoom(655);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            scheduledGroundObjectDelay(AgilityPlusObjectIDs.ardySecondRoofGap, 5);
+            robot.delay(3500);
+        }
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_SECOND_ROOF_RUN_POINT) && isIdle) {
+            System.out.println("ardy 2nd roof run point");
+            robot.delay(500);
+            setCameraZoom(1004);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            scheduledGroundObjectDelay(AgilityPlusObjectIDs.ardySecondRoofGap, 8);
+            robot.delay(500);
+        }
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_THIRD_ROOF) && isIdle && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.ARDY_GRACEFULMARK)) {
+            System.out.println("ardy 3rd roof no GM");
+            robot.delay(500);
+            setCameraZoom(695);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.ardyThirdRoofGap, 10);
+            robot.delay(1500);
+        }
+        // TODO: GRACEMARK
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_THIRD_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.ARDY_GRACEFULMARK)) {
+            System.out.println("ardy 3rd roof yes GM");
+            robot.delay(500);
+            changeCameraYaw(0);
+            client.setCameraPitchTarget(512);
+            setCameraZoom(1004);
+            robot.delay(500);
+            checkGracefulmark(AgilityPlusWorldPoints.ARDY_GRACEFULMARK);
+            robot.delay(1000);
+        }
+
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_FOURTH_ROOF) && isIdle) {
+            System.out.println("ardy 4th roof");
+            robot.delay(500);
+            changeCameraYaw(0);
+            client.setCameraPitchTarget(75);
+            setCameraZoom(40);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.ardyFourthRoofGap, 10);
+            robot.delay(3500);
+        }
+
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_FIFTH_ROOF) && isIdle) {
+            // yaw 249
+            // pitch 172
+            // zoom -72
+            System.out.println("ardy 5th roof");
+            robot.delay(500);
+            changeCameraYaw(249);
+            client.setCameraPitchTarget(172);
+            setCameraZoom(-72);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.ardyFifthRoofGap, 6);
+            robot.delay(3500);
+        }
+
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_SIXTH_ROOF) && isIdle) {
+            System.out.println("ardy 6th roof");
+            robot.delay(1000);
+            changeCameraYaw(512);
+            client.setCameraPitchTarget(512);
+            setCameraZoom(890);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.ardySixthRoofGap, 10);
+            robot.delay(3500);
+        }
+
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_FINISH) && isIdle) {
+            System.out.println("ardy finish");
+            robot.delay(1500);
+
+            // alternative
+            changeCameraYaw(570);
+            client.setCameraPitchTarget(4);
+            setCameraZoom(1004);
+
+//            changeCameraYaw(576);
+//            client.setCameraPitchTarget(4);
+//            setCameraZoom(205);
+            robot.delay(500);
+//            scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.ardyStartWall, 6);
+            scheduledPointDelay(new Point(500, 500), 15);
+            robot.delay(3500);
+        }
+
+        //
+        else if(isNearWorldTile(AgilityPlusWorldPoints.ARDY_FAIL1, 2) && isIdle) {
+            System.out.println("ardy fail 1");
+            robot.delay(500);
+            setCameraZoom(1004);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            panCameraToArdyStartFromFail1();
+            robot.delay(500);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.ARDY_START));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            robot.delay(500);
+        } else if(isNearWorldTile(AgilityPlusWorldPoints.ARDY_FAIL2, 2) && isIdle) {
+            System.out.println("ardy fail 2");
+            robot.delay(500);
+            setCameraZoom(1004);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            panCameraToArdyStartFromFail2();
+            robot.delay(500);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.ARDY_START));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            robot.delay(500);
+        }
+    }
+
     private Point generatePointsFromPoint(Point point, int sigma) {
         List<Point> points = new ArrayList<>();
 
@@ -845,6 +1014,20 @@ public class AgilityPlusMain implements Runnable {
         client.setOculusOrbState(1);
         pressKey(KeyEvent.VK_A, 600);
         pressKey(KeyEvent.VK_W, 1100);
+    }
+
+    private synchronized void panCameraToArdyStartFromFail1() {
+        client.setOculusOrbNormalSpeed(40);
+        client.setOculusOrbState(1);
+        pressKey(KeyEvent.VK_D, 550);
+        pressKey(KeyEvent.VK_S, 800);
+    }
+
+    private synchronized void panCameraToArdyStartFromFail2() {
+        client.setOculusOrbNormalSpeed(40);
+        client.setOculusOrbState(1);
+        pressKey(KeyEvent.VK_S, 1300);
+        pressKey(KeyEvent.VK_D, 1150);
     }
 
     private synchronized void panCameraOneDirection(int keyEvent, int ms) {
