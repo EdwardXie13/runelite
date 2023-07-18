@@ -757,7 +757,7 @@ public class AgilityPlusMain implements Runnable {
 
         Point obstacleCenter = getCenterOfRectangle(groundObjectRectangle);
 
-        MouseCoordCalculation.generateCoord(obstacleCenter, gameObject, sigma);
+        MouseCoordCalculation.generateCoord(client, obstacleCenter, gameObject, sigma);
     }
 
     private void getObstacleCenter(GroundObject groundObject, int sigma) {
@@ -766,7 +766,7 @@ public class AgilityPlusMain implements Runnable {
 
         Point obstacleCenter = getCenterOfRectangle(groundObjectRectangle);
 
-        MouseCoordCalculation.generateCoord(obstacleCenter, groundObject, sigma);
+        MouseCoordCalculation.generateCoord(client, obstacleCenter, groundObject, sigma);
     }
 
     private void getObstacleCenter(DecorativeObject decorativeObject, int sigma) {
@@ -775,7 +775,7 @@ public class AgilityPlusMain implements Runnable {
 
         Point obstacleCenter = getCenterOfRectangle(groundObjectRectangle);
 
-        MouseCoordCalculation.generateCoord(obstacleCenter, decorativeObject, sigma);
+        MouseCoordCalculation.generateCoord(client, obstacleCenter, decorativeObject, sigma);
     }
 
     private Point getCenterOfRectangle(Rectangle rectangle) {
@@ -804,35 +804,35 @@ public class AgilityPlusMain implements Runnable {
         clientThread.invokeLater(() -> client.runScript(ScriptID.CAMERA_DO_ZOOM, zoom, zoom));
     }
 
-    private void panCameraToCanfisStart() {
+    private synchronized void panCameraToCanfisStart() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
         pressKey(KeyEvent.VK_S, 900);
         pressKey(KeyEvent.VK_D, 1600);
     }
 
-    private void panCameraToCanfisStart2() {
+    private synchronized void panCameraToCanfisStart2() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
         pressKey(KeyEvent.VK_D, 300);
         pressKey(KeyEvent.VK_W, 400);
     }
 
-    private void panCameraToSeersStartFromFail1() {
+    private synchronized void panCameraToSeersStartFromFail1() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
         pressKey(KeyEvent.VK_S, 500);
         pressKey(KeyEvent.VK_D, 800);
     }
 
-    private void panCameraToSeersStartFromFail2() {
+    private synchronized void panCameraToSeersStartFromFail2() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
         pressKey(KeyEvent.VK_W, 300);
         pressKey(KeyEvent.VK_D, 1100);
     }
 
-    private void panCameraToSeersStartFromFinish() {
+    private synchronized void panCameraToSeersStartFromFinish() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
         pressKey(KeyEvent.VK_D, 1700);
@@ -840,20 +840,20 @@ public class AgilityPlusMain implements Runnable {
         robot.delay(1000);
     }
 
-    private void panCameraToRellekaStartFromFail2() {
+    private synchronized void panCameraToRellekaStartFromFail2() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
         pressKey(KeyEvent.VK_A, 600);
         pressKey(KeyEvent.VK_W, 1100);
     }
 
-    private void panCameraOneDirection(int keyEvent, int ms) {
+    private synchronized void panCameraOneDirection(int keyEvent, int ms) {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
         pressKey(keyEvent, ms);
     }
 
-    private void pressKey(int key, int ms) {
+    private synchronized void pressKey(int key, int ms) {
         robot.keyPress(key);
         robot.delay(ms);
         robot.keyRelease(key);
@@ -893,7 +893,7 @@ public class AgilityPlusMain implements Runnable {
         isIdle = false;
         try {
             Point generatedPoint = generatePointsFromPoint(point, sigma);
-            MouseCoordCalculation.generateCoord(generatedPoint, gameObject, sigma);
+            MouseCoordCalculation.generateCoord(client, generatedPoint, gameObject, sigma);
         } catch (Exception e) {
             e.printStackTrace();
             isIdle = true;
@@ -903,7 +903,7 @@ public class AgilityPlusMain implements Runnable {
     private void scheduledPointDelay(Point point, int sigma) {
         isIdle = false;
         try {
-            MouseCoordCalculation.generateCoord(point, sigma);
+            MouseCoordCalculation.generateCoord(client, point, sigma);
         } catch (Exception e) {
             e.printStackTrace();
             isIdle = true;

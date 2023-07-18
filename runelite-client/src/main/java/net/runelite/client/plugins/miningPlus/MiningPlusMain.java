@@ -126,7 +126,7 @@ public class MiningPlusMain implements Runnable {
 
         Point obstacleCenter = getCenterOfRectangle(groundObjectRectangle);
 
-        MouseCoordCalculation.generateCoord(obstacleCenter, gameObject, sigma);
+        MouseCoordCalculation.generateCoord(client, obstacleCenter, gameObject, sigma);
     }
 
     private Point getCenterOfRectangle(Rectangle rectangle) {
@@ -172,7 +172,7 @@ public class MiningPlusMain implements Runnable {
     private void scheduledPointClick(Point canvasPoint, int sigma) {
         Point actualPoint = new Point(canvasPoint.x, canvasPoint.y);
         try {
-            MouseCoordCalculation.generateCoord(actualPoint, sigma);
+            MouseCoordCalculation.generateCoord(client, actualPoint, sigma);
         } catch (Exception e) {
             e.printStackTrace();
         }

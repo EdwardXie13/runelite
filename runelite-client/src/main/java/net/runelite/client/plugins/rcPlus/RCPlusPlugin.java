@@ -84,7 +84,7 @@ public class RCPlusPlugin extends Plugin {
 
         Point obstacleCenter = getCenterOfRectangle(groundObjectRectangle);
 
-        MouseCoordCalculation.generateCoord(obstacleCenter, gameObject, sigma);
+        MouseCoordCalculation.generateCoord(client, obstacleCenter, gameObject, sigma);
     }
 
     private Point getCenterOfRectangle(Rectangle rectangle) {

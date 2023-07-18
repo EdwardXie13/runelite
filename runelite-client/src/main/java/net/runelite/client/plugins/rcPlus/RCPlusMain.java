@@ -302,7 +302,7 @@ public class RCPlusMain implements Runnable {
 
         Point obstacleCenter = getCenterOfRectangle(groundObjectRectangle);
 
-        MouseCoordCalculation.generateCoord(obstacleCenter, gameObject, sigma);
+        MouseCoordCalculation.generateCoord(client, obstacleCenter, gameObject, sigma);
     }
 
     private Point getCenterOfRectangle(Rectangle rectangle) {
@@ -361,7 +361,7 @@ public class RCPlusMain implements Runnable {
     private void scheduledPointDelay(Point point, int sigma) {
         isIdle = false;
         try {
-            MouseCoordCalculation.generateCoord(point, sigma);
+            MouseCoordCalculation.generateCoord(client, point, sigma);
         } catch (Exception e) {
             e.printStackTrace();
             isIdle = true;
