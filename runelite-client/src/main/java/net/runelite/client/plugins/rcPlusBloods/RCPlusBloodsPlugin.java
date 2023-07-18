@@ -38,16 +38,8 @@ public class RCPlusBloodsPlugin extends Plugin {
 
     static boolean denseRunestoneNorthMineable;
 
-    private STATUS toggleStatus = STATUS.STOP;
-
-    public static boolean hasStarted = false;
-
     RCPlusBloodsMain thread;
-
-    enum STATUS{
-        START,
-        STOP
-    }
+    
 
     @Subscribe
     public void onGameTick(GameTick event) throws AWTException {
@@ -66,18 +58,14 @@ public class RCPlusBloodsPlugin extends Plugin {
         String chatBoxMessage = stripTargetAnchors(chatboxInput.getText());
         if(chatBoxMessage == null) return;
 
-        if(chatBoxMessage.equals("1") && toggleStatus == STATUS.STOP && !hasStarted) {
-            toggleStatus = STATUS.START;
-            hasStarted = true;
+        if(chatBoxMessage.equals("1") && !RCPlusBloodsMain.isRunning) {
             thread = new RCPlusBloodsMain(client, clientThread);
+            RCPlusBloodsMain.isRunning = true;
             System.out.println("status is go");
-//            sendSlackMessage("starting RC exp = " + lastRcExp);
-        } else if (chatBoxMessage.equals("2") && toggleStatus == STATUS.START && hasStarted) {
-            toggleStatus = STATUS.STOP;
+        } else if (chatBoxMessage.equals("2") && RCPlusBloodsMain.isRunning) {
             thread.t.interrupt();
-            hasStarted = false;
+            RCPlusBloodsMain.isRunning = false;
             System.out.println("status is stop");
-//            sendSlackMessage("stopping RC exp = " + lastRcExp);
         }
     }
 
@@ -100,15 +88,12 @@ public class RCPlusBloodsPlugin extends Plugin {
 //    }
 
     @Subscribe
-    private void onGameStateChanged(GameStateChanged ev)
+    private void onGameStateChanged(GameStateChanged event)
     {
-        if (ev.getGameState() == GameState.CONNECTION_LOST && hasStarted)
+        if (event.getGameState() == GameState.LOGIN_SCREEN && RCPlusBloodsMain.isRunning)
         {
-            toggleStatus = STATUS.STOP;
-            thread.t.interrupt();
-            hasStarted = false;
+            RCPlusBloodsMain.isRunning = false;
             System.out.println("status is stop (login screen)");
-//            sendSlackMessage("logged out RC exp = " + lastRcExp);
         }
     }
 

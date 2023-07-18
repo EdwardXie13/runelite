@@ -74,7 +74,6 @@ import net.runelite.client.plugins.miningPlus.MiningPlusMain;
 import net.runelite.client.plugins.rcPlus.RCPlusMain;
 import net.runelite.client.plugins.rcPlusBloods.RCPlusBloodsMain;
 import net.runelite.client.plugins.tanningPlus.TanningPlusMain;
-import net.runelite.client.plugins.tanningPlus.TanningPlusPlugin;
 import net.runelite.client.plugins.twoclickcrafting.TwoClickCraftingMain;
 import net.runelite.client.ui.ClientUI;
 import net.runelite.client.util.OSType;

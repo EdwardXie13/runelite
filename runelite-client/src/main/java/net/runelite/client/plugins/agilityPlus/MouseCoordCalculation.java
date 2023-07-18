@@ -1,26 +1,25 @@
 package net.runelite.client.plugins.agilityPlus;
 
 import com.fazecast.jSerialComm.SerialPort;
-import net.runelite.api.DecorativeObject;
-import net.runelite.api.GameObject;
-import net.runelite.api.GroundObject;
-import net.runelite.api.NPC;
+import lombok.experimental.UtilityClass;
+import net.runelite.api.Client;
+import net.runelite.api.TileObject;
 
-import java.awt.AWTException;
-import java.awt.Color;
 import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Robot;
 import java.awt.Shape;
+import java.awt.Window;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+@UtilityClass
 public class MouseCoordCalculation {
-    static Point generatedPoint = null;
+    Point generatedPoint = null;
 
-    public static void generateCoord(Point point, GameObject gameObject, int sigma) {
+    public void generateCoord(Client client, Point point, TileObject gameObject, int sigma) {
         Shape clickbox = gameObject.getClickbox();
 
         //generate 3 more random points
@@ -33,45 +32,10 @@ public class MouseCoordCalculation {
         }
 
         generatedPoint = randomClusterPicker(points);
-//        moveWindow();
-        mouseMove();
+        mouseMove(client);
     }
 
-    public static void generateCoord(Point point, GroundObject groundObject, int sigma) {
-        Shape clickbox = groundObject.getClickbox();
-
-        //generate 3 more random points
-        List<Point> points = new ArrayList<>();
-
-        while(points.size() < 3) {
-            Point newPoint = randomCoord(point, sigma);
-            if(isCoordInClickBox(clickbox, newPoint) && isInGame(newPoint))
-                points.add(randomCoord(newPoint, sigma));
-        }
-
-        generatedPoint = randomClusterPicker(points);
-//        moveWindow();
-        mouseMove();
-    }
-
-    public static void generateCoord(Point point, DecorativeObject decorativeObject, int sigma) {
-        Shape clickbox = decorativeObject.getClickbox();
-
-        //generate 3 more random points
-        List<Point> points = new ArrayList<>();
-
-        while(points.size() < 3) {
-            Point newPoint = randomCoord(point, sigma);
-            if(isCoordInClickBox(clickbox, newPoint) && isInGame(newPoint))
-                points.add(newPoint);
-        }
-
-        generatedPoint = randomClusterPicker(points);
-//        moveWindow();
-        mouseMove();
-    }
-
-    public static void generateCoord(Point point, int sigma) {
+    public void generateCoord(Client client, Point point, int sigma) {
         //generate 3 more random points
         List<Point> points = new ArrayList<>();
 
@@ -82,22 +46,21 @@ public class MouseCoordCalculation {
         }
 
         generatedPoint = randomClusterPicker(points);
-//        moveWindow();
-        mouseMove();
+        mouseMove(client);
     }
 
-    public static boolean isCoordInClickBox(Shape clickbox, Point point) {
+    private boolean isCoordInClickBox(Shape clickbox, Point point) {
         return clickbox.contains(point.x, point.y);
     }
 
-    public static boolean isInGame(Point point) {
+    private boolean isInGame(Point point) {
         //Rectangle gameBox = new Rectangle(0, 26, 963, 1039);
 
         return 0 <= point.x && point.x <= 963
                 && 26 <= point.y && point.y <= 1039;
     }
 
-    public static Point randomClusterPicker(List<Point> points) {
+    public Point randomClusterPicker(List<Point> points) {
         try {
             Random random = new Random();
             int num = random.nextInt(10000);
@@ -114,7 +77,7 @@ public class MouseCoordCalculation {
         }
     }
 
-    public static Point randomCoord(Point point, int sigma) {
+    public Point randomCoord(Point point, int sigma) {
         int minXCoord = point.x-sigma*sigma;
         int maxXCoord = point.x+sigma*sigma;
         int minYCoord = point.y-sigma*sigma;
@@ -126,47 +89,64 @@ public class MouseCoordCalculation {
         return new Point(newXCoord, newYCoord);
     }
 
-    public static void moveWindow() {
+//    public void moveWindow() {
+//        try {
+//            Robot robot = new Robot();
+//            windMouse(robot, generatedPoint.x, generatedPoint.y);
+//            Point displacement = moveWinTo();
+//
+//            Runtime.getRuntime().exec("cmd /c start cmd.exe /c \"python C:\\Users\\Main\\Documents\\GitHub\\botTest\\src\\main\\java\\moveWin.py " +
+//                    displacement.x + " " + displacement.y);
+//            robot.delay(300);
+//            mouseClick();
+//            robot.delay(200);
+//            Runtime.getRuntime().exec("cmd /c start cmd.exe /c \"python C:\\Users\\Main\\Documents\\GitHub\\botTest\\src\\main\\java\\moveWin.py " +
+//                    (-displacement.x) + " " + (-displacement.y));
+//            robot.delay(200);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+
+    private synchronized void mouseMove(Client client) {
         try {
             Robot robot = new Robot();
+            // tab into window
+            switchToWindow("RuneLite - " + client.getLocalPlayer().getName());
+            robot.delay(200);
             windMouse(robot, generatedPoint.x, generatedPoint.y);
-            Point displacement = moveWinTo();
-
-            Runtime.getRuntime().exec("cmd /c start cmd.exe /c \"python C:\\Users\\Main\\Documents\\GitHub\\botTest\\src\\main\\java\\moveWin.py " +
-                    displacement.x + " " + displacement.y);
-            robot.delay(300);
             mouseClick();
-            robot.delay(200);
-            Runtime.getRuntime().exec("cmd /c start cmd.exe /c \"python C:\\Users\\Main\\Documents\\GitHub\\botTest\\src\\main\\java\\moveWin.py " +
-                    (-displacement.x) + " " + (-displacement.y));
-            robot.delay(200);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static void mouseMove() {
-        try {
-            Robot robot = new Robot();
-            windMouse(robot, generatedPoint.x, generatedPoint.y);
-            mouseClick();
-        } catch (Exception e) {
-            e.printStackTrace();
+    public void switchToWindow(String windowName) {
+        Window[] windows = Window.getWindows();
+        for (Window window : windows) {
+            if (window instanceof java.awt.Frame) {
+                java.awt.Frame frame = (java.awt.Frame) window;
+                if (frame.getTitle().contains(windowName)) {
+                    frame.toFront();
+                    frame.requestFocus();
+                    break;
+                }
+            }
         }
     }
 
-    public static Point moveWinTo() {
-        Point currentMousePos = MouseInfo.getPointerInfo().getLocation();
-        int currentX = currentMousePos.x;
-        int currentY = currentMousePos.y;
+//    public Point moveWinTo() {
+//        Point currentMousePos = MouseInfo.getPointerInfo().getLocation();
+//        int currentX = currentMousePos.x;
+//        int currentY = currentMousePos.y;
+//
+//        int displacementX = currentX - generatedPoint.x;
+//        int displacementY = currentY - generatedPoint.y;
+//
+//        return new Point(displacementX, displacementY);
+//    }
 
-        int displacementX = currentX - generatedPoint.x;
-        int displacementY = currentY - generatedPoint.y;
-
-        return new Point(displacementX, displacementY);
-    }
-
-    public static void mouseClick() throws IOException {
+    public void mouseClick() throws IOException {
         SerialPort sp = SerialPort.getCommPort("COM3"); // device name TODO: must be changed
         sp.setComPortParameters(9600, 8, 1, 0); // default connection settings for Arduino
         sp.setComPortTimeouts(SerialPort.TIMEOUT_WRITE_BLOCKING, 0, 0); // block until bytes can be written
@@ -176,21 +156,10 @@ public class MouseCoordCalculation {
         }
 
         sp.getOutputStream().write((byte) 1);
-//        System.out.println("Sent number: " + 1);
         sp.closePort();
     }
 
-//    private static void mouseClick(Robot robot) {
-//        int minDelay = 75;
-//        int maxDelay = 95;
-//        Random random = new Random();
-//
-//        robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
-//        robot.delay(random.nextInt(maxDelay - minDelay) + minDelay);
-//        robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-//    }
-
-    public static long randomPos(int mu, int sigma, int min, int max) {
+    private long randomPos(int mu, int sigma, int min, int max) {
         Random random = new Random();
         double t = 2 * Math.PI * random.nextDouble();
         double g = mu + (sigma * Math.sqrt(-2 * Math.log(random.nextDouble()))) * Math.cos(t);
@@ -203,10 +172,10 @@ public class MouseCoordCalculation {
         return Math.round(g);
     }
 
-    public static Color getPixel(int x, int y) throws AWTException {
-        Robot robot = new Robot();
-        return robot.getPixelColor(x, y);
-    }
+//    public Color getPixel(int x, int y) throws AWTException {
+//        Robot robot = new Robot();
+//        return robot.getPixelColor(x, y);
+//    }
 
     /**
      * Internal mouse movement algorithm from SMART. Do not use this without credit to either
@@ -227,7 +196,7 @@ public class MouseCoordCalculation {
      * @param targetArea Radius of area around the destination that should
      *                   trigger slowing, prevents spiraling
      */
-    private static void windMouseImpl(Robot robot, double xs, double ys, double xe, double ye, double gravity, double wind, double minWait, double maxWait, double maxStep, double targetArea) {
+    private void windMouseImpl(Robot robot, double xs, double ys, double xe, double ye, double gravity, double wind, double minWait, double maxWait, double maxStep, double targetArea) {
         final double sqrt3 = Math.sqrt(3);
         final double sqrt5 = Math.sqrt(5);
 
@@ -275,9 +244,9 @@ public class MouseCoordCalculation {
      * @param x The x destination
      * @param y The y destination
      */
-    public static void windMouse(Robot robot, int x, int y) {
+    private void windMouse(Robot robot, int x, int y) {
         Point c = MouseInfo.getPointerInfo().getLocation();
-        double speed = (Math.random() * 15D + 15D) / 10D;
+        double speed = (Math.random() * 15D + 15D) / 9D;
         windMouseImpl(robot, c.x, c.y, x, y, 9D, 3D, 5D / speed, 10D / speed, 10D * speed, 8D * speed);
     }
 }

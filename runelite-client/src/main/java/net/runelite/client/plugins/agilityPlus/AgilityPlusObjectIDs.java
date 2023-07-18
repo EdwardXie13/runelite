@@ -87,6 +87,23 @@ public class AgilityPlusObjectIDs {
     public static GameObject rellekaFifthRoofGap = null;
     public static GameObject rellekaSixthRoofGap = null;
 
+    //=== ARDY ===
+    public static final int GAP_15609 = ObjectID.GAP_15609;
+    public static final int PLANK_26635 = ObjectID.PLANK_26635;
+    public static final int GAP_15610 = ObjectID.GAP_15610;
+    public static final int GAP_15611 = ObjectID.GAP_15611;
+    public static final int STEEP_ROOF = ObjectID.STEEP_ROOF;
+    public static final int GAP_15612 = ObjectID.GAP_15612;
+    public static final int WOODEN_BEAMS = ObjectID.WOODEN_BEAMS;
+
+    public static GameObject ardyFirstRoofGap = null;
+    public static GroundObject ardySecondRoofGap = null;
+    public static GameObject ardyThirdRoofGap = null;
+    public static GameObject ardyFourthRoofGap = null;
+    public static GameObject ardyFifthRoofGap = null;
+    public static GameObject ardySixthRoofGap = null;
+    public static DecorativeObject ardyStartWall = null;
+
     public static void assignObjects(GameObjectSpawned event) {
         GameObject obj = event.getGameObject();
 
@@ -186,6 +203,22 @@ public class AgilityPlusObjectIDs {
                 rellekaSixthRoofGap = obj;
                 break;
 
+            //=== ARDY ===
+            case GAP_15609:
+                ardyFirstRoofGap = obj;
+                break;
+            case GAP_15610:
+                ardyThirdRoofGap = obj;
+                break;
+            case GAP_15611:
+                ardyFourthRoofGap = obj;
+                break;
+            case STEEP_ROOF:
+                ardyFifthRoofGap = obj;
+                break;
+            case GAP_15612:
+                ardySixthRoofGap = obj;
+                break;
         }
     }
 
@@ -287,6 +320,23 @@ public class AgilityPlusObjectIDs {
             case PILE_OF_FISH:
                 rellekaSixthRoofGap = null;
                 break;
+
+            //=== ARDY ===
+            case GAP_15609:
+                ardyFirstRoofGap = null;
+                break;
+            case GAP_15610:
+                ardyThirdRoofGap = null;
+                break;
+            case GAP_15611:
+                ardyFourthRoofGap = null;
+                break;
+            case STEEP_ROOF:
+                ardyFifthRoofGap = null;
+                break;
+            case GAP_15612:
+                ardySixthRoofGap = null;
+                break;
         }
     }
 
@@ -307,6 +357,11 @@ public class AgilityPlusObjectIDs {
             //=== SEERS ===
             case TIGHTROPE_14932:
                 seersTightrope = obj;
+                break;
+
+            //=== ARDY ===
+            case PLANK_26635:
+                ardySecondRoofGap = obj;
                 break;
         }
     }
@@ -329,6 +384,11 @@ public class AgilityPlusObjectIDs {
             case TIGHTROPE_14932:
                 seersTightrope = null;
                 break;
+
+            //=== ARDY ===
+            case PLANK_26635:
+                ardySecondRoofGap = null;
+                break;
         }
     }
 
@@ -345,6 +405,11 @@ public class AgilityPlusObjectIDs {
             case ROUGH_WALL_14946:
                 rellekaStartWall = obj;
                 break;
+
+            //=== ARDY ===
+            case WOODEN_BEAMS:
+                ardyStartWall = obj;
+                break;
         }
     }
 
@@ -360,6 +425,11 @@ public class AgilityPlusObjectIDs {
                 break;
             case ROUGH_WALL_14946:
                 rellekaStartWall = null;
+                break;
+
+            //=== ARDY ===
+            case WOODEN_BEAMS:
+                ardyStartWall = null;
                 break;
         }
     }
