@@ -49,6 +49,11 @@ public class MouseCoordCalculation {
         mouseMove(client);
     }
 
+    public void generateCoordNoRand(Client client, Point point, int sigma) {
+        generatedPoint = randomCoord(point, sigma);
+        mouseMove(client);
+    }
+
     private boolean isCoordInClickBox(Shape clickbox, Point point) {
         return clickbox.contains(point.x, point.y);
     }
@@ -112,9 +117,10 @@ public class MouseCoordCalculation {
         try {
             Robot robot = new Robot();
             // tab into window
-            switchToWindow("RuneLite - " + client.getLocalPlayer().getName());
-            robot.delay(200);
+//            switchToWindow("RuneLite - " + client.getLocalPlayer().getName());
+//            robot.delay(200);
             windMouse(robot, generatedPoint.x, generatedPoint.y);
+            robot.delay(100);
             mouseClick();
         } catch (Exception e) {
             e.printStackTrace();
