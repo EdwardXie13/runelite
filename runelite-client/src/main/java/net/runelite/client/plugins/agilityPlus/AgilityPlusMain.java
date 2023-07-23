@@ -136,7 +136,7 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstacleNet2_L, 15);
             robot.delay(500);
-        } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_NET1) && isIdle) {
+        } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_NET1) && AgilityPlusObjectIDs.gnomeObstaclePipeLeft != null && isIdle) {
             setCameraZoom(495);
             client.setCameraPitchTarget(100);
             changeCameraYaw(1020);
@@ -145,12 +145,34 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
             client.setCameraPitchTarget(512);
             robot.delay(8000); //adjust as needed
-        } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_LEFT_PIPE) && isIdle) {
+        } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_NET1) && AgilityPlusObjectIDs.gnomeObstaclePipeRight != null && isIdle) {
+            setCameraZoom(285);
+            client.setCameraPitchTarget(118);
+            changeCameraYaw(757);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstaclePipeRight, 8);
+            robot.delay(1000);
+            client.setCameraPitchTarget(512);
+            robot.delay(8000); //adjust as needed
+        } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_LEFT_PIPE) &&  isIdle) {
             setCameraZoom(896);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             robot.delay(500);
             panCameraOneDirection(KeyEvent.VK_A, 600);
+            robot.delay(500);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.GNOME_START));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            robot.delay(500);
+        } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_RIGHT_PIPE) &&  isIdle) {
+            robot.delay(1000);
+            setCameraZoom(896);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            panCameraOneDirection(KeyEvent.VK_A, 700);
             robot.delay(500);
             getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.GNOME_START));
             robot.delay(500);

@@ -1,7 +1,7 @@
 package net.runelite.client.plugins.tithefarmplus;
 
 import net.runelite.api.GameObject;
-import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.Tile;
 import net.runelite.api.events.GameObjectSpawned;
 
 import java.util.ArrayList;
@@ -18,7 +18,8 @@ public class TitheFarmPlusObjectIDs {
         UNWATERED,
         WATERED,
         GROWN,
-        DEAD
+        DEAD,
+        NMP
     }
 
     public static final List<Integer> unwatered = new ArrayList<>(
@@ -87,45 +88,44 @@ public class TitheFarmPlusObjectIDs {
         GameObject obj = event.getGameObject();
 
         int id = obj.getId();
-        WorldPoint worldPoint = event.getTile().getWorldLocation();
 
         // loads from south west to north west, left to right
-        if(id == 27383 && !TitheFarmPlusMain.isRunning) {
-            if(!hasInit) {
-                TitheFarmPlusWorldPoints.centerOfALlTitheFarmPatches.add(convertPatchCenter(worldPoint));
-                if(TitheFarmPlusWorldPoints.centerOfALlTitheFarmPatches.size() == 41) {
+        if (id == 27383 && !TitheFarmPlusMain.isRunning) {
+            if (!hasInit) {
+                TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.add(event.getTile());
+                if (TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.size() == 41) {
                     TitheFarmPlusWorldPoints.initTitheFarm();
                 }
             }
-        } else if(id == 27383) {
-            patchStates.set(getPatchNumberFromWorldPoint(convertPatchCenter(worldPoint)), PatchState.EMPTY);
-        } else if(unwatered.contains(id)) {
-            patchStates.set(getPatchNumberFromWorldPoint(convertPatchCenter(worldPoint)), PatchState.UNWATERED);
-        } else if(watered.contains(id)) {
-            patchStates.set(getPatchNumberFromWorldPoint(convertPatchCenter(worldPoint)), PatchState.WATERED);
-        } else if(grown.contains(id)) {
-            patchStates.set(getPatchNumberFromWorldPoint(convertPatchCenter(worldPoint)), PatchState.GROWN);
-        } else if(dead.contains(id)) {
-            patchStates.set(getPatchNumberFromWorldPoint(convertPatchCenter(worldPoint)), PatchState.DEAD);
+        } else {
+            PatchState patchState = getPatchStateFromGameObjectId(id);
+            if (patchState == PatchState.NMP)
+                return;
+            patchStates.set(getPatchNumberFromTile(event.getTile()), patchState);
         }
     }
 
-    private static boolean checkIfUselessPatch(WorldPoint worldPoint) {
-        int number = TitheFarmPlusWorldPoints.centerOfALlTitheFarmPatches.indexOf(convertPatchCenter(worldPoint));
-        System.out.println("the patch # to check if useless: " + number);
-        return number < 0 || number > 20 || number == 16;
-    }
-
-    private static WorldPoint convertPatchCenter(WorldPoint worldPoint) {
-        return new WorldPoint(worldPoint.getX()+1, worldPoint.getY()+1, worldPoint.getPlane());
-    }
-
-    private static Integer getPatchNumberFromWorldPoint(WorldPoint worldPoint) {
-        return TitheFarmPlusWorldPoints.patchNumByWorldPoint.entrySet()
+    private static Integer getPatchNumberFromTile(Tile tile) {
+        return TitheFarmPlusWorldPoints.patchNumByTile.entrySet()
                 .stream()
-                .filter(entry -> entry.getValue().equals(worldPoint))
+                .filter(entry -> entry.getValue().equals(tile))
                 .map(Map.Entry::getKey)
                 .findFirst()
                 .orElse(-1);
+    }
+
+    public static PatchState getPatchStateFromGameObjectId(int gameObjectId) {
+        if(gameObjectId == 27383)
+            return PatchState.EMPTY;
+        else if(unwatered.contains(gameObjectId))
+            return PatchState.UNWATERED;
+        else if(watered.contains(gameObjectId))
+            return PatchState.WATERED;
+        else if(grown.contains(gameObjectId))
+            return PatchState.GROWN;
+        else if(dead.contains(gameObjectId))
+            return PatchState.DEAD;
+        else
+            return PatchState.NMP;
     }
 }

@@ -29,6 +29,8 @@ public class TitheFarmPlusPlugin extends Plugin {
 
     TitheFarmPlusMain thread;
 
+    private boolean hasStarted = false;
+
     @Subscribe
     public void onGameTick(GameTick event) throws AWTException {
         toggleStatus();
@@ -36,7 +38,7 @@ public class TitheFarmPlusPlugin extends Plugin {
     }
 
     private String stripTargetAnchors(String text) {
-        Matcher m = Pattern.compile(">(.*?)<").matcher(text);
+        Matcher m = Pattern.compile("ff>(.*?)</c").matcher(text);
         return m.find() ? m.group(1) : "";
     }
 
@@ -45,13 +47,15 @@ public class TitheFarmPlusPlugin extends Plugin {
         String chatBoxMessage = stripTargetAnchors(chatboxInput.getText());
         if(chatBoxMessage == null) return;
 
-        if(chatBoxMessage.equals("1") && !TitheFarmPlusMain.isRunning) {
+        if(chatBoxMessage.equals("1") && !TitheFarmPlusMain.isRunning && !hasStarted) {
             thread = new TitheFarmPlusMain(client, clientThread);
             TitheFarmPlusMain.isRunning = true;
+            hasStarted = true;
             System.out.println("status is go");
-        } else if (chatBoxMessage.equals("2") && TitheFarmPlusMain.isRunning) {
+        } else if (chatBoxMessage.equals("2") && TitheFarmPlusMain.isRunning && hasStarted) {
             thread.t.interrupt();
             TitheFarmPlusMain.isRunning = false;
+            hasStarted = false;
             System.out.println("status is stop");
         }
     }
@@ -70,9 +74,10 @@ public class TitheFarmPlusPlugin extends Plugin {
     @Subscribe
     private void onGameStateChanged(GameStateChanged event)
     {
-        if (event.getGameState() == GameState.LOGIN_SCREEN && TitheFarmPlusMain.isRunning)
+        if (event.getGameState() == GameState.LOGIN_SCREEN && TitheFarmPlusMain.isRunning && hasStarted)
         {
             TitheFarmPlusMain.isRunning = false;
+            hasStarted = false;
             System.out.println("status is stop (login screen)");
         }
     }

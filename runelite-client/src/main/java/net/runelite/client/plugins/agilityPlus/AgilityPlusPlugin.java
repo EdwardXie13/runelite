@@ -3,7 +3,6 @@ package net.runelite.client.plugins.agilityPlus;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
-import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.DecorativeObjectDespawned;
 import net.runelite.api.events.DecorativeObjectSpawned;
 import net.runelite.api.events.GameObjectDespawned;
@@ -27,7 +26,6 @@ import java.util.regex.Pattern;
 @PluginDescriptor(name = "Agility Plus", enabledByDefault = false)
 @Slf4j
 public class AgilityPlusPlugin extends Plugin {
-
     @Inject
     private Client client;
 
@@ -36,6 +34,8 @@ public class AgilityPlusPlugin extends Plugin {
 
     AgilityPlusMain thread;
 
+    private boolean hasStarted = false;
+
     @Subscribe
     public void onGameTick(GameTick event) throws AWTException {
         toggleStatus();
@@ -43,7 +43,7 @@ public class AgilityPlusPlugin extends Plugin {
     }
 
     private String stripTargetAnchors(String text) {
-        Matcher m = Pattern.compile(">(.*?)<").matcher(text);
+        Matcher m = Pattern.compile("ff>(.*?)</c").matcher(text);
         return m.find() ? m.group(1) : "";
     }
 
@@ -52,13 +52,15 @@ public class AgilityPlusPlugin extends Plugin {
         String chatBoxMessage = stripTargetAnchors(chatboxInput.getText());
         if(chatBoxMessage == null) return;
 
-        if(chatBoxMessage.equals("1") && !AgilityPlusMain.isRunning) {
+        if(chatBoxMessage.equals("1") && !AgilityPlusMain.isRunning && !hasStarted) {
             thread = new AgilityPlusMain(client, clientThread);
             AgilityPlusMain.isRunning = true;
+            hasStarted = true;
             System.out.println("status is go");
-        } else if (chatBoxMessage.equals("2") && AgilityPlusMain.isRunning) {
+        } else if (chatBoxMessage.equals("2") && AgilityPlusMain.isRunning && hasStarted) {
             thread.t.interrupt();
             AgilityPlusMain.isRunning = false;
+            hasStarted = false;
             System.out.println("status is stop");
         }
     }
@@ -77,9 +79,10 @@ public class AgilityPlusPlugin extends Plugin {
     @Subscribe
     private void onGameStateChanged(GameStateChanged event)
     {
-        if (event.getGameState() == GameState.LOGIN_SCREEN && AgilityPlusMain.isRunning)
+        if (event.getGameState() == GameState.LOGIN_SCREEN && AgilityPlusMain.isRunning && hasStarted)
         {
             AgilityPlusMain.isRunning = false;
+            hasStarted = false;
             System.out.println("status is stop (login screen)");
         }
     }

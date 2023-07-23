@@ -49,7 +49,7 @@ public class RCPlusBloodsPlugin extends Plugin {
     }
 
     private String stripTargetAnchors(String text) {
-        Matcher m = Pattern.compile(">(.*?)<").matcher(text);
+        Matcher m = Pattern.compile("ff>(.*?)</c").matcher(text);
         return m.find() ? m.group(1) : "";
     }
 
