@@ -58,11 +58,13 @@ public class TitheFarmPlusWorldPoints {
 
     public static void initTitheFarmPatchTiles() {
         // 0-6
-        for (int i = 0; i < 7; i++) {
-            TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
-                    returnRightTilesAscending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(i))
-            );
-        }
+        TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(returnRightTilesAscending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(0)));
+        TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(returnRightTilesAscending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(1)));
+        TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(returnRightTilesAscending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(2)));
+        TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(returnTopRightTile(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(3)));
+        TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(returnRightTilesAscending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(4)));
+        TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(returnRightTilesAscending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(5)));
+        TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(returnRightTilesAscending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(6)));
 
         // 7
         TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
@@ -129,6 +131,13 @@ public class TitheFarmPlusWorldPoints {
         return ImmutableList.of(
                 new WorldPoint(worldPoint.getX() + 3, worldPoint.getY() + 2, worldPoint.getPlane()),
                 new WorldPoint(worldPoint.getX() + 3, worldPoint.getY() + 1, worldPoint.getPlane())
+        );
+    }
+
+    private static List<WorldPoint> returnTopRightTile(Tile tile) {
+        WorldPoint worldPoint = tile.getWorldLocation();
+        return ImmutableList.of(
+                new WorldPoint(worldPoint.getX() + 3, worldPoint.getY() + 2, worldPoint.getPlane())
         );
     }
 

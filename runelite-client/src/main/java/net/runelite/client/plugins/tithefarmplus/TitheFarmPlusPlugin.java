@@ -3,6 +3,7 @@ package net.runelite.client.plugins.tithefarmplus;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
+import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameObjectSpawned;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
@@ -15,6 +16,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
 import java.awt.AWTException;
+import java.awt.Robot;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,7 +36,6 @@ public class TitheFarmPlusPlugin extends Plugin {
     @Subscribe
     public void onGameTick(GameTick event) throws AWTException {
         toggleStatus();
-        checkOculusReset();
     }
 
     private String stripTargetAnchors(String text) {
@@ -64,13 +65,6 @@ public class TitheFarmPlusPlugin extends Plugin {
         return client.getLocalPlayer().getWorldLocation().getRegionID();
     }
 
-    private void checkOculusReset() {
-        if(TitheFarmPlusMain.resetOculusOrb){
-            client.setOculusOrbState(0);
-            TitheFarmPlusMain.resetOculusOrb = false;
-        }
-    }
-
     @Subscribe
     private void onGameStateChanged(GameStateChanged event)
     {
@@ -86,5 +80,25 @@ public class TitheFarmPlusPlugin extends Plugin {
     public void onGameObjectSpawned(GameObjectSpawned event)
     {
         TitheFarmPlusObjectIDs.assignObjects(event);
+    }
+
+    @Subscribe
+    public void onChatMessage(final ChatMessage event) {
+        String chatMessage = event.getMessage();
+        if(chatMessage.equals("Watering can charges remaining: 10.0%"))
+            TitheFarmPlusMain.fillWateringCan = true;
+    }
+
+    @Override
+    protected void shutDown() throws Exception
+    {
+        TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.clear();
+        TitheFarmPlusWorldPoints.patchNumByTile.clear();
+        TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.clear();
+        TitheFarmPlusWorldPoints.waterBarrelWorldPoint = null;
+        TitheFarmPlusMain.isIdle = true;
+        TitheFarmPlusMain.isRunning = false;
+        TitheFarmPlusMain.hasInit = false;
+        TitheFarmPlusMain.fillWateringCan = false;
     }
 }

@@ -6,6 +6,7 @@ import net.runelite.api.ScriptID;
 import net.runelite.api.Tile;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
 import net.runelite.client.plugins.tithefarmplus.TitheFarmPlusObjectIDs.PatchState;
@@ -17,6 +18,7 @@ import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -27,15 +29,14 @@ public class TitheFarmPlusMain implements Runnable {
     private final Client client;
     private final ClientThread clientThread;
     public static boolean isIdle = true;
-    public static boolean resetOculusOrb = false;
     public long start;
     Robot robot = new Robot();
     public static boolean isRunning = false;
     public static boolean hasInit = false;
     private int currentPatch = 0;
     private boolean hasSetZoom = false;
-    private boolean fillWateringCan = false;
-    public int waterUsed = 300;
+    public static boolean fillWateringCan = false;
+    private boolean logout = false;
 
     public static List<PatchState> patchStates = new ArrayList<>(Collections.nCopies(20, PatchState.EMPTY));
 
@@ -69,9 +70,16 @@ public class TitheFarmPlusMain implements Runnable {
         }
 
         // TODO: add logout time check / 1400 fruits
+        if(!logout)
+            closeToLogout();
+
         rotateCamera();
 
-        if(isAtCurrentPatch(0) && countEmptyPatches() && fillWateringCan) {
+        if(isAtCurrentPatch(19) && countEmptyPatches() && logout) {
+            isRunning = false;
+            t.interrupt();
+            System.out.println("interrupted");
+        } else if(isAtCurrentPatch(0) && countEmptyPatches() && fillWateringCan) {
             panCameraToWaterBarrelFromPatch0();
         } else if(isAtWorldPoint(TitheFarmPlusWorldPoints.waterBarrelWorldPoint)) {
             robot.delay(1000);
@@ -105,9 +113,6 @@ public class TitheFarmPlusMain implements Runnable {
                 // increment patch
                 incrementPatch();
                 moveToNextTile();
-                waterUsed++;
-                if(waterUsed >= 300 && !fillWateringCan)
-                    fillWateringCan = true;
             }
 
         } else if(patchStates.get(currentPatch) == PatchState.WATERED && isAtCurrentPatch(currentPatch)) {
@@ -172,7 +177,6 @@ public class TitheFarmPlusMain implements Runnable {
         client.setOculusOrbNormalSpeed(12);
         robot.delay(500);
         fillWateringCan = false;
-        waterUsed = 0;
     }
 
     private void panCameraOneDirection(int keyEvent, int ms) {
@@ -188,7 +192,7 @@ public class TitheFarmPlusMain implements Runnable {
     }
 
     private void rotateCamera() {
-        if(currentPatch <= 7)
+        if(currentPatch <= 7 || currentPatch == 19)
             changeCameraYaw(0);
         else if (currentPatch <= 18)
             changeCameraYaw(1024);
@@ -285,5 +289,17 @@ public class TitheFarmPlusMain implements Runnable {
 
     public int getRegionID() {
         return WorldPoint.fromLocalInstance(client, client.getLocalPlayer().getLocalLocation()).getRegionID();
+    }
+
+    private void closeToLogout() {
+        Widget timeWidget = client.getWidget(10616865);
+
+        if(timeWidget != null) {
+            String timeWidgetTime = timeWidget.getText();
+            List<String> timeSplit = Arrays.asList(timeWidgetTime.split(":"));
+            // at 5 hr mark
+            if(Integer.parseInt(timeSplit.get(0)) == 5 && Integer.parseInt(timeSplit.get(1)) == 50)
+                logout = true;
+        }
     }
 }
