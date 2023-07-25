@@ -44,16 +44,18 @@ public class TitheFarmPlusWorldPoints {
         TitheFarmPlusWorldPoints.patchNumByTile.put(11, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(12));
 
         // Patch before center
-        TitheFarmPlusWorldPoints.patchNumByTile.put(12, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(11));
+        TitheFarmPlusWorldPoints.patchNumByTile.put(12, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(21));
+
+        TitheFarmPlusWorldPoints.patchNumByTile.put(13, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(11));
 
         //Alternate 2nd and 3rd col
-        TitheFarmPlusWorldPoints.patchNumByTile.put(13, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(20));
-        TitheFarmPlusWorldPoints.patchNumByTile.put(14, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(10));
-        TitheFarmPlusWorldPoints.patchNumByTile.put(15, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(19));
-        TitheFarmPlusWorldPoints.patchNumByTile.put(16, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(9));
-        TitheFarmPlusWorldPoints.patchNumByTile.put(17, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(18));
-        TitheFarmPlusWorldPoints.patchNumByTile.put(18, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(17));
-        TitheFarmPlusWorldPoints.patchNumByTile.put(19, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(8));
+        TitheFarmPlusWorldPoints.patchNumByTile.put(14, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(20));
+        TitheFarmPlusWorldPoints.patchNumByTile.put(15, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(10));
+        TitheFarmPlusWorldPoints.patchNumByTile.put(16, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(19));
+        TitheFarmPlusWorldPoints.patchNumByTile.put(17, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(9));
+        TitheFarmPlusWorldPoints.patchNumByTile.put(18, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(18));
+        TitheFarmPlusWorldPoints.patchNumByTile.put(19, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(17));
+        TitheFarmPlusWorldPoints.patchNumByTile.put(20, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(8));
     }
 
     public static void initTitheFarmPatchTiles() {
@@ -80,6 +82,9 @@ public class TitheFarmPlusWorldPoints {
         // patch #12 must click in 2 special tiles
         TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
             returnSouthTiles(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(12)));
+
+        TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
+                returnLeftTilesDescending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(21)));
 
         // =====
         // patch #11 need right
