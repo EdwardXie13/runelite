@@ -93,7 +93,7 @@ public class TitheFarmPlusMain implements Runnable {
         } else if(patchStates.get(currentPatch) == PatchState.EMPTY && isAtCurrentPatch(currentPatch)) {
             // click seed
             clickFirstSlot();
-            shouldDelayBit();
+//            shouldDelayBit();
             // click center of patch
             clickPatch(patchNumByTile.get(currentPatch));
 
@@ -102,7 +102,7 @@ public class TitheFarmPlusMain implements Runnable {
             }
         } else if(patchStates.get(currentPatch) == PatchState.UNWATERED && isAtCurrentPatch(currentPatch)) {
             // click patch
-            shouldDelayBit();
+//            shouldDelayBit();
             clickPatch(patchNumByTile.get(currentPatch));
 
             while(patchStates.get(currentPatch) == PatchState.UNWATERED) {
@@ -122,7 +122,7 @@ public class TitheFarmPlusMain implements Runnable {
             }
         } else if(patchStates.get(currentPatch) == PatchState.GROWN && isAtCurrentPatch(currentPatch)) {
             // click patch
-            shouldDelayBit();
+//            shouldDelayBit();
             clickPatch(patchNumByTile.get(currentPatch));
 
             while(patchStates.get(currentPatch) == PatchState.GROWN) {
@@ -136,7 +136,7 @@ public class TitheFarmPlusMain implements Runnable {
             }
         } else if(patchStates.get(currentPatch) == PatchState.DEAD && isAtCurrentPatch(currentPatch)) {
             // click patch
-            shouldDelayBit();
+//            shouldDelayBit();
             clickPatch(patchNumByTile.get(currentPatch));
 
             while(patchStates.get(currentPatch) == PatchState.DEAD) {
@@ -205,10 +205,10 @@ public class TitheFarmPlusMain implements Runnable {
             currentPatch++;
     }
 
-    private void shouldDelayBit() {
-        if(currentPatch == 3 || currentPatch == 4 || currentPatch == 11 || currentPatch == 12)
-            robot.delay(400);
-    }
+//    private void shouldDelayBit() {
+//        if(currentPatch == 3 || currentPatch == 4 || currentPatch == 11 || currentPatch == 12)
+//            robot.delay(400);
+//    }
 
     private void moveToNextTile() {
         List<WorldPoint> newPatchWorldPoints = patchWalkTilesByWorldPoint.get(currentPatch);
