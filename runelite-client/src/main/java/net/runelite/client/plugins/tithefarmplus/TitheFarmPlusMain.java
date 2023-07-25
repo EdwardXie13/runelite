@@ -38,7 +38,7 @@ public class TitheFarmPlusMain implements Runnable {
     public static boolean fillWateringCan = false;
     private boolean logout = false;
 
-    public static List<PatchState> patchStates = new ArrayList<>(Collections.nCopies(20, PatchState.EMPTY));
+    public static List<PatchState> patchStates = new ArrayList<>(Collections.nCopies(21, PatchState.EMPTY));
 
     Thread t;
 
@@ -75,10 +75,13 @@ public class TitheFarmPlusMain implements Runnable {
 
         rotateCamera();
 
-        if(isAtCurrentPatch(19) && countEmptyPatches() && logout) {
+        if(isAtCurrentPatch(0) && countEmptyPatches() && logout) {
             isRunning = false;
             t.interrupt();
             System.out.println("interrupted");
+        } else if(!hasEnoughStamina() && isAtCurrentPatch(0) && countEmptyPatches()) {
+            System.out.println("recharging energy");
+            robot.delay(1000);
         } else if(isAtCurrentPatch(0) && countEmptyPatches() && fillWateringCan) {
             panCameraToWaterBarrelFromPatch0();
         } else if(isAtWorldPoint(TitheFarmPlusWorldPoints.waterBarrelWorldPoint)) {
@@ -93,7 +96,7 @@ public class TitheFarmPlusMain implements Runnable {
         } else if(patchStates.get(currentPatch) == PatchState.EMPTY && isAtCurrentPatch(currentPatch)) {
             // click seed
             clickFirstSlot();
-            shouldDelayBit();
+//            shouldDelayBit();
             // click center of patch
             clickPatch(patchNumByTile.get(currentPatch));
 
@@ -102,7 +105,7 @@ public class TitheFarmPlusMain implements Runnable {
             }
         } else if(patchStates.get(currentPatch) == PatchState.UNWATERED && isAtCurrentPatch(currentPatch)) {
             // click patch
-            shouldDelayBit();
+//            shouldDelayBit();
             clickPatch(patchNumByTile.get(currentPatch));
 
             while(patchStates.get(currentPatch) == PatchState.UNWATERED) {
@@ -122,7 +125,7 @@ public class TitheFarmPlusMain implements Runnable {
             }
         } else if(patchStates.get(currentPatch) == PatchState.GROWN && isAtCurrentPatch(currentPatch)) {
             // click patch
-            shouldDelayBit();
+//            shouldDelayBit();
             clickPatch(patchNumByTile.get(currentPatch));
 
             while(patchStates.get(currentPatch) == PatchState.GROWN) {
@@ -136,7 +139,7 @@ public class TitheFarmPlusMain implements Runnable {
             }
         } else if(patchStates.get(currentPatch) == PatchState.DEAD && isAtCurrentPatch(currentPatch)) {
             // click patch
-            shouldDelayBit();
+//            shouldDelayBit();
             clickPatch(patchNumByTile.get(currentPatch));
 
             while(patchStates.get(currentPatch) == PatchState.DEAD) {
@@ -153,7 +156,7 @@ public class TitheFarmPlusMain implements Runnable {
     }
 
     private boolean countEmptyPatches() {
-        return patchStates.stream().filter(patch -> patch.equals(PatchState.EMPTY)).count() == 20;
+        return patchStates.stream().filter(patch -> patch.equals(PatchState.EMPTY)).count() == 21;
     }
 
     private void panCameraToWaterBarrelFromPatch0() {
@@ -192,23 +195,23 @@ public class TitheFarmPlusMain implements Runnable {
     }
 
     private void rotateCamera() {
-        if(currentPatch <= 7 || currentPatch == 19)
+        if(currentPatch <= 7 || currentPatch == 20)
             changeCameraYaw(0);
-        else if (currentPatch <= 18)
+        else if (currentPatch <= 19)
             changeCameraYaw(1024);
     }
 
     private void incrementPatch() {
-        if(currentPatch == 19)
+        if(currentPatch == 20)
             currentPatch = 0;
         else
             currentPatch++;
     }
 
-    private void shouldDelayBit() {
-        if(currentPatch == 3 || currentPatch == 4 || currentPatch == 11 || currentPatch == 12)
-            robot.delay(400);
-    }
+//    private void shouldDelayBit() {
+//        if(currentPatch == 3 || currentPatch == 4 || currentPatch == 11 || currentPatch == 12)
+//            robot.delay(400);
+//    }
 
     private void moveToNextTile() {
         List<WorldPoint> newPatchWorldPoints = patchWalkTilesByWorldPoint.get(currentPatch);
@@ -217,18 +220,18 @@ public class TitheFarmPlusMain implements Runnable {
 
     private void clickFirstSlot() {
         scheduledPointDelay(new Point(782, 768), 3);
-        robot.delay(250);
+        robot.delay(100);
     }
 
     private void clickPatch(WorldPoint worldPoint) {
         getWorldPointCoords(LocalPoint.fromWorld(client, worldPoint));
-        robot.delay(250);
+        robot.delay(100);
     }
 
     private void clickPatch(Tile tile) {
         WorldPoint tileWP = tile.getWorldLocation();
         getWorldPointCoords(LocalPoint.fromWorld(client, new WorldPoint(tileWP.getX() + 1, tileWP.getY() + 1, tileWP.getPlane())));
-        robot.delay(250);
+        robot.delay(100);
     }
 
     private boolean isAtCurrentPatch(int currentPatch) {
@@ -301,5 +304,10 @@ public class TitheFarmPlusMain implements Runnable {
             if(Integer.parseInt(timeSplit.get(0)) == 5 && Integer.parseInt(timeSplit.get(1)) == 50)
                 logout = true;
         }
+    }
+
+    private boolean hasEnoughStamina() {
+        double energy = client.getEnergy() / 100.0;
+        return energy >= 30.0;
     }
 }

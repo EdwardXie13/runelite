@@ -16,7 +16,6 @@ import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
 import java.awt.AWTException;
-import java.awt.Robot;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
