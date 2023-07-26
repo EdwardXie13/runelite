@@ -41,21 +41,21 @@ public class TitheFarmPlusWorldPoints {
         TitheFarmPlusWorldPoints.patchNumByTile.put(8, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(15));
         TitheFarmPlusWorldPoints.patchNumByTile.put(9, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(14));
         TitheFarmPlusWorldPoints.patchNumByTile.put(10, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(13));
-        TitheFarmPlusWorldPoints.patchNumByTile.put(11, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(12));
+        TitheFarmPlusWorldPoints.patchNumByTile.put(11, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(22));
+        TitheFarmPlusWorldPoints.patchNumByTile.put(12, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(21));
+        TitheFarmPlusWorldPoints.patchNumByTile.put(13, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(12));
 
         // Patch before center
-        TitheFarmPlusWorldPoints.patchNumByTile.put(12, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(21));
-
-        TitheFarmPlusWorldPoints.patchNumByTile.put(13, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(11));
+        TitheFarmPlusWorldPoints.patchNumByTile.put(14, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(11));
 
         //Alternate 2nd and 3rd col
-        TitheFarmPlusWorldPoints.patchNumByTile.put(14, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(20));
-        TitheFarmPlusWorldPoints.patchNumByTile.put(15, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(10));
+        TitheFarmPlusWorldPoints.patchNumByTile.put(15, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(20));
         TitheFarmPlusWorldPoints.patchNumByTile.put(16, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(19));
-        TitheFarmPlusWorldPoints.patchNumByTile.put(17, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(9));
-        TitheFarmPlusWorldPoints.patchNumByTile.put(18, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(18));
-        TitheFarmPlusWorldPoints.patchNumByTile.put(19, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(17));
-        TitheFarmPlusWorldPoints.patchNumByTile.put(20, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(8));
+        TitheFarmPlusWorldPoints.patchNumByTile.put(17, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(10));
+        TitheFarmPlusWorldPoints.patchNumByTile.put(18, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(9));
+        TitheFarmPlusWorldPoints.patchNumByTile.put(19, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(18));
+        TitheFarmPlusWorldPoints.patchNumByTile.put(20, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(17));
+        TitheFarmPlusWorldPoints.patchNumByTile.put(21, TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(8));
     }
 
     public static void initTitheFarmPatchTiles() {
@@ -72,19 +72,23 @@ public class TitheFarmPlusWorldPoints {
         TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
                 returnRightTilesDescending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(7)));
 
-        // 15 to 13 because it ordered from south to north, 13 - 15 (counting from 0)
-        for (int i = 15; i > 12; i--) {
-            TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
-                    returnLeftTilesDescending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(i))
-            );
-        }
-
-        // patch #12 must click in 2 special tiles
         TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
-            returnSouthTiles(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(12)));
+                returnRightTilesDescending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(15)));
+
+        TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
+                returnRightTilesDescending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(14)));
+
+        TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
+                returnRightTilesDescending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(13)));
+
+        TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
+                returnLeftTilesDescending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(22)));
 
         TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
                 returnLeftTilesDescending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(21)));
+
+        TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
+                returnBottomRightTile(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(12)));
 
         // =====
         // patch #11 need right
@@ -95,13 +99,13 @@ public class TitheFarmPlusWorldPoints {
         TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
                 returnLeftTilesDescending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(20)));
 
-        // patch #10 need right
-        TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
-                returnRightTilesDescending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(10)));
-
         // patch #18 need Left
         TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
                 returnLeftTilesDescending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(19)));
+
+        // patch #10 need right
+        TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
+                returnRightTilesDescending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(10)));
 
         // patch #9 need right
         TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
@@ -152,6 +156,11 @@ public class TitheFarmPlusWorldPoints {
                 new WorldPoint(worldPoint.getX() + 3, worldPoint.getY(), worldPoint.getPlane()),
                 new WorldPoint(worldPoint.getX() + 3, worldPoint.getY() + 1, worldPoint.getPlane())
         );
+    }
+
+    private static List<WorldPoint> returnBottomRightTile(Tile tile) {
+        WorldPoint worldPoint = tile.getWorldLocation();
+        return ImmutableList.of(new WorldPoint(worldPoint.getX() + 3, worldPoint.getY(), worldPoint.getPlane()));
     }
 
     private static List<WorldPoint> returnLeftTilesDescending(Tile tile) {
