@@ -73,17 +73,15 @@ public class TitheFarmPlusMain implements Runnable {
         if(!logout)
             closeToLogout();
 
-
-
         rotateCamera();
 
-        if(!hasEnoughStamina() && isAtCurrentPatch(0) && countEmptyPatches()) {
-            System.out.println("recharging energy");
-            robot.delay(1000);
-        } else if(isAtCurrentPatch(19) && countEmptyPatches() && logout) {
+        if(isAtCurrentPatch(0) && countEmptyPatches() && logout) {
             isRunning = false;
             t.interrupt();
             System.out.println("interrupted");
+        } else if(!hasEnoughStamina() && isAtCurrentPatch(0) && countEmptyPatches()) {
+            System.out.println("recharging energy");
+            robot.delay(1000);
         } else if(isAtCurrentPatch(0) && countEmptyPatches() && fillWateringCan) {
             panCameraToWaterBarrelFromPatch0();
         } else if(isAtWorldPoint(TitheFarmPlusWorldPoints.waterBarrelWorldPoint)) {
