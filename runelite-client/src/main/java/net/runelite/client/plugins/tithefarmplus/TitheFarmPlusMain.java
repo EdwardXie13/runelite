@@ -37,8 +37,9 @@ public class TitheFarmPlusMain implements Runnable {
     private boolean hasSetZoom = false;
     public static boolean fillWateringCan = false;
     private boolean logout = false;
+    private static final int patches = 22;
 
-    public static List<PatchState> patchStates = new ArrayList<>(Collections.nCopies(21, PatchState.EMPTY));
+    public static List<PatchState> patchStates = new ArrayList<>(Collections.nCopies(patches, PatchState.EMPTY));
 
     Thread t;
 
@@ -156,7 +157,7 @@ public class TitheFarmPlusMain implements Runnable {
     }
 
     private boolean countEmptyPatches() {
-        return patchStates.stream().filter(patch -> patch.equals(PatchState.EMPTY)).count() == 21;
+        return patchStates.stream().filter(patch -> patch.equals(PatchState.EMPTY)).count() == patches;
     }
 
     private void panCameraToWaterBarrelFromPatch0() {
@@ -195,14 +196,14 @@ public class TitheFarmPlusMain implements Runnable {
     }
 
     private void rotateCamera() {
-        if(currentPatch <= 7 || currentPatch == 20)
+        if(currentPatch <= 7 || currentPatch == 21)
             changeCameraYaw(0);
-        else if (currentPatch <= 19)
+        else if (currentPatch <= 20)
             changeCameraYaw(1024);
     }
 
     private void incrementPatch() {
-        if(currentPatch == 20)
+        if(currentPatch == 21)
             currentPatch = 0;
         else
             currentPatch++;
