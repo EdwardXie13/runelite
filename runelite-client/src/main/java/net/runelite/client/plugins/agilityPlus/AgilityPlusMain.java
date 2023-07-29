@@ -221,13 +221,13 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
       }
         // 1 roof
-        else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIRST_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK1) && isIdle) {
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIRST_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS1 && isIdle) {
             setCameraZoom(758);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             robot.delay(1000);
-            checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK1);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIRST_ROOF) && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK1) && isIdle) {
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.CANFIS_GRACEFULMARK1));
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIRST_ROOF) && !AgilityPlusWorldPoints.MOG_CANFIS1 && isIdle) {
             setCameraZoom(336);
             changeCameraYaw(0);
             robot.delay(500);
@@ -246,12 +246,12 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
         }
         // 2 roof
-        else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SECOND_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2) && isIdle) {
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SECOND_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS2 && isIdle) {
             setCameraZoom(896);
             changeCameraYaw(0);
             robot.delay(1000);
-            checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SECOND_ROOF) && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2) && isIdle) {
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2));
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SECOND_ROOF) && !AgilityPlusWorldPoints.MOG_CANFIS2 && isIdle) {
             setCameraZoom(540);
             changeCameraYaw(0);
             robot.delay(500);
@@ -269,13 +269,13 @@ public class AgilityPlusMain implements Runnable {
             scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSecondRoofGap, 10);
         }
         // 3 roof
-        else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_THIRD_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3) && isIdle) {
+        else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_THIRD_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS3 && isIdle) {
             robot.delay(1000);
             setCameraZoom(751);
             changeCameraYaw(0);
             robot.delay(1000);
-            checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3);
-        } else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_THIRD_ROOF) && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3) && isIdle) {
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3));
+        } else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_THIRD_ROOF) && !AgilityPlusWorldPoints.MOG_CANFIS3 && isIdle) {
             robot.delay(1000);
             setCameraZoom(483);
             changeCameraYaw(0);
@@ -294,13 +294,13 @@ public class AgilityPlusMain implements Runnable {
             scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisThirdRoofGap, 10);
         }
         // 4 roof
-        else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FOURTH_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK4) && isIdle) {
+        else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FOURTH_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS4 && isIdle) {
             setCameraZoom(751);
             changeCameraYaw(0);
             robot.delay(1000);
-            checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK4);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.CANFIS_GRACEFULMARK4));
             robot.delay(1000);
-        } else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FOURTH_ROOF) && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK4) && isIdle) {
+        } else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FOURTH_ROOF) && !AgilityPlusWorldPoints.MOG_CANFIS4 && isIdle) {
 //            setCameraZoom(896);
             setCameraZoom(-47);
             client.setCameraPitchTarget(160);
@@ -324,14 +324,14 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(5000);
         }
         // 5 roof
-        else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIFTH_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK5) && isIdle) {
+        else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIFTH_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS5 && isIdle) {
             setCameraZoom(896);
             client.setCameraPitchTarget(512);
             changeCameraYaw(512);
             robot.delay(1000);
-            checkGracefulmark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK5);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.CANFIS_GRACEFULMARK5));
             robot.delay(500);
-        } else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIFTH_ROOF) && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK5) && isIdle) {
+        } else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIFTH_ROOF) && !AgilityPlusWorldPoints.MOG_CANFIS5 && isIdle) {
             setCameraZoom(729);
             client.setCameraPitchTarget(512);
             changeCameraYaw(512);
@@ -411,12 +411,12 @@ public class AgilityPlusMain implements Runnable {
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
             robot.delay(500);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIRST_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1)) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIRST_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_SEERS1) {
             setCameraZoom(896);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             robot.delay(500);
-            checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.SEERS_GRACEFULMARK1));
             robot.delay(500);
         } else if(isNearWorldTile(new WorldPoint(2721, 3494, 3), 3) && isIdle) {
             setCameraZoom(896);
@@ -424,7 +424,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraYaw(0);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10);
             robot.delay(1500);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIRST_ROOF) && isIdle && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1)) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIRST_ROOF) && isIdle && !AgilityPlusWorldPoints.MOG_SEERS1) {
             setCameraZoom(362);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
@@ -437,12 +437,12 @@ public class AgilityPlusMain implements Runnable {
             changeCameraYaw(1535);
             robot.delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1)) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_SEERS2_1) {
             setCameraZoom(483);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             robot.delay(500);
-            checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1));
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1) && isIdle) {
             setCameraZoom(23);
             client.setCameraPitchTarget(52);
@@ -450,17 +450,17 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
             scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10);
             robot.delay(3500);
-        } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1, 2) && isIdle && !isAtWorldPoint(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1)) {
+        } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1, 2) && isIdle && !AgilityPlusWorldPoints.MOG_SEERS2_1) {
             changeCameraYaw(1024);
             setCameraZoom(590);
             robot.delay(500);
             scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2)) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_SEERS2_2) {
             changeCameraYaw(0);
             client.setCameraPitchTarget(512);
             setCameraZoom(680);
             robot.delay(500);
-            checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2));
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2, 2) && isIdle) {
             setCameraZoom(245);
             client.setCameraPitchTarget(43);
@@ -481,18 +481,18 @@ public class AgilityPlusMain implements Runnable {
             changeCameraYaw(0);
             robot.delay(500);
             scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_THIRD_ROOF) && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3) && isIdle) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_THIRD_ROOF) && !AgilityPlusWorldPoints.MOG_SEERS3 && isIdle) {
             setCameraZoom(404);
             client.setCameraPitchTarget(48);
             changeCameraYaw(0);
             robot.delay(500);
             scheduledPointDelay(new Point(468, 799), 10);
             robot.delay(1500);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_THIRD_ROOF) && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3) && isIdle) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_THIRD_ROOF) && AgilityPlusWorldPoints.MOG_SEERS3 && isIdle) {
             changeCameraYaw(0);
             setCameraZoom(896);
             robot.delay(500);
-            checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.SEERS_GRACEFULMARK3));
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3)  && isIdle) {
             setCameraZoom(261);
             client.setCameraPitchTarget(44);
@@ -519,12 +519,12 @@ public class AgilityPlusMain implements Runnable {
             changeCameraYaw(0);
             robot.delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFourthRoofGap, 10);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIFTH_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5)) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIFTH_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_SEERS5) {
             setCameraZoom(670);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             robot.delay(500);
-            checkGracefulmark(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.SEERS_GRACEFULMARK5));
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5, 2) && isIdle) {
             setCameraZoom(226);
             client.setCameraPitchTarget(48);
@@ -532,7 +532,7 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
             scheduledPointDelay(new Point(296, 768), 10);
             robot.delay(1500);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIFTH_ROOF) && isIdle) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIFTH_ROOF) && isIdle && !AgilityPlusWorldPoints.MOG_SEERS5) {
             setCameraZoom(704);
             client.setCameraPitchTarget(48);
             changeCameraYaw(512);
@@ -577,7 +577,7 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
             scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.rellekaStartWall, 10);
             robot.delay(500);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIRST_ROOF) && isIdle && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1)) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIRST_ROOF) && isIdle && !AgilityPlusWorldPoints.MOG_RELLEKA1) {
             System.out.println("relleka 1st roof");
             robot.delay(500);
             changeCameraYaw(0);
@@ -585,14 +585,14 @@ public class AgilityPlusMain implements Runnable {
             setCameraZoom(390);
             robot.delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFirstRoofGap, 10);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIRST_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1)) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIRST_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_RELLEKA1) {
             System.out.println("relleka pick up GM 1");
             robot.delay(500);
             changeCameraYaw(0);
             client.setCameraPitchTarget(512);
             setCameraZoom(850);
             robot.delay(500);
-            checkGracefulmark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1));
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1) && isIdle) {
             System.out.println("relleka 1st roof");
@@ -624,7 +624,7 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaSecondRoofGap, 10);
             robot.delay(500);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_1) && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_2)) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && !AgilityPlusWorldPoints.MOG_RELLEKA3_1 && !AgilityPlusWorldPoints.MOG_RELLEKA3_2) {
             System.out.println("relleka 3rd roof");
             robot.delay(500);
             setCameraZoom(540);
@@ -633,23 +633,23 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaThirdRoofGap, 10);
             robot.delay(500);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_1)) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_RELLEKA3_1) {
             System.out.println("relleka pick up GM 3_1");
             robot.delay(500);
             setCameraZoom(880);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             robot.delay(500);
-            checkGracefulmark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_1);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_1));
             robot.delay(500);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_2)) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_RELLEKA3_2) {
             System.out.println("relleka pick up GM 3_2");
             robot.delay(500);
             setCameraZoom(880);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
             robot.delay(500);
-            checkGracefulmark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_2);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_2));
             robot.delay(500);
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_1) || isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_2)) && isIdle) {
             System.out.println("relleka pick up GM 4_2");
@@ -660,7 +660,7 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaThirdRoofGap, 10);
             robot.delay(500);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FOURTH_ROOF) && isIdle && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_1) && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_2)) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FOURTH_ROOF) && isIdle && !AgilityPlusWorldPoints.MOG_RELLEKA4_1 && !AgilityPlusWorldPoints.MOG_RELLEKA4_2) {
             System.out.println("relleka 4th roof");
             robot.delay(500);
             setCameraZoom(540);
@@ -669,23 +669,23 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFourthRoofGap, 10);
             robot.delay(500);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FOURTH_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_1)) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FOURTH_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_RELLEKA4_1) {
             System.out.println("relleka pick up GM 4_1");
             robot.delay(500);
             setCameraZoom(715);
             client.setCameraPitchTarget(512);
             changeCameraYaw(1024);
             robot.delay(500);
-            checkGracefulmark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_1);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_1));
             robot.delay(500);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FOURTH_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_2)) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FOURTH_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_RELLEKA4_2) {
             System.out.println("relleka pick up GM 4_2");
             robot.delay(500);
             setCameraZoom(715);
             client.setCameraPitchTarget(512);
             changeCameraYaw(1024);
             robot.delay(500);
-            checkGracefulmark(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_2);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_2));
             robot.delay(500);
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_1) || isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_2)) && isIdle) {
             System.out.println("relleka 4th roof");
@@ -823,7 +823,7 @@ public class AgilityPlusMain implements Runnable {
             scheduledGroundObjectDelay(AgilityPlusObjectIDs.ardySecondRoofGap, 8);
             robot.delay(500);
         }
-        else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_THIRD_ROOF) && isIdle && !doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.ARDY_GRACEFULMARK)) {
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_THIRD_ROOF) && isIdle && !AgilityPlusWorldPoints.MOG_ARDY) {
             System.out.println("ardy 3rd roof no GM");
             robot.delay(500);
             setCameraZoom(695);
@@ -834,14 +834,14 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(1500);
         }
         // TODO: GRACEMARK
-        else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_THIRD_ROOF) && isIdle && doesWorldPointHaveGracefulMark(AgilityPlusWorldPoints.ARDY_GRACEFULMARK)) {
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_THIRD_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_ARDY) {
             System.out.println("ardy 3rd roof yes GM");
             robot.delay(500);
             changeCameraYaw(0);
             client.setCameraPitchTarget(512);
             setCameraZoom(1004);
             robot.delay(500);
-            checkGracefulmark(AgilityPlusWorldPoints.ARDY_GRACEFULMARK);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.ARDY_GRACEFULMARK));
             robot.delay(1000);
         }
 
@@ -1134,26 +1134,21 @@ public class AgilityPlusMain implements Runnable {
                 && client.getLocalPlayer().getWorldLocation().getPlane() == target.getPlane();
     }
 
-    private void checkGracefulmark(WorldPoint worldpoint) {
-        if(doesWorldPointHaveGracefulMark(worldpoint))
-            getWorldPointCoords(LocalPoint.fromWorld(client, worldpoint));
-    }
-
-    private boolean doesWorldPointHaveGracefulMark(WorldPoint worldpoint) {
-        Tile[][][] sceneTiles = client.getScene().getTiles();
-        if(sceneTiles == null) return false;
-
-        int startX = sceneTiles[0][0][0].getWorldLocation().getX();
-        int startY = sceneTiles[0][0][0].getWorldLocation().getY();
-
-        int playerPlane = client.getLocalPlayer().getWorldLocation().getPlane();
-        List<TileItem> itemsOnTile = sceneTiles[playerPlane][worldpoint.getX()-startX][worldpoint.getY()-startY].getGroundItems();
-        List<Integer> tileItemIds = new ArrayList<>();
-        if(itemsOnTile != null)
-            itemsOnTile.forEach(tileItem -> tileItemIds.add(tileItem.getId()));
-
-        return tileItemIds.contains(ItemID.MARK_OF_GRACE);
-    }
+//    private boolean doesWorldPointHaveGracefulMark(WorldPoint worldpoint) {
+//        Tile[][][] sceneTiles = client.getScene().getTiles();
+//        if(sceneTiles == null) return false;
+//
+//        int startX = sceneTiles[0][0][0].getWorldLocation().getX();
+//        int startY = sceneTiles[0][0][0].getWorldLocation().getY();
+//
+//        int playerPlane = client.getLocalPlayer().getWorldLocation().getPlane();
+//        List<TileItem> itemsOnTile = sceneTiles[playerPlane][worldpoint.getX()-startX][worldpoint.getY()-startY].getGroundItems();
+//        List<Integer> tileItemIds = new ArrayList<>();
+//        if(itemsOnTile != null)
+//            itemsOnTile.forEach(tileItem -> tileItemIds.add(tileItem.getId()));
+//
+//        return tileItemIds.contains(ItemID.MARK_OF_GRACE);
+//    }
 
     private boolean checkIdle()
     {

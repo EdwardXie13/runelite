@@ -77,45 +77,49 @@ public class AgilityPlusWorldPoints {
 
     public static final WorldPoint RELLEKA_GRACEFULMARK3_1 = new WorldPoint(2628, 3652, 3);
     public static final WorldPoint RELLEKA_GRACEFULMARK3_2 = new WorldPoint(2629, 3653, 3);
-
     public static final WorldPoint RELLEKA_GRACEFULMARK4_1 = new WorldPoint(2641, 3650, 3);
     public static final WorldPoint RELLEKA_GRACEFULMARK4_2 = new WorldPoint(2642, 3651, 3);
-
     public static final WorldPoint RELLEKA_GRACEFULMARK1 = new WorldPoint(2623, 3675, 3);
 
     //=== ARDY
     // 710 zoom, pitch 0, yaw south
     public static final WorldPoint ARDY_START = new WorldPoint(2673, 3297, 0);
-
     public static final WorldPoint ARDY_FIRST_ROOF = new WorldPoint(2671, 3299, 3);
     public static final WorldPoint ARDY_FIRST_ROOF_RUN_POINT = new WorldPoint(2671, 3309, 3);
-
-    // 655 zoom
     public static final WorldPoint ARDY_SECOND_ROOF = new WorldPoint(2665, 3318, 3);
     public static final WorldPoint ARDY_SECOND_ROOF_RUN_POINT = new WorldPoint(2662, 3318, 3);
-
-    // 692 zoom
     public static final WorldPoint ARDY_THIRD_ROOF = new WorldPoint(2656, 3318, 3);
-
-    // 510 zoom face south
     public static final WorldPoint ARDY_FOURTH_ROOF = new WorldPoint(2653, 3314, 3);
-
-    // 350 zoom
     public static final WorldPoint ARDY_FIFTH_ROOF = new WorldPoint(2651, 3309, 3);
-
-    // 1004 zoom
     public static final WorldPoint ARDY_FIFTH_ROOF_RUN_POINT = new WorldPoint(2653, 3300, 3);
-
-    // 875 zoom
     public static final WorldPoint ARDY_SIXTH_ROOF = new WorldPoint(2656, 3297, 3);
-
-    // 205 zoom, pitch 4, yaw 576
     public static final WorldPoint ARDY_FINISH = new WorldPoint(2668, 3297, 0);
 
     public static final WorldPoint ARDY_FAIL1 = new WorldPoint(2666, 3311, 0);
     public static final WorldPoint ARDY_FAIL2 = new WorldPoint(2653, 3316, 0);
 
     public static final WorldPoint ARDY_GRACEFULMARK = new WorldPoint(2657, 3318, 3);
+
+    // MOG booleans
+    public static boolean MOG_CANFIS1 = false;
+    public static boolean MOG_CANFIS2 = false;
+    public static boolean MOG_CANFIS3 = false;
+    public static boolean MOG_CANFIS4 = false;
+    public static boolean MOG_CANFIS5 = false;
+
+    public static boolean MOG_SEERS1 = false;
+    public static boolean MOG_SEERS2_1 = false;
+    public static boolean MOG_SEERS2_2 = false; //3
+    public static boolean MOG_SEERS3 = false;
+    public static boolean MOG_SEERS5 = false; //3
+
+    public static boolean MOG_RELLEKA1 = false;
+    public static boolean MOG_RELLEKA3_1 = false;
+    public static boolean MOG_RELLEKA3_2 = false;
+    public static boolean MOG_RELLEKA4_1 = false;
+    public static boolean MOG_RELLEKA4_2 = false;
+
+    public static boolean MOG_ARDY = false;
 }
 
 

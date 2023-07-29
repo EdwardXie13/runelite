@@ -3,6 +3,10 @@ package net.runelite.client.plugins.agilityPlus;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
+import net.runelite.api.ItemID;
+import net.runelite.api.Tile;
+import net.runelite.api.TileItem;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.DecorativeObjectDespawned;
 import net.runelite.api.events.DecorativeObjectSpawned;
 import net.runelite.api.events.GameObjectDespawned;
@@ -11,6 +15,8 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.GroundObjectDespawned;
 import net.runelite.api.events.GroundObjectSpawned;
+import net.runelite.api.events.ItemDespawned;
+import net.runelite.api.events.ItemSpawned;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
@@ -133,5 +139,99 @@ public class AgilityPlusPlugin extends Plugin {
     public void onDecorativeObjectDespawned(DecorativeObjectDespawned event)
     {
         AgilityPlusObjectIDs.assignObjects(event);
+    }
+
+    @Subscribe
+    public void onItemSpawned(ItemSpawned itemSpawned)
+    {
+        final TileItem item = itemSpawned.getItem();
+        final Tile tile = itemSpawned.getTile();
+
+        if (item.getId() == ItemID.MARK_OF_GRACE)
+        {
+            WorldPoint MOG_TILE = tile.getWorldLocation();
+            if(MOG_TILE.equals(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK1))
+                AgilityPlusWorldPoints.MOG_CANFIS1 = true;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2))
+                AgilityPlusWorldPoints.MOG_CANFIS2 = true;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3))
+                AgilityPlusWorldPoints.MOG_CANFIS3 = true;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK4))
+                AgilityPlusWorldPoints.MOG_CANFIS4 = true;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK5))
+                AgilityPlusWorldPoints.MOG_CANFIS5 = true;
+
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1))
+                AgilityPlusWorldPoints.MOG_SEERS1 = true;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1))
+                AgilityPlusWorldPoints.MOG_SEERS2_1 = true;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2))
+                AgilityPlusWorldPoints.MOG_SEERS2_2 = true;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3))
+                AgilityPlusWorldPoints.MOG_SEERS3 = true;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5))
+                AgilityPlusWorldPoints.MOG_SEERS5 = true;
+
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1))
+                AgilityPlusWorldPoints.MOG_RELLEKA1 = true;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_1))
+                AgilityPlusWorldPoints.MOG_RELLEKA3_1 = true;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_2))
+                AgilityPlusWorldPoints.MOG_RELLEKA3_2 = true;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_1))
+                AgilityPlusWorldPoints.MOG_RELLEKA4_1 = true;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_2))
+                AgilityPlusWorldPoints.MOG_RELLEKA4_2 = true;
+
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.ARDY_GRACEFULMARK))
+                AgilityPlusWorldPoints.MOG_ARDY = true;
+        }
+    }
+
+    @Subscribe
+    public void onItemDespawned(ItemDespawned itemDespawned)
+    {
+        final TileItem item = itemDespawned.getItem();
+        final Tile tile = itemDespawned.getTile();
+
+        if (item.getId() == ItemID.MARK_OF_GRACE)
+        {
+            WorldPoint MOG_TILE = tile.getWorldLocation();
+            if(MOG_TILE.equals(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK1))
+                AgilityPlusWorldPoints.MOG_CANFIS1 = false;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2))
+                AgilityPlusWorldPoints.MOG_CANFIS2 = false;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3))
+                AgilityPlusWorldPoints.MOG_CANFIS3 = false;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK4))
+                AgilityPlusWorldPoints.MOG_CANFIS4 = false;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK5))
+                AgilityPlusWorldPoints.MOG_CANFIS5 = false;
+
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1))
+                AgilityPlusWorldPoints.MOG_SEERS1 = false;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1))
+                AgilityPlusWorldPoints.MOG_SEERS2_1 = false;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_2))
+                AgilityPlusWorldPoints.MOG_SEERS2_2 = false;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.SEERS_GRACEFULMARK3))
+                AgilityPlusWorldPoints.MOG_SEERS3 = false;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.SEERS_GRACEFULMARK5))
+                AgilityPlusWorldPoints.MOG_SEERS5 = false;
+
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK1))
+                AgilityPlusWorldPoints.MOG_RELLEKA1 = false;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_1))
+                AgilityPlusWorldPoints.MOG_RELLEKA3_1 = false;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_2))
+                AgilityPlusWorldPoints.MOG_RELLEKA3_2 = false;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_1))
+                AgilityPlusWorldPoints.MOG_RELLEKA4_1 = false;
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_2))
+                AgilityPlusWorldPoints.MOG_RELLEKA4_2 = false;
+
+            else if(MOG_TILE.equals(AgilityPlusWorldPoints.ARDY_GRACEFULMARK))
+                AgilityPlusWorldPoints.MOG_ARDY = false;
+        }
     }
 }
