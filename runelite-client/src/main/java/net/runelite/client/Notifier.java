@@ -73,6 +73,7 @@ import net.runelite.client.plugins.agilityPlus.AgilityPlusMain;
 import net.runelite.client.plugins.miningPlus.MiningPlusMain;
 import net.runelite.client.plugins.rcPlus.RCPlusMain;
 import net.runelite.client.plugins.rcPlusBloods.RCPlusBloodsMain;
+import net.runelite.client.plugins.rcPlusSouls.RCPlusSoulsMain;
 import net.runelite.client.plugins.tanningPlus.TanningPlusMain;
 import net.runelite.client.plugins.twoclickcrafting.TwoClickCraftingMain;
 import net.runelite.client.ui.ClientUI;
@@ -162,6 +163,7 @@ public class Notifier
 		AgilityPlusMain.isIdle = true;
 		RCPlusMain.isIdle = true;
 		RCPlusBloodsMain.isIdle = true;
+		RCPlusSoulsMain.isIdle = true;
 		MiningPlusMain.isIdle = true;
 		TanningPlusMain.isIdle = true;
 		TwoClickCraftingMain.isIdle = true;
