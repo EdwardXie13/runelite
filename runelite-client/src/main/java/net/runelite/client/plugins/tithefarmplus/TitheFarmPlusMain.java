@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import static net.runelite.client.plugins.tithefarmplus.TitheFarmPlusWorldPoints.patchNumByTile;
 import static net.runelite.client.plugins.tithefarmplus.TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint;
@@ -70,7 +71,6 @@ public class TitheFarmPlusMain implements Runnable {
             hasSetZoom = true;
         }
 
-        // TODO: add logout time check / 1400 fruits
         if(!logout)
             closeToLogout();
 
@@ -309,6 +309,6 @@ public class TitheFarmPlusMain implements Runnable {
 
     private boolean hasEnoughStamina() {
         double energy = client.getEnergy() / 100.0;
-        return energy >= 30.0;
+        return energy >= new Random().nextInt(6) + 35;
     }
 }
