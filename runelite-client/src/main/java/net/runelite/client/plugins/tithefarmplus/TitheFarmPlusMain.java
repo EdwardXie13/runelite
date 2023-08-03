@@ -76,84 +76,74 @@ public class TitheFarmPlusMain implements Runnable {
 
         rotateCamera();
 
-        if(isAtCurrentPatch(0) && countEmptyPatches() && logout) {
-            isRunning = false;
-            t.interrupt();
-            System.out.println("interrupted");
-        } else if(!hasEnoughStamina() && isAtCurrentPatch(0) && countEmptyPatches()) {
+        if(!hasEnoughStamina() && patchStates.get(21) == PatchState.EMPTY && patchStates.get(0) == PatchState.EMPTY) {
             System.out.println("recharging energy");
             robot.delay(1000);
-        } else if(isAtCurrentPatch(0) && countEmptyPatches() && fillWateringCan) {
-            panCameraToWaterBarrelFromPatch0();
-        } else if(isAtWorldPoint(TitheFarmPlusWorldPoints.waterBarrelWorldPoint)) {
-            robot.delay(1000);
-            setCameraZoom(1004);
-            robot.delay(500);
-            scheduledPointDelay(new Point(782, 804), 3); // row 2 col 1
-            robot.delay(250);
-            scheduledPointDelay(new Point(163, 501), 5); // click barrel
-            robot.delay(1000);
-            panCameraToPatch0FromWaterBarrel();
-        } else if(patchStates.get(currentPatch) == PatchState.EMPTY && isAtCurrentPatch(currentPatch)) {
-            // click seed
-            clickFirstSlot();
-//            shouldDelayBit();
-            // click center of patch
-            clickPatch(patchNumByTile.get(currentPatch));
+        } else {
+            if (isAtCurrentPatch(0) && countEmptyPatches() && logout) {
+                isRunning = false;
+                t.interrupt();
+                System.out.println("interrupted");
+            } else if (isAtCurrentPatch(0) && countEmptyPatches() && fillWateringCan) {
+                System.out.println("fill watering can");
+                panCameraToWaterBarrelFromPatch0();
+            } else if (isAtWorldPoint(TitheFarmPlusWorldPoints.waterBarrelWorldPoint)) {
+                robot.delay(1000);
+                setCameraZoom(1004);
+                robot.delay(500);
+                scheduledPointDelay(new Point(782, 804), 3); // row 2 col 1
+                robot.delay(250);
+                scheduledPointDelay(new Point(163, 501), 5); // click barrel
+                robot.delay(1000);
+                panCameraToPatch0FromWaterBarrel();
+            } else if (patchStates.get(currentPatch) == PatchState.EMPTY && isAtCurrentPatch(currentPatch)) {
+                clickFirstSlot();
+                clickPatch(patchNumByTile.get(currentPatch));
 
-            while(patchStates.get(currentPatch) == PatchState.EMPTY) {
-                robot.delay(150);
-            }
-        } else if(patchStates.get(currentPatch) == PatchState.UNWATERED && isAtCurrentPatch(currentPatch)) {
-            // click patch
-//            shouldDelayBit();
-            clickPatch(patchNumByTile.get(currentPatch));
+                while (patchStates.get(currentPatch) == PatchState.EMPTY) {
+                    robot.delay(150);
+                }
+            } else if (patchStates.get(currentPatch) == PatchState.UNWATERED && isAtCurrentPatch(currentPatch)) {
+                clickPatch(patchNumByTile.get(currentPatch));
 
-            while(patchStates.get(currentPatch) == PatchState.UNWATERED) {
-                robot.delay(150);
-            }
+                while (patchStates.get(currentPatch) == PatchState.UNWATERED) {
+                    robot.delay(150);
+                }
 
-            if(patchStates.get(currentPatch) == PatchState.WATERED) {
-                // increment patch
-                incrementPatch();
-                moveToNextTile();
-            }
+                if (patchStates.get(currentPatch) == PatchState.WATERED) {
+                    incrementPatch();
+                    moveToNextTile();
+                }
 
-        } else if(patchStates.get(currentPatch) == PatchState.WATERED && isAtCurrentPatch(currentPatch)) {
-            // wait until next stage
-            while(patchStates.get(currentPatch) == PatchState.WATERED) {
-                robot.delay(150);
-            }
-        } else if(patchStates.get(currentPatch) == PatchState.GROWN && isAtCurrentPatch(currentPatch)) {
-            // click patch
-//            shouldDelayBit();
-            clickPatch(patchNumByTile.get(currentPatch));
+            } else if (patchStates.get(currentPatch) == PatchState.WATERED && isAtCurrentPatch(currentPatch)) {
+                while (patchStates.get(currentPatch) == PatchState.WATERED) {
+                    robot.delay(150);
+                }
+            } else if (patchStates.get(currentPatch) == PatchState.GROWN && isAtCurrentPatch(currentPatch)) {
+                clickPatch(patchNumByTile.get(currentPatch));
 
-            while(patchStates.get(currentPatch) == PatchState.GROWN) {
-                robot.delay(150);
-            }
-            // increment patch
-            if(patchStates.get(currentPatch) == PatchState.EMPTY) {
-                // increment patch
-                incrementPatch();
-                moveToNextTile();
-            }
-        } else if(patchStates.get(currentPatch) == PatchState.DEAD && isAtCurrentPatch(currentPatch)) {
-            // click patch
-//            shouldDelayBit();
-            clickPatch(patchNumByTile.get(currentPatch));
+                while (patchStates.get(currentPatch) == PatchState.GROWN) {
+                    robot.delay(150);
+                }
 
-            while(patchStates.get(currentPatch) == PatchState.DEAD) {
-                robot.delay(150);
+                if (patchStates.get(currentPatch) == PatchState.EMPTY) {
+                    incrementPatch();
+                    moveToNextTile();
+                }
+            } else if (patchStates.get(currentPatch) == PatchState.DEAD && isAtCurrentPatch(currentPatch)) {
+                clickPatch(patchNumByTile.get(currentPatch));
+
+                while (patchStates.get(currentPatch) == PatchState.DEAD) {
+                    robot.delay(150);
+                }
+
+                if (patchStates.get(currentPatch) == PatchState.EMPTY) {
+                    incrementPatch();
+                    moveToNextTile();
+                }
             }
-            // increment patch
-            if(patchStates.get(currentPatch) == PatchState.EMPTY) {
-                // increment patch
-                incrementPatch();
-                moveToNextTile();
-            }
+            rotateCamera();
         }
-        rotateCamera();
     }
 
     private boolean countEmptyPatches() {
