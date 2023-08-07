@@ -53,9 +53,8 @@ public class AgilityPlusMain implements Runnable {
             if (checkIdle() && checkLastReset())
                 reset();
 
-            if(isNotHealthly())
-                robot.delay(1000);
-            else if (getRegionID() == 9781)
+
+            if (getRegionID() == 9781)
                 doGnomeAgility();
             else if (getRegionID() == 13878)
                 doCanfisAgility();
@@ -185,15 +184,6 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
             scheduledPointDelay(new Point(804, 157), 4);
             robot.delay(500);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_START) && isIdle) {
-            pressKey(KeyEvent.VK_DOWN, 2000);
-            setCameraZoom(783);
-            changeCameraYaw(42);
-            robot.delay(500);
-            scheduledPointDelay(new Point(70, 162), 10);
-            robot.delay(500);
-            client.setCameraPitchTarget(512);
-            robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FAIL1) && isIdle) {
             robot.delay(1000);
             setCameraZoom(896);
@@ -219,6 +209,18 @@ public class AgilityPlusMain implements Runnable {
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
             robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_START) && isIdle) {
+            pressKey(KeyEvent.VK_DOWN, 2000);
+            setCameraZoom(783);
+            changeCameraYaw(42);
+            robot.delay(500);
+            scheduledPointDelay(new Point(70, 162), 10);
+            robot.delay(500);
+            client.setCameraPitchTarget(512);
+            robot.delay(500);
+        } else if(isNotHealthly()) {
+            System.out.println("waiting to heal");
+            robot.delay(1000);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIRST_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS1 && isIdle) {
             setCameraZoom(758);
             client.setCameraPitchTarget(512);
@@ -414,6 +416,17 @@ public class AgilityPlusMain implements Runnable {
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
             robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_START) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(760);
+            client.setCameraPitchTarget(80);
+            changeCameraYaw(1024);
+            robot.delay(500);
+            scheduledPointDelay(new Point(478, 666), 10);
+            robot.delay(500);
+        } else if(isNotHealthly()) {
+            System.out.println("waiting to heal");
+            robot.delay(1000);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIRST_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_SEERS1) {
             setCameraZoom(896);
             client.setCameraPitchTarget(512);
@@ -554,14 +567,6 @@ public class AgilityPlusMain implements Runnable {
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
             robot.delay(500);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_START) && isIdle) {
-            robot.delay(500);
-            setCameraZoom(760);
-            client.setCameraPitchTarget(80);
-            changeCameraYaw(1024);
-            robot.delay(500);
-            scheduledPointDelay(new Point(478, 666), 10);
-            robot.delay(500);
         }
     }
 
@@ -570,6 +575,34 @@ public class AgilityPlusMain implements Runnable {
         if(turnRunOn()) {
             robot.delay(500);
             scheduledPointDelay(new Point(804, 157), 4);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FAIL1) && isIdle) {
+            System.out.println("relleka fail 1");
+            robot.delay(500);
+            setCameraZoom(1004);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            panCameraOneDirection(KeyEvent.VK_W, 1200);
+            robot.delay(500);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.RELLEKA_START));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FAIL2) && isIdle) {
+            System.out.println("relleka fail 2");
+            robot.delay(500);
+            setCameraZoom(1004);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            panCameraToRellekaStartFromFail2();
+            robot.delay(500);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.RELLEKA_START));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
             robot.delay(500);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.RELLEKA_START, 2) && isIdle) {
             System.out.println("relleka start");
@@ -580,6 +613,9 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
             scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.rellekaStartWall, 10);
             robot.delay(500);
+        } else if(isNotHealthly()) {
+            System.out.println("waiting to heal");
+            robot.delay(1000);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIRST_ROOF) && isIdle && !AgilityPlusWorldPoints.MOG_RELLEKA1) {
             System.out.println("relleka 1st roof");
             robot.delay(500);
@@ -730,34 +766,6 @@ public class AgilityPlusMain implements Runnable {
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
             robot.delay(500);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FAIL1) && isIdle) {
-            System.out.println("relleka fail 1");
-            robot.delay(500);
-            setCameraZoom(1004);
-            client.setCameraPitchTarget(512);
-            changeCameraYaw(0);
-            robot.delay(500);
-            panCameraOneDirection(KeyEvent.VK_W, 1200);
-            robot.delay(500);
-            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.RELLEKA_START));
-            robot.delay(500);
-            client.setOculusOrbState(0);
-            client.setOculusOrbNormalSpeed(12);
-            robot.delay(500);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FAIL2) && isIdle) {
-            System.out.println("relleka fail 2");
-            robot.delay(500);
-            setCameraZoom(1004);
-            client.setCameraPitchTarget(512);
-            changeCameraYaw(0);
-            robot.delay(500);
-            panCameraToRellekaStartFromFail2();
-            robot.delay(500);
-            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.RELLEKA_START));
-            robot.delay(500);
-            client.setOculusOrbState(0);
-            client.setOculusOrbNormalSpeed(12);
-            robot.delay(500);
         }
     }
 
@@ -766,6 +774,34 @@ public class AgilityPlusMain implements Runnable {
         if(turnRunOn()) {
             robot.delay(500);
             scheduledPointDelay(new Point(804, 157), 4);
+            robot.delay(500);
+        } else if(isNearWorldTile(AgilityPlusWorldPoints.ARDY_FAIL1, 2) && isIdle) {
+            System.out.println("ardy fail 1");
+            robot.delay(500);
+            setCameraZoom(1004);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            panCameraToArdyStartFromFail1();
+            robot.delay(500);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.ARDY_START));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            robot.delay(500);
+        } else if(isNearWorldTile(AgilityPlusWorldPoints.ARDY_FAIL2, 2) && isIdle) {
+            System.out.println("ardy fail 2"); // 7 dmg
+            robot.delay(500);
+            setCameraZoom(1004);
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            panCameraToArdyStartFromFail2();
+            robot.delay(500);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.ARDY_START));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_START) && isIdle) {
             System.out.println("ardy start");
@@ -776,6 +812,9 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
             scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.ardyStartWall, 10);
             robot.delay(500);
+        } else if(isNotHealthly()) {
+            System.out.println("waiting to heal");
+            robot.delay(1000);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_FIRST_ROOF) && isIdle) {
             System.out.println("ardy 1st roof");
             robot.delay(500);
@@ -869,34 +908,6 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
             scheduledPointDelay(new Point(500, 500), 15);
             robot.delay(3500);
-        } else if(isNearWorldTile(AgilityPlusWorldPoints.ARDY_FAIL1, 2) && isIdle) {
-            System.out.println("ardy fail 1");
-            robot.delay(500);
-            setCameraZoom(1004);
-            client.setCameraPitchTarget(512);
-            changeCameraYaw(0);
-            robot.delay(500);
-            panCameraToArdyStartFromFail1();
-            robot.delay(500);
-            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.ARDY_START));
-            robot.delay(500);
-            client.setOculusOrbState(0);
-            client.setOculusOrbNormalSpeed(12);
-            robot.delay(500);
-        } else if(isNearWorldTile(AgilityPlusWorldPoints.ARDY_FAIL2, 2) && isIdle) {
-            System.out.println("ardy fail 2");
-            robot.delay(500);
-            setCameraZoom(1004);
-            client.setCameraPitchTarget(512);
-            changeCameraYaw(0);
-            robot.delay(500);
-            panCameraToArdyStartFromFail2();
-            robot.delay(500);
-            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.ARDY_START));
-            robot.delay(500);
-            client.setOculusOrbState(0);
-            client.setOculusOrbNormalSpeed(12);
-            robot.delay(500);
         }
     }
 
