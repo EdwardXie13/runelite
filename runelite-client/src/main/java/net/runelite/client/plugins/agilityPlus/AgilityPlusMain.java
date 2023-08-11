@@ -438,6 +438,7 @@ public class AgilityPlusMain implements Runnable {
             setCameraZoom(896);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
+            robot.delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10);
             robot.delay(1500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIRST_ROOF) && isIdle && !AgilityPlusWorldPoints.MOG_SEERS1) {
@@ -556,7 +557,7 @@ public class AgilityPlusMain implements Runnable {
             scheduledPointDelay(new Point(324, 738), 10);
             robot.delay(1500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FINISH) && isIdle && client.getOculusOrbState() == 0) {
-            robot.delay(1500);
+            robot.delay(1000);
             setCameraZoom(1004);
             client.setCameraPitchTarget(512);
             changeCameraYaw(0);
