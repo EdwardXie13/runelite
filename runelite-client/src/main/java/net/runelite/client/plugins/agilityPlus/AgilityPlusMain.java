@@ -572,7 +572,7 @@ public class AgilityPlusMain implements Runnable {
     }
 
     private void doRellekaAgility() {
-        healthyThreshold = 9;
+        healthyThreshold = 4;
         if(turnRunOn()) {
             robot.delay(500);
             scheduledPointDelay(new Point(804, 157), 4);
