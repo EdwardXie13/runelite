@@ -1,23 +1,26 @@
 package net.runelite.client.plugins.pressSpace;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
 import net.runelite.api.Client;
 import net.runelite.api.InventoryID;
+import net.runelite.api.Item;
 import net.runelite.api.ItemID;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.inject.Inject;
 import java.awt.Robot;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -33,7 +36,43 @@ public class PressSpacePlugin extends Plugin {
     @Inject
     private PressSpaceConfig config;
 
-    private int recipe;
+    private int recipe = 0;
+
+    public List<Item> inventoryItems = new ArrayList<>();
+
+    public Set<Integer> grimyHerbs = Set.of(
+        ItemID.GRIMY_GUAM_LEAF,
+        ItemID.GRIMY_MARRENTILL,
+        ItemID.GRIMY_TARROMIN,
+        ItemID.GRIMY_HARRALANDER,
+        ItemID.GRIMY_RANARR_WEED,
+        ItemID.GRIMY_IRIT_LEAF,
+        ItemID.GRIMY_AVANTOE,
+        ItemID.GRIMY_KWUARM,
+        ItemID.GRIMY_CADANTINE,
+        ItemID.GRIMY_DWARF_WEED,
+        ItemID.GRIMY_TORSTOL,
+        ItemID.GRIMY_LANTADYME,
+        ItemID.GRIMY_TOADFLAX,
+        ItemID.GRIMY_SNAPDRAGON
+    );
+
+    public Set<Integer> cleanHerbs = Set.of(
+        ItemID.GUAM_LEAF,
+        ItemID.MARRENTILL,
+        ItemID.TARROMIN,
+        ItemID.HARRALANDER,
+        ItemID.RANARR_WEED,
+        ItemID.IRIT_LEAF,
+        ItemID.AVANTOE,
+        ItemID.KWUARM,
+        ItemID.CADANTINE,
+        ItemID.DWARF_WEED,
+        ItemID.TORSTOL,
+        ItemID.LANTADYME,
+        ItemID.TOADFLAX,
+        ItemID.SNAPDRAGON
+    );
 
     @Provides
     PressSpaceConfig provideConfig(ConfigManager configManager) {
@@ -47,6 +86,13 @@ public class PressSpacePlugin extends Plugin {
         smithingDarts();
     }
 
+    @Subscribe
+    public void onItemContainerChanged(ItemContainerChanged event) {
+        if (event.getItemContainer() == client.getItemContainer(InventoryID.INVENTORY)) {
+            inventoryItems = Arrays.asList(event.getItemContainer().getItems());
+        }
+    }
+
     private void smithingDarts() {
 //        20447261 size == 4 means press space
         if(client.getWidget(WidgetInfo.SMITHING_INVENTORY_ITEMS_CONTAINER) != null) {
@@ -57,43 +103,75 @@ public class PressSpacePlugin extends Plugin {
         }
     }
 
-    private int countItem(int item) {
-        return client.getItemContainer(InventoryID.INVENTORY).count(item);
+    private boolean doesInventoryContainCleanHerbs() {
+        for(Integer id : cleanHerbs) {
+            if(countItem(id, 14) && countItem(ItemID.VIAL_OF_WATER, 14))
+                return true;
+        }
+        return false;
+    }
+
+    private boolean doesInventoryContainGrimyHerbs() {
+        for(Integer id : grimyHerbs) {
+            if(countItem(id, 28))
+                return true;
+        }
+        return false;
+    }
+
+    private boolean doesInventoryContainRecipe() {
+        for (Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> recipe : Potions.potionRecipe) {
+            Pair<Integer, Integer> key = recipe.getKey();
+            Pair<Integer, Integer> value = recipe.getValue();
+
+            if(countItem(key.getLeft(), key.getRight()) && countItem(value.getLeft(), value.getRight()))
+                return true;
+        }
+
+        return false;
+    }
+
+    private boolean countItem(int item, int count) {
+        return inventoryItems.stream()
+                .filter(items -> items.getId() == item)
+                .count() >= count;
     }
 
     private boolean containsItem(int item) {
-        return client.getItemContainer(InventoryID.INVENTORY).contains(item);
+        return inventoryItems.stream().anyMatch(
+                items -> items.getId() == item
+        );
     }
 
     private int getRecipe() {
-        if (config.guamPotUnf() && countItem(ItemID.VIAL_OF_WATER) == 14 && countItem(ItemID.GUAM_LEAF) == 14)
-            return Recipe.GuamPot.getId();
-        else if (config.attackPot() && countItem(ItemID.GUAM_POTION_UNF) == 14 && countItem(ItemID.EYE_OF_NEWT) == 14)
-            return Recipe.AttackPot.getId();
-        else if (config.glassBlowing() && countItem(ItemID.MOLTEN_GLASS) == 27 && countItem(ItemID.GLASSBLOWING_PIPE) == 1)
-            return Recipe.BlowGlass.getId();
-        else if (config.fireBattlestaff() && countItem(ItemID.BATTLESTAFF) == 14 && countItem(ItemID.FIRE_ORB) == 14)
-            return Recipe.FireBstaff.getId();
-        else if (config.staminaPot() && (countItem(ItemID.SUPER_ENERGY4) == 27 || countItem(ItemID.SUPER_ENERGY3) == 27) && containsItem(ItemID.AMYLASE_CRYSTAL))
-            return Recipe.Stamina.getId();
-        else if(config.cutSapphire() && countItem(ItemID.UNCUT_SAPPHIRE) == 27 && containsItem(ItemID.CHISEL))
-            return Recipe.CutSapphire.getId();
+        if(doesInventoryContainGrimyHerbs())
+            return 2;
+        else if(doesInventoryContainCleanHerbs())
+            return 1;
+        else if(doesInventoryContainRecipe())
+            return 1;
+        else if (config.glassBlowing() && countItem(ItemID.MOLTEN_GLASS, 27) && countItem(ItemID.GLASSBLOWING_PIPE, 1))
+            return 3;
+        else if (config.fireBattlestaff() && countItem(ItemID.BATTLESTAFF, 14) && countItem(ItemID.FIRE_ORB, 14))
+            return 4;
+        else if(config.cutSapphire() && countItem(ItemID.UNCUT_SAPPHIRE, 27) && containsItem(ItemID.CHISEL))
+            return 6;
         else if(config.craftDragonhide() && containsItem(ItemID.NEEDLE) && containsItem(ItemID.THREAD) &&
-                (countItem(ItemID.GREEN_DRAGON_LEATHER) == 26 ||
-                        countItem(ItemID.BLUE_DRAGON_LEATHER) == 26 ||
-                        countItem(ItemID.RED_DRAGON_LEATHER) == 26 ||
-                        countItem(ItemID.BLACK_DRAGON_LEATHER) == 26)
-        )
-            return Recipe.Dragonhide.getId();
+                (countItem(ItemID.GREEN_DRAGON_LEATHER, 26) ||
+                        countItem(ItemID.BLUE_DRAGON_LEATHER, 26) ||
+                        countItem(ItemID.RED_DRAGON_LEATHER, 26) ||
+                        countItem(ItemID.BLACK_DRAGON_LEATHER, 26)
+        ))
+            return 7;
         else if(config.tanDragonhide() && containsItem(ItemID.NATURE_RUNE) && containsItem(ItemID.ASTRAL_RUNE) && containsItem(ItemID.JUG) &&
-                (countItem(ItemID.GREEN_DRAGONHIDE) == 25 ||
-                        countItem(ItemID.BLUE_DRAGONHIDE) == 25 ||
-                        countItem(ItemID.RED_DRAGONHIDE) == 25 ||
-                        countItem(ItemID.BLACK_DRAGONHIDE) == 25)
-        )
-            return Recipe.Dragonhide.getId();
+                (countItem(ItemID.GREEN_DRAGONHIDE, 25) ||
+                        countItem(ItemID.BLUE_DRAGONHIDE, 25) ||
+                        countItem(ItemID.RED_DRAGONHIDE, 25) ||
+                        countItem(ItemID.BLACK_DRAGONHIDE, 25)
+        ))
+            return 7;
         else
-            return Recipe.None.getId();
+            return 0;
     }
 
     private void closeBank() {

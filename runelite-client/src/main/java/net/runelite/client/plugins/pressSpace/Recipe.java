@@ -7,11 +7,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum Recipe {
     None(0),
-    GuamPot(1),
-    AttackPot(2),
+    Potions(1),
+    Herbs(2),
     BlowGlass(3),
     FireBstaff(4),
-    Stamina(5),
+    // INSERT 5 here
     CutSapphire(6),
     Dragonhide(7);
 
