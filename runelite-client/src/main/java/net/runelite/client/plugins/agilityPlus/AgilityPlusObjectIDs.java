@@ -1,5 +1,6 @@
 package net.runelite.client.plugins.agilityPlus;
 
+import lombok.experimental.UtilityClass;
 import net.runelite.api.DecorativeObject;
 import net.runelite.api.GameObject;
 import net.runelite.api.GroundObject;
@@ -12,16 +13,17 @@ import net.runelite.api.events.GameObjectSpawned;
 import net.runelite.api.events.GroundObjectDespawned;
 import net.runelite.api.events.GroundObjectSpawned;
 
+@UtilityClass
 public class AgilityPlusObjectIDs {
     //=== GNOME_STRONGHOLD ===
-    public static final int LOG_BALANCE_23145 = ObjectID.LOG_BALANCE_23145;
-    public static final int OBSTACLE_NET_23134 = ObjectID.OBSTACLE_NET_23134;
-    public static final int TREE_BRANCH_23559 = ObjectID.TREE_BRANCH_23559;
-    public static final int BALANCING_ROPE_23557 = ObjectID.BALANCING_ROPE_23557;
-    public static final int TREE_BRANCH_23560 = ObjectID.TREE_BRANCH_23560;
-    public static final int OBSTACLE_NET_23135 = ObjectID.OBSTACLE_NET_23135;
-    public static final int OBSTACLE_PIPE_23138 = ObjectID.OBSTACLE_PIPE_23138; //left pipe
-    public static final int OBSTACLE_PIPE_23139 = ObjectID.OBSTACLE_PIPE_23139; //right pipe
+    public final int LOG_BALANCE_23145 = ObjectID.LOG_BALANCE_23145;
+    public final int OBSTACLE_NET_23134 = ObjectID.OBSTACLE_NET_23134;
+    public final int TREE_BRANCH_23559 = ObjectID.TREE_BRANCH_23559;
+    public final int BALANCING_ROPE_23557 = ObjectID.BALANCING_ROPE_23557;
+    public final int TREE_BRANCH_23560 = ObjectID.TREE_BRANCH_23560;
+    public final int OBSTACLE_NET_23135 = ObjectID.OBSTACLE_NET_23135;
+    public final int OBSTACLE_PIPE_23138 = ObjectID.OBSTACLE_PIPE_23138; //left pipe
+    public final int OBSTACLE_PIPE_23139 = ObjectID.OBSTACLE_PIPE_23139; //right pipe
 
     public static GroundObject gnomeLogBalance = null;
     public static GameObject gnomeObstacleNet1_L = null;
@@ -36,15 +38,67 @@ public class AgilityPlusObjectIDs {
     public static GameObject gnomeObstaclePipeLeft = null;
     public static GameObject gnomeObstaclePipeRight = null;
 
+    //=== VARROCK ===
+    public final int ROUGH_WALL_14412 = ObjectID.ROUGH_WALL_14412;
+    public final int CLOTHES_LINE = ObjectID.CLOTHES_LINE;
+    public final int GAP_14414 = ObjectID.GAP_14414;
+    public final int Wall_14832 = ObjectID.WALL_14832;
+    public final int GAP_14833 = ObjectID.GAP_14833;
+    public final int GAP_14834 = ObjectID.GAP_14834;
+    public final int GAP_14835 = ObjectID.GAP_14835;
+    public final int LEDGE_14836 = ObjectID.LEDGE_14836;
+    public final int EDGE = ObjectID.EDGE;
+
+    public static DecorativeObject varrockStart = null;
+    public static GameObject varrockFirstRoofGap = null; // 500 zoom
+    public static GameObject varrockSecondRoofGap = null; // 370 zoom
+    public static GameObject varrockThirdRoofGap = null; // 500 zoom
+    public static GameObject varrockFourthRoofGap = null; // 495 zoom, west
+    public static GameObject varrockFifthRoofGap = null; // 155 zoom, south
+    public static GameObject varrockSixthRoofGap = null; // 640 zoom, east, 72 pitch
+    public static GameObject varrockSeventhRoofGap = null; // 455 zoom, south, 512 pitch
+                                                            // 320 zoom, north, 234 pitch
+    public static GameObject varrockEighthRoofGap = null; // -45 zoom, south, 116 pitch
+
+    //=== FALADOR ===
+    public final int ROUGH_WALL_148989 = ObjectID.ROUGH_WALL_14898;
+    public final int TIGHTROPE_14899 = ObjectID.TIGHTROPE_14899;
+    public final int HAND_HOLDS_14901 = ObjectID.HAND_HOLDS_14901; // 230 zoom, east, 172 pitch
+    public final int GAP_14903 = ObjectID.GAP_14903; // 255 zoom, east, 42 pitch
+                                                            // 574 zoom, 1313 yaw, 42 pitch (355, 630, 10)
+    public final int GAP_14904 = ObjectID.GAP_14904; // 625 zoom, north, 512 pitch
+    public final int TIGHTROPE_14905 = ObjectID.TIGHTROPE_14905; // -72 zoom, east, 103 pitch
+    public final int TIGHTROPE_14911 = ObjectID.TIGHTROPE_14911; // 862 zoom, north, 512 pitch
+    public final int GAP_14919 = ObjectID.GAP_14919; // 295 zoom, north, 214 pitch
+    public final int LEDGE_14920 = ObjectID.LEDGE_14920; // 174 zoom, 1975 yaw, 91 pitch (170, 783, 10))
+    public final int LEDGE_14921 = ObjectID.LEDGE_14921; // 410 zoom, 1024 yaw, 224 pitch
+    public final int LEDGE_14922 = ObjectID.LEDGE_14922; // 730 zoom, 1024 yaw, 91 pitch
+    public final int LEDGE_14924 = ObjectID.LEDGE_14924; // 390 zoom, 512 yaw, 202 pitch
+    public final int EDGE_14925 = ObjectID.EDGE_14925; // -72 zoom, 642 yaw, 77 pitch (135, 790, 10)
+
+    public static DecorativeObject faladorStart = null;
+    public static GroundObject faladorFirstRoofGap = null;
+    public static GameObject faladorSecondRoofGap = null;
+    public static GameObject faladorThirdRoofGap = null; // un used
+    public static GameObject faladorFourthRoofGap = null;
+    public static GameObject faladorFifthRoofGap = null;
+    public static GroundObject faladorSixthRoofGap = null;
+    public static GameObject faladorSeventhRoofGap = null;
+    public static GameObject faladorEighthRoofGap = null; // un used
+    public static GameObject faladorNinthRoofGap = null;
+    public static GameObject faladorTenthRoofGap = null;
+    public static GameObject faladorEleventhRoofGap = null;
+    public static GameObject faladorTwelfthRoofGap = null; // unused
+
     //=== CANFIS ===
-    public static final int TALL_TREE_14843 = ObjectID.TALL_TREE_14843;
-    public static final int GAP_14844 = ObjectID.GAP_14844; // 1 roof
-    public static final int GAP_14845 = ObjectID.GAP_14845; // 2 roof
-    public static final int GAP_14848 = ObjectID.GAP_14848; // 3 roof
-    public static final int GAP_14846 = ObjectID.GAP_14846; // 4 roof
-    public static final int POLEVAULT = ObjectID.POLEVAULT; // 5 roof
-    public static final int GAP_14847 = ObjectID.GAP_14847; // 6 roof
-    public static final int GAP_14897 = ObjectID.GAP_14897; // 7 roof
+    public final int TALL_TREE_14843 = ObjectID.TALL_TREE_14843;
+    public final int GAP_14844 = ObjectID.GAP_14844; // 1 roof
+    public final int GAP_14845 = ObjectID.GAP_14845; // 2 roof
+    public final int GAP_14848 = ObjectID.GAP_14848; // 3 roof
+    public final int GAP_14846 = ObjectID.GAP_14846; // 4 roof
+    public final int POLEVAULT = ObjectID.POLEVAULT; // 5 roof
+    public final int GAP_14847 = ObjectID.GAP_14847; // 6 roof
+    public final int GAP_14897 = ObjectID.GAP_14897; // 7 roof
 
     public static GameObject canfisTallTree = null;
     public static GameObject canfisFirstRoofGap = null;
@@ -56,12 +110,12 @@ public class AgilityPlusObjectIDs {
     public static GameObject canfisSeventhRoofGap = null;
 
     //=== SEERS ===
-    public static final int WALL_14927 = ObjectID.WALL_14927;
-    public static final int GAP_14928 = ObjectID.GAP_14928;
-    public static final int TIGHTROPE_14932 = ObjectID.TIGHTROPE_14932;
-    public static final int GAP_14929 = ObjectID.GAP_14929;
-    public static final int GAP_14930 = ObjectID.GAP_14930;
-    public static final int EDGE_14931 = ObjectID.EDGE_14931;
+    public final int WALL_14927 = ObjectID.WALL_14927;
+    public final int GAP_14928 = ObjectID.GAP_14928;
+    public final int TIGHTROPE_14932 = ObjectID.TIGHTROPE_14932;
+    public final int GAP_14929 = ObjectID.GAP_14929;
+    public final int GAP_14930 = ObjectID.GAP_14930;
+    public final int EDGE_14931 = ObjectID.EDGE_14931;
 
     public static DecorativeObject seersStartWall = null;
     public static GameObject seersFirstRoofGap = null;
@@ -71,13 +125,13 @@ public class AgilityPlusObjectIDs {
     public static GameObject seersFifthRoofGap = null;
 
     //=== RELLEKA ===
-    public static final int ROUGH_WALL_14946 = ObjectID.ROUGH_WALL_14946;
-    public static final int GAP_14947 = ObjectID.GAP_14947;
-    public static final int TIGHTROPE_14987 = ObjectID.TIGHTROPE_14987;
-    public static final int GAP_14990 = ObjectID.GAP_14990;
-    public static final int GAP_14991 = ObjectID.GAP_14991;
-    public static final int TIGHTROPE_14992 = ObjectID.TIGHTROPE_14992;
-    public static final int PILE_OF_FISH = ObjectID.PILE_OF_FISH;
+    public final int ROUGH_WALL_14946 = ObjectID.ROUGH_WALL_14946;
+    public final int GAP_14947 = ObjectID.GAP_14947;
+    public final int TIGHTROPE_14987 = ObjectID.TIGHTROPE_14987;
+    public final int GAP_14990 = ObjectID.GAP_14990;
+    public final int GAP_14991 = ObjectID.GAP_14991;
+    public final int TIGHTROPE_14992 = ObjectID.TIGHTROPE_14992;
+    public final int PILE_OF_FISH = ObjectID.PILE_OF_FISH;
 
     public static DecorativeObject rellekaStartWall = null;
     public static GameObject rellekaFirstRoofGap = null;
@@ -88,13 +142,13 @@ public class AgilityPlusObjectIDs {
     public static GameObject rellekaSixthRoofGap = null;
 
     //=== ARDY ===
-    public static final int GAP_15609 = ObjectID.GAP_15609;
-    public static final int PLANK_26635 = ObjectID.PLANK_26635;
-    public static final int GAP_15610 = ObjectID.GAP_15610;
-    public static final int GAP_15611 = ObjectID.GAP_15611;
-    public static final int STEEP_ROOF = ObjectID.STEEP_ROOF;
-    public static final int GAP_15612 = ObjectID.GAP_15612;
-    public static final int WOODEN_BEAMS = ObjectID.WOODEN_BEAMS;
+    public final int GAP_15609 = ObjectID.GAP_15609;
+    public final int PLANK_26635 = ObjectID.PLANK_26635;
+    public final int GAP_15610 = ObjectID.GAP_15610;
+    public final int GAP_15611 = ObjectID.GAP_15611;
+    public final int STEEP_ROOF = ObjectID.STEEP_ROOF;
+    public final int GAP_15612 = ObjectID.GAP_15612;
+    public final int WOODEN_BEAMS = ObjectID.WOODEN_BEAMS;
 
     public static GameObject ardyFirstRoofGap = null;
     public static GroundObject ardySecondRoofGap = null;
@@ -141,6 +195,64 @@ public class AgilityPlusObjectIDs {
             case OBSTACLE_PIPE_23139:
                 if(obj.getWorldLocation().equals(new WorldPoint(2487, 3431, 0)))
                     gnomeObstaclePipeRight = obj;
+                break;
+
+            //=== VARROCK ===
+            case CLOTHES_LINE:
+                varrockFirstRoofGap = obj;
+                break;
+            case GAP_14414:
+                varrockSecondRoofGap = obj;
+                break;
+            case Wall_14832:
+                varrockThirdRoofGap = obj;
+                break;
+            case GAP_14833:
+                varrockFourthRoofGap = obj;
+                break;
+            case GAP_14834:
+                varrockFifthRoofGap = obj;
+                break;
+            case GAP_14835:
+                varrockSixthRoofGap = obj;
+                break;
+            case LEDGE_14836:
+                varrockSeventhRoofGap = obj;
+                break;
+            case EDGE:
+                varrockEighthRoofGap = obj;
+                break;
+
+            //=== FALADOR ===
+            case HAND_HOLDS_14901:
+                faladorSecondRoofGap = obj;
+                break;
+            case GAP_14903:
+                faladorThirdRoofGap = obj;
+                break;
+            case GAP_14904:
+                faladorFourthRoofGap = obj;
+                break;
+            case TIGHTROPE_14905:
+                faladorFifthRoofGap = obj;
+                break;
+            case GAP_14919:
+                faladorSeventhRoofGap = obj;
+                break;
+            case LEDGE_14920:
+                faladorEighthRoofGap = obj;
+                break;
+            case LEDGE_14921:
+                faladorNinthRoofGap = obj;
+                break;
+            case LEDGE_14922:
+                faladorTenthRoofGap = obj;
+                break;
+            case LEDGE_14924:
+                faladorEleventhRoofGap = obj;
+                break;
+            case EDGE_14925:
+                faladorTwelfthRoofGap = obj;
                 break;
 
             //=== CANFIS ===
@@ -261,6 +373,64 @@ public class AgilityPlusObjectIDs {
                     gnomeObstaclePipeRight = null;
                 break;
 
+            //=== VARROCK ===
+            case CLOTHES_LINE:
+                varrockFirstRoofGap = null;
+                break;
+            case GAP_14414:
+                varrockSecondRoofGap = null;
+                break;
+            case Wall_14832:
+                varrockThirdRoofGap = null;
+                break;
+            case GAP_14833:
+                varrockFourthRoofGap = null;
+                break;
+            case GAP_14834:
+                varrockFifthRoofGap = null;
+                break;
+            case GAP_14835:
+                varrockSixthRoofGap = null;
+                break;
+            case LEDGE_14836:
+                varrockSeventhRoofGap = null;
+                break;
+            case EDGE:
+                varrockEighthRoofGap = null;
+                break;
+
+            //=== FALADOR ===
+            case HAND_HOLDS_14901:
+                faladorSecondRoofGap = null;
+                break;
+            case GAP_14903:
+                faladorThirdRoofGap = null;
+                break;
+            case GAP_14904:
+                faladorFourthRoofGap = null;
+                break;
+            case TIGHTROPE_14905:
+                faladorFifthRoofGap = null;
+                break;
+            case GAP_14919:
+                faladorSeventhRoofGap = null;
+                break;
+            case LEDGE_14920:
+                faladorEighthRoofGap = null;
+                break;
+            case LEDGE_14921:
+                faladorNinthRoofGap = null;
+                break;
+            case LEDGE_14922:
+                faladorTenthRoofGap = null;
+                break;
+            case LEDGE_14924:
+                faladorEleventhRoofGap = null;
+                break;
+            case EDGE_14925:
+                faladorTwelfthRoofGap = null;
+                break;
+
             //=== CANFIS ===
             case TALL_TREE_14843:
                 canfisTallTree = null;
@@ -354,6 +524,14 @@ public class AgilityPlusObjectIDs {
                 gnomeBalancingRope = obj;
                 break;
 
+            //=== FALADOR ===
+            case TIGHTROPE_14899:
+                faladorFirstRoofGap = obj;
+                break;
+            case TIGHTROPE_14911:
+                faladorSixthRoofGap = obj;
+                break;
+
             //=== SEERS ===
             case TIGHTROPE_14932:
                 seersTightrope = obj;
@@ -380,6 +558,14 @@ public class AgilityPlusObjectIDs {
                 gnomeBalancingRope = null;
                 break;
 
+            //=== FALADOR ===
+            case TIGHTROPE_14899:
+                faladorFirstRoofGap = null;
+                break;
+            case TIGHTROPE_14911:
+                faladorSixthRoofGap = null;
+                break;
+
             //=== SEERS ===
             case TIGHTROPE_14932:
                 seersTightrope = null;
@@ -398,6 +584,16 @@ public class AgilityPlusObjectIDs {
         int id = obj.getId();
 
         switch (id) {
+            //=== VARROCK ===
+            case ROUGH_WALL_14412:
+                varrockStart = obj;
+                break;
+
+            //=== FALADOR ===
+            case ROUGH_WALL_148989:
+                faladorStart = obj;
+                break;
+
             //=== SEERS ===
             case WALL_14927:
                 seersStartWall = obj;
@@ -419,6 +615,16 @@ public class AgilityPlusObjectIDs {
         int id = obj.getId();
 
         switch (id) {
+            //=== VARROCK ===
+            case ROUGH_WALL_14412:
+                varrockStart = null;
+                break;
+
+            //=== FALADOR ===
+            case ROUGH_WALL_148989:
+                faladorStart = null;
+                break;
+
             //=== SEERS ===
             case WALL_14927:
                 seersStartWall = null;

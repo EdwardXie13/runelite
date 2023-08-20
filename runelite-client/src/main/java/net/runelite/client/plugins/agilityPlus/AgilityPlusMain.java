@@ -47,19 +47,23 @@ public class AgilityPlusMain implements Runnable {
     public void run()
     {
         while (isRunning) {
-            if (checkIdle() && checkLastReset())
+            if(checkIdle() && checkLastReset())
                 reset();
 
 
-            if (getRegionID() == 9781)
+            if(getRegionID() == 9781)
                 doGnomeAgility();
-            else if (getRegionID() == 13878)
+            else if(getRegionID() == 13878)
                 doCanfisAgility();
-            else if (getRegionID() == 10806)
+            else if(getRegionID() == 12597 || getRegionID() == 12853)
+                doVarrockAgility();
+            else if(getRegionID() == 12084)
+                doFaladorAgility();
+            else if(getRegionID() == 10806)
                 doSeersAgility();
-            else if (getRegionID() == 10553 || getRegionID() == 10297)
+            else if(getRegionID() == 10553 || getRegionID() == 10297)
                 doRellekaAgility();
-            else if (getRegionID() == 10547)
+            else if(getRegionID() == 10547)
                 doArdyAgility();
         }
         System.out.println("Thread has stopped.");
@@ -172,6 +176,217 @@ public class AgilityPlusMain implements Runnable {
             client.setOculusOrbState(0);
             client.setOculusOrbNormalSpeed(12);
             robot.delay(500);
+        }
+    }
+
+    private void doVarrockAgility() {
+        healthyThreshold = 5;
+        if(turnRunOn()) {
+            robot.delay(500);
+            scheduledPointDelay(new Point(804, 157), 4);
+            robot.delay(500);
+        }
+        // TODO: fail 1
+        // TODO: fail 2
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_START) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(830);
+            changeCameraPitch(30);
+            changeCameraYaw(512);
+            robot.delay(500);
+            scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.varrockStart, 5);
+        } else if(isNotHealthly()) {
+            System.out.println("waiting to heal");
+            robot.delay(1000);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_FIRST_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(500);
+            changeCameraPitch(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockFirstRoofGap, 5);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_SECOND_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(370);
+            changeCameraPitch(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockSecondRoofGap, 5);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_THIRD_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(500);
+            changeCameraPitch(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockFirstRoofGap, 7);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_FOURTH_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(495);
+            changeCameraPitch(512);
+            changeCameraYaw(512);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockFourthRoofGap, 5);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_FIFTH_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(155);
+            changeCameraPitch(512);
+            changeCameraYaw(1024);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockFifthRoofGap, 3);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_SIXTH_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(640);
+            changeCameraPitch(72);
+            changeCameraYaw(1536);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockSixthRoofGap, 5);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_SEVENTH_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(320);
+            changeCameraPitch(234);
+            changeCameraYaw(0);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockSeventhRoofGap, 5);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_EIGHTH_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(-45);
+            changeCameraPitch(116);
+            changeCameraYaw(1024);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockEighthRoofGap, 5);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_FINISH) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(1004);
+            changeCameraPitch(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            // TODO: PAN TO VARROCK START
+        }
+    }
+
+    private void doFaladorAgility() {
+        healthyThreshold = 5;
+        if(turnRunOn()) {
+            robot.delay(500);
+            scheduledPointDelay(new Point(804, 157), 4);
+            robot.delay(500);
+        }
+        // TODO: fail 1
+        // TODO: fail 2
+        else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_START) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(1004);
+            changeCameraPitch(100);
+            changeCameraYaw(1024);
+            robot.delay(500);
+            scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.faladorStart, 8);
+            robot.delay(500);
+        } else if(isNotHealthly()) {
+            System.out.println("waiting to heal");
+            robot.delay(1000);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_FIRST_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(635);
+            changeCameraPitch(512);
+            changeCameraYaw(1024);
+            robot.delay(500);
+            scheduledGroundObjectDelay(AgilityPlusObjectIDs.faladorFirstRoofGap, 5);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_SECOND_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(230);
+            changeCameraPitch(172);
+            changeCameraYaw(1536);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorSecondRoofGap, 8);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_THIRD_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(574);
+            changeCameraPitch(42);
+            changeCameraYaw(1313);
+            robot.delay(500);
+            scheduledPointDelay(new Point(355, 630), 8);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_FOURTH_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(625);
+            changeCameraPitch(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorFourthRoofGap, 10);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_FIFTH_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(-72);
+            changeCameraPitch(103);
+            changeCameraYaw(1536);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorFifthRoofGap, 8);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_SIXTH_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(862);
+            changeCameraPitch(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            scheduledGroundObjectDelay(AgilityPlusObjectIDs.faladorSixthRoofGap, 8);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_SEVENTH_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(295);
+            changeCameraPitch(214);
+            changeCameraYaw(0);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorSeventhRoofGap, 12);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_EIGHTH_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(174);
+            changeCameraPitch(91);
+            changeCameraYaw(1975);
+            robot.delay(500);
+            scheduledPointDelay(new Point(170, 783), 10);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_NINTH_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(410);
+            changeCameraPitch(224);
+            changeCameraYaw(1024);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorNinthRoofGap, 10);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_TENTH_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(730);
+            changeCameraPitch(91);
+            changeCameraYaw(1024);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorTenthRoofGap, 10);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_ELEVENTH_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(390);
+            changeCameraPitch(202);
+            changeCameraYaw(512);
+            robot.delay(500);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorEleventhRoofGap, 10);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_TWELFTH_ROOF) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(-72);
+            changeCameraPitch(77);
+            changeCameraYaw(642);
+            robot.delay(500);
+            scheduledPointDelay(new Point(135, 790), 10);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_FINISH) && isIdle) {
+            robot.delay(500);
+            setCameraZoom(1004);
+            changeCameraPitch(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            // TODO: PAN TO FALADOR START
         }
     }
 
