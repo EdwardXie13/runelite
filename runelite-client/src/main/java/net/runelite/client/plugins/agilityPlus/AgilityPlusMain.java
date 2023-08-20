@@ -50,7 +50,6 @@ public class AgilityPlusMain implements Runnable {
             if(checkIdle() && checkLastReset())
                 reset();
 
-
             if(getRegionID() == 9781)
                 doGnomeAgility();
             else if(getRegionID() == 13878)
@@ -180,15 +179,37 @@ public class AgilityPlusMain implements Runnable {
     }
 
     private void doVarrockAgility() {
-        healthyThreshold = 5;
+        healthyThreshold = 4;
         if(turnRunOn()) {
             robot.delay(500);
             scheduledPointDelay(new Point(804, 157), 4);
             robot.delay(500);
-        }
-        // TODO: fail 1
-        // TODO: fail 2
-        else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_START) && isIdle) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_FAIL1) && isIdle) {
+            robot.delay(1000);
+            setCameraZoom(1004);
+            changeCameraPitch(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            panCameraOneDirection(KeyEvent.VK_D, 500);
+            robot.delay(500);
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.VARROCK_START));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            robot.delay(1500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_FAIL2) && isIdle) {
+            robot.delay(1000);
+            setCameraZoom(1004);
+            changeCameraPitch(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            panCameraToVarrockStartFromFail2();
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.VARROCK_START));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            robot.delay(1500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_START) && isIdle) {
             robot.delay(500);
             setCameraZoom(830);
             changeCameraPitch(30);
@@ -218,7 +239,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockFirstRoofGap, 7);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockThirdRoofGap, 7);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_FOURTH_ROOF) && isIdle) {
             robot.delay(500);
             setCameraZoom(495);
@@ -260,20 +281,46 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            // TODO: PAN TO VARROCK START
+            panCameraToVarrockStartFromFinish();
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.VARROCK_START));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            robot.delay(500);
         }
     }
 
     private void doFaladorAgility() {
-        healthyThreshold = 5;
+        healthyThreshold = 4;
         if(turnRunOn()) {
             robot.delay(500);
             scheduledPointDelay(new Point(804, 157), 4);
             robot.delay(500);
-        }
-        // TODO: fail 1
-        // TODO: fail 2
-        else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_START) && isIdle) {
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_FAIL1) && isIdle) {
+            robot.delay(1000);
+            setCameraZoom(1004);
+            changeCameraPitch(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            panCameraToFaladorStartFromFail1();
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.FALADOR_START));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_FAIL2) && isIdle) {
+            robot.delay(1000);
+            setCameraZoom(1004);
+            changeCameraPitch(512);
+            changeCameraYaw(0);
+            robot.delay(500);
+            panCameraToFaladorStartFromFail2();
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.FALADOR_START));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            robot.delay(500);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_START) && isIdle) {
             robot.delay(500);
             setCameraZoom(1004);
             changeCameraPitch(100);
@@ -386,7 +433,12 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            // TODO: PAN TO FALADOR START
+            panCameraToFaladorStartFromFinish();
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.FALADOR_START));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            robot.delay(500);
         }
     }
 
@@ -1194,35 +1246,75 @@ public class AgilityPlusMain implements Runnable {
         clientThread.invokeLater(() -> client.runScript(ScriptID.CAMERA_DO_ZOOM, zoom, zoom));
     }
 
-    private synchronized void panCameraToCanfisStart() {
+    private void panCameraToVarrockStartFromFail2() {
+        client.setOculusOrbNormalSpeed(40);
+        client.setOculusOrbState(1);
+        pressKey(KeyEvent.VK_D, 2100);
+        pressKey(KeyEvent.VK_W, 150);
+        robot.delay(1000);
+    }
+
+    private void panCameraToVarrockStartFromFinish() {
+        client.setOculusOrbNormalSpeed(40);
+        client.setOculusOrbState(1);
+        pressKey(KeyEvent.VK_A, 1000);
+        pressKey(KeyEvent.VK_S, 100);
+        robot.delay(1000);
+    }
+
+    private void panCameraToFaladorStartFromFinish() {
+        client.setOculusOrbNormalSpeed(40);
+        client.setOculusOrbState(1);
+        pressKey(KeyEvent.VK_D, 550);
+        pressKey(KeyEvent.VK_W, 350);
+        robot.delay(1000);
+    }
+
+    private void panCameraToFaladorStartFromFail1() {
+        client.setOculusOrbNormalSpeed(40);
+        client.setOculusOrbState(1);
+        pressKey(KeyEvent.VK_A, 1000);
+        pressKey(KeyEvent.VK_S, 500);
+        robot.delay(1000);
+    }
+
+    private void panCameraToFaladorStartFromFail2() {
+        client.setOculusOrbNormalSpeed(40);
+        client.setOculusOrbState(1);
+        pressKey(KeyEvent.VK_S, 1250);
+        pressKey(KeyEvent.VK_D, 200);
+        robot.delay(1000);
+    }
+
+    private void panCameraToCanfisStart() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
         pressKey(KeyEvent.VK_S, 900);
         pressKey(KeyEvent.VK_D, 1600);
     }
 
-    private synchronized void panCameraToCanfisStart2() {
+    private void panCameraToCanfisStart2() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
         pressKey(KeyEvent.VK_D, 300);
         pressKey(KeyEvent.VK_W, 400);
     }
 
-    private synchronized void panCameraToSeersStartFromFail1() {
+    private void panCameraToSeersStartFromFail1() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
         pressKey(KeyEvent.VK_S, 500);
         pressKey(KeyEvent.VK_D, 800);
     }
 
-    private synchronized void panCameraToSeersStartFromFail2() {
+    private void panCameraToSeersStartFromFail2() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
         pressKey(KeyEvent.VK_W, 300);
         pressKey(KeyEvent.VK_D, 1100);
     }
 
-    private synchronized void panCameraToSeersStartFromFinish() {
+    private void panCameraToSeersStartFromFinish() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
         pressKey(KeyEvent.VK_D, 1700);
@@ -1230,34 +1322,34 @@ public class AgilityPlusMain implements Runnable {
         robot.delay(1000);
     }
 
-    private synchronized void panCameraToRellekaStartFromFail2() {
+    private void panCameraToRellekaStartFromFail2() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
         pressKey(KeyEvent.VK_A, 600);
         pressKey(KeyEvent.VK_W, 1100);
     }
 
-    private synchronized void panCameraToArdyStartFromFail1() {
+    private void panCameraToArdyStartFromFail1() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
         pressKey(KeyEvent.VK_D, 550);
         pressKey(KeyEvent.VK_S, 800);
     }
 
-    private synchronized void panCameraToArdyStartFromFail2() {
+    private void panCameraToArdyStartFromFail2() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
         pressKey(KeyEvent.VK_S, 1300);
         pressKey(KeyEvent.VK_D, 1150);
     }
 
-    private synchronized void panCameraOneDirection(int keyEvent, int ms) {
+    private void panCameraOneDirection(int keyEvent, int ms) {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
         pressKey(keyEvent, ms);
     }
 
-    private synchronized void pressKey(int key, int ms) {
+    private void pressKey(int key, int ms) {
         robot.keyPress(key);
         robot.delay(ms);
         robot.keyRelease(key);

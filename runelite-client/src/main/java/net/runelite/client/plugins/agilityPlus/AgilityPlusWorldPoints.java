@@ -30,6 +30,9 @@ public class AgilityPlusWorldPoints {
     public static final WorldPoint VARROCK_EIGHTH_ROOF = new WorldPoint(3236, 3410, 3);
     public static final WorldPoint VARROCK_FINISH = new WorldPoint(3236, 3417, 0);
 
+    public static final WorldPoint VARROCK_FAIL1 = new WorldPoint(3212, 3414, 0);
+    public static final WorldPoint VARROCK_FAIL2 = new WorldPoint(3190, 3410, 0);
+
     //=== FALADOR ===
     public static final WorldPoint FALADOR_START = new WorldPoint(3036, 3341, 0);
     public static final WorldPoint FALADOR_FIRST_ROOF = new WorldPoint(3036, 3342, 3);
