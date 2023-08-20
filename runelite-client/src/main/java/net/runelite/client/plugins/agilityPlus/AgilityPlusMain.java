@@ -768,13 +768,13 @@ public class AgilityPlusMain implements Runnable {
     }
 
     private void doArdyAgility() {
-        healthyThreshold = 9;
+        healthyThreshold = 4;
         if(turnRunOn()) {
             robot.delay(500);
             scheduledPointDelay(new Point(804, 157), 4);
             robot.delay(500);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.ARDY_FAIL1, 2) && isIdle) {
-            System.out.println("ardy fail 1");
+            System.out.println("ardy fail 1"); // 2?
             robot.delay(500);
             setCameraZoom(1004);
             changeCameraPitch(512);
@@ -788,7 +788,7 @@ public class AgilityPlusMain implements Runnable {
             client.setOculusOrbNormalSpeed(12);
             robot.delay(500);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.ARDY_FAIL2, 2) && isIdle) {
-            System.out.println("ardy fail 2"); // 7 dmg
+            System.out.println("ardy fail 2"); // 7 dmg, 3???
             robot.delay(500);
             setCameraZoom(1004);
             changeCameraPitch(512);
@@ -804,9 +804,9 @@ public class AgilityPlusMain implements Runnable {
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_START) && isIdle) {
             System.out.println("ardy start");
             robot.delay(500);
-            setCameraZoom(730);
+            setCameraZoom(855);
             changeCameraPitch(0);
-            changeCameraYaw(1024);
+            changeCameraYaw(0);
             robot.delay(500);
             scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.ardyStartWall, 10);
             robot.delay(500);
@@ -869,7 +869,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraYaw(0);
             robot.delay(500);
             getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.ARDY_GRACEFULMARK));
-            robot.delay(1000);
+            robot.delay(1500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_FOURTH_ROOF) && isIdle) {
             System.out.println("ardy 4th roof");
             robot.delay(500);
