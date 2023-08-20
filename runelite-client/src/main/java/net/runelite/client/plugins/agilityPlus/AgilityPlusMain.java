@@ -261,6 +261,12 @@ public class AgilityPlusMain implements Runnable {
             changeCameraYaw(0);
             robot.delay(500);
             // TODO: PAN TO VARROCK START
+            panCameraToVarrockStartFromFinish();
+            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.VARROCK_START));
+            robot.delay(500);
+            client.setOculusOrbState(0);
+            client.setOculusOrbNormalSpeed(12);
+            robot.delay(500);
         }
     }
 
@@ -1192,6 +1198,14 @@ public class AgilityPlusMain implements Runnable {
 
     private void setCameraZoom(int zoom) {
         clientThread.invokeLater(() -> client.runScript(ScriptID.CAMERA_DO_ZOOM, zoom, zoom));
+    }
+
+    private synchronized void panCameraToVarrockStartFromFinish() {
+        client.setOculusOrbNormalSpeed(40);
+        client.setOculusOrbState(1);
+        pressKey(KeyEvent.VK_A, 1000);
+        pressKey(KeyEvent.VK_S, 100);
+        robot.delay(1000);
     }
 
     private synchronized void panCameraToCanfisStart() {
