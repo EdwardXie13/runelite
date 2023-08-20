@@ -18,8 +18,38 @@ public class AgilityPlusWorldPoints {
     public static final WorldPoint GNOME_LEFT_PIPE = new WorldPoint(2484, 3437, 0);
     public static final WorldPoint GNOME_RIGHT_PIPE = new WorldPoint(2487, 3437, 0);
 
-    //=== CANFIS ===
+    //=== VARROCK ===
+    public static final WorldPoint VARROCK_START = new WorldPoint(3221, 3414, 0);
+    public static final WorldPoint VARROCK_FIRST_ROOF = new WorldPoint(3219, 3414, 3);
+    public static final WorldPoint VARROCK_SECOND_ROOF = new WorldPoint(3208, 3414, 3);
+    public static final WorldPoint VARROCK_THIRD_ROOF = new WorldPoint(3197, 3416, 1);
+    public static final WorldPoint VARROCK_FOURTH_ROOF = new WorldPoint(3192, 3406, 3);
+    public static final WorldPoint VARROCK_FIFTH_ROOF = new WorldPoint(3193, 3398, 3);
+    public static final WorldPoint VARROCK_SIXTH_ROOF = new WorldPoint(3218, 3399, 3);
+    public static final WorldPoint VARROCK_SEVENTH_ROOF = new WorldPoint(3236, 3403, 3);
+    public static final WorldPoint VARROCK_EIGHTH_ROOF = new WorldPoint(3236, 3410, 3);
+    public static final WorldPoint VARROCK_FINISH = new WorldPoint(3236, 3417, 0);
 
+    //=== FALADOR ===
+    public static final WorldPoint FALADOR_START = new WorldPoint(3036, 3341, 0);
+    public static final WorldPoint FALADOR_FIRST_ROOF = new WorldPoint(3036, 3342, 3);
+    public static final WorldPoint FALADOR_SECOND_ROOF = new WorldPoint(3047, 3344, 3);
+    public static final WorldPoint FALADOR_THIRD_ROOF = new WorldPoint(3050, 3357, 3);
+    public static final WorldPoint FALADOR_FOURTH_ROOF = new WorldPoint(3048, 3361, 3);
+    public static final WorldPoint FALADOR_FIFTH_ROOF = new WorldPoint(3041, 3361, 3);
+    public static final WorldPoint FALADOR_SIXTH_ROOF = new WorldPoint(3028, 3354, 3);
+    public static final WorldPoint FALADOR_SEVENTH_ROOF = new WorldPoint(3020, 3353, 3);
+    public static final WorldPoint FALADOR_EIGHTH_ROOF = new WorldPoint(3018, 3349, 3);
+    public static final WorldPoint FALADOR_NINTH_ROOF = new WorldPoint(3014, 3346, 3);
+    public static final WorldPoint FALADOR_TENTH_ROOF = new WorldPoint(3013, 3342, 3);
+    public static final WorldPoint FALADOR_ELEVENTH_ROOF = new WorldPoint(3013, 3333, 3);
+    public static final WorldPoint FALADOR_TWELFTH_ROOF = new WorldPoint(3019, 3333, 3);
+    public static final WorldPoint FALADOR_FINISH = new WorldPoint(3029, 3333, 0);
+
+    public static final WorldPoint FALADOR_FAIL1 = new WorldPoint(3050, 3351, 0);
+    public static final WorldPoint FALADOR_FAIL2 = new WorldPoint(3031, 3359, 0);
+
+    //=== CANFIS ===
     public static final WorldPoint CANFIS_START = new WorldPoint(3510, 3485, 0);
     public static final WorldPoint CANFIS_FIRST_ROOF = new WorldPoint(3506, 3492, 2);
     public static final WorldPoint CANFIS_FIRST_ROOF_INFRONT = new WorldPoint(3506, 3497, 2);
