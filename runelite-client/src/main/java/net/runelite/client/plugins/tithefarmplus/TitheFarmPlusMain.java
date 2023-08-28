@@ -39,6 +39,7 @@ public class TitheFarmPlusMain implements Runnable {
     public static boolean fillWateringCan = false;
     private boolean logout = false;
     private static final int patches = 22;
+    private int randomStamina = 35;
 
     public static List<PatchState> patchStates = new ArrayList<>(Collections.nCopies(patches, PatchState.EMPTY));
 
@@ -128,6 +129,11 @@ public class TitheFarmPlusMain implements Runnable {
 
                 if (patchStates.get(currentPatch) == PatchState.EMPTY) {
                     incrementPatch();
+                    if(currentPatch == 21) {
+                        // generate randomStamina
+                        randomStamina = new Random().nextInt(6) + 35;
+                    }
+
                     moveToNextTile();
                 }
             } else if (patchStates.get(currentPatch) == PatchState.DEAD && isAtCurrentPatch(currentPatch)) {
@@ -198,11 +204,6 @@ public class TitheFarmPlusMain implements Runnable {
         else
             currentPatch++;
     }
-
-//    private void shouldDelayBit() {
-//        if(currentPatch == 3 || currentPatch == 4 || currentPatch == 11 || currentPatch == 12)
-//            robot.delay(400);
-//    }
 
     private void moveToNextTile() {
         List<WorldPoint> newPatchWorldPoints = patchWalkTilesByWorldPoint.get(currentPatch);
@@ -299,6 +300,6 @@ public class TitheFarmPlusMain implements Runnable {
 
     private boolean hasEnoughStamina() {
         double energy = client.getEnergy() / 100.0;
-        return energy >= new Random().nextInt(6) + 35;
+        return energy >= randomStamina;
     }
 }
