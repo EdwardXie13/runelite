@@ -884,7 +884,6 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(1000);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIRST_ROOF) && isIdle && !AgilityPlusWorldPoints.MOG_RELLEKA1) {
             System.out.println("relleka 1st roof");
-            robot.delay(500);
             setCameraZoom(390);
             changeCameraPitch(512);
             changeCameraYaw(0);
@@ -892,7 +891,6 @@ public class AgilityPlusMain implements Runnable {
             scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFirstRoofGap, 10);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIRST_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_RELLEKA1) {
             System.out.println("relleka pick up GM 1");
-            robot.delay(500);
             setCameraZoom(850);
             changeCameraPitch(512);
             changeCameraYaw(0);
@@ -909,7 +907,6 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_SECOND_ROOF) && isIdle) {
             System.out.println("relleka 2ndd roof");
-            robot.delay(1000);
             setCameraZoom(1004);
             changeCameraPitch(512);
             changeCameraYaw(0);
@@ -922,25 +919,23 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_SECOND_ROOF_RUN_POINT) && isIdle) {
             System.out.println("relleka 2nd roof run point");
-            robot.delay(500);
             setCameraZoom(1004);
             changeCameraPitch(512);
             changeCameraYaw(0);
-            robot.delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaSecondRoofGap, 10);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && !AgilityPlusWorldPoints.MOG_RELLEKA3_1 && !AgilityPlusWorldPoints.MOG_RELLEKA3_2) {
             System.out.println("relleka 3rd roof");
-            robot.delay(500);
+            robot.delay(250);
             setCameraZoom(540);
             changeCameraPitch(512);
             changeCameraYaw(0);
-            robot.delay(500);
+            robot.delay(250);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaThirdRoofGap, 10);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_RELLEKA3_1) {
             System.out.println("relleka pick up GM 3_1");
-            robot.delay(500);
+            robot.delay(250);
             setCameraZoom(880);
             changeCameraPitch(512);
             changeCameraYaw(0);
@@ -949,7 +944,7 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_RELLEKA3_2) {
             System.out.println("relleka pick up GM 3_2");
-            robot.delay(500);
+            robot.delay(250);
             setCameraZoom(880);
             changeCameraPitch(512);
             changeCameraYaw(0);
@@ -958,7 +953,7 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_1) || isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK3_2)) && isIdle) {
             System.out.println("relleka pick up GM 4_2");
-            robot.delay(500);
+            robot.delay(250);
             setCameraZoom(570);
             changeCameraPitch(512);
             changeCameraYaw(1024);
@@ -976,7 +971,7 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FOURTH_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_RELLEKA4_1) {
             System.out.println("relleka pick up GM 4_1");
-            robot.delay(500);
+            robot.delay(250);
             setCameraZoom(715);
             changeCameraPitch(512);
             changeCameraYaw(1024);
@@ -985,7 +980,7 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FOURTH_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_RELLEKA4_2) {
             System.out.println("relleka pick up GM 4_2");
-            robot.delay(500);
+            robot.delay(250);
             setCameraZoom(715);
             changeCameraPitch(512);
             changeCameraYaw(1024);
@@ -994,7 +989,7 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_1) || isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_GRACEFULMARK4_2)) && isIdle) {
             System.out.println("relleka 4th roof");
-            robot.delay(500);
+            robot.delay(250);
             setCameraZoom(570);
             changeCameraPitch(512);
             changeCameraYaw(1024);
@@ -1003,7 +998,7 @@ public class AgilityPlusMain implements Runnable {
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIFTH_ROOF) && isIdle) {
             System.out.println("relleka 5th roof");
-            robot.delay(500);
+            robot.delay(250);
             setCameraZoom(500);
             changeCameraPitch(512);
             changeCameraYaw(1536);
@@ -1018,13 +1013,13 @@ public class AgilityPlusMain implements Runnable {
             changeCameraYaw(0);
             robot.delay(500);
             scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaSixthRoofGap, 10);
+            robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FINISH) && isIdle) {
             System.out.println("relleka finish");
-            robot.delay(500);
             setCameraZoom(1004);
             changeCameraPitch(512);
             changeCameraYaw(0);
-            robot.delay(500);
+            robot.delay(250);
             panCameraOneDirection(KeyEvent.VK_A, 1700);
             robot.delay(500);
             getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.RELLEKA_START));
