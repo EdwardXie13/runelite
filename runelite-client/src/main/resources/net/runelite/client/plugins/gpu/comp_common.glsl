@@ -35,7 +35,6 @@ layout(std140) uniform uniforms {
   int cameraX;
   int cameraY;
   int cameraZ;
-  ivec2 sinCosTable[2048];
 };
 
 struct modelinfo {
@@ -43,7 +42,7 @@ struct modelinfo {
   int toffset;  // offset into texture buffer
   int size;     // length in faces
   int idx;      // write idx in target buffer
-  int flags;    // buffer, radius, orientation
+  int flags;    // buffer, hillskew, plane, radius, orientation
   int x;        // scene position x
   int y;        // scene position y
   int z;        // scene position z
