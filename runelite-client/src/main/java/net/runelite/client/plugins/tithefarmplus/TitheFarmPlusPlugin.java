@@ -53,7 +53,7 @@ public class TitheFarmPlusPlugin extends Plugin {
             hasStarted = true;
             System.out.println("status is go");
         } else if (chatBoxMessage.equals("2") && TitheFarmPlusMain.isRunning && hasStarted) {
-            thread.t.interrupt();
+            thread.t.stop();
             TitheFarmPlusMain.isRunning = false;
             hasStarted = false;
             System.out.println("status is stop");

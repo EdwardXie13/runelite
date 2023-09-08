@@ -39,7 +39,7 @@ public class TitheFarmPlusMain implements Runnable {
     public static boolean fillWateringCan = false;
     private boolean logout = false;
     private static final int patches = 22;
-    private int randomStamina = 35;
+    private int randomStamina = 85;
 
     public static List<PatchState> patchStates = new ArrayList<>(Collections.nCopies(patches, PatchState.EMPTY));
 
@@ -78,8 +78,10 @@ public class TitheFarmPlusMain implements Runnable {
         rotateCamera();
 
         if(!hasEnoughStamina() && patchStates.get(21) == PatchState.EMPTY && patchStates.get(0) == PatchState.EMPTY) {
-            System.out.println("recharging energy");
-            robot.delay(1000);
+            while(getClientEnergy() < randomStamina) {
+                System.out.println("recharging energy");
+                robot.delay(1000);
+            }
         } else {
             if (isAtCurrentPatch(0) && countEmptyPatches() && logout) {
                 isRunning = false;
@@ -131,7 +133,7 @@ public class TitheFarmPlusMain implements Runnable {
                     incrementPatch();
                     if(currentPatch == 21) {
                         // generate randomStamina
-                        randomStamina = new Random().nextInt(6) + 35;
+                        randomStamina = new Random().nextInt(16) + 85;
                     }
 
                     moveToNextTile();
@@ -298,8 +300,11 @@ public class TitheFarmPlusMain implements Runnable {
         }
     }
 
+    private double getClientEnergy() {
+        return client.getEnergy() / 100.0;
+    }
+
     private boolean hasEnoughStamina() {
-        double energy = client.getEnergy() / 100.0;
-        return energy >= randomStamina;
+        return getClientEnergy() >= 20;
     }
 }
