@@ -11,7 +11,11 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
+import net.runelite.client.game.WorldService;
 import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
+import net.runelite.client.util.WorldUtil;
+import net.runelite.http.api.worlds.World;
+import net.runelite.http.api.worlds.WorldResult;
 
 import java.awt.AWTException;
 import java.awt.Point;
@@ -29,6 +33,7 @@ import java.util.Set;
 public class RCPlusBloodsMain implements Runnable {
     private final Client client;
     private final ClientThread clientThread;
+    private WorldService worldService;
     public static boolean isIdle = true;
     public static boolean resetOculusOrb = false;
     public long start;
@@ -48,9 +53,10 @@ public class RCPlusBloodsMain implements Runnable {
 
     Thread t;
 
-    RCPlusBloodsMain(Client client, ClientThread clientThread) throws AWTException {
+    RCPlusBloodsMain(Client client, ClientThread clientThread, WorldService worldService) throws AWTException {
         this.client = client;
         this.clientThread = clientThread;
+        this.worldService = worldService;
 
         t = new Thread(this);
         System.out.println("New thread: " + t);
@@ -349,7 +355,7 @@ public class RCPlusBloodsMain implements Runnable {
             String timeWidgetTime = timeWidget.getText();
             List<String> timeSplit = Arrays.asList(timeWidgetTime.split(":"));
             // at 5 hr mark
-            return Integer.parseInt(timeSplit.get(0)) == 0 && Integer.parseInt(timeSplit.get(1)) == 5;
+            return Integer.parseInt(timeSplit.get(0)) == 5 && Integer.parseInt(timeSplit.get(1)) == 50;
         }
 
         return false;
@@ -567,29 +573,23 @@ public class RCPlusBloodsMain implements Runnable {
     }
 
     private void worldHop() {
-        System.out.println("worldHop to: " + (client.getWorld() + 1));
-        // ctrl down
-        robot.keyPress(KeyEvent.VK_CONTROL);
-        robot.delay(200);
+        int currentWorld = client.getWorld();
+        int newWorld = currentWorld + 1;
 
-        // shift down
-        robot.keyPress(KeyEvent.VK_SHIFT);
-        robot.delay(200);
+        WorldResult worldResult = worldService.getWorlds();
 
-        // direction key down
-        robot.keyPress(KeyEvent.VK_RIGHT);
-        robot.delay(200);
+        World world = worldResult.findWorld(newWorld);
+        System.out.println("the new world: " + world.toString());
 
-        // direction key up
-        robot.keyRelease(KeyEvent.VK_RIGHT);
-        robot.delay(200);
+        final net.runelite.api.World rsWorld = client.createWorld();
+        rsWorld.setActivity(world.getActivity());
+        rsWorld.setAddress(world.getAddress());
+        rsWorld.setId(world.getId());
+        rsWorld.setPlayerCount(world.getPlayers());
+        rsWorld.setLocation(world.getLocation());
+        rsWorld.setTypes(WorldUtil.toWorldTypes(world.getTypes()));
 
-        // shift up
-        robot.keyRelease( KeyEvent.VK_SHIFT);
-        robot.delay(200);
-
-        // ctrl up
-        robot.keyRelease(KeyEvent.VK_CONTROL);
-        robot.delay(200);
+        robot.delay(500);
+        client.hopToWorld(rsWorld);
     }
 }

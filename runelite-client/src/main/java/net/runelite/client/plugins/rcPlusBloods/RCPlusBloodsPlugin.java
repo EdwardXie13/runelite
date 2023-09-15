@@ -14,6 +14,7 @@ import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.game.WorldService;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
@@ -31,6 +32,9 @@ public class RCPlusBloodsPlugin extends Plugin {
 
     @Inject
     private ClientThread clientThread;
+
+    @Inject
+    private WorldService worldService;
 
     public int lastRcExp = 0;
 
@@ -59,7 +63,7 @@ public class RCPlusBloodsPlugin extends Plugin {
         if(chatBoxMessage == null) return;
 
         if(chatBoxMessage.equals("1") && !RCPlusBloodsMain.isRunning) {
-            thread = new RCPlusBloodsMain(client, clientThread);
+            thread = new RCPlusBloodsMain(client, clientThread, worldService);
             RCPlusBloodsMain.isRunning = true;
             System.out.println("status is go");
         } else if (chatBoxMessage.equals("2") && RCPlusBloodsMain.isRunning) {
