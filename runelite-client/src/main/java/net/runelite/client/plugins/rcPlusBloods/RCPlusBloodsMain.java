@@ -93,6 +93,13 @@ public class RCPlusBloodsMain implements Runnable {
             pressKey(KeyEvent.VK_ESCAPE, 100);
             robot.delay(1000);
         }
+        else if(closeToLogout() && isIdle) {
+            resetLoginTimerByWorldHopping();
+            changeCameraYaw(0);
+            setCameraZoom(684);
+            robot.delay(1500);
+            isIdle = true;
+        }
         // BLOOD_ESSENCE = 26390;
         // BLOOD_ESSENCE_ACTIVE = 26392;
         else if(inventoryContains(26390) && !inventoryContains(26392) && determineStatus()==STATUS.READY_TO_BLOOD2 && isIdle) {
@@ -254,12 +261,7 @@ public class RCPlusBloodsMain implements Runnable {
             scheduledPointDelay(new Point(53, 434), 10);
             robot.delay(4000);
         } else if(isAtWorldPoint(RCPlusBloodsWorldPoints.BLOOD_ALTAR_BIND_ESS) && isIdle) {
-            if(closeToLogout()) {
-                resetLoginTimerByWorldHopping();
-                changeCameraYaw(0);
-                setCameraZoom(684);
-                robot.delay(1500);
-            } else if(determineStatus()==STATUS.READY_TO_BLOOD) {
+             if(determineStatus()==STATUS.READY_TO_BLOOD) {
                 System.out.println("bind frags");
                 scheduledPointDelay(new Point(174, 333), 14);
                 robot.delay(1000);
@@ -347,7 +349,7 @@ public class RCPlusBloodsMain implements Runnable {
             String timeWidgetTime = timeWidget.getText();
             List<String> timeSplit = Arrays.asList(timeWidgetTime.split(":"));
             // at 5 hr mark
-            return Integer.parseInt(timeSplit.get(0)) == 5;
+            return Integer.parseInt(timeSplit.get(0)) == 0 && Integer.parseInt(timeSplit.get(1)) == 5;
         }
 
         return false;
@@ -565,7 +567,7 @@ public class RCPlusBloodsMain implements Runnable {
     }
 
     private void worldHop() {
-        System.out.println("worldHop to: " + client.getWorld() + 1);
+        System.out.println("worldHop to: " + (client.getWorld() + 1));
         // ctrl down
         robot.keyPress(KeyEvent.VK_CONTROL);
         robot.delay(200);
