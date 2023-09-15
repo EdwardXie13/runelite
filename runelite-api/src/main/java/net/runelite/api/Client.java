@@ -1866,6 +1866,9 @@ public interface Client extends OAuthApi, GameEngine
 	boolean isGpu();
 	void setGpuFlags(int gpuflags);
 
+	void setExpandedMapLoading(int chunks);
+	int getExpandedMapLoading();
+
 	int get3dZoom();
 	int getCenterX();
 	int getCenterY();
@@ -1875,8 +1878,6 @@ public interface Client extends OAuthApi, GameEngine
 	int getCameraZ2();
 
 	TextureProvider getTextureProvider();
-
-	void setRenderArea(boolean[][] renderArea);
 
 	int getRasterizer3D_clipMidX2();
 	int getRasterizer3D_clipNegativeMidX();
