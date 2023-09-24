@@ -66,6 +66,7 @@ public class AgilityPlusPlugin extends Plugin {
         } else if (chatBoxMessage.equals("2") && AgilityPlusMain.isRunning && hasStarted) {
             thread.t.interrupt();
             AgilityPlusMain.isRunning = false;
+            AgilityPlusMain.isIdle = true;
             hasStarted = false;
             System.out.println("status is stop");
         }
@@ -88,6 +89,7 @@ public class AgilityPlusPlugin extends Plugin {
         if (event.getGameState() == GameState.LOGIN_SCREEN && AgilityPlusMain.isRunning && hasStarted)
         {
             AgilityPlusMain.isRunning = false;
+            AgilityPlusMain.isIdle = true;
             hasStarted = false;
             System.out.println("status is stop (login screen)");
         }
