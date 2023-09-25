@@ -72,7 +72,12 @@ public class LeftClickConstructionPlugin extends Plugin {
 
     private void butlerChat() {
         Widget removeBox = client.getWidget(15138822);
-        if (removeBox != null && removeBox.getText().contains("if thou")) {
+        if (
+                removeBox != null && removeBox.getText().contains("if thou")
+                    ||
+                removeBox != null && removeBox.getText().contains("unfailing service")
+
+        ) {
             pressKey(KeyEvent.VK_SPACE);
         }
     }
