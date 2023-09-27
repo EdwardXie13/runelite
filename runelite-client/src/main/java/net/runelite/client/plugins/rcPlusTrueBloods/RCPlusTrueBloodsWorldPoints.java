@@ -15,9 +15,6 @@ public class RCPlusTrueBloodsWorldPoints {
     public static final WorldPoint caveEntrance3 = new WorldPoint(3536, 9768, 0);
     public static final WorldPoint caveEntrance4 = new WorldPoint(3543, 9772, 0);
 
-    // zoom -47
-    // pitch 133
-    // yaw 182
     public static final WorldPoint craftingGuild = new WorldPoint(2931, 3286, 0);
     public static final WorldPoint craftingGuildBank = new WorldPoint(2936, 3281, 0);
 
