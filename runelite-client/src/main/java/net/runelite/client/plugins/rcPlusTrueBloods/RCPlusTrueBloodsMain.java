@@ -100,27 +100,13 @@ public class RCPlusTrueBloodsMain implements Runnable {
             pressKey(KeyEvent.VK_SPACE, 100);
             robot.delay(500);
             isIdle = true;
-        } else if (turnRunOn() && hasEnoughStamina(5)) {
-            robot.delay(500);
-            scheduledPointDelay(new Point(804, 157), 4);
-            robot.delay(500);
-        } else if (client.getGameState() == GameState.LOGGED_IN && isLogoutPanelOpen()) {
-            pressKey(KeyEvent.VK_ESCAPE, 100);
-            robot.delay(1000);
         }
-//        else if (closeToLogout() && isIdle) {
-//            resetLoginTimerByWorldHopping();
-//            changeCameraYaw(0);
-//            setCameraZoom(684);
-//            robot.delay(1500);
-//            isIdle = true;
-//        }
         // BLOOD_ESSENCE = 26390;
         // BLOOD_ESSENCE_ACTIVE = 26392;
 
         else if(isAtWorldPoint(RCPlusTrueBloodsWorldPoints.fairyRingDLS) && isIdle) {
             System.out.println("fairy ring cave");
-            robot.delay(250);
+//            robot.delay(250);
             setCameraZoom(400);
             changeCameraPitch(77);
             changeCameraYaw(0);
@@ -133,40 +119,51 @@ public class RCPlusTrueBloodsMain implements Runnable {
             setCameraZoom(800);
             changeCameraPitch(14);
             changeCameraYaw(1798);
-            robot.delay(250);
-            scheduledGameObjectDelay(RCPlusTrueBloodsObjectIDs.caveEntrance5046, 10);
             robot.delay(500);
-        } else if(isAtWorldPoint(RCPlusTrueBloodsWorldPoints.caveEntrance2) && isIdle) {
+            scheduledGameObjectDelay(RCPlusTrueBloodsObjectIDs.caveEntrance5046, 10);
+            robot.delay(100);
+            panCameraToCave3FromCave2();
+            robot.delay(1000);
+        }
+        else if(isAtWorldPoint(RCPlusTrueBloodsWorldPoints.caveEntrance2) && isIdle) {
             System.out.println("2nd cave");
             robot.delay(250);
-            setCameraZoom(800);
-            changeCameraPitch(512);
-            changeCameraYaw(0);
-            robot.delay(250);
-            panCameraToCave3FromCave2();
-            robot.delay(500);
-            getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusTrueBloodsWorldPoints.caveEntrance2To3));
-            robot.delay(500);
-            client.setOculusOrbState(0);
-            client.setOculusOrbNormalSpeed(12);
-            robot.delay(500);
-        } else if(isAtWorldPoint(RCPlusTrueBloodsWorldPoints.caveEntrance2To3) && isIdle) {
+            try {
+                robot.delay(250);
+                getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusTrueBloodsWorldPoints.caveEntrance2To3));
+            } catch (Exception e) {
+                setCameraZoom(800);
+                changeCameraPitch(512);
+                changeCameraYaw(0);
+                robot.delay(250);
+                panCameraToCave3FromCave2();
+                robot.delay(500);
+                getWorldPointCoords(LocalPoint.fromWorld(client, RCPlusTrueBloodsWorldPoints.caveEntrance2To3));
+            } finally {
+                robot.delay(1000);
+                client.setOculusOrbState(0);
+                client.setOculusOrbNormalSpeed(12);
+            }
+        }
+        else if(isAtWorldPoint(RCPlusTrueBloodsWorldPoints.caveEntrance2To3) && isIdle) {
             System.out.println("2 -> 3");
             robot.delay(250);
-            setCameraZoom(1000);
+            setCameraZoom(900);
             changeCameraPitch(512);
             changeCameraYaw(0);
-            robot.delay(250);
-            scheduledGameObjectDelay(RCPlusTrueBloodsObjectIDs.cave43759, 8);
             robot.delay(500);
-        } else if(isAtWorldPoint(RCPlusTrueBloodsWorldPoints.caveEntrance3) && isIdle) {
+            scheduledGameObjectDelay(RCPlusTrueBloodsObjectIDs.cave43759, 8);
+            isIdle = true;
+        }
+        else if(isAtWorldPoint(RCPlusTrueBloodsWorldPoints.caveEntrance3) && isIdle) {
             System.out.println("3rd cave");
+//            robot.delay(500);
             setCameraZoom(-47);
             changeCameraPitch(75);
             changeCameraYaw(760);
-            robot.delay(250);
-            scheduledPointDelay(new Point(491, 537), 8);
             robot.delay(500);
+            scheduledPointDelay(new Point(491, 537), 8);
+            robot.delay(1000);
         } else if(isAtWorldPoint(RCPlusTrueBloodsWorldPoints.caveEntrance4) && isIdle) {
             System.out.println("4th cave");
             setCameraZoom(190);
@@ -181,15 +178,11 @@ public class RCPlusTrueBloodsMain implements Runnable {
             setCameraZoom(715);
             changeCameraPitch(0);
             changeCameraYaw(512);
-            robot.delay(250);
-            scheduledPointDelay(new Point(490, 560), 8);
             robot.delay(500);
-        } else if(isAtWorldPoint(RCPlusTrueBloodsWorldPoints.bloodAltarTile) &&isIdle) {
+            scheduledPointDelay(new Point(490, 560), 8);
+            robot.delay(2500);
+
             System.out.println("blood altar. bind 2nd 3rd inventory");
-            setCameraZoom(715);
-            changeCameraPitch(0);
-            changeCameraYaw(512);
-            robot.delay(250);
             // click slot 1
             scheduledPointDelay(new Point(782, 768), 4);
             robot.delay(500);
@@ -203,6 +196,8 @@ public class RCPlusTrueBloodsMain implements Runnable {
             scheduledPointDelay(new Point(490, 560), 8);
             robot.delay(500);
             // click slot 5 (tp)
+            pouchUses++;
+            System.out.println("trips = " + pouchUses);
             scheduledPointDelay(new Point(782, 804), 4);
             robot.delay(500);
         }
@@ -257,34 +252,46 @@ public class RCPlusTrueBloodsMain implements Runnable {
             isIdle = true;
         } else if(isTalkingToDarkMage() && isIdle) {
             System.out.println("talking to mage");
-            pressKey(KeyEvent.VK_SPACE, 100);
-            robot.delay(500);
-            if(canRepairPouch()) {
-                System.out.println("repair pouch");
-                pressKey(KeyEvent.VK_2, 100);
-                robot.delay(250);
-                pressKey(KeyEvent.VK_SPACE, 100);
-                robot.delay(250);
-                pressKey(KeyEvent.VK_SPACE, 100);
+            boolean talkingDarkMage = true;
+            while(talkingDarkMage) {
+                if(isTalkingToDarkMage()) {
+                    if(getDialogNPC().contains("resolve"))
+                        talkingDarkMage = false;
+                    pressKey(KeyEvent.VK_SPACE, 100);
+                    robot.delay(300);
+                } else if(canSelectOption()) {
+                    if(canRepairPouch()) {
+                        System.out.println("repair pouch");
+                        pressKey(KeyEvent.VK_2, 100);
+                        robot.delay(250);
+                        pressKey(KeyEvent.VK_SPACE, 100);
+                        robot.delay(250);
+                        talkingDarkMage = false;
+                        pouchUses = 0;
+                        isIdle = true;
+                    } else if(newEssencePouch()) {
+                        System.out.println("cannot repair");
+                        talkingDarkMage = false;
+                        pouchUses = 0;
+                        isIdle = true;
+                    }
+                }
             }
-            pouchUses = 0;
-            pressKey(KeyEvent.VK_ESCAPE, 100);
-            isIdle = true;
-        } else if(isAtWorldPoint(RCPlusTrueBloodsWorldPoints.craftingGuildBank) && pouchUses == 7 && isIdle) {
-            System.out.println("press contact NPC");
-            robot.delay(500);
-            pressKey(KeyEvent.VK_F3, 100);
-            robot.delay(500);
-            // press npc contact
-            scheduledPointDelay(new Point(843,864), 4);
-            robot.delay(500);
-            isIdle = true;
         }
+//        else if(isAtWorldPoint(RCPlusTrueBloodsWorldPoints.craftingGuildBank) && pouchUses >= 7 && isIdle) {
+//            System.out.println("press contact NPC");
+//            pressKey(KeyEvent.VK_F3, 100);
+//            robot.delay(500);
+//            // press npc contact
+//            scheduledPointDelay(new Point(843,864), 4);
+//            robot.delay(500);
+//            isIdle = true;
+//        }
         // banking sequence
         // if inv contains blood runes, then we need to bank
         else if(isAtWorldPoint(RCPlusTrueBloodsWorldPoints.craftingGuildBank) && inventoryContains(565) && isIdle) {
             isIdle = false;
-            robot.delay(250);
+            robot.delay(500);
             setCameraZoom(1004);
             changeCameraPitch(512);
             changeCameraYaw(1024);
@@ -292,25 +299,25 @@ public class RCPlusTrueBloodsMain implements Runnable {
             scheduledPointDelay(new Point(488, 257), 6);
 
             while(client.getWidget(786433) == null)
-                robot.delay(500);
+                robot.delay(250);
 
             bankSequence();
 
-            pressKey(KeyEvent.VK_ESCAPE, 100);
             isIdle = true;
         }
         // if inv contains pure ess, we can tp
         else if(isAtWorldPoint(RCPlusTrueBloodsWorldPoints.craftingGuildBank) && inventoryContains(7936) && isIdle) {
+            pressKey(KeyEvent.VK_ESCAPE, 100);
             robot.delay(250);
             scheduledPointDelay(new Point(905, 983), 4);
-            robot.delay(3000);
+            robot.delay(5000);
             isIdle = true;
         }
     }
 
     private void bankSequence() {
         // click slot 2
-        robot.delay(500);
+        robot.delay(250);
         scheduledPointDelay(new Point(821, 768), 4);
         // withdraw ess
         robot.delay(500);
@@ -328,7 +335,7 @@ public class RCPlusTrueBloodsMain implements Runnable {
         robot.delay(500);
         scheduledPointDelay(new Point(521, 791), 4);
         // close window
-        robot.delay(500);
+        robot.delay(250);
         pressKey(KeyEvent.VK_ESCAPE, 100);
     }
 
@@ -349,15 +356,49 @@ public class RCPlusTrueBloodsMain implements Runnable {
         return false;
     }
 
-    private boolean canRepairPouch() {
-        Widget dialogBox = client.getWidget(4915201);
+    private String getDialogNPC() {
+        Widget dialogBox = client.getWidget(15138822);
         if(dialogBox != null) {
-            Widget dialogBoxOption = dialogBox.getChild(2);
-            if(dialogBoxOption != null) {
-                return dialogBoxOption.getText().contains("repair");
-            }
+            return dialogBox.getText();
         }
 
+        return "";
+    }
+
+    private boolean canSelectOption() {
+        Widget dialogBox = client.getWidget(14352385);
+        if(dialogBox != null) {
+            Widget dialogBoxOption = dialogBox.getChild(0);
+            if(dialogBoxOption != null) {
+                return dialogBoxOption.getText().contains("Select");
+            }
+        }
+        return false;
+    }
+
+    private boolean canRepairPouch() {
+        Widget dialogBox = client.getWidget(14352385);
+        if(dialogBox != null) {
+            Widget dialogBoxOption = dialogBox.getChild(0);
+            if(dialogBoxOption != null) {
+                if(dialogBoxOption.getText().contains("Select")) {
+                    return dialogBox.getChild(2).getText().contains("repair");
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean newEssencePouch() {
+        Widget dialogBox = client.getWidget(14352385);
+        if(dialogBox != null) {
+            Widget dialogBoxOption = dialogBox.getChild(0);
+            if(dialogBoxOption != null) {
+                if(dialogBoxOption.getText().contains("Select")) {
+                    return dialogBox.getChild(2).getText().contains("essence");
+                }
+            }
+        }
         return false;
     }
 
@@ -406,11 +447,22 @@ public class RCPlusTrueBloodsMain implements Runnable {
         return false;
     }
 
+//    private void panCameraToCave3FromCave2() {
+//        client.setOculusOrbNormalSpeed(40);
+//        client.setOculusOrbState(1);
+//        pressKey(KeyEvent.VK_D, 1300);
+//        pressKey(KeyEvent.VK_S, 1200);
+//    }
+
     private void panCameraToCave3FromCave2() {
         client.setOculusOrbNormalSpeed(40);
         client.setOculusOrbState(1);
-        pressKey(KeyEvent.VK_D, 1300);
-        pressKey(KeyEvent.VK_S, 1200);
+        setCameraZoom(800);
+        changeCameraPitch(512);
+        changeCameraYaw(0);
+        robot.delay(250);
+        pressKey(KeyEvent.VK_D, 2700);
+        pressKey(KeyEvent.VK_S, 400);
     }
 
     private boolean inventoryContains(int id) {

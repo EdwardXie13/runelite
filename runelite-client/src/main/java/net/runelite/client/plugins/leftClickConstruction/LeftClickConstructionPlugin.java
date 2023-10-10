@@ -20,7 +20,8 @@ public class LeftClickConstructionPlugin extends Plugin {
     @Subscribe
     public void onGameTick(GameTick event) {
         removeBox();
-        buildBox();
+        buildBox1();
+        buildBox2();
         butlerChat();
         butlerPayment();
 
@@ -63,10 +64,17 @@ public class LeftClickConstructionPlugin extends Plugin {
         }
     }
 
-    private void buildBox() {
+    private void buildBox1() {
         Widget removeBox = client.getWidget(30015492);
         if (removeBox != null && removeBox.getName().contains("Oak door")) {
             pressOtherKey(KeyEvent.VK_1);
+        }
+    }
+
+    private void buildBox2() {
+        Widget removeBox = client.getWidget(30015493);
+        if(removeBox != null && removeBox.getName().contains("Oak larder")) {
+            pressOtherKey(KeyEvent.VK_2);
         }
     }
 

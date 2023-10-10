@@ -120,15 +120,20 @@ public class PressSpacePlugin extends Plugin {
     }
 
     private boolean doesInventoryContainRecipe() {
-        for (Pair<Pair<Integer, Integer>, Pair<Integer, Integer>> recipe : Potions.potionRecipe) {
-            Pair<Integer, Integer> key = recipe.getKey();
-            Pair<Integer, Integer> value = recipe.getValue();
-
-            if(countItem(key.getLeft(), key.getRight()) && countItem(value.getLeft(), value.getRight()))
+        for (Set<Pair<Integer, Integer>> recipe : Potions.potionRecipe) {
+            if(doesInventoryContainRecipe(recipe))
                 return true;
         }
 
         return false;
+    }
+
+    public boolean doesInventoryContainRecipe(Set<Pair<Integer, Integer>> set) {
+        List<Boolean> values = new ArrayList<>();
+        for (Pair<Integer, Integer> pair : set) {
+            values.add(countItem(pair.getKey(), pair.getValue()));
+        }
+        return values.stream().allMatch(Boolean::booleanValue);
     }
 
     private boolean countItem(int item, int count) {

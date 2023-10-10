@@ -15,14 +15,12 @@ public class RCPlusTrueBloodsObjectIDs {
     public final int CAVE_43759 = ObjectID.CAVE_43759;
     public final int trueBloodAltarEntranceID = 25380;
     public final int ALTAR_43479 = ObjectID.ALTAR_43479;
-    public final int POOL_OF_REVITALISATION = ObjectID.POOL_OF_REVITALISATION;
 
     public static GameObject caveEntrance16308 = null;
     public static GameObject caveEntrance5046 = null;
     public static GameObject cave43759 = null;
     public static GameObject trueBloodAltarEntrance = null;
     public static GameObject trueBloodAltar = null;
-    public static GameObject poolOfRevitalisation = null;
 
     public static void assignObjects(GameObjectSpawned event) {
         GameObject obj = event.getGameObject();
@@ -46,9 +44,6 @@ public class RCPlusTrueBloodsObjectIDs {
             case ALTAR_43479:
                 trueBloodAltar = obj;
                 break;
-//            case POOL_OF_REVITALISATION:
-//                poolOfRevitalisation = obj;
-//                break;
         }
     }
 
@@ -74,9 +69,6 @@ public class RCPlusTrueBloodsObjectIDs {
             case ALTAR_43479:
                 trueBloodAltar = null;
                 break;
-//            case POOL_OF_REVITALISATION:
-//                poolOfRevitalisation = null;
-//                break;
         }
     }
 }
