@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Adam <Adam@sigterm.info>
+ * Copyright (c) 2023, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,57 +22,52 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package net.runelite.client.plugins.gpu.regions;
 
-#define PI 3.1415926535897932384626433832795f
-#define UNIT PI / 1024.0f
+import java.io.IOException;
+import java.io.InputStream;
+import lombok.extern.slf4j.Slf4j;
+import static org.junit.Assert.*;
+import org.junit.Test;
 
-layout(std140) uniform uniforms {
-  float cameraYaw;
-  float cameraPitch;
-  int centerX;
-  int centerY;
-  int zoom;
-  float cameraX;
-  float cameraY;
-  float cameraZ;
-  ivec2 sinCosTable[2048];
-};
+@Slf4j
+public class RegionsTest
+{
+	@Test
+	public void test() throws IOException
+	{
+		long start;
+		Regions regions;
+		try (InputStream in = Regions.class.getResourceAsStream("regions.txt"))
+		{
+			start = System.nanoTime();
+			regions = new Regions(in, "regions.txt");
+		}
+		log.info("Parse took {}ms", (System.nanoTime() - start) / 1_000_000);
 
-struct modelinfo {
-  int offset;   // offset into vertex buffer
-  int toffset;  // offset into texture buffer
-  int size;     // length in faces
-  int idx;      // write idx in target buffer
-  int flags;    // buffer, hillskew, plane, radius, orientation
-  int x;        // scene position x
-  int y;        // scene position y
-  int z;        // scene position z
-};
+		// check areas don't intersect
+		for (Region r1 : regions.getRegions())
+		{
+			for (Region r2 : regions.getRegions())
+			{
+				if (r1 == r2)
+				{
+					continue;
+				}
+				if (intersects(r1, r2))
+				{
+					fail("regions intersect");
+				}
+			}
+		}
 
-layout(std430, binding = 0) readonly buffer modelbuffer_in {
-  modelinfo ol[];
-};
+		assertEquals(0, regions.getRegionId(50 * 8, 50 * 8)); // Lumbridge
+		assertNotEquals(0, regions.getRegionId(2416 / 8, 4448 / 8)); // Zanaris
+	}
 
-layout(std430, binding = 1) readonly buffer vertexbuffer_in {
-  ivec4 vb[];
-};
-
-layout(std430, binding = 2) readonly buffer tempvertexbuffer_in {
-  ivec4 tempvb[];
-};
-
-layout(std430, binding = 3) writeonly buffer vertex_out {
-  ivec4 vout[];
-};
-
-layout(std430, binding = 4) writeonly buffer uv_out {
-  vec4 uvout[];
-};
-
-layout(std430, binding = 5) readonly buffer texturebuffer_in {
-  vec4 texb[];
-};
-
-layout(std430, binding = 6) readonly buffer temptexturebuffer_in {
-  vec4 temptexb[];
-};
+	private static boolean intersects(Region r1, Region r2)
+	{
+		return r1.cx1 <= r2.cx2 && r1.cx2 >= r2.cx1 &&
+			r1.cy1 <= r2.cy2 && r1.cy2 >= r2.cy1;
+	}
+}
