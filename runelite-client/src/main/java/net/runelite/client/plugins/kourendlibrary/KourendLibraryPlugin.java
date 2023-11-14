@@ -25,8 +25,6 @@
 package net.runelite.client.plugins.kourendlibrary;
 
 import com.google.inject.Provides;
-
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -55,16 +53,12 @@ import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.api.events.NpcSpawned;
-import net.runelite.client.chat.ChatColorType;
-import net.runelite.client.chat.ChatMessageBuilder;
-import net.runelite.client.chat.ChatMessageManager;
-import net.runelite.client.chat.QueuedMessage;
+import net.runelite.api.widgets.ComponentID;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.api.Quest;
 import net.runelite.api.QuestState;
 import net.runelite.client.config.ConfigManager;
@@ -88,7 +82,6 @@ public class KourendLibraryPlugin extends Plugin
 	private static final Pattern BOOK_EXTRACTOR = Pattern.compile("'<col=0000ff>(.*)</col>'");
 	private static final Pattern TAG_MATCHER = Pattern.compile("(<[^>]*>)");
 	static final int REGION = 6459;
-	String temp = "";
 
 	static final boolean debug = false;
 
@@ -115,9 +108,6 @@ public class KourendLibraryPlugin extends Plugin
 
 	@Inject
 	private ItemManager itemManager;
-
-	@Inject
-	private ChatMessageManager chatMessageManager;
 
 	private KourendLibraryPanel panel;
 	private NavigationButton navButton;
@@ -306,7 +296,7 @@ public class KourendLibraryPlugin extends Plugin
 
 		if (lastBookcaseAnimatedOn != null)
 		{
-			Widget find = client.getWidget(WidgetInfo.DIALOG_SPRITE_SPRITE);
+			Widget find = client.getWidget(ComponentID.DIALOG_SPRITE_SPRITE);
 			if (find != null)
 			{
 				Book book = Book.byId(find.getItemId());
@@ -319,12 +309,12 @@ public class KourendLibraryPlugin extends Plugin
 			}
 		}
 
-		Widget npcHead = client.getWidget(WidgetInfo.DIALOG_NPC_HEAD_MODEL);
+		Widget npcHead = client.getWidget(ComponentID.DIALOG_NPC_HEAD_MODEL);
 		if (npcHead != null)
 		{
 			if (isLibraryCustomer(npcHead.getModelId()))
 			{
-				Widget textw = client.getWidget(WidgetInfo.DIALOG_NPC_TEXT);
+				Widget textw = client.getWidget(ComponentID.DIALOG_NPC_TEXT);
 				String text = textw.getText();
 				Matcher m = BOOK_EXTRACTOR.matcher(text);
 				if (m.find())
@@ -345,21 +335,6 @@ public class KourendLibraryPlugin extends Plugin
 					library.setCustomer(-1, null);
 					updateBooksPanel();
 				}
-			}
-			else if (isBiblia(npcHead.getModelId()))
-			{
-				Widget textw = client.getWidget(WidgetInfo.DIALOG_NPC_TEXT);
-				String text = textw.getText();
-
-				if (text.contains("Try the") )
-				{
-					if (temp != text)
-					{
-						sendChatMessage(text);
-						temp = text;
-					}
-				}
-
 			}
 		}
 	}
@@ -462,23 +437,5 @@ public class KourendLibraryPlugin extends Plugin
 	static boolean isLibraryCustomer(int npcId)
 	{
 		return npcId == NpcID.VILLIA || npcId == NpcID.PROFESSOR_GRACKLEBONE || npcId == NpcID.SAM_7049;
-	}
-
-	static boolean isBiblia(int npcId)
-	{
-		return npcId == NpcID.BIBLIA;
-	}
-
-	private void sendChatMessage(String chatMessage)
-	{
-		final String message = new ChatMessageBuilder()
-				.append(new Color(100, 0, 200), chatMessage)
-				.build();
-
-		chatMessageManager.queue(
-				QueuedMessage.builder()
-						.type(ChatMessageType.CONSOLE)
-						.runeLiteFormattedMessage(message)
-						.build());
 	}
 }
