@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Trevor <https://github.com/Trevor159>
+ * Copyright (c) 2023, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,35 +22,20 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.api;
+package net.runelite.client.plugins.loottracker;
 
-/**
- * Represents an animation of a renderable
- */
-public interface Animation
+import lombok.Data;
+
+@Data
+class NpcMetadata
 {
-	/**
-	 * Get the id for this animation
-	 * @see AnimationID
-	 * @return
-	 */
-	int getId();
-
-	/**
-	 * Get how many distinct frames this animation has.
-	 *
-	 * For animaya animations, this is the duration in client ticks. For classic
-	 * animations, this is how many keyframes it has, not it's duration in ticks.
-	 */
-	int getNumFrames();
-
-	/**
-	 * How this animation behaves when its restarted during playback
-	 */
-	int getRestartMode();
-
-	/**
-	 * @see #getRestartMode()
-	 */
-	void setRestartMode(int restartMode);
+	int id;
+	int r1;
+	int r2;
+	int r3;
+	int r4;
+	int r5;
+	int r6;
+	int r7;
+	int r8;
 }
