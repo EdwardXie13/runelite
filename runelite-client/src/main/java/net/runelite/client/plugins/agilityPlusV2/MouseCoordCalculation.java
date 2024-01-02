@@ -23,7 +23,11 @@ public class MouseCoordCalculation {
     Point generatedPoint = null;
 
     public void generatePointToClick(Shape shape) {
-        Polygon polygon = convertShapeToPolygon(shape);
+        generatePointToClick(convertShapeToPolygon(shape));
+    }
+
+    public void generatePointToClick(Polygon polygon) {
+//        Polygon polygon = convertShapeToPolygon(shape);
         String jsonFormat = convertPolygonToGeoJSON(polygon);
         Integer[][][] coordinates = parseCoordinates(jsonFormat);
         PolyLabel result1 = PolyLabel.polyLabel(coordinates);

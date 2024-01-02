@@ -126,7 +126,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(70);
             changeCameraYaw(322);
             robot.delay(500);
-            scheduledGameObjectPointDelay(new Point(825, 799), AgilityPlusObjectIDs.gnomeTreeBranch2, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeTreeBranch2);
             robot.delay(500);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_DROP) && isIdle) {
             setCameraZoom(-47);
@@ -1371,13 +1371,22 @@ public class AgilityPlusMain implements Runnable {
         {
             return;
         }
-
-        Rectangle boundingBox = poly.getBounds();
-
-        Point obstacleCenter = getCenterOfRectangle(boundingBox);
-
-        scheduledPointDelay(obstacleCenter, 10);
+        MouseCoordCalculation.generatePointToClick(poly);
     }
+
+//    private void getWorldPointCoords(final LocalPoint dest) {
+//        Polygon poly = Perspective.getCanvasTileAreaPoly(this.client, dest, 1);
+//        if (poly == null)
+//        {
+//            return;
+//        }
+//
+//        Rectangle boundingBox = poly.getBounds();
+//
+//        Point obstacleCenter = getCenterOfRectangle(boundingBox);
+//
+//        scheduledPointDelay(obstacleCenter, 10);
+//    }
 
     private boolean isNearWorldTile(final WorldPoint target, final int range) {
         return this.client.getLocalPlayer().getWorldLocation().distanceTo2D(target) < range
