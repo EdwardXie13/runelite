@@ -12,7 +12,7 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.game.WorldService;
-import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
+import net.runelite.client.plugins.agilityPlusV2.MouseCoordCalculation;
 import net.runelite.client.util.WorldUtil;
 import net.runelite.http.api.worlds.World;
 import net.runelite.http.api.worlds.WorldResult;

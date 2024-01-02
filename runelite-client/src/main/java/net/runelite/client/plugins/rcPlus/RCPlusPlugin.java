@@ -16,7 +16,7 @@ import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
+import net.runelite.client.plugins.agilityPlusV2.MouseCoordCalculation;
 
 import javax.inject.Inject;
 import java.awt.AWTException;

@@ -19,7 +19,7 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.game.WorldService;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.plugins.agilityPlus.AgilityPlusObjectIDs;
+import net.runelite.client.plugins.agilityPlusV2.AgilityPlusObjectIDs;
 
 import javax.inject.Inject;
 import java.awt.AWTException;

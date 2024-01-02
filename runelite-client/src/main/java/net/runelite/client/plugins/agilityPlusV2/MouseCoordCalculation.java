@@ -1,23 +1,38 @@
-package net.runelite.client.plugins.agilityPlus;
+package net.runelite.client.plugins.agilityPlusV2;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fazecast.jSerialComm.SerialPort;
+import com.monst.polylabel.PolyLabel;
 import lombok.experimental.UtilityClass;
 import net.runelite.api.Client;
 import net.runelite.api.TileObject;
 
-import java.awt.MouseInfo;
-import java.awt.Point;
-import java.awt.Robot;
-import java.awt.Shape;
-import java.awt.Window;
+import java.awt.*;
+import java.awt.geom.PathIterator;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
 @UtilityClass
 public class MouseCoordCalculation {
     Point generatedPoint = null;
+
+    public void generatePointToClick(Shape shape) {
+        Polygon polygon = convertShapeToPolygon(shape);
+        String jsonFormat = convertPolygonToGeoJSON(polygon);
+        Integer[][][] coordinates = parseCoordinates(jsonFormat);
+        PolyLabel result1 = PolyLabel.polyLabel(coordinates);
+
+        Point centerPoint = new Point((int)result1.getX(), (int)result1.getY());
+        int sigma = (int) Math.sqrt(result1.getDistance());
+        generateCoordNoRand(centerPoint, sigma);
+//        mouseMove();
+    }
 
     public void generateCoord(Client client, Point point, TileObject gameObject, int sigma) {
         Shape clickbox = gameObject.getClickbox();
@@ -32,7 +47,7 @@ public class MouseCoordCalculation {
         }
 
         generatedPoint = randomClusterPicker(points);
-        mouseMove(client);
+        mouseMove();
     }
 
     public void generateCoord(Client client, Point point, int sigma) {
@@ -46,12 +61,12 @@ public class MouseCoordCalculation {
         }
 
         generatedPoint = randomClusterPicker(points);
-        mouseMove(client);
+        mouseMove();
     }
 
-    public void generateCoordNoRand(Client client, Point point, int sigma) {
+    public void generateCoordNoRand(Point point, int sigma) {
         generatedPoint = randomCoord(point, sigma);
-        mouseMove(client);
+        mouseMove();
     }
 
     private boolean isCoordInClickBox(Shape clickbox, Point point) {
@@ -113,14 +128,14 @@ public class MouseCoordCalculation {
 //        }
 //    }
 
-    private synchronized void mouseMove(Client client) {
+    private void mouseMove() {
         try {
             Robot robot = new Robot();
             // tab into window
 //            switchToWindow("RuneLite - " + client.getLocalPlayer().getName());
 //            robot.delay(200);
             windMouse(robot, generatedPoint.x, generatedPoint.y);
-            robot.delay(100);
+            robot.delay(150);
             mouseClick();
         } catch (Exception e) {
             e.printStackTrace();
@@ -178,10 +193,87 @@ public class MouseCoordCalculation {
         return Math.round(g);
     }
 
-//    public Color getPixel(int x, int y) throws AWTException {
-//        Robot robot = new Robot();
-//        return robot.getPixelColor(x, y);
-//    }
+    private Polygon convertShapeToPolygon(Shape shape) {
+        Polygon polygon = new Polygon();
+
+        PathIterator pathIterator = shape.getPathIterator(null);
+        float[] coords = new float[6];
+
+        while (!pathIterator.isDone()) {
+            int type = pathIterator.currentSegment(coords);
+
+            switch (type) {
+                case PathIterator.SEG_MOVETO:
+                case PathIterator.SEG_LINETO:
+                    polygon.addPoint((int) coords[0], (int) coords[1]);
+                    break;
+
+                default:
+                    // Ignore other segment types for simplicity
+                    break;
+            }
+
+            // Move to the next segment
+            pathIterator.next();
+        }
+
+        return polygon;
+    }
+
+    private String convertPolygonToGeoJSON(Polygon polygon) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            ObjectNode geoJsonPolygon = objectMapper.createObjectNode();
+
+            ArrayNode coordinatesArray = objectMapper.createArrayNode();
+            ArrayNode firstRingArray = objectMapper.createArrayNode();
+
+            for (int i = 0; i < polygon.npoints; i++) {
+                ArrayNode point = objectMapper.createArrayNode();
+                point.add(polygon.xpoints[i]);
+                point.add(polygon.ypoints[i]);
+                firstRingArray.add(point);
+            }
+
+            ArrayNode closingPoint = objectMapper.createArrayNode();
+            closingPoint.add(polygon.xpoints[0]);
+            closingPoint.add(polygon.ypoints[0]);
+            firstRingArray.add(closingPoint);
+
+            coordinatesArray.add(firstRingArray);
+            geoJsonPolygon.set("coordinates", coordinatesArray);
+
+            return geoJsonPolygon.get("coordinates").toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private Integer[][][] parseCoordinates(String coordinatesString) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            // Use TypeReference to handle the nested structure
+            List<List<List<Integer>>> coordinates = objectMapper.readValue(coordinatesString, new TypeReference<List<List<List<Integer>>>>() {});
+
+            // Convert to Integer[][][]
+            Integer[][][] integerCoordinates = new Integer[coordinates.size()][][];
+            for (int i = 0; i < coordinates.size(); i++) {
+                List<List<Integer>> subArray = coordinates.get(i);
+                integerCoordinates[i] = new Integer[subArray.size()][];
+                for (int j = 0; j < subArray.size(); j++) {
+                    List<Integer> coordinate = subArray.get(j);
+                    integerCoordinates[i][j] = coordinate.toArray(new Integer[0]);
+                }
+            }
+
+            return integerCoordinates;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     /**
      * Internal mouse movement algorithm from SMART. Do not use this without credit to either

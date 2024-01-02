@@ -1,4 +1,4 @@
-package net.runelite.client.plugins.agilityPlus;
+package net.runelite.client.plugins.agilityPlusV2;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
@@ -23,13 +23,14 @@ import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import java.awt.AWTException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@PluginDescriptor(name = "Agility Plus", enabledByDefault = false)
+@PluginDescriptor(name = "Agility Plus2", enabledByDefault = false)
 @Slf4j
 public class AgilityPlusPlugin extends Plugin {
     @Inject
@@ -38,9 +39,21 @@ public class AgilityPlusPlugin extends Plugin {
     @Inject
     private ClientThread clientThread;
 
-    AgilityPlusMain thread;
+    @Inject
+    private OverlayManager overlayManager;
 
+    AgilityPlusMain thread;
     private boolean hasStarted = false;
+
+    @Override
+    protected void startUp() throws Exception {
+        AgilityPlusObjectIDs.setAllVarsNull();
+    }
+
+    @Override
+    protected void shutDown() throws Exception {
+        AgilityPlusObjectIDs.setAllVarsNull();
+    }
 
     @Subscribe
     public void onGameTick(GameTick event) throws AWTException {
@@ -119,18 +132,6 @@ public class AgilityPlusPlugin extends Plugin {
         AgilityPlusObjectIDs.assignObjects(event);
     }
 
-//    @Subscribe
-//    public void onWallObjectSpawned(WallObjectSpawned event)
-//    {
-//        onTileObject(event.getTile(), null, event.getWallObject());
-//    }
-//
-//    @Subscribe
-//    public void onWallObjectDespawned(WallObjectDespawned event)
-//    {
-//        onTileObject(event.getTile(), event.getWallObject(), null);
-//    }
-//
     @Subscribe
     public void onDecorativeObjectSpawned(DecorativeObjectSpawned event)
     {
@@ -235,5 +236,9 @@ public class AgilityPlusPlugin extends Plugin {
             else if(MOG_TILE.equals(AgilityPlusWorldPoints.ARDY_GRACEFULMARK))
                 AgilityPlusWorldPoints.MOG_ARDY = false;
         }
+    }
+
+    public boolean getHasStarted() {
+        return hasStarted;
     }
 }

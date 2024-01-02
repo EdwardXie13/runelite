@@ -1,4 +1,4 @@
-package net.runelite.client.plugins.agilityPlus;
+package net.runelite.client.plugins.agilityPlusV2;
 
 import lombok.experimental.UtilityClass;
 import net.runelite.api.DecorativeObject;
@@ -638,5 +638,76 @@ public class AgilityPlusObjectIDs {
                 ardyStartWall = null;
                 break;
         }
+    }
+
+    public void setAllVarsNull() {
+        gnomeLogBalance = null;
+        gnomeObstacleNet1_L = null;
+        gnomeObstacleNet1_M = null;
+        gnomeObstacleNet1_R = null;
+        gnomeTreeBranch1 = null;
+        gnomeBalancingRope = null;
+        gnomeTreeBranch2 = null;
+        gnomeObstacleNet2_L = null;
+        gnomeObstacleNet2_M = null;
+        gnomeObstacleNet2_R = null;
+        gnomeObstaclePipeLeft = null;
+        gnomeObstaclePipeRight = null;
+
+        varrockStart = null;
+        varrockFirstRoofGap = null;
+        varrockSecondRoofGap = null;
+        varrockThirdRoofGap = null;
+        varrockFourthRoofGap = null;
+        varrockFifthRoofGap = null;
+        varrockSixthRoofGap = null;
+        varrockSeventhRoofGap = null;
+        varrockEighthRoofGap = null;
+
+        faladorStart = null;
+        faladorFirstRoofGap = null;
+        faladorSecondRoofGap = null;
+        faladorThirdRoofGap = null; // un used
+        faladorFourthRoofGap = null;
+        faladorFifthRoofGap = null;
+        faladorSixthRoofGap = null;
+        faladorSeventhRoofGap = null;
+        faladorEighthRoofGap = null; // un used
+        faladorNinthRoofGap = null;
+        faladorTenthRoofGap = null;
+        faladorEleventhRoofGap = null;
+        faladorTwelfthRoofGap = null; // unused
+
+        canfisTallTree = null;
+        canfisFirstRoofGap = null;
+        canfisSecondRoofGap = null;
+        canfisThirdRoofGap = null;
+        canfisFourthRoofGap = null;
+        canfisFifthRoofGap = null;
+        canfisSixthRoofGap = null;
+        canfisSeventhRoofGap = null;
+
+        seersStartWall = null;
+        seersFirstRoofGap = null;
+        seersTightrope = null;
+        seersThirdRoofGap = null;
+        seersFourthRoofGap = null;
+        seersFifthRoofGap = null;
+
+        rellekaStartWall = null;
+        rellekaFirstRoofGap = null;
+        rellekaSecondRoofGap = null;
+        rellekaThirdRoofGap = null;
+        rellekaFourthRoofGap = null;
+        rellekaFifthRoofGap = null;
+        rellekaSixthRoofGap = null;
+
+        ardyFirstRoofGap = null;
+        ardySecondRoofGap = null;
+        ardyThirdRoofGap = null;
+        ardyFourthRoofGap = null;
+        ardyFifthRoofGap = null;
+        ardySixthRoofGap = null;
+        ardyStartWall = null;
     }
 }

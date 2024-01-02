@@ -42,6 +42,7 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.client.plugins.agilityPlusV2.MouseCoordCalculation;
 import net.runelite.client.plugins.rcPlusBloods.RCPlusBloodsMain;
 import net.runelite.client.plugins.rcPlusBloods.RCPlusBloodsPlugin;
 import net.runelite.client.ui.overlay.Overlay;
@@ -337,6 +338,11 @@ public class DenseRunestoneOverlay extends Overlay
         }
     }
 
+    private void generatePointToClick(GroundObject gameObject) {
+        Shape convexHull = gameObject.getConvexHull();
+        MouseCoordCalculation.generatePointToClick(convexHull);
+    }
+
     private void closerRockRender(Graphics2D graphics, Color fill, Color border, Color borderHover) {
         if ((northStoneMineable && northStone != null && closerRock().equals("N")) || !southStoneMineable)
         {
@@ -390,7 +396,7 @@ public class DenseRunestoneOverlay extends Overlay
         int startY = sceneTiles[0][0][0].getWorldLocation().getY();
 
         GroundObject rockClimb = sceneTiles[0][1761-startX][3873-startY].getGroundObject();
-
+        generatePointToClick(rockClimb);
         renderObject(graphics, rockClimb);
     }
 

@@ -13,7 +13,7 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
-import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
+import net.runelite.client.plugins.agilityPlusV2.MouseCoordCalculation;
 
 import java.awt.AWTException;
 import java.awt.Point;

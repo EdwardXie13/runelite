@@ -1,4 +1,4 @@
-package net.runelite.client.plugins.agilityPlus;
+package net.runelite.client.plugins.agilityPlusV2;
 
 import net.runelite.api.Client;
 import net.runelite.api.DecorativeObject;
@@ -30,6 +30,7 @@ public class AgilityPlusMain implements Runnable {
     Robot robot = new Robot();
     private int healthyThreshold = 1;
     public static boolean isRunning = false;
+    public static boolean grabClickBox = false;
 
     Thread t;
 
@@ -49,7 +50,6 @@ public class AgilityPlusMain implements Runnable {
         while (isRunning) {
             if(checkIdle() && checkLastReset())
                 reset();
-
 
             if(getRegionID() == 9781)
                 doGnomeAgility();
@@ -83,14 +83,16 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGroundObjectDelay(AgilityPlusObjectIDs.gnomeLogBalance, 10);
-            robot.delay(500);
+            scheduledGroundObjectDelay(AgilityPlusObjectIDs.gnomeLogBalance);
+//            grabClickBox = true;
+//            scheduledGroundObjectDelay(AgilityPlusObjectIDs.gnomeLogBalance, 10);
+            robot.delay(1000);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_LOG) && isIdle) {
             setCameraZoom(400);
             changeCameraPitch(0);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstacleNet1_M, 15);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstacleNet1_M);
             robot.delay(500);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_CLIMB1) && isIdle) {
             robot.delay(1000);
@@ -98,7 +100,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(150);
             changeCameraYaw(220);
             robot.delay(1000);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeTreeBranch1, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeTreeBranch1);
             robot.delay(500);
             changeCameraPitch(512);
             robot.delay(1000);
@@ -108,7 +110,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(125);
             changeCameraYaw(225);
             robot.delay(1000);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeTreeBranch1, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeTreeBranch1);
             robot.delay(500);
             changeCameraPitch(512);
             robot.delay(1000);
@@ -117,7 +119,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(20);
             changeCameraYaw(512);
             robot.delay(500);
-            scheduledGroundObjectDelay(AgilityPlusObjectIDs.gnomeBalancingRope, 10);
+            scheduledGroundObjectDelay(AgilityPlusObjectIDs.gnomeBalancingRope);
             robot.delay(500);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_TIGHTROPE) && isIdle) {
             setCameraZoom(520);
@@ -131,14 +133,14 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(90);
             changeCameraYaw(1185);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstacleNet2_L, 15);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstacleNet2_L);
             robot.delay(500);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.GNOME_AFTER_NET1) && AgilityPlusObjectIDs.gnomeObstaclePipeLeft != null && isIdle) {
             setCameraZoom(495);
             changeCameraPitch(100);
             changeCameraYaw(1020);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstaclePipeLeft, 15);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstaclePipeLeft);
             robot.delay(500);
             changeCameraPitch(512);
             robot.delay(8000); //adjust as needed
@@ -147,7 +149,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(118);
             changeCameraYaw(757);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstaclePipeRight, 8);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.gnomeObstaclePipeRight);
             robot.delay(1000);
             changeCameraPitch(512);
             robot.delay(8000); //adjust as needed
@@ -216,7 +218,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(30);
             changeCameraYaw(512);
             robot.delay(500);
-            scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.varrockStart, 5);
+            scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.varrockStart);
         } else if(isNotHealthly()) {
             System.out.println("waiting to heal");
             robot.delay(1000);
@@ -226,56 +228,56 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockFirstRoofGap, 5);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockFirstRoofGap);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_SECOND_ROOF) && isIdle) {
             robot.delay(500);
             setCameraZoom(370);
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockSecondRoofGap, 5);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockSecondRoofGap);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_THIRD_ROOF) && isIdle) {
             robot.delay(500);
             setCameraZoom(500);
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockThirdRoofGap, 7);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockThirdRoofGap);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_FOURTH_ROOF) && isIdle) {
             robot.delay(500);
             setCameraZoom(495);
             changeCameraPitch(512);
             changeCameraYaw(512);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockFourthRoofGap, 5);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockFourthRoofGap);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_FIFTH_ROOF) && isIdle) {
             robot.delay(500);
             setCameraZoom(155);
             changeCameraPitch(512);
             changeCameraYaw(1024);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockFifthRoofGap, 3);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockFifthRoofGap);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_SIXTH_ROOF) && isIdle) {
             robot.delay(500);
             setCameraZoom(640);
             changeCameraPitch(72);
             changeCameraYaw(1536);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockSixthRoofGap, 5);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockSixthRoofGap);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_SEVENTH_ROOF) && isIdle) {
             robot.delay(500);
             setCameraZoom(320);
             changeCameraPitch(234);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockSeventhRoofGap, 5);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockSeventhRoofGap);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_EIGHTH_ROOF) && isIdle) {
             robot.delay(500);
             setCameraZoom(-45);
             changeCameraPitch(116);
             changeCameraYaw(1024);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockEighthRoofGap, 5);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.varrockEighthRoofGap);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.VARROCK_FINISH) && isIdle) {
             robot.delay(500);
             setCameraZoom(1004);
@@ -327,7 +329,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(100);
             changeCameraYaw(1024);
             robot.delay(500);
-            scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.faladorStart, 8);
+            scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.faladorStart);
             robot.delay(500);
         } else if(isNotHealthly()) {
             System.out.println("waiting to heal");
@@ -338,7 +340,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(1024);
             robot.delay(500);
-            scheduledGroundObjectDelay(AgilityPlusObjectIDs.faladorFirstRoofGap, 5);
+            scheduledGroundObjectDelay(AgilityPlusObjectIDs.faladorFirstRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_SECOND_ROOF) && isIdle) {
             robot.delay(500);
@@ -346,7 +348,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(172);
             changeCameraYaw(1536);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorSecondRoofGap, 8);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorSecondRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_THIRD_ROOF) && isIdle) {
             robot.delay(500);
@@ -362,7 +364,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorFourthRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorFourthRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_FIFTH_ROOF) && isIdle) {
             robot.delay(500);
@@ -370,7 +372,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(103);
             changeCameraYaw(1536);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorFifthRoofGap, 8);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorFifthRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_SIXTH_ROOF) && isIdle) {
             robot.delay(500);
@@ -378,7 +380,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGroundObjectDelay(AgilityPlusObjectIDs.faladorSixthRoofGap, 8);
+            scheduledGroundObjectDelay(AgilityPlusObjectIDs.faladorSixthRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_SEVENTH_ROOF) && isIdle) {
             robot.delay(500);
@@ -386,7 +388,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(214);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorSeventhRoofGap, 12);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorSeventhRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_EIGHTH_ROOF) && isIdle) {
             robot.delay(500);
@@ -402,7 +404,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(224);
             changeCameraYaw(1024);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorNinthRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorNinthRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_TENTH_ROOF) && isIdle) {
             robot.delay(500);
@@ -410,7 +412,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(91);
             changeCameraYaw(1024);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorTenthRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorTenthRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_ELEVENTH_ROOF) && isIdle) {
             robot.delay(500);
@@ -418,7 +420,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(202);
             changeCameraYaw(512);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorEleventhRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.faladorEleventhRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_TWELFTH_ROOF) && isIdle) {
             robot.delay(500);
@@ -497,20 +499,20 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFirstRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFirstRoofGap);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK1) && isIdle) {
             setCameraZoom(679);
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFirstRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFirstRoofGap);
             robot.delay(2000);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.CANFIS_FIRST_ROOF_INFRONT, 2) && isIdle) {
             setCameraZoom(800);
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFirstRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFirstRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SECOND_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS2 && isIdle) {
             setCameraZoom(896);
@@ -523,20 +525,20 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSecondRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSecondRoofGap);
             robot.delay(3500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2) && isIdle) {
             setCameraZoom(597);
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSecondRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSecondRoofGap);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SECOND_ROOF_INFRONT) && isIdle) {
             setCameraZoom(921);
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSecondRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSecondRoofGap);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_THIRD_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS3 && isIdle) {
             robot.delay(1000);
             setCameraZoom(751);
@@ -550,20 +552,20 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisThirdRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisThirdRoofGap);
             robot.delay(2000);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3) && isIdle) {
             setCameraZoom(595);
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisThirdRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisThirdRoofGap);
         } else if (isAtWorldPoint(new WorldPoint(3487, 3499, 2)) && isIdle) {
             setCameraZoom(896);
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisThirdRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisThirdRoofGap);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FOURTH_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS4 && isIdle) {
             setCameraZoom(751);
             changeCameraPitch(512);
@@ -576,21 +578,21 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(160);
             changeCameraYaw(0);
             robot.delay(1000);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFourthRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFourthRoofGap);
             robot.delay(4700);
         } else if (isAtWorldPoint(new WorldPoint(3477, 3492, 3)) && isIdle) {
             setCameraZoom(1004);
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFourthRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFourthRoofGap);
             robot.delay(3000);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK4) && isIdle) {
             setCameraZoom(230);
             changeCameraPitch(0);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFourthRoofGap, 8);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFourthRoofGap);
             robot.delay(5000);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_FIFTH_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS5 && isIdle) {
             setCameraZoom(896);
@@ -604,13 +606,13 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(512);
             robot.delay(2500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFifthRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFifthRoofGap);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK5) && isIdle) {
             setCameraZoom(846);
             changeCameraPitch(512);
             changeCameraYaw(512);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFifthRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisFifthRoofGap);
             robot.delay(2500);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SIXTH_ROOF) && isIdle) {
             setCameraZoom(896);
@@ -628,21 +630,21 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSixthRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSixthRoofGap);
             robot.delay(500);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SEVENTH_ROOF) && isIdle) {
             setCameraZoom(458);
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(1000);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSeventhRoofGap, 8);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSeventhRoofGap);
             robot.delay(5000);
         } else if (isAtWorldPoint(AgilityPlusWorldPoints.CANFIS_SEVENTH_ROOF_INFRONT) && isIdle) {
             setCameraZoom(896);
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSeventhRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.canfisSeventhRoofGap);
             robot.delay(1000);
         }
 
@@ -704,21 +706,21 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap);
             robot.delay(1500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIRST_ROOF) && isIdle && !AgilityPlusWorldPoints.MOG_SEERS1) {
             setCameraZoom(362);
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap);
             robot.delay(9000);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK1, 2) && isIdle) {
             setCameraZoom(-47);
             changeCameraPitch(175);
             changeCameraYaw(1535);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFirstRoofGap);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_SEERS2_1) {
             setCameraZoom(483);
             changeCameraPitch(512);
@@ -730,14 +732,14 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(52);
             changeCameraYaw(242);
             robot.delay(500);
-            scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10);
+            scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope);
             robot.delay(3500);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_GRACEFULMARK2_1, 2) && isIdle && !AgilityPlusWorldPoints.MOG_SEERS2_1) {
             setCameraZoom(590);
             changeCameraPitch(512);
             changeCameraYaw(1024);
             robot.delay(500);
-            scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10);
+            scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_SEERS2_2) {
             setCameraZoom(680);
             changeCameraPitch(512);
@@ -749,19 +751,19 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(43);
             changeCameraYaw(85);
             robot.delay(500);
-            scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10);
+            scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope);
         } else if((isAtWorldPoint(AgilityPlusWorldPoints.SEERS_SECOND_ROOF) && isIdle)) {
             setCameraZoom(577);
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(1000);
-            scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10);
+            scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope);
         } else if(isNearWorldTile(new WorldPoint(2710, 3490, 2), 3) && isIdle) {
             setCameraZoom(896);
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope, 10);
+            scheduledGroundObjectDelay(AgilityPlusObjectIDs.seersTightrope);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_THIRD_ROOF) && !AgilityPlusWorldPoints.MOG_SEERS3 && isIdle) {
             setCameraZoom(404);
             changeCameraPitch(48);
@@ -787,20 +789,20 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFourthRoofGap, 5);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFourthRoofGap);
             robot.delay(7000);
         } else if(isNearWorldTile(AgilityPlusWorldPoints.SEERS_FOURTH_ROOF_RUN_POINT, 2) && isIdle) {
             setCameraZoom(896);
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFourthRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFourthRoofGap);
         } else if(isAtWorldPoint(new WorldPoint(2704, 3470, 3)) && isIdle) {
             setCameraZoom(896);
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFourthRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.seersFourthRoofGap);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.SEERS_FIFTH_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_SEERS5) {
             setCameraZoom(670);
             changeCameraPitch(512);
@@ -877,7 +879,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(75);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.rellekaStartWall, 10);
+            scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.rellekaStartWall);
             robot.delay(500);
         } else if(isNotHealthly()) {
             System.out.println("waiting to heal");
@@ -888,7 +890,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFirstRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFirstRoofGap);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIRST_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_RELLEKA1) {
             System.out.println("relleka pick up GM 1");
             setCameraZoom(850);
@@ -903,7 +905,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFirstRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFirstRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_SECOND_ROOF) && isIdle) {
             System.out.println("relleka 2ndd roof");
@@ -922,7 +924,7 @@ public class AgilityPlusMain implements Runnable {
             setCameraZoom(1004);
             changeCameraPitch(512);
             changeCameraYaw(0);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaSecondRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaSecondRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && !AgilityPlusWorldPoints.MOG_RELLEKA3_1 && !AgilityPlusWorldPoints.MOG_RELLEKA3_2) {
             System.out.println("relleka 3rd roof");
@@ -931,7 +933,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(250);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaThirdRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaThirdRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_THIRD_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_RELLEKA3_1) {
             System.out.println("relleka pick up GM 3_1");
@@ -958,7 +960,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(1024);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaThirdRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaThirdRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FOURTH_ROOF) && isIdle && !AgilityPlusWorldPoints.MOG_RELLEKA4_1 && !AgilityPlusWorldPoints.MOG_RELLEKA4_2) {
             System.out.println("relleka 4th roof");
@@ -967,7 +969,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFourthRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFourthRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FOURTH_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_RELLEKA4_1) {
             System.out.println("relleka pick up GM 4_1");
@@ -994,7 +996,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(1024);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFourthRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFourthRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FIFTH_ROOF) && isIdle) {
             System.out.println("relleka 5th roof");
@@ -1003,7 +1005,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(1536);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFifthRoofGap, 6);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaFifthRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_SIXTH_ROOF) && isIdle) {
             System.out.println("relleka 6th roof");
@@ -1012,7 +1014,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaSixthRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.rellekaSixthRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.RELLEKA_FINISH) && isIdle) {
             System.out.println("relleka finish");
@@ -1071,7 +1073,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(0);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.ardyStartWall, 10);
+            scheduledDecorativeObjectDelay(AgilityPlusObjectIDs.ardyStartWall);
             robot.delay(500);
         } else if(isNotHealthly()) {
             System.out.println("waiting to heal");
@@ -1095,7 +1097,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.ardyFirstRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.ardyFirstRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_SECOND_ROOF) && isIdle) {
             System.out.println("ardy 2nd roof");
@@ -1104,7 +1106,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGroundObjectDelay(AgilityPlusObjectIDs.ardySecondRoofGap, 5);
+            scheduledGroundObjectDelay(AgilityPlusObjectIDs.ardySecondRoofGap);
             robot.delay(3500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_SECOND_ROOF_RUN_POINT) && isIdle) {
             System.out.println("ardy 2nd roof run point");
@@ -1113,7 +1115,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGroundObjectDelay(AgilityPlusObjectIDs.ardySecondRoofGap, 8);
+            scheduledGroundObjectDelay(AgilityPlusObjectIDs.ardySecondRoofGap);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_THIRD_ROOF) && isIdle && !AgilityPlusWorldPoints.MOG_ARDY) {
             System.out.println("ardy 3rd roof no GM");
@@ -1122,7 +1124,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.ardyThirdRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.ardyThirdRoofGap);
             robot.delay(1500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_THIRD_ROOF) && isIdle && AgilityPlusWorldPoints.MOG_ARDY) {
             System.out.println("ardy 3rd roof yes GM");
@@ -1140,7 +1142,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(75);
             changeCameraYaw(0);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.ardyFourthRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.ardyFourthRoofGap);
             robot.delay(3500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_FIFTH_ROOF) && isIdle) {
             System.out.println("ardy 5th roof");
@@ -1149,7 +1151,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(172);
             changeCameraYaw(249);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.ardyFifthRoofGap, 6);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.ardyFifthRoofGap);
             robot.delay(3500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_SIXTH_ROOF) && isIdle) {
             System.out.println("ardy 6th roof");
@@ -1158,7 +1160,7 @@ public class AgilityPlusMain implements Runnable {
             changeCameraPitch(512);
             changeCameraYaw(512);
             robot.delay(500);
-            scheduledGameObjectDelay(AgilityPlusObjectIDs.ardySixthRoofGap, 10);
+            scheduledGameObjectDelay(AgilityPlusObjectIDs.ardySixthRoofGap);
             robot.delay(3500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_FINISH) && isIdle) {
             System.out.println("ardy finish");
@@ -1181,33 +1183,6 @@ public class AgilityPlusMain implements Runnable {
         }
 
         return MouseCoordCalculation.randomClusterPicker(points);
-    }
-
-    private void getObstacleCenter(GameObject gameObject, int sigma) {
-        Shape groundObjectConvexHull = gameObject.getConvexHull();
-        Rectangle groundObjectRectangle = groundObjectConvexHull.getBounds();
-
-        Point obstacleCenter = getCenterOfRectangle(groundObjectRectangle);
-
-        MouseCoordCalculation.generateCoord(client, obstacleCenter, gameObject, sigma);
-    }
-
-    private void getObstacleCenter(GroundObject groundObject, int sigma) {
-        Shape groundObjectConvexHull = groundObject.getConvexHull();
-        Rectangle groundObjectRectangle = groundObjectConvexHull.getBounds();
-
-        Point obstacleCenter = getCenterOfRectangle(groundObjectRectangle);
-
-        MouseCoordCalculation.generateCoord(client, obstacleCenter, groundObject, sigma);
-    }
-
-    private void getObstacleCenter(DecorativeObject decorativeObject, int sigma) {
-        Shape groundObjectConvexHull = decorativeObject.getConvexHull();
-        Rectangle groundObjectRectangle = groundObjectConvexHull.getBounds();
-
-        Point obstacleCenter = getCenterOfRectangle(groundObjectRectangle);
-
-        MouseCoordCalculation.generateCoord(client, obstacleCenter, decorativeObject, sigma);
     }
 
     private Point getCenterOfRectangle(Rectangle rectangle) {
@@ -1351,34 +1326,22 @@ public class AgilityPlusMain implements Runnable {
         robot.keyRelease(key);
     }
 
-    private void scheduledGroundObjectDelay(GroundObject groundObject, int sigma) {
+    private void scheduledGroundObjectDelay(GroundObject groundObject) {
         isIdle = false;
-        try {
-            getObstacleCenter(groundObject, sigma);
-        } catch (Exception e) {
-            e.printStackTrace();
-            isIdle = true;
-        }
+        Shape convexHull = groundObject.getConvexHull();
+        MouseCoordCalculation.generatePointToClick(convexHull);
     }
 
-    private void scheduledGameObjectDelay(GameObject gameObject, int sigma) {
+    private void scheduledGameObjectDelay(GameObject gameObject) {
         isIdle = false;
-        try {
-            getObstacleCenter(gameObject, sigma);
-        } catch (Exception e) {
-            e.printStackTrace();
-            isIdle = true;
-        }
+        Shape convexHull = gameObject.getConvexHull();
+        MouseCoordCalculation.generatePointToClick(convexHull);
     }
 
-    private void scheduledDecorativeObjectDelay(DecorativeObject decorativeObject, int sigma) {
+    private void scheduledDecorativeObjectDelay(DecorativeObject decorativeObject) {
         isIdle = false;
-        try {
-            getObstacleCenter(decorativeObject, sigma);
-        } catch (Exception e) {
-            e.printStackTrace();
-            isIdle = true;
-        }
+        Shape convexHull = decorativeObject.getConvexHull();
+        MouseCoordCalculation.generatePointToClick(convexHull);
     }
 
     private void scheduledGameObjectPointDelay(Point point, GameObject gameObject, int sigma) {
@@ -1420,22 +1383,6 @@ public class AgilityPlusMain implements Runnable {
         return this.client.getLocalPlayer().getWorldLocation().distanceTo2D(target) < range
                 && client.getLocalPlayer().getWorldLocation().getPlane() == target.getPlane();
     }
-
-//    private boolean doesWorldPointHaveGracefulMark(WorldPoint worldpoint) {
-//        Tile[][][] sceneTiles = client.getScene().getTiles();
-//        if(sceneTiles == null) return false;
-//
-//        int startX = sceneTiles[0][0][0].getWorldLocation().getX();
-//        int startY = sceneTiles[0][0][0].getWorldLocation().getY();
-//
-//        int playerPlane = client.getLocalPlayer().getWorldLocation().getPlane();
-//        List<TileItem> itemsOnTile = sceneTiles[playerPlane][worldpoint.getX()-startX][worldpoint.getY()-startY].getGroundItems();
-//        List<Integer> tileItemIds = new ArrayList<>();
-//        if(itemsOnTile != null)
-//            itemsOnTile.forEach(tileItem -> tileItemIds.add(tileItem.getId()));
-//
-//        return tileItemIds.contains(ItemID.MARK_OF_GRACE);
-//    }
 
     private boolean checkIdle()
     {

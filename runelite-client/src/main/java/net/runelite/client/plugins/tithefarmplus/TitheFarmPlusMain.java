@@ -8,7 +8,7 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
-import net.runelite.client.plugins.agilityPlus.MouseCoordCalculation;
+import net.runelite.client.plugins.agilityPlusV2.MouseCoordCalculation;
 import net.runelite.client.plugins.tithefarmplus.TitheFarmPlusObjectIDs.PatchState;
 
 import java.awt.AWTException;
@@ -255,7 +255,7 @@ public class TitheFarmPlusMain implements Runnable {
     private void scheduledPointDelay(Point point, int sigma) {
         isIdle = false;
         try {
-            MouseCoordCalculation.generateCoordNoRand(client, point, sigma);
+            MouseCoordCalculation.generateCoordNoRand(point, sigma);
         } catch (Exception e) {
             e.printStackTrace();
             isIdle = true;
