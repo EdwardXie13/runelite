@@ -324,7 +324,7 @@ public class AgilityPlusMain implements Runnable {
             client.setOculusOrbNormalSpeed(12);
             robot.delay(500);
         } else if(isAtWorldPoint(AgilityPlusWorldPoints.FALADOR_START) && isIdle) {
-            robot.delay(500);
+            robot.delay(1500);
             setCameraZoom(1004);
             changeCameraPitch(100);
             changeCameraYaw(1024);
