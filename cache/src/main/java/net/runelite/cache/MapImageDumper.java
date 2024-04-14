@@ -944,7 +944,8 @@ public class MapImageDumper
 		for (WorldMapElementDefinition element : elements)
 		{
 			AreaDefinition area = areas.getArea(element.getAreaDefinitionId());
-			if (area == null || area.getName() == null || element.getPosition().getZ() != z)
+			Position worldPosition = element.getWorldPosition();
+			if (area == null || area.getName() == null || worldPosition.getZ() != z)
 			{
 				continue;
 			}
@@ -965,9 +966,8 @@ public class MapImageDumper
 					SpriteDefinition sprite = sprites.findSpriteByArchiveName(fontSize.getName(), c);
 					if (sprite.getWidth() != 0 && sprite.getHeight() != 0)
 					{
-						Position position = element.getPosition();
-						int drawX = position.getX() - regionLoader.getLowestX().getBaseX();
-						int drawY = regionLoader.getHighestY().getBaseY() - position.getY() + Region.Y - 2;
+						int drawX = worldPosition.getX() - regionLoader.getLowestX().getBaseX();
+						int drawY = regionLoader.getHighestY().getBaseY() - worldPosition.getY() + Region.Y - 2;
 						blitGlyph(image,
 								(drawX * MAP_SCALE) + advance - (stringWidth / 2),
 								(drawY * MAP_SCALE) + ascent - (font.getAscent() / 2),
@@ -1096,13 +1096,9 @@ public class MapImageDumper
 		{
 			int localX = location.getPosition().getX() - region.getBaseX();
 			int localY = location.getPosition().getY() - region.getBaseY();
-			boolean isBridge = (region.getTileSetting(1, localX, localY) & 2) != 0;
 
-			int tileZ = z + (isBridge ? 1 : 0);
-			int localZ = location.getPosition().getZ();
-			if (z != 0 && localZ != tileZ)
+			if (z != location.getPosition().getZ())
 			{
-				// draw all icons on z=0
 				continue;
 			}
 
@@ -1122,10 +1118,35 @@ public class MapImageDumper
 				assert sprite != null;
 
 				blitIcon(img,
-					2 + (drawX * MAP_SCALE) - (sprite.getMaxWidth() / 2),
-					2 + (drawY * MAP_SCALE) - (sprite.getMaxHeight() / 2),
+					(drawX * MAP_SCALE) - (sprite.getMaxWidth() / 2),
+					(drawY * MAP_SCALE) - (sprite.getMaxHeight() / 2),
 					sprite);
 			}
+		}
+
+		// Draw the intermap link icons which are not stored with the map locations
+		List<WorldMapElementDefinition> elements = worldMapManager.getElements();
+		for (WorldMapElementDefinition element : elements)
+		{
+			AreaDefinition area = areas.getArea(element.getAreaDefinitionId());
+			Position worldPosition = element.getWorldPosition();
+			int regionX = worldPosition.getX() / Region.X;
+			int regionY = worldPosition.getY() / Region.Y;
+
+			if (area == null || area.getName() != null || worldPosition.getZ() != z || regionX != region.getRegionX() || regionY != region.getRegionY())
+			{
+				continue;
+			}
+
+			int localX = worldPosition.getX() - region.getBaseX();
+			int localY = worldPosition.getY() - region.getBaseY();
+			int drawX = drawBaseX + localX;
+			int drawY = drawBaseY + (Region.Y - 1 - localY);
+			SpriteDefinition sprite = sprites.findSprite(area.spriteId, 0);
+			blitIcon(img,
+					(drawX * MAP_SCALE) - (sprite.getMaxWidth() / 2),
+					(drawY * MAP_SCALE) - (sprite.getMaxHeight() / 2),
+					sprite);
 		}
 	}
 
