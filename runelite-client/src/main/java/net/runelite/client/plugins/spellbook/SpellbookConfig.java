@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Trevor <https://github.com/Trevor159>
+ * Copyright (c) 2024, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,16 +22,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.events;
+package net.runelite.client.plugins.spellbook;
 
-import java.awt.TrayIcon;
-import lombok.Value;
-import net.runelite.client.config.Notification;
+import net.runelite.client.config.Config;
+import net.runelite.client.config.ConfigGroup;
 
-@Value
-public class NotificationFired
+@ConfigGroup(SpellbookConfig.GROUP)
+public interface SpellbookConfig extends Config
 {
-	final Notification notification;
-	final String message;
-	final TrayIcon.MessageType type;
+	String GROUP = "spellbook";
 }

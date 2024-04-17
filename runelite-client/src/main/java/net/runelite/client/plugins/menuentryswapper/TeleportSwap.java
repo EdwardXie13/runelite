@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Trevor <https://github.com/Trevor159>
+ * Copyright (c) 2024, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,16 +22,42 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.events;
+package net.runelite.client.plugins.menuentryswapper;
 
-import java.awt.TrayIcon;
-import lombok.Value;
-import net.runelite.client.config.Notification;
+import java.util.ArrayList;
+import java.util.List;
 
-@Value
-public class NotificationFired
+class TeleportSwap
 {
-	final Notification notification;
-	final String message;
-	final TrayIcon.MessageType type;
+	boolean worn;
+	boolean held;
+	String option;
+	List<TeleportSub> subs = new ArrayList<>();
+
+	TeleportSwap addSub(String option, Runnable r)
+	{
+		var sub = new TeleportSub();
+		sub.option = option;
+		sub.execute = r;
+		subs.add(sub);
+		return this;
+	}
+
+	TeleportSwap worn()
+	{
+		worn = true;
+		return this;
+	}
+
+	TeleportSwap held()
+	{
+		held = true;
+		return this;
+	}
+}
+
+class TeleportSub
+{
+	String option;
+	Runnable execute;
 }
