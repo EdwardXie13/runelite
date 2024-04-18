@@ -73,6 +73,7 @@ import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.events.NotificationFired;
 import net.runelite.client.plugins.agilityPlusV2.AgilityPlusMain;
 import net.runelite.client.plugins.miningPlus.MiningPlusMain;
+import net.runelite.client.plugins.plankmakeplus.PlankmakePlusMain;
 import net.runelite.client.plugins.rcPlus.RCPlusMain;
 import net.runelite.client.plugins.rcPlusBloods.RCPlusBloodsMain;
 import net.runelite.client.plugins.rcPlusSouls.RCPlusSoulsMain;
@@ -184,6 +185,7 @@ public class Notifier
 		RCPlusTrueBloodsMain.isIdle = true;
 		MiningPlusMain.isIdle = true;
 		TanningPlusMain.isIdle = true;
+		PlankmakePlusMain.isIdle = true;
 		TwoClickCraftingMain.isIdle = true;
 		var notif = defaultNotification(TrayIcon.MessageType.NONE);
 		notify(notif, message);
