@@ -399,9 +399,12 @@ public class GuardiansOfTheRiftHelperPlugin extends Plugin
 			client.clearHintArrow();
 		}
 		if(msg.contains("The rift becomes active!")) {
+			lastPortalDespawnTime = Optional.empty();
+			nextGameStart = Optional.of(Instant.now().plusSeconds(120));
+			isFirstPortal = true;
+		} else if(msg.contains("Creatures from the Abyss begin their attack!")) {
 			lastPortalDespawnTime = Optional.of(Instant.now());
 			nextGameStart = Optional.empty();
-			isFirstPortal = true;
 		} else if(msg.contains("The rift will become active in 30 seconds.")) {
 			nextGameStart = Optional.of(Instant.now().plusSeconds(30));
 		} else if(msg.contains("The rift will become active in 10 seconds.")) {
