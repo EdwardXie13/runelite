@@ -25,6 +25,7 @@
  */
 package net.runelite.client.plugins.runecraftPlus;
 
+import com.google.common.collect.ImmutableSet;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.DecorativeObject;
@@ -40,6 +41,7 @@ import net.runelite.api.Point;
 import net.runelite.api.Tile;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.plugins.agilityPlusV2.MouseCoordCalculation;
@@ -47,6 +49,7 @@ import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.OverlayUtil;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.inject.Inject;
 import java.awt.*;
@@ -68,6 +71,20 @@ public class DenseRunestoneOverlay extends Overlay
     private static final Color CLICKBOX_BORDER_HOVER_COLOR = CLICKBOX_BORDER_COLOR.darker();
 
     private static final Color Pink_Color = new Color(255,128,255, 255);
+    private static final Set<Pair<Integer, Integer> GOTR_OUTFIT = ImmutableSet.of(
+        new Pair(ItemID.HAT_OF_THE_EYE,
+        ItemID.ROBE_TOP_OF_THE_EYE,
+        ItemID.ROBE_BOTTOMS_OF_THE_EYE,
+        ItemID.BOOTS_OF_THE_EYE
+//        ItemID.ROBE_TOP_OF_THE_EYE_RED,
+//        ItemID.ROBE_BOTTOMS_OF_THE_EYE_RED,
+//        ItemID.HAT_OF_THE_EYE_GREEN,
+//        ItemID.ROBE_TOP_OF_THE_EYE_GREEN,
+//        ItemID.ROBE_BOTTOMS_OF_THE_EYE_GREEN,
+//        ItemID.HAT_OF_THE_EYE_BLUE,
+//        ItemID.ROBE_TOP_OF_THE_EYE_BLUE,
+//        ItemID.ROBE_BOTTOMS_OF_THE_EYE_BLUE
+    );
 
     Robot robot = new Robot();
 
@@ -331,15 +348,22 @@ public class DenseRunestoneOverlay extends Overlay
                 returnRockClimb(graphics);
                 secondRun = false;
             } else {
+                // If inv contains GOTR, render it
+                // if
+                for (Integer itemId: GOTR_OUTFIT) {
+                    if(client.getItemContainer(InventoryID.INVENTORY).contains(itemId)) {
+                        renderItem(graphics, 9764864, itemId);
+                    }
+                }
                 renderObject(graphics, bloodAltar, Pink_Color, Pink_Color, Pink_Color);
             }
         }
     }
 
-    private void generatePointToClick(GroundObject gameObject) {
-        Shape convexHull = gameObject.getConvexHull();
-        MouseCoordCalculation.generatePointToClick(convexHull);
-    }
+//    private void generatePointToClick(GroundObject gameObject) {
+//        Shape convexHull = gameObject.getConvexHull();
+//        MouseCoordCalculation.generatePointToClick(convexHull);
+//    }
 
     private void closerRockRender(Graphics2D graphics, Color fill, Color border, Color borderHover) {
         if ((northStoneMineable && northStone != null && closerRock().equals("N")) || !southStoneMineable)
@@ -394,7 +418,7 @@ public class DenseRunestoneOverlay extends Overlay
         int startY = sceneTiles[0][0][0].getWorldLocation().getY();
 
         GroundObject rockClimb = sceneTiles[0][1761-startX][3873-startY].getGroundObject();
-        generatePointToClick(rockClimb);
+//        generatePointToClick(rockClimb);
         renderObject(graphics, rockClimb);
     }
 
@@ -452,7 +476,8 @@ public class DenseRunestoneOverlay extends Overlay
         OverlayUtil.renderHoverableArea(graphics, clickbox, mousePosition, fill, border, borderHover);
     }
 
-    private void renderItem(Graphics2D graphics, int widgetID, int itemID) {
+    private void renderItem(Graphics2D graphics, int itemID) {
+        Widget widget = client.getWidget(InterfaceID.INVENTORY, 0);
         List<Widget> container = new ArrayList<>(Arrays.asList(client.getWidget(widgetID).getChildren()));
         for(Widget item : container) {
             if(item.getItemId() == itemID) {

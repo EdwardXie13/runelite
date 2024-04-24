@@ -1329,19 +1329,19 @@ public class AgilityPlusMain implements Runnable {
     private void scheduledGroundObjectDelay(GroundObject groundObject) {
         isIdle = false;
         Shape convexHull = groundObject.getConvexHull();
-        MouseCoordCalculation.generatePointToClick(convexHull);
+//        MouseCoordCalculation.generatePointToClick(convexHull);
     }
 
     private void scheduledGameObjectDelay(GameObject gameObject) {
         isIdle = false;
         Shape convexHull = gameObject.getConvexHull();
-        MouseCoordCalculation.generatePointToClick(convexHull);
+//        MouseCoordCalculation.generatePointToClick(convexHull);
     }
 
     private void scheduledDecorativeObjectDelay(DecorativeObject decorativeObject) {
         isIdle = false;
         Shape convexHull = decorativeObject.getConvexHull();
-        MouseCoordCalculation.generatePointToClick(convexHull);
+//        MouseCoordCalculation.generatePointToClick(convexHull);
     }
 
     private void scheduledGameObjectPointDelay(Point point, GameObject gameObject, int sigma) {
@@ -1371,7 +1371,7 @@ public class AgilityPlusMain implements Runnable {
         {
             return;
         }
-        MouseCoordCalculation.generatePointToClick(poly);
+//        MouseCoordCalculation.generatePointToClick(poly);
     }
 
 //    private void getWorldPointCoords(final LocalPoint dest) {
