@@ -71,8 +71,8 @@ public class DenseRunestoneOverlay extends Overlay
     private static final Color CLICKBOX_BORDER_HOVER_COLOR = CLICKBOX_BORDER_COLOR.darker();
 
     private static final Color Pink_Color = new Color(255,128,255, 255);
-    private static final Set<Pair<Integer, Integer> GOTR_OUTFIT = ImmutableSet.of(
-        new Pair(ItemID.HAT_OF_THE_EYE,
+    private static final Set<Integer> GOTR_OUTFIT = ImmutableSet.of(
+        ItemID.HAT_OF_THE_EYE,
         ItemID.ROBE_TOP_OF_THE_EYE,
         ItemID.ROBE_BOTTOMS_OF_THE_EYE,
         ItemID.BOOTS_OF_THE_EYE
@@ -350,11 +350,11 @@ public class DenseRunestoneOverlay extends Overlay
             } else {
                 // If inv contains GOTR, render it
                 // if
-                for (Integer itemId: GOTR_OUTFIT) {
-                    if(client.getItemContainer(InventoryID.INVENTORY).contains(itemId)) {
-                        renderItem(graphics, 9764864, itemId);
-                    }
-                }
+//                for (Integer itemId: GOTR_OUTFIT) {
+//                    if(client.getItemContainer(InventoryID.INVENTORY).contains(itemId)) {
+//                        renderItem(graphics, 9764864, itemId);
+//                    }
+//                }
                 renderObject(graphics, bloodAltar, Pink_Color, Pink_Color, Pink_Color);
             }
         }
@@ -476,18 +476,18 @@ public class DenseRunestoneOverlay extends Overlay
         OverlayUtil.renderHoverableArea(graphics, clickbox, mousePosition, fill, border, borderHover);
     }
 
-    private void renderItem(Graphics2D graphics, int itemID) {
-        Widget widget = client.getWidget(InterfaceID.INVENTORY, 0);
-        List<Widget> container = new ArrayList<>(Arrays.asList(client.getWidget(widgetID).getChildren()));
-        for(Widget item : container) {
-            if(item.getItemId() == itemID) {
-//                Polygon poly = new Polygon.Rectangle(item.getBounds());
-                Rectangle rectangle = new Rectangle(item.getBounds());
-                graphics.setColor(Pink_Color);
-                graphics.fill(rectangle);
-            }
-        }
-    }
+//    private void renderItem(Graphics2D graphics, int itemID) {
+//        Widget widget = client.getWidget(InterfaceID.INVENTORY, 0);
+//        List<Widget> container = new ArrayList<>(Arrays.asList(client.getWidget(widgetID).getChildren()));
+//        for(Widget item : container) {
+//            if(item.getItemId() == itemID) {
+////                Polygon poly = new Polygon.Rectangle(item.getBounds());
+//                Rectangle rectangle = new Rectangle(item.getBounds());
+//                graphics.setColor(Pink_Color);
+//                graphics.fill(rectangle);
+//            }
+//        }
+//    }
 
     private void renderTileArea(Graphics2D graphics, final LocalPoint dest, int size) {
         Polygon poly = Perspective.getCanvasTileAreaPoly(this.client, dest, size);
