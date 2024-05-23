@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fazecast.jSerialComm.SerialPort;
-import com.monst.polylabel.PolyLabel;
+//import com.monst.polylabel.PolyLabel;
 import lombok.experimental.UtilityClass;
 import net.runelite.api.Client;
 import net.runelite.api.TileObject;
@@ -22,21 +22,21 @@ import java.util.Random;
 public class MouseCoordCalculation {
     Point generatedPoint = null;
 
-    public void generatePointToClick(Shape shape) {
-        generatePointToClick(convertShapeToPolygon(shape));
-    }
+//    public void generatePointToClick(Shape shape) {
+//        generatePointToClick(convertShapeToPolygon(shape));
+//    }
 
-    public void generatePointToClick(Polygon polygon) {
-//        Polygon polygon = convertShapeToPolygon(shape);
-        String jsonFormat = convertPolygonToGeoJSON(polygon);
-        Integer[][][] coordinates = parseCoordinates(jsonFormat);
-        PolyLabel result1 = PolyLabel.polyLabel(coordinates);
-
-        Point centerPoint = new Point((int)result1.getX(), (int)result1.getY());
-        int sigma = (int) Math.sqrt(result1.getDistance());
-        generateCoordNoRand(centerPoint, sigma);
-//        mouseMove();
-    }
+//    public void generatePointToClick(Polygon polygon) {
+////        Polygon polygon = convertShapeToPolygon(shape);
+//        String jsonFormat = convertPolygonToGeoJSON(polygon);
+//        Integer[][][] coordinates = parseCoordinates(jsonFormat);
+//        PolyLabel result1 = PolyLabel.polyLabel(coordinates);
+//
+//        Point centerPoint = new Point((int)result1.getX(), (int)result1.getY());
+//        int sigma = (int) Math.sqrt(result1.getDistance());
+//        generateCoordNoRand(centerPoint, sigma);
+////        mouseMove();
+//    }
 
     public void generateCoord(Client client, Point point, TileObject gameObject, int sigma) {
         Shape clickbox = gameObject.getClickbox();

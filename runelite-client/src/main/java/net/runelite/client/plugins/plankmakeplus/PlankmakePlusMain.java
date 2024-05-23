@@ -1,30 +1,39 @@
-package net.runelite.client.plugins.miningPlus;
+package net.runelite.client.plugins.plankmakeplus;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import net.runelite.api.Client;
-import net.runelite.api.GameObject;
+import net.runelite.api.Item;
+import net.runelite.api.ItemID;
 import net.runelite.api.ScriptID;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.agilityPlusV2.MouseCoordCalculation;
 
-import java.awt.AWTException;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Robot;
-import java.awt.Shape;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
-public class MiningPlusMain implements Runnable {
+public class PlankmakePlusMain implements Runnable {
     private final Client client;
     private final ClientThread clientThread;
     public static boolean isIdle = true;
     public long start;
+
     public static boolean isRunning = false;
-    Robot robot = new Robot();
+
+    public static List<Item> inventoryItems = new ArrayList<>();
+
+    Random random = new Random();
+
+    int mahoganyLogsID = ItemID.MAHOGANY_LOGS;
+    int mahoganyPlankID = ItemID.MAHOGANY_PLANK;
+
+    Thread t;
 
     private static final List<Point> inventoryCoords = new ArrayList(ImmutableList.of(
             new Point(782, 768), // 1 row 1 col
@@ -51,15 +60,13 @@ public class MiningPlusMain implements Runnable {
             new Point(824, 948), // 6 row 2 col
             new Point(866, 948), // 6 row 3 col
             new Point(908, 948), // 6 row 4 col
-            new Point(782, 984), // 7 row 1 col
-            new Point(824, 984), // 7 row 2 col
-            new Point(866, 984), // 7 row 3 col
-            new Point(908, 984)  // 7 row 4 col
+            new Point(782, 984) // 7 row 1 col
+//            new Point(824, 984), // 7 row 2 col
+//            new Point(866, 984), // 7 row 3 col
+//            new Point(908, 984)  // 7 row 4 col
     ));
 
-    Thread t;
-
-    MiningPlusMain(Client client, ClientThread clientThread) throws AWTException {
+    PlankmakePlusMain(Client client, ClientThread clientThread) {
         this.client = client;
         this.clientThread = clientThread;
 
@@ -75,63 +82,87 @@ public class MiningPlusMain implements Runnable {
         while (isRunning) {
             if (checkIdle() && checkLastReset())
                 reset();
-            else if(isAtWorldPoint(MiningPlusWorldPoints.FALADOR_MINE_COPPER_SPOT)) {
-                doPowerMineCopper();
-            } else if(isAtWorldPoint(MiningPlusWorldPoints.FALADOR_MINE_IRON_SPOT)) {
-                doPowerMineIron();
+
+            if (isAtWorldPoint(new WorldPoint(3094, 3489, 0))
+                    || isAtWorldPoint(new WorldPoint(3185, 3444, 0))) {
+//                System.out.println("do plankmake");
+                doPlankmake();
             }
         }
         System.out.println("Thread has stopped.");
     }
 
-    private void doPowerMineCopper() {
-        if(checkLevelUp()) {
-            pressKey(KeyEvent.VK_SPACE);
-            robot.delay(500);
+    private void doPlankmake() {
+        // click bank
+        if(!isBankOpen() && checkInventoryCount(mahoganyPlankID, 25) && isIdle) {
+            System.out.println("clickBank");
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            setCameraZoom(1004);
+            delay(500);
+            scheduledPointDelay(new Point(760, 533), 8);
+            delay(1000);
             isIdle = true;
-        } else if(MiningPlusObjectIDs.copperRockR != null && isIdle) {
-            dropItemInInventory(new Point(782, 768));
-            scheduledGameObjectDelay(MiningPlusObjectIDs.copperRockR, 8);
-        } else if(MiningPlusObjectIDs.copperRockL != null && isIdle) {
-            dropItemInInventory(new Point(822, 768));
-            scheduledGameObjectDelay(MiningPlusObjectIDs.copperRockL, 8);
+        }
+        // bank is open and bank sequence
+        else if(isBankOpen() && checkInventoryCount(mahoganyPlankID, 25) && isIdle) {
+            System.out.println("banking");
+            delay(300);
+            bankingSequence();
+        }
+        // bank is open and ready to plank
+        else if(isBankOpen() && checkInventoryCount(mahoganyLogsID, 25) && isIdle) {
+            System.out.println("closing bank");
+            delay(300);
+            pressKey(KeyEvent.VK_ESCAPE);
+        }
+        // click plankmake if have atleast 1 log
+        else if(!isBankOpen() && checkInventoryCount(mahoganyLogsID, 25) && isIdle) {
+            System.out.println("press plankmake");
+            delay(300);
+            pressKey(KeyEvent.VK_F6);
+            delay(300);
+            // + 20, +20 from top left of sprite
+            for (Point inventoryCoord : inventoryCoords) {
+                scheduledPointDelay(new Point(907, 893), 4);
+                delay(300);
+                scheduledPointDelay(inventoryCoord, 3); // row 1 col 1
+                delay(random.nextInt(2000 - 1700) + 1700);
+            }
+
+            delay(random.nextInt(700 - 400) + 400);
+            isIdle = true;
         }
     }
 
-    private void doPowerMineIron() {
-        if(checkLevelUp()) {
-            pressKey(KeyEvent.VK_SPACE);
-            robot.delay(500);
-            isIdle = true;
-        } else if(MiningPlusObjectIDs.ironRockR != null && isIdle) {
-            dropItemInInventory(new Point(782, 768));
-            scheduledGameObjectDelay(MiningPlusObjectIDs.ironRockR, 8);
-        } else if(MiningPlusObjectIDs.ironRockL != null && isIdle) {
-            dropItemInInventory(new Point(822, 768));
-            scheduledGameObjectDelay(MiningPlusObjectIDs.ironRockL, 8);
-        }
-    }
+    private void bankingSequence() {
+        // deposit leather (click slot 1)
+        // scheduledPointDelay(new Point(782, 768), 3);
+        // 524, 793 bottom right bank
 
-    private void dropItemInInventory(Point coord) {
-        keyDown(KeyEvent.VK_SHIFT);
-        scheduledPointClick(coord, 3);
-        robot.delay(500);
-        keyUp(KeyEvent.VK_SHIFT);
+        // deposit slot 1
+        scheduledPointDelay(new Point(782, 768), 3);
+        delay(700);
+
+        // withdraw hides
+        scheduledPointDelay(new Point(524, 793), 3);
+        delay(1000);
         isIdle = true;
     }
 
-    private void getObstacleCenter(GameObject gameObject, int sigma) {
-        Shape groundObjectConvexHull = gameObject.getConvexHull();
-        Rectangle groundObjectRectangle = groundObjectConvexHull.getBounds();
-
-        Point obstacleCenter = getCenterOfRectangle(groundObjectRectangle);
-
-        MouseCoordCalculation.generateCoord(client, obstacleCenter, gameObject, sigma);
+    public int getRegionID() {
+        return client.getLocalPlayer().getWorldLocation().getRegionID();
     }
 
-    private Point getCenterOfRectangle(Rectangle rectangle) {
-        // +26 to the Y coordinate because calculations are taken from canvas, not window
-        return new Point((int) rectangle.getCenterX(), (int) rectangle.getCenterY() + 26);
+    private boolean checkInventoryCount(int itemID, int count) {
+        try {
+             return inventoryItems.stream()
+                    .filter(item -> item.getId() == itemID)
+                    .count() >= count;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     private boolean isAtWorldPoint(WorldPoint worldPoint) {
@@ -154,49 +185,30 @@ public class MiningPlusMain implements Runnable {
         clientThread.invokeLater(() -> client.runScript(ScriptID.CAMERA_DO_ZOOM, zoom, zoom));
     }
 
-    private boolean checkLevelUp() {
-        Widget levelUpMessage = client.getWidget(10617391);
-        return !levelUpMessage.isSelfHidden();
+    private void delay(int ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (Exception e) {
+            e.getStackTrace(); }
     }
 
-    private void scheduledGameObjectDelay(GameObject gameObject, int sigma) {
+    private void scheduledPointDelay(Point point, int sigma) {
         isIdle = false;
         try {
-            getObstacleCenter(gameObject, sigma);
+            MouseCoordCalculation.generateCoord(client, point, sigma);
         } catch (Exception e) {
             e.printStackTrace();
             isIdle = true;
         }
     }
 
-    private void scheduledPointClick(Point canvasPoint, int sigma) {
-        Point actualPoint = new Point(canvasPoint.x, canvasPoint.y);
-        try {
-            MouseCoordCalculation.generateCoord(client, actualPoint, sigma);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    private boolean isBankOpen() {
+        return client.getWidget(WidgetInfo.BANK_CONTAINER) != null;
     }
 
     private void pressKey(int key) {
         KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key, KeyEvent.CHAR_UNDEFINED);
         this.client.getCanvas().dispatchEvent(keyPress);
-        KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key, KeyEvent.CHAR_UNDEFINED);
-        this.client.getCanvas().dispatchEvent(keyRelease);
-    }
-
-    private void pressKey(int key, int ms) {
-        keyDown(key);
-        robot.delay(ms);
-        keyUp(key);
-    }
-
-    private void keyDown(int key) {
-        KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key, KeyEvent.CHAR_UNDEFINED);
-        this.client.getCanvas().dispatchEvent(keyPress);
-    }
-
-    private void keyUp(int key) {
         KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key, KeyEvent.CHAR_UNDEFINED);
         this.client.getCanvas().dispatchEvent(keyRelease);
     }
@@ -214,9 +226,8 @@ public class MiningPlusMain implements Runnable {
     }
 
     private void reset() {
-        System.out.println("idle for too long, reset");
         isIdle = true;
-        robot.delay(200);
+        delay(200);
         start = System.currentTimeMillis();
     }
 
@@ -227,4 +238,3 @@ public class MiningPlusMain implements Runnable {
         return sec >= 5;
     }
 }
-
