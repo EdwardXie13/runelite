@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Jordan Atwood <nightfirecat@nightfirec.at>
+ * Copyright (c) 2024, Christopher Brown <christoabrown@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,15 +22,36 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.attackstyles;
+package net.runelite.cache.definitions;
 
-import org.junit.Test;
+import lombok.Data;
+import lombok.ToString;
 
-public class WeaponTypeTest
+@Data
+@ToString(callSuper = true)
+public class ZoneDefinition extends AbstractWorldMapDataDefinition
 {
-	@Test
-	public void init()
+	public int sourceZoneX;
+	public int sourceZoneZ;
+	public int displayZoneX;
+	public int displayZoneZ;
+
+	public boolean equals(Object obj)
 	{
-		WeaponType.getWeaponType(0);
+		if (!(obj instanceof ZoneDefinition))
+		{
+			return false;
+		}
+		else
+		{
+			ZoneDefinition other = (ZoneDefinition) obj;
+			return other.displaySquareX == this.displaySquareX && other.displaySquareZ == this.displaySquareZ
+					&& other.displayZoneX == this.displayZoneX && other.displayZoneZ == this.displayZoneZ;
+		}
+	}
+
+	public int hashCode()
+	{
+		return this.displaySquareX | this.displaySquareZ << 8 | this.displayZoneX << 16 | this.displayZoneZ << 24;
 	}
 }
