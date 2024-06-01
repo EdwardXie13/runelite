@@ -10,6 +10,9 @@ import net.runelite.client.plugins.PluginDescriptor;
 import javax.inject.Inject;
 import java.awt.Robot;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Objects;
 
 @PluginDescriptor(name = "Left Click Construction")
 public class LeftClickConstructionPlugin extends Plugin {
@@ -25,6 +28,8 @@ public class LeftClickConstructionPlugin extends Plugin {
         butlerChat();
         butlerPayment();
 
+        //mahogany homes
+        isConstructionWindowOpen();
     }
 
 //    @Subscribe
@@ -53,6 +58,30 @@ public class LeftClickConstructionPlugin extends Plugin {
 //            }
 //        }
 //    }
+
+    private void isConstructionWindowOpen() {
+        // 30015492 - 30015499
+        Widget constructionWindow = client.getWidget(30015491);
+        if(constructionWindow != null) {
+            for (int i = 30015492; i <= 30015499; i++) {
+                System.out.println("i: " + i);
+                Widget widget = client.getWidget(i);
+                System.out.println("widgetText: " + widget.getChild(0).getText());
+//                if(widget.getChild(4) == null && widget.getChild(5) != null) {
+//                    System.out.println("widget ID: " + i);
+//                }
+            }
+//            System.out.println(constructionWindow.getChild(5));
+//            Widget[] stuff = constructionWindow.getDynamicChildren();
+//            System.out.println(stuff.length);
+//            Arrays.stream(stuff)
+//                    .map(Widget::getId)
+//                    .forEach(System.out::println);
+//            ArrayList<Widget> constructionWindowTiles = new ArrayList<>(Arrays.asList(Objects.requireNonNull(constructionWindow.getChildren())));
+//            constructionWindowTiles.forEach(tile -> System.out.println(tile.getId()));
+        }
+
+    }
 
     private void removeBox() {
         Widget removeBox = client.getWidget(14352385);
