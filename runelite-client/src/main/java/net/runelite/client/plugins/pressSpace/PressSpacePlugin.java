@@ -175,6 +175,8 @@ public class PressSpacePlugin extends Plugin {
                         countItem(ItemID.BLACK_DRAGONHIDE, 25)
         ))
             return 7;
+        else if(containsItem(ItemID.COINS_995) && countItem(ItemID.TEAK_LOGS, 27))
+            return 8;
         else
             return 0;
     }

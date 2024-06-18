@@ -29,6 +29,7 @@ public class LeftClickConstructionPlugin extends Plugin {
         butlerPayment();
 
         //mahogany homes
+        playerDialogue();
         isConstructionWindowOpen();
     }
 
@@ -59,37 +60,36 @@ public class LeftClickConstructionPlugin extends Plugin {
 //        }
 //    }
 
+    private void playerDialogue() {
+        Widget dialogueWindow = client.getWidget(14221318);
+        if(dialogueWindow != null &&
+                (dialogueWindow.getText().contains("finished with the work you wanted") ||
+                dialogueWindow.getText().contains("Could I have an adept contract") ||
+                dialogueWindow.getText().contains("my current construction") ||
+                dialogueWindow.getText().contains("love a cuppa"))
+        ) {
+            pressKey(KeyEvent.VK_SPACE);
+        }
+    }
+
     private void isConstructionWindowOpen() {
         // 30015492 - 30015499
-        Widget constructionWindow = client.getWidget(30015491);
-        if(constructionWindow != null) {
-            for (int i = 30015492; i <= 30015499; i++) {
-                System.out.println("i: " + i);
-                Widget widget = client.getWidget(i);
-                System.out.println("widgetText: " + widget.getChild(0).getText());
-//                if(widget.getChild(4) == null && widget.getChild(5) != null) {
-//                    System.out.println("widget ID: " + i);
-//                }
-            }
-//            System.out.println(constructionWindow.getChild(5));
-//            Widget[] stuff = constructionWindow.getDynamicChildren();
-//            System.out.println(stuff.length);
-//            Arrays.stream(stuff)
-//                    .map(Widget::getId)
-//                    .forEach(System.out::println);
-//            ArrayList<Widget> constructionWindowTiles = new ArrayList<>(Arrays.asList(Objects.requireNonNull(constructionWindow.getChildren())));
-//            constructionWindowTiles.forEach(tile -> System.out.println(tile.getId()));
+        Widget constructionWindow = client.getWidget(30015489);
+        if(constructionWindow != null && constructionWindow.getChild(1).getText().contains("Furniture Creation Menu")) {
+            pressOtherKey(KeyEvent.VK_3); // Teak
         }
-
     }
 
     private void removeBox() {
         Widget removeBox = client.getWidget(14352385);
         if (removeBox != null &&
-            (removeBox.getChild(0).getText().contains("Really remove it") ||
-            removeBox.getChild(0).getText().contains("Repeat last task"))
+                (removeBox.getChild(0).getText().contains("Really remove it") ||
+                removeBox.getChild(0).getText().contains("Repeat last task") ||
+                removeBox.getChild(0).getText().contains("Take tea?"))
         ) {
             pressOtherKey(KeyEvent.VK_1);
+        } else if (removeBox != null && removeBox.getChild(3).getText().contains("Adept Contract")) {
+            pressOtherKey(KeyEvent.VK_3);
         }
     }
 
@@ -109,11 +109,11 @@ public class LeftClickConstructionPlugin extends Plugin {
 
     private void butlerChat() {
         Widget removeBox = client.getWidget(15138822);
-        if (
-                removeBox != null && removeBox.getText().contains("if thou")
-                    ||
-                removeBox != null && removeBox.getText().contains("unfailing service")
-
+        if (removeBox != null &&
+                (removeBox.getText().contains("if thou") ||
+                removeBox.getText().contains("unfailing service") ||
+                removeBox.getText().contains("get another job") ||
+                removeBox.getText().contains("Would you like a cup of tea"))
         ) {
             pressKey(KeyEvent.VK_SPACE);
         }
@@ -121,7 +121,10 @@ public class LeftClickConstructionPlugin extends Plugin {
 
     private void butlerPayment() {
         Widget removeBox = client.getWidget(14352385);
-        if (removeBox != null && removeBox.getChild(1).getText().contains("Okay, here's")) {
+        if (removeBox != null &&
+                (removeBox.getChild(1).getText().contains("Okay, here's") ||
+                removeBox.getChild(1).getText().contains("text take tea"))
+        ) {
             pressOtherKey(KeyEvent.VK_1);
         }
     }
