@@ -15,6 +15,7 @@ public class Potions {
         Arrays.asList(
             // unf pot + ingredient
             Set.of(Pair.of(ItemID.GUAM_POTION_UNF, 14), Pair.of(ItemID.EYE_OF_NEWT, 14)),
+                Set.of(Pair.of(ItemID.HARRALANDER_POTION_UNF, 27), Pair.of(ItemID.VOLCANIC_ASH, 1)),
                 Set.of(Pair.of(ItemID.TARROMIN_POTION_UNF, 14), Pair.of(ItemID.LIMPWURT_ROOT, 14)),
                 Set.of(Pair.of(ItemID.TARROMIN_POTION_UNF, 14), Pair.of(ItemID.ASHES, 14)),
                 Set.of(Pair.of(ItemID.RANARR_POTION_UNF, 14), Pair.of(ItemID.SNAPE_GRASS, 14)),
