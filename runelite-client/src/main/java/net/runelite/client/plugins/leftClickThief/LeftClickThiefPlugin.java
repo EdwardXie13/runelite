@@ -57,8 +57,7 @@ public class LeftClickThiefPlugin extends Plugin {
             String overheadText = npc.getOverheadText();
             if(overheadText != null) {
                 if(overheadText.contains("Zzzzzz") ||
-                        overheadText.contains("I'll kill you for that") ||
-                npc.getAnimation() == 838
+                    overheadText.contains("I'll kill you for that")
                 ) {
                     swapPickpocket();
                 } else if(overheadText.contains("Arghh my head")) {
