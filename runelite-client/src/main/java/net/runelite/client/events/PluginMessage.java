@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2021, Adam <Adam@sigterm.info>
+ * Copyright (c) 2023, jocopa3
+ * Copyright (c) 2024, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,32 +23,41 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.api.clan;
+package net.runelite.client.events;
 
+import java.util.Collections;
+import java.util.Map;
+import lombok.NonNull;
 import lombok.Value;
 
 /**
- * A rank in a clan. The {@link #getRank()} value is -1 to 127 representing the rank.
- * Some constants are defined for named ranks, but most ranks have configurable titles which must be
- * fetched via {@link ClanSettings#titleForRank(ClanRank)}
- *
- * @see #JMOD
- * @see #OWNER
- * @see #DEPUTY_OWNER
- * @see #ADMINISTRATOR
- * @see #GUEST
+ * An event pluginhub plugins can use to send data to each other.
  */
 @Value
-public class ClanRank
+public class PluginMessage
 {
-	public static final ClanRank JMOD = new ClanRank(127);
-	public static final ClanRank OWNER = new ClanRank(126);
-	public static final ClanRank DEPUTY_OWNER = new ClanRank(125);
-	public static final ClanRank ADMINISTRATOR = new ClanRank(100);
-	public static final ClanRank GUEST = new ClanRank(-1);
-
 	/**
-	 * The rank, -1 to 127.
+	 * Event namespace. This should usually be a unique string representing your plugin name eg. "tombs-of-amascut"
 	 */
-	private final int rank;
+	String namespace;
+	/**
+	 * Event name. This should represent what the event is for, eg "points".
+	 */
+	String name;
+	/**
+	 * Event data.
+	 */
+	Map<String, Object> data;
+
+	public PluginMessage(@NonNull String namespace, @NonNull String name)
+	{
+		this(namespace, name, Collections.emptyMap());
+	}
+
+	public PluginMessage(@NonNull String namespace, @NonNull String name, @NonNull Map<String, Object> data)
+	{
+		this.namespace = namespace;
+		this.name = name;
+		this.data = data;
+	}
 }
