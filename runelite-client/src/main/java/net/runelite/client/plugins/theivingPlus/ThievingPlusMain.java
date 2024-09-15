@@ -77,6 +77,8 @@ public class ThievingPlusMain implements Runnable {
                 reset();
             else if(isAtWorldPoint(ThievingPlusWorldPoints.ARDY_CAKE_STALL_SPOT)) {
                 doCakes();
+            } else if (isAtWorldPoint(ThievingPlusWorldPoints.HOSIDIUS_FRUIT_STALL_SPOT)) {
+                doFruits();
             }
         }
         System.out.println("Thread has stopped.");
@@ -88,10 +90,23 @@ public class ThievingPlusMain implements Runnable {
             System.out.println("stealing cakes");
             // click static spot
             scheduledPointDelay(new Point(278, 517), 4); // row 2 col 1
-            robot.delay(250);
+            robot.delay(1000);
 
             dropItemInInventory(new Point(782, 768));
             robot.mouseMove(278, 517);
+        }
+    }
+
+    private void doFruits() {
+        System.out.println("doing fruits");
+        if(ThievingPlusObjectIDs.fruitStall != null && isIdle) {
+            System.out.println("stealing fruits");
+            // click static spot
+            scheduledPointDelay(new Point(320, 539), 4); // row 2 col 1
+            robot.delay(1000);
+
+            dropItemInInventory(new Point(782, 768));
+            robot.mouseMove(320, 539);
         }
     }
 
