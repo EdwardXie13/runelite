@@ -77,6 +77,7 @@ import net.runelite.client.plugins.plankmakeplus.PlankmakePlusMain;
 import net.runelite.client.plugins.rcPlus.RCPlusMain;
 import net.runelite.client.plugins.rcPlusTrueBloods.RCPlusTrueBloodsMain;
 import net.runelite.client.plugins.tanningPlus.TanningPlusMain;
+import net.runelite.client.plugins.theivingPlus.ThievingPlusMain;
 import net.runelite.client.plugins.twoclickcrafting.TwoClickCraftingMain;
 import net.runelite.client.ui.ClientUI;
 import net.runelite.client.util.OSType;
@@ -181,6 +182,7 @@ public class Notifier
 		TanningPlusMain.isIdle = true;
 		PlankmakePlusMain.isIdle = true;
 		TwoClickCraftingMain.isIdle = true;
+		ThievingPlusMain.isIdle = true;
 
 		var notif = defaultNotification(TrayIcon.MessageType.NONE);
 		notify(notif, message);

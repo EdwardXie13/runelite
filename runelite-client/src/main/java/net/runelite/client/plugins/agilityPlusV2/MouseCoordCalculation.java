@@ -11,6 +11,7 @@ import net.runelite.api.Client;
 import net.runelite.api.TileObject;
 
 import java.awt.*;
+import java.awt.event.InputEvent;
 import java.awt.geom.PathIterator;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -140,7 +141,9 @@ public class MouseCoordCalculation {
 //            robot.delay(200);
             windMouse(robot, generatedPoint.x, generatedPoint.y);
             robot.delay(150);
-            mouseClick();
+            robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
+            robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
+//            mouseClick();
         } catch (Exception e) {
             e.printStackTrace();
         }
