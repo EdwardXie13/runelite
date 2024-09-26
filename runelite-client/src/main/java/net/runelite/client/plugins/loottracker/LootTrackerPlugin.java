@@ -188,6 +188,8 @@ public class LootTrackerPlugin extends Plugin
 		put(13117, "Rogues' Chest").
 		put(13156, "Chest (Ancient Vault)").
 		put(12348, "Muddy Chest").
+		put(5422, "Chest (Aldarin Villas)").
+		put(6550, "Chest (Moon key)").
 		build();
 
 	// Chests opened with keys from slayer tasks
@@ -1257,6 +1259,9 @@ public class LootTrackerPlugin extends Plugin
 					case ItemID.BOUNTY_CRATE_TIER_7:
 					case ItemID.BOUNTY_CRATE_TIER_8:
 					case ItemID.BOUNTY_CRATE_TIER_9:
+					case ItemID.APPRENTICE_POTION_PACK:
+					case ItemID.ADEPT_POTION_PACK:
+					case ItemID.EXPERT_POTION_PACK:
 						onInvChange(collectInvAndGroundItems(LootRecordType.EVENT, itemManager.getItemComposition(event.getItemId()).getName()));
 						break;
 					case ItemID.SUPPLY_CRATE_24884:
