@@ -23,6 +23,7 @@ public class Potions {
                 Set.of(Pair.of(ItemID.IRIT_POTION_UNF, 14), Pair.of(ItemID.EYE_OF_NEWT, 14)),
                 Set.of(Pair.of(ItemID.IRIT_POTION_UNF, 14), Pair.of(ItemID.UNICORN_HORN_DUST, 14)),
                 Set.of(Pair.of(ItemID.AVANTOE_POTION_UNF, 14), Pair.of(ItemID.MORT_MYRE_FUNGUS, 14)),
+                Set.of(Pair.of(ItemID.AVANTOE_POTION_UNF, 14), Pair.of(ItemID.SNAPE_GRASS, 14)),
                 Set.of(Pair.of(ItemID.KWUARM_POTION_UNF, 14), Pair.of(ItemID.LIMPWURT_ROOT, 14)),
                 Set.of(Pair.of(ItemID.SNAPDRAGON_POTION_UNF, 14), Pair.of(ItemID.RED_SPIDERS_EGGS, 14)),
                 Set.of(Pair.of(ItemID.CADANTINE_POTION_UNF, 14), Pair.of(ItemID.WHITE_BERRIES, 14)),

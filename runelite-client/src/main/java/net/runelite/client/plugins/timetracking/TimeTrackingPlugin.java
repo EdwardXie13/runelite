@@ -55,10 +55,7 @@ import static net.runelite.client.plugins.timetracking.TimeTrackingConfig.PREFER
 import static net.runelite.client.plugins.timetracking.TimeTrackingConfig.STOPWATCHES;
 import static net.runelite.client.plugins.timetracking.TimeTrackingConfig.TIMERS;
 import net.runelite.client.plugins.timetracking.clocks.ClockManager;
-import net.runelite.client.plugins.timetracking.farming.CompostTracker;
-import net.runelite.client.plugins.timetracking.farming.FarmingContractManager;
-import net.runelite.client.plugins.timetracking.farming.FarmingTracker;
-import net.runelite.client.plugins.timetracking.farming.PaymentTracker;
+import net.runelite.client.plugins.timetracking.farming.*;
 import net.runelite.client.plugins.timetracking.hunter.BirdHouseTracker;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
@@ -94,6 +91,9 @@ public class TimeTrackingPlugin extends Plugin
 
 	@Inject
 	private BirdHouseTracker birdHouseTracker;
+
+	@Inject
+	private SkillerIronFarmingTracker skillerIronFarmingTracker;
 
 	@Inject
 	private FarmingContractManager farmingContractManager;

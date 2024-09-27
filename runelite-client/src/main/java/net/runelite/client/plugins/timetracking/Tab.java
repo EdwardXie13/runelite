@@ -44,9 +44,12 @@ public enum Tab
 	BUSH("Bush Patches", ItemID.POISON_IVY_BERRIES),
 	GRAPE("Grape Patches", ItemID.GRAPES),
 	SPECIAL("Special Patches", ItemID.MUSHROOM),
-	TIME_OFFSET("Farming Tick Offset", ItemID.WATERING_CAN);
+	TIME_OFFSET("Farming Tick Offset", ItemID.WATERING_CAN),
+	SKILLER_IRON("Lvl 3 Iron", ItemID.IRON_MED_HELM),
+	SKILLER_IRON_TAB("Skiller Iron Tab", ItemID.IRON_MED_HELM);
 
 	public static final Tab[] FARMING_TABS = {HERB, TREE, FRUIT_TREE, SPECIAL, FLOWER, ALLOTMENT, BUSH, GRAPE, HOPS};
+	public static final Tab[] SKILLER_TABS = {HERB, SPECIAL, FLOWER, ALLOTMENT, BUSH};
 
 	private final String name;
 	private final int itemID;

@@ -68,17 +68,23 @@ class FarmingWorld
 		// Some of these patches get updated in multiple regions.
 		// It may be worth it to add a specialization for these patches
 		add(new FarmingRegion("Al Kharid", 13106, false,
-			new FarmingPatch("", Varbits.FARMING_4771, PatchImplementation.CACTUS, NpcID.AYESHA)
+			new FarmingPatch("", Varbits.FARMING_4771, PatchImplementation.CACTUS, NpcID.AYESHA),
+			new FarmingPatch("", Varbits.FARMING_4771, PatchImplementation.SKILLER_CACTUS, NpcID.AYESHA)
 		), 13362, 13105);
 
 		add(new FarmingRegion("Ardougne", 10290, false,
-			new FarmingPatch("", Varbits.FARMING_4771, PatchImplementation.BUSH, NpcID.TORRELL)
+			new FarmingPatch("", Varbits.FARMING_4771, PatchImplementation.BUSH, NpcID.TORRELL),
+			new FarmingPatch("", Varbits.FARMING_4771, PatchImplementation.SKILLER_BUSH, NpcID.TORRELL)
 		), 10546);
 		add(new FarmingRegion("Ardougne", 10548, false,
 			new FarmingPatch("North", Varbits.FARMING_4771, PatchImplementation.ALLOTMENT, NpcID.KRAGEN, 0),
+			new FarmingPatch("North", Varbits.FARMING_4771, PatchImplementation.SKILLER_ALLOTMENT, NpcID.KRAGEN, 0),
 			new FarmingPatch("South", Varbits.FARMING_4772, PatchImplementation.ALLOTMENT, NpcID.KRAGEN, 1),
+			new FarmingPatch("South", Varbits.FARMING_4772, PatchImplementation.SKILLER_ALLOTMENT, NpcID.KRAGEN, 1),
 			new FarmingPatch("", Varbits.FARMING_4773, PatchImplementation.FLOWER),
+			new FarmingPatch("", Varbits.FARMING_4773, PatchImplementation.SKILLER_FLOWER),
 			new FarmingPatch("", Varbits.FARMING_4774, PatchImplementation.HERB),
+			new FarmingPatch("", Varbits.FARMING_4774, PatchImplementation.SKILLER_HERB),
 			new FarmingPatch("", Varbits.FARMING_4775, PatchImplementation.COMPOST)
 		));
 
@@ -93,9 +99,13 @@ class FarmingWorld
 
 		add(new FarmingRegion("Catherby", 11062, false,
 			new FarmingPatch("North", Varbits.FARMING_4771, PatchImplementation.ALLOTMENT, NpcID.DANTAERA, 0),
+			new FarmingPatch("North", Varbits.FARMING_4771, PatchImplementation.SKILLER_ALLOTMENT, NpcID.DANTAERA, 0),
 			new FarmingPatch("South", Varbits.FARMING_4772, PatchImplementation.ALLOTMENT, NpcID.DANTAERA, 1),
+			new FarmingPatch("South", Varbits.FARMING_4772, PatchImplementation.SKILLER_ALLOTMENT, NpcID.DANTAERA, 1),
 			new FarmingPatch("", Varbits.FARMING_4773, PatchImplementation.FLOWER),
+			new FarmingPatch("", Varbits.FARMING_4773, PatchImplementation.SKILLER_FLOWER),
 			new FarmingPatch("", Varbits.FARMING_4774, PatchImplementation.HERB),
+			new FarmingPatch("", Varbits.FARMING_4774, PatchImplementation.SKILLER_HERB),
 			new FarmingPatch("", Varbits.FARMING_4775, PatchImplementation.COMPOST)
 		)
 		{
@@ -131,11 +141,13 @@ class FarmingWorld
 		), 6447, 6448, 6449, 6191, 6193);
 
 		add(new FarmingRegion("Champions' Guild", 12596, true,
-			new FarmingPatch("", Varbits.FARMING_4771, PatchImplementation.BUSH, NpcID.DREVEN)
+			new FarmingPatch("", Varbits.FARMING_4771, PatchImplementation.BUSH, NpcID.DREVEN),
+			new FarmingPatch("", Varbits.FARMING_4771, PatchImplementation.SKILLER_BUSH, NpcID.DREVEN)
 		));
 
 		add(new FarmingRegion("Draynor Manor", 12340, false,
-			new FarmingPatch("Belladonna", Varbits.FARMING_4771, PatchImplementation.BELLADONNA)
+			new FarmingPatch("Belladonna", Varbits.FARMING_4771, PatchImplementation.BELLADONNA),
+			new FarmingPatch("Belladonna", Varbits.FARMING_4771, PatchImplementation.SKILLER_BELLADONNA)
 		));
 
 		add(new FarmingRegion("Entrana", 11060, false,
@@ -152,9 +164,13 @@ class FarmingWorld
 		), 12084);
 		add(new FarmingRegion("Falador", 12083, false,
 			new FarmingPatch("North West", Varbits.FARMING_4771, PatchImplementation.ALLOTMENT, NpcID.ELSTAN, 0),
+			new FarmingPatch("North West", Varbits.FARMING_4771, PatchImplementation.SKILLER_ALLOTMENT, NpcID.ELSTAN, 0),
 			new FarmingPatch("South East", Varbits.FARMING_4772, PatchImplementation.ALLOTMENT, NpcID.ELSTAN, 1),
+			new FarmingPatch("South East", Varbits.FARMING_4772, PatchImplementation.SKILLER_ALLOTMENT, NpcID.ELSTAN, 1),
 			new FarmingPatch("", Varbits.FARMING_4773, PatchImplementation.FLOWER),
+			new FarmingPatch("", Varbits.FARMING_4773, PatchImplementation.SKILLER_FLOWER),
 			new FarmingPatch("", Varbits.FARMING_4774, PatchImplementation.HERB),
+			new FarmingPatch("", Varbits.FARMING_4774, PatchImplementation.SKILLER_HERB),
 			new FarmingPatch("", Varbits.FARMING_4775, PatchImplementation.COMPOST)
 		)
 		{
@@ -168,8 +184,11 @@ class FarmingWorld
 
 		add(new FarmingRegion("Fossil Island", 14651, false,
 			new FarmingPatch("East", Varbits.FARMING_4771, PatchImplementation.HARDWOOD_TREE, NpcID.SQUIRREL_7754),
+			new FarmingPatch("East", Varbits.FARMING_4771, PatchImplementation.SKILLER_HARDWOOD_TREE, NpcID.SQUIRREL_7754),
 			new FarmingPatch("Middle", Varbits.FARMING_4772, PatchImplementation.HARDWOOD_TREE, NpcID.SQUIRREL_7755),
-			new FarmingPatch("West", Varbits.FARMING_4773, PatchImplementation.HARDWOOD_TREE, NpcID.SQUIRREL_7756)
+			new FarmingPatch("Middle", Varbits.FARMING_4772, PatchImplementation.SKILLER_HARDWOOD_TREE, NpcID.SQUIRREL_7755),
+			new FarmingPatch("West", Varbits.FARMING_4773, PatchImplementation.HARDWOOD_TREE, NpcID.SQUIRREL_7756),
+			new FarmingPatch("West", Varbits.FARMING_4773, PatchImplementation.SKILLER_HARDWOOD_TREE, NpcID.SQUIRREL_7756)
 		)
 		{
 			@Override
@@ -211,9 +230,13 @@ class FarmingWorld
 
 		add(new FarmingRegion("Kourend", 6967, false,
 			new FarmingPatch("North East", Varbits.FARMING_4771, PatchImplementation.ALLOTMENT, NpcID.MARISI, 0),
+			new FarmingPatch("North East", Varbits.FARMING_4771, PatchImplementation.SKILLER_ALLOTMENT, NpcID.MARISI, 0),
 			new FarmingPatch("South West", Varbits.FARMING_4772, PatchImplementation.ALLOTMENT, NpcID.MARISI, 1),
+			new FarmingPatch("South West", Varbits.FARMING_4772, PatchImplementation.SKILLER_ALLOTMENT, NpcID.MARISI, 1),
 			new FarmingPatch("", Varbits.FARMING_4773, PatchImplementation.FLOWER),
+			new FarmingPatch("", Varbits.FARMING_4773, PatchImplementation.SKILLER_FLOWER),
 			new FarmingPatch("", Varbits.FARMING_4774, PatchImplementation.HERB),
+			new FarmingPatch("", Varbits.FARMING_4774, PatchImplementation.SKILLER_HERB),
 			new FarmingPatch("", Varbits.FARMING_4775, PatchImplementation.COMPOST),
 			new FarmingPatch("", Varbits.FARMING_7904, PatchImplementation.SPIRIT_TREE, NpcID.LAMMY_LANGLE)
 		), 6711);
@@ -266,7 +289,8 @@ class FarmingWorld
 		}, 12083);
 
 		add(new FarmingRegion("Rimmington", 11570, false,
-			new FarmingPatch("", Varbits.FARMING_4771, PatchImplementation.BUSH, NpcID.TARIA)
+			new FarmingPatch("", Varbits.FARMING_4771, PatchImplementation.BUSH, NpcID.TARIA),
+			new FarmingPatch("", Varbits.FARMING_4771, PatchImplementation.SKILLER_BUSH, NpcID.TARIA)
 		), 11826);
 
 		add(new FarmingRegion("Seers' Village", 10551, false,
@@ -309,17 +333,25 @@ class FarmingWorld
 		add(farmingGuildRegion = new FarmingRegion("Farming Guild", 4922, true,
 			new FarmingPatch("", Varbits.FARMING_7905, PatchImplementation.TREE, NpcID.ROSIE),
 			new FarmingPatch("", Varbits.FARMING_4775, PatchImplementation.HERB),
+			new FarmingPatch("", Varbits.FARMING_4775, PatchImplementation.SKILLER_HERB),
 			new FarmingPatch("", Varbits.FARMING_4772, PatchImplementation.BUSH, NpcID.ALAN, 3),
+			new FarmingPatch("", Varbits.FARMING_4772, PatchImplementation.SKILLER_BUSH, NpcID.ALAN, 3),
 			new FarmingPatch("", Varbits.FARMING_7906, PatchImplementation.FLOWER),
+			new FarmingPatch("", Varbits.FARMING_7906, PatchImplementation.SKILLER_FLOWER),
 			new FarmingPatch("North", Varbits.FARMING_4773, PatchImplementation.ALLOTMENT, NpcID.ALAN, 1),
+			new FarmingPatch("North", Varbits.FARMING_4773, PatchImplementation.SKILLER_ALLOTMENT, NpcID.ALAN, 1),
 			new FarmingPatch("South", Varbits.FARMING_4774, PatchImplementation.ALLOTMENT, NpcID.ALAN, 2),
+			new FarmingPatch("South", Varbits.FARMING_4774, PatchImplementation.SKILLER_ALLOTMENT, NpcID.ALAN, 2),
 			new FarmingPatch("", Varbits.FARMING_7912, PatchImplementation.BIG_COMPOST),
+			new FarmingPatch("", Varbits.FARMING_7912, PatchImplementation.SKILLER_BIG_COMPOST),
 			new FarmingPatch("", Varbits.FARMING_7904, PatchImplementation.CACTUS, NpcID.ALAN, 0),
+			new FarmingPatch("", Varbits.FARMING_7904, PatchImplementation.SKILLER_CACTUS, NpcID.ALAN, 0),
 			new FarmingPatch("", Varbits.FARMING_4771, PatchImplementation.SPIRIT_TREE, NpcID.LATLINK_FASTBELL),
 			new FarmingPatch("", Varbits.FARMING_7909, PatchImplementation.FRUIT_TREE, NpcID.NIKKIE),
 			new FarmingPatch("Anima", Varbits.FARMING_7911, PatchImplementation.ANIMA),
 			new FarmingPatch("", Varbits.FARMING_7910, PatchImplementation.CELASTRUS, NpcID.TAYLOR),
-			new FarmingPatch("", Varbits.FARMING_7907, PatchImplementation.REDWOOD, NpcID.ALEXANDRA)
+			new FarmingPatch("", Varbits.FARMING_7907, PatchImplementation.REDWOOD, NpcID.ALEXANDRA),
+			new FarmingPatch("", Varbits.FARMING_7907, PatchImplementation.SKILLER_REDWOOD, NpcID.ALEXANDRA)
 		), 5177, 5178, 5179, 4921, 4923, 4665, 4666, 4667);
 
 		//All of Prifddinas, and all of Prifddinas Underground
