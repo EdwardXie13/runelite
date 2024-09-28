@@ -49,7 +49,6 @@ public enum Tab
 	SKILLER_IRON_TAB("Skiller Iron Tab", ItemID.IRON_MED_HELM);
 
 	public static final Tab[] FARMING_TABS = {HERB, TREE, FRUIT_TREE, SPECIAL, FLOWER, ALLOTMENT, BUSH, GRAPE, HOPS};
-	public static final Tab[] SKILLER_TABS = {HERB, SPECIAL, FLOWER, ALLOTMENT, BUSH};
 
 	private final String name;
 	private final int itemID;

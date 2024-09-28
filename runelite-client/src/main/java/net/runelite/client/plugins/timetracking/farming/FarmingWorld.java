@@ -134,9 +134,13 @@ class FarmingWorld
 
 		add(new FarmingRegion("Civitas illa Fortis", 6192, false,
 			new FarmingPatch("North", Varbits.FARMING_4771, PatchImplementation.ALLOTMENT, NpcID.HARMINIA, 0),
+			new FarmingPatch("North", Varbits.FARMING_4771, PatchImplementation.SKILLER_ALLOTMENT, NpcID.HARMINIA, 0),
 			new FarmingPatch("South", Varbits.FARMING_4772, PatchImplementation.ALLOTMENT, NpcID.HARMINIA, 1),
+			new FarmingPatch("South", Varbits.FARMING_4772, PatchImplementation.SKILLER_ALLOTMENT, NpcID.HARMINIA, 1),
 			new FarmingPatch("", Varbits.FARMING_4773, PatchImplementation.FLOWER),
+			new FarmingPatch("", Varbits.FARMING_4773, PatchImplementation.SKILLER_FLOWER),
 			new FarmingPatch("", Varbits.FARMING_4774, PatchImplementation.HERB),
+			new FarmingPatch("", Varbits.FARMING_4774, PatchImplementation.SKILLER_HERB),
 			new FarmingPatch("", Varbits.FARMING_4775, PatchImplementation.COMPOST)
 		), 6447, 6448, 6449, 6191, 6193);
 
