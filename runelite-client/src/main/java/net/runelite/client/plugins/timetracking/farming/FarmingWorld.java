@@ -72,6 +72,10 @@ class FarmingWorld
 			new FarmingPatch("", Varbits.FARMING_4771, PatchImplementation.SKILLER_CACTUS, NpcID.AYESHA)
 		), 13362, 13105);
 
+		add(new FarmingRegion("Aldarin", 5421, false,
+			new FarmingPatch("", Varbits.FARMING_4771, PatchImplementation.HOPS, NpcID.ERCOS)
+		), 5165, 5166, 5422, 5677, 5678);
+
 		add(new FarmingRegion("Ardougne", 10290, false,
 			new FarmingPatch("", Varbits.FARMING_4771, PatchImplementation.BUSH, NpcID.TORRELL),
 			new FarmingPatch("", Varbits.FARMING_4771, PatchImplementation.SKILLER_BUSH, NpcID.TORRELL)
