@@ -4,18 +4,18 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public enum Potion {
-	MAMMOTH("Mammoth-might mix", PotionComponent.MOX, PotionComponent.MOX, PotionComponent.MOX, 1, 60, 135),
-	MYSTIC("Mystic mana amalgam", PotionComponent.MOX, PotionComponent.MOX, PotionComponent.AGA, 2, 60, 175),
-	MARLEY("Marley's moonlight", PotionComponent.MOX, PotionComponent.MOX, PotionComponent.LYE, 3, 60, 215),
-	MIXALOT("Mixalot", PotionComponent.MOX, PotionComponent.AGA, PotionComponent.LYE, 10, 64, 255),
+	MAMMOTH("Mammoth-might mix", PotionComponent.MOX, PotionComponent.MOX, PotionComponent.MOX, 1, 60, 190),
+	MYSTIC("Mystic mana amalgam", PotionComponent.MOX, PotionComponent.MOX, PotionComponent.AGA, 2, 63, 215),
+	MARLEY("Marley's moonlight", PotionComponent.MOX, PotionComponent.MOX, PotionComponent.LYE, 3, 66, 240),
+	MIXALOT("Mixalot", PotionComponent.MOX, PotionComponent.AGA, PotionComponent.LYE, 10, 81, 365),
 
-	ALCO("Alco-augmentator", PotionComponent.AGA, PotionComponent.AGA, PotionComponent.AGA, 4, 76, 255),
-	AZURE("Azure aura mix", PotionComponent.AGA, PotionComponent.AGA, PotionComponent.MOX, 5, 68, 215),
-	AQUA("Aqualux amalgam", PotionComponent.AGA, PotionComponent.AGA, PotionComponent.LYE, 6, 72, 295),
+	ALCO("Alco-augmentator", PotionComponent.AGA, PotionComponent.AGA, PotionComponent.AGA, 4, 60, 190),
+	AZURE("Azure aura mix", PotionComponent.AGA, PotionComponent.AGA, PotionComponent.MOX, 5, 69, 265),
+	AQUA("Aqualux amalgam", PotionComponent.AGA, PotionComponent.AGA, PotionComponent.LYE, 6, 72, 290),
 
-	LIPLACK("Liplack liquor", PotionComponent.LYE, PotionComponent.LYE, PotionComponent.LYE, 7, 86, 375),
-	MEGA("Megalite liquid", PotionComponent.LYE, PotionComponent.LYE, PotionComponent.MOX, 8, 80, 295),
-	ANTI("Anti-leech lotion", PotionComponent.LYE, PotionComponent.LYE, PotionComponent.AGA, 9, 84, 335),
+	LIPLACK("Liplack liquor", PotionComponent.LYE, PotionComponent.LYE, PotionComponent.LYE, 7, 60, 190),
+	MEGA("Megalite liquid", PotionComponent.LYE, PotionComponent.LYE, PotionComponent.MOX, 8, 75, 315),
+	ANTI("Anti-leech lotion", PotionComponent.LYE, PotionComponent.LYE, PotionComponent.AGA, 9, 78, 340),
 
 	NONE("", PotionComponent.NONE, PotionComponent.NONE, PotionComponent.NONE, 0, 0, 0),
 	;
