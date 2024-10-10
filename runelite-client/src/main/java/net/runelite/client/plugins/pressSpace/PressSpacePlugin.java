@@ -18,6 +18,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import javax.inject.Inject;
 import java.awt.Robot;
 import java.awt.event.KeyEvent;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -84,6 +85,7 @@ public class PressSpacePlugin extends Plugin {
         closeBank();
         craftBox();
         smithingDarts();
+        smeltingSilverBolts();
     }
 
     @Subscribe
@@ -100,6 +102,13 @@ public class PressSpacePlugin extends Plugin {
             if(dartBox != null && Objects.requireNonNull(dartBox.getChildren()).length == 4) {
                 pressKey(KeyEvent.VK_SPACE);
             }
+        }
+    }
+
+    private void smeltingSilverBolts() {
+        Widget silverBoltBox = client.getWidget(393243);
+        if(silverBoltBox != null && Objects.requireNonNull(silverBoltBox.getChildren()).length == 4) {
+            pressKey(KeyEvent.VK_SPACE);
         }
     }
 
