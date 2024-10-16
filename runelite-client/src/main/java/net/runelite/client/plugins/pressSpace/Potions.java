@@ -49,7 +49,8 @@ public class Potions {
                 Set.of(Pair.of(ItemID.CHOCOLATE_BAR, 27), Pair.of(ItemID.PESTLE_AND_MORTAR, 1)),
                 Set.of(Pair.of(ItemID.BUCKET_OF_SAND, 14), Pair.of(ItemID.SODA_ASH, 14)),
                 Set.of(Pair.of(ItemID.SILVER_BAR, 26), Pair.of(ItemID.SILVER_BOLTS_UNF, 1), Pair.of(ItemID.BOLT_MOULD, 1)),
-                Set.of(Pair.of(ItemID.SILVER_BAR, 27), Pair.of(ItemID.BOLT_MOULD, 1))
+                Set.of(Pair.of(ItemID.SILVER_BAR, 27), Pair.of(ItemID.BOLT_MOULD, 1)),
+                Set.of(Pair.of(ItemID.SEAWEED, 28))
         )
     );
 }
