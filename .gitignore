@@ -13,3 +13,4 @@ project.properties
 *.txt
 .DS_Store
 *.env
+env.json
