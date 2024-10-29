@@ -19,11 +19,7 @@ import javax.inject.Inject;
 import java.awt.Robot;
 import java.awt.event.KeyEvent;
 import java.sql.SQLOutput;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @PluginDescriptor(
         name = "Press Space",
@@ -75,6 +71,8 @@ public class PressSpacePlugin extends Plugin {
         ItemID.SNAPDRAGON
     );
 
+    List<Integer> cakeIngredients = new ArrayList<>(Arrays.asList(ItemID.BUCKET_OF_MILK, ItemID.POT_OF_FLOUR, ItemID.EGG));
+
     @Provides
     PressSpaceConfig provideConfig(ConfigManager configManager) {
         return configManager.getConfig(PressSpaceConfig.class);
@@ -86,6 +84,7 @@ public class PressSpacePlugin extends Plugin {
         craftBox();
         smithingDarts();
         smeltingSilverBolts();
+        gatherIngredients();
     }
 
     @Subscribe
@@ -145,6 +144,12 @@ public class PressSpacePlugin extends Plugin {
         return values.stream().allMatch(Boolean::booleanValue);
     }
 
+    private int getCountItems(int item) {
+        return (int) inventoryItems.stream()
+                .filter(items -> items.getId() == item)
+                .count();
+    }
+
     private boolean countItem(int item, int count) {
         return inventoryItems.stream()
                 .filter(items -> items.getId() == item)
@@ -158,34 +163,15 @@ public class PressSpacePlugin extends Plugin {
     }
 
     private int getRecipe() {
-        if(doesInventoryContainGrimyHerbs())
-            return 2;
-        else if(doesInventoryContainCleanHerbs())
-            return 1;
-        else if(doesInventoryContainRecipe())
+        if( doesInventoryContainGrimyHerbs() ||
+            doesInventoryContainCleanHerbs() ||
+            doesInventoryContainRecipe() ||
+            containsItem(ItemID.RAW_SALMON) ||
+            containsItem(ItemID.RAW_TROUT)
+        )
             return 1;
         else if (config.glassBlowing() && countItem(ItemID.MOLTEN_GLASS, 27) && countItem(ItemID.GLASSBLOWING_PIPE, 1))
-            return 3;
-        else if (config.fireBattlestaff() && countItem(ItemID.BATTLESTAFF, 14) && countItem(ItemID.FIRE_ORB, 14))
-            return 4;
-        else if(config.cutSapphire() && countItem(ItemID.UNCUT_SAPPHIRE, 27) && containsItem(ItemID.CHISEL))
             return 6;
-        else if(config.craftDragonhide() && containsItem(ItemID.NEEDLE) && containsItem(ItemID.THREAD) &&
-                (countItem(ItemID.GREEN_DRAGON_LEATHER, 26) ||
-                        countItem(ItemID.BLUE_DRAGON_LEATHER, 26) ||
-                        countItem(ItemID.RED_DRAGON_LEATHER, 26) ||
-                        countItem(ItemID.BLACK_DRAGON_LEATHER, 26)
-        ))
-            return 7;
-        else if(config.tanDragonhide() && containsItem(ItemID.NATURE_RUNE) && containsItem(ItemID.ASTRAL_RUNE) && containsItem(ItemID.JUG) &&
-                (countItem(ItemID.GREEN_DRAGONHIDE, 25) ||
-                        countItem(ItemID.BLUE_DRAGONHIDE, 25) ||
-                        countItem(ItemID.RED_DRAGONHIDE, 25) ||
-                        countItem(ItemID.BLACK_DRAGONHIDE, 25)
-        ))
-            return 7;
-        else if(containsItem(ItemID.COINS_995) && countItem(ItemID.TEAK_LOGS, 27))
-            return 8;
         else
             return 0;
     }
@@ -203,14 +189,45 @@ public class PressSpacePlugin extends Plugin {
             if(client.getLocalPlayer().getWorldLocation().getRegionID() == 7757)
                 pressKey(KeyEvent.VK_SPACE);
             if(recipe == 0) return;
-            if (recipe == Recipe.BlowGlass.getId() && getWidget()) {
+
+            if (recipe == 6 && getWidget()) {
                 pressOtherKey(KeyEvent.VK_6);
-            } else if(recipe == Recipe.Dragonhide.getId()) {
-                pressOtherKey(KeyEvent.VK_1);
             } else {
                 pressKey(KeyEvent.VK_SPACE);
             }
         }
+    }
+
+    private void gatherIngredients() {
+        Widget chatBox = client.getWidget(14352385);
+        if (chatBox != null) {
+            Widget[] chatBoxChildren = chatBox.getChildren();
+            if(chatBoxChildren != null && Arrays.stream(chatBoxChildren).findAny().isPresent()) {
+                // Cake Items
+                if(containsItem(ItemID.CAKE_TIN)) {
+                    Integer leastcakeIngredients = checkCakeIngredients();
+                    if (leastcakeIngredients.intValue() == 1927) // milk
+                        pressOtherKey(KeyEvent.VK_2);
+                    else if (leastcakeIngredients.intValue() == 1944) // egg
+                        pressOtherKey(KeyEvent.VK_3);
+                    else if (leastcakeIngredients.intValue() == 1933) // flour
+                        pressOtherKey(KeyEvent.VK_4);
+
+                }
+            }
+        }
+    }
+
+    private Integer checkCakeIngredients() {
+        Map<Integer, Integer> ingredientCounts = new HashMap<>();
+
+        // Populate the map with item counts
+        cakeIngredients.forEach(item -> {
+            int count = getCountItems(item);
+            ingredientCounts.put(item, count);
+        });
+
+        return Collections.min(ingredientCounts.entrySet(), Map.Entry.comparingByValue()).getKey();
     }
 
     private boolean isBankOpen() {
