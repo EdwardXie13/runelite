@@ -168,9 +168,15 @@ public class PressSpacePlugin extends Plugin {
             doesInventoryContainRecipe() ||
             containsItem(ItemID.RAW_SALMON) ||
             containsItem(ItemID.RAW_TROUT)
-        )
+        ) {
             return 1;
-        else if (config.glassBlowing() && countItem(ItemID.MOLTEN_GLASS, 27) && countItem(ItemID.GLASSBLOWING_PIPE, 1))
+        }
+        // return -1 for not close bank but only press space
+        else if(
+                (containsItem(ItemID.ARROW_SHAFT) && containsItem(ItemID.FEATHER))
+        ) {
+            return -1;
+        } else if (config.glassBlowing() && countItem(ItemID.MOLTEN_GLASS, 27) && countItem(ItemID.GLASSBLOWING_PIPE, 1))
             return 6;
         else
             return 0;
@@ -178,7 +184,7 @@ public class PressSpacePlugin extends Plugin {
 
     private void closeBank() {
         recipe = getRecipe();
-        if (isBankOpen() && recipe != 0)
+        if (isBankOpen() && recipe > 0)
             pressKey(KeyEvent.VK_ESCAPE);
     }
 
