@@ -31,19 +31,20 @@ public class LeftClickBuyRFD extends Plugin {
 
     @Subscribe
     public void onGameTick(GameTick event) {
-        if (isBankOpen() &&
-            getCountInventoryItems() == 1 &&
-            containsItem(ItemID.COINS_995)) {
-            pressKey(KeyEvent.VK_ESCAPE);
-        }
-        else if (isRFDChestOpen() &&
-                ((  getWidgetCount(19660816, 1) == 0 &&
-                    getWidgetCount(19660816, 5) == 0) ||
-                getCountInventoryItems() == 28)) {
-            pressKey(KeyEvent.VK_ESCAPE);
+        if(Objects.equals(client.getLocalPlayer().getWorldLocation(), new WorldPoint(3218, 9623, 0))) {
+            if (isBankOpen() &&
+                    getCountInventoryItems() == 1 &&
+                    containsItem(ItemID.COINS_995)) {
+                pressKey(KeyEvent.VK_ESCAPE);
+            } else if (isRFDChestOpen() &&
+                    ((getWidgetCount(19660816, 1) == 0 &&
+                            getWidgetCount(19660816, 5) == 0) ||
+                            getCountInventoryItems() == 28)) {
+                pressKey(KeyEvent.VK_ESCAPE);
 
-            if(chocolateBarCount == 0 && grapeCount == 0)
-                quickHop();
+                if (chocolateBarCount == 0 && grapeCount == 0)
+                    quickHop();
+            }
         }
     }
 
@@ -66,7 +67,7 @@ public class LeftClickBuyRFD extends Plugin {
     public void swapMenus() {
         MenuEntry entry = client.getMenuEntries()[client.getMenuEntries().length - 1];
         String target = entry.getTarget();
-        if(target != null && target.contains("Chest")) {
+        if(target != null && target.contains("Chest") && containsItem(ItemID.COINS_995)) {
             if(getCountInventoryItems() == 28) {
                 swapBank();
             } else if(getCountInventoryItems() < 28) {

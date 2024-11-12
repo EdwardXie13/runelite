@@ -173,7 +173,8 @@ public class PressSpacePlugin extends Plugin {
         }
         // return -1 for not close bank but only press space
         else if(
-                (containsItem(ItemID.ARROW_SHAFT) && containsItem(ItemID.FEATHER))
+                (containsItem(ItemID.ARROW_SHAFT) && containsItem(ItemID.FEATHER)) ||
+                (containsItem(ItemID.SILVER_BOLTS_UNF) && containsItem(ItemID.FEATHER))
         ) {
             return -1;
         } else if (config.glassBlowing() && countItem(ItemID.MOLTEN_GLASS, 27) && countItem(ItemID.GLASSBLOWING_PIPE, 1))
