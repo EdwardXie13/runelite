@@ -85,6 +85,7 @@ public class PressSpacePlugin extends Plugin {
         smithingDarts();
         smeltingSilverBolts();
         gatherIngredients();
+        bountyHunterWorldHop();
     }
 
     @Subscribe
@@ -107,6 +108,13 @@ public class PressSpacePlugin extends Plugin {
     private void smeltingSilverBolts() {
         Widget silverBoltBox = client.getWidget(393243);
         if(silverBoltBox != null && Objects.requireNonNull(silverBoltBox.getChildren()).length == 4) {
+            pressKey(KeyEvent.VK_SPACE);
+        }
+    }
+
+    private void bountyHunterWorldHop() {
+        Widget dialogBox = client.getWidget(12648450);
+        if(dialogBox != null && dialogBox.getText().contains("Bounty Hunter")) {
             pressKey(KeyEvent.VK_SPACE);
         }
     }
