@@ -46,7 +46,7 @@ public class ProgressBarComponent implements LayoutableRenderableEntity
 		BOTH
 	}
 
-	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.0");
+	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.00");
 	private static final DecimalFormat DECIMAL_FORMAT_ABS = new DecimalFormat("#0");
 
 	private static final int SIDE_LABEL_OFFSET = 4;
