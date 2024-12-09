@@ -107,7 +107,7 @@ public class SeedLoggerPlugin extends Plugin {
         Map<String, Map<String, Object>> seedData = new LinkedHashMap<>();
 
         // Populate the LinkedHashMap with default values in the desired order
-        List<String> orderedKeys = List.of("guam", "harralander", "ranarr", "toadflax", "irit",
+        List<String> orderedKeys = List.of("skillExperience", "guam", "harralander", "ranarr", "toadflax", "irit",
                 "avantoe", "kwuarm", "snapdragon", "cadantine", "lantadyme", "torstol");
         for (String key : orderedKeys) {
             seedData.put(key, createDefaultSeedData(key));
@@ -145,6 +145,16 @@ public class SeedLoggerPlugin extends Plugin {
                 }
             }
         }
+
+        // Add skill experience to the output
+        Map<String, Integer> skillExperience = new LinkedHashMap<>();
+        skillExperience.put("herbloreXp", client.getSkillExperience(Skill.HERBLORE));
+        skillExperience.put("thievingXp", client.getSkillExperience(Skill.THIEVING));
+        skillExperience.put("farmingXp", client.getSkillExperience(Skill.FARMING));
+
+        // Add skill experience to the JSON output
+        seedData.put("skillExperience", new LinkedHashMap<>());
+        skillExperience.forEach((key, value) -> seedData.get("skillExperience").put(key, value));
 
         writeDataToJson(seedData);
     }
