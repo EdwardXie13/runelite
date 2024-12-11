@@ -244,51 +244,63 @@ public class SeedLoggerPlugin extends Plugin {
         switch (seedName) {
             case "guam":
                 data.put("seedRate", 0.0148809523809524);
-                data.put("xp", 25.0);
+                data.put("potXp", 25.0);
+                data.put("herbXp", 11.0);
                 break;
             case "harralander":
                 data.put("seedRate", 0.004854368932);
-                data.put("xp", 67.5);
+                data.put("potXp", 67.5);
+                data.put("herbXp", 21.5);
                 break;
             case "ranarr":
                 data.put("seedRate", 0.0037209302325581);
-                data.put("xp", 87.5);
+                data.put("potXp", 87.5);
+                data.put("herbXp", 27.0);
                 break;
             case "toadflax":
                 data.put("seedRate", 0.002257336343);
-                data.put("xp", 180.0);
+                data.put("potXp", 180.0);
+                data.put("herbXp", 34.0);
                 break;
             case "irit":
                 data.put("seedRate", 0.00153609831);
-                data.put("xp", 100.0);
+                data.put("potXp", 100.0);
+                data.put("herbXp", 43.0);
                 break;
             case "avantoe":
                 data.put("seedRate", 0.001055966209);
-                data.put("xp", 112.5);
+                data.put("potXp", 112.5);
+                data.put("herbXp", 54.5);
                 break;
             case "kwuarm":
                 data.put("seedRate", 0.0007199424046);
-                data.put("xp", 125.0);
+                data.put("potXp", 125.0);
+                data.put("herbXp", 69.0);
                 break;
             case "snapdragon":
                 data.put("seedRate", 0.0005392579810181191);
-                data.put("xp", 142.5);
+                data.put("potXp", 142.5);
+                data.put("herbXp", 87.5);
                 break;
             case "cadantine":
                 data.put("seedRate", 0.0003360215054);
-                data.put("xp", 150.0);
+                data.put("potXp", 150.0);
+                data.put("herbXp", 106.5);
                 break;
             case "lantadyme":
                 data.put("seedRate", 0.0002399808015);
-                data.put("xp", 172.5);
+                data.put("potXp", 172.5);
+                data.put("herbXp", 134.5);
                 break;
             case "torstol":
                 data.put("seedRate", 0.0001078518288);
-                data.put("xp", 175.0);
+                data.put("potXp", 175.0);
+                data.put("herbXp", 199.5);
                 break;
             default:
                 data.put("seedRate", 0.0);
-                data.put("xp", 0.0);
+                data.put("potXp", 0.0);
+                data.put("herbXp", 0.0);
                 break;
         }
         data.put("currentSeeds", 0);
