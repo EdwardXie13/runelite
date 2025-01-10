@@ -1,342 +1,434 @@
 package net.runelite.client.plugins.itemchargesimproved;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.gson.Gson;
 import com.google.inject.Provides;
-import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
-import net.runelite.api.GameState;
-import net.runelite.api.InventoryID;
-import net.runelite.api.ItemContainer;
-import net.runelite.api.events.AnimationChanged;
-import net.runelite.api.events.ChatMessage;
-import net.runelite.api.events.GameTick;
-import net.runelite.api.events.GraphicChanged;
-import net.runelite.api.events.HitsplatApplied;
-import net.runelite.api.events.ItemContainerChanged;
-import net.runelite.api.events.MenuOptionClicked;
-import net.runelite.api.events.VarbitChanged;
-import net.runelite.api.events.WidgetLoaded;
+import net.runelite.api.*;
+import net.runelite.api.events.*;
+import net.runelite.api.widgets.Widget;
 import net.runelite.client.Notifier;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.chat.ChatMessageManager;
+import net.runelite.client.chat.QueuedMessage;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.input.*;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsAhrimsHood;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsAhrimsRobeskirt;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsAhrimsRobetop;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsAhrimsStaff;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsDharoksGreataxe;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsDharoksHelm;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsDharoksPlatebody;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsDharoksPlatelegs;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsGuthansChainskirt;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsGuthansHelm;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsGuthansPlatebody;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsGuthansWarspear;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsKarilsCoif;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsKarilsCrossbow;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsKarilsLeatherskirt;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsKarilsLeathertop;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsToragsHammers;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsToragsHelm;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsToragsPlatebody;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsToragsPlatelegs;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsVeracsBrassard;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsVeracsFlail;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsVeracsHelm;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.BarrowsVeracsPlateskirt;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.C_Coffin;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.H_CircletOfWater;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.J_BraceletOfClay;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.J_BraceletOfExpeditious;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.J_BraceletOfFlamtaer;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.J_BraceletOfSlaughter;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.J_Camulet;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.J_CelestialRing;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.J_RingOfRecoil;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.J_RingOfSuffering;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.J_SlayerRing;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.J_XericsTalisman;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.S_Chronicle;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.S_CrystalShield;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.S_DragonfireShield;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.S_FaladorShield;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.S_KharedstMemoirs;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.U_AshSanctifier;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.U_BoneCrusher;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.U_BottomlessCompostBucket;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.U_FishBarrel;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.U_GricollersCan;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.U_OgreBellows;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.U_SoulBearer;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.U_TeleportCrystal;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.U_Waterskin;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.W_Arclight;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.W_BryophytasStaff;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.W_IbansStaff;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.W_PharaohsSceptre;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.W_SanguinestiStaff;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.W_SkullSceptre;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.W_ToxicStaffOfTheDead;
-import net.runelite.client.plugins.itemchargesimproved.infoboxes.W_TridentOfTheSeas;
 import net.runelite.client.ui.overlay.OverlayManager;
+import net.runelite.client.ui.overlay.infobox.InfoBox;
 import net.runelite.client.ui.overlay.infobox.InfoBoxManager;
+import net.runelite.client.ui.overlay.tooltip.TooltipManager;
+import net.runelite.client.plugins.itemchargesimproved.item.ChargedItemBase;
+import net.runelite.client.plugins.itemchargesimproved.item.overlays.ChargedItemInfobox;
+import net.runelite.client.plugins.itemchargesimproved.item.overlays.ChargedItemOverlay;
+import net.runelite.client.plugins.itemchargesimproved.items.*;
+import net.runelite.client.plugins.itemchargesimproved.items.barrows.*;
+import net.runelite.client.plugins.itemchargesimproved.store.AdvancedMenuEntry;
+import net.runelite.client.plugins.itemchargesimproved.store.Store;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
+import java.util.*;
 
-@Slf4j
 @PluginDescriptor(
 	name = "Item Charges Improved",
 	description = "Show charges of various items",
 	tags = {
 		"charges",
 		"barrows",
+		"crystal",
+		"ardougne",
+		"coffing",
+		"magic",
+		"cape",
+		"circlet",
 		"bracelet",
+		"clay",
+		"expeditious",
+		"flamtaer",
+		"slaughter",
+		"camulet",
+		"celestial",
 		"ring",
+		"escape",
+		"recoil",
+		"shadow",
+		"suffering",
+		"slayer",
 		"xeric",
 		"talisman",
-		"book",
 		"chronicle",
-		"shield",
+		"dragonfire",
+		"falador",
+		"kharedst",
+		"memoirs",
 		"ash",
+		"sanctifier",
 		"bone",
+		"crusher",
 		"bottomless",
+		"compost",
 		"bucket",
+		"coal",
+		"bag",
 		"fish",
+		"barrel",
+		"fungicide",
+		"spray",
+		"gem",
 		"gricoller",
 		"can",
+		"herb",
+		"sack",
+		"log",
+		"basket",
+		"ogre",
+		"bellows",
+		"seed",
+		"box",
 		"soul",
+		"bearer",
+		"teleport",
+		"waterskin",
 		"arclight",
 		"bryophyta",
 		"staff",
+		"bow",
+		"halberd",
 		"iban",
 		"pharaoh",
 		"sceptre",
-		"skull",
 		"sanguinesti",
+		"skull",
 		"trident",
-		"dragonfire",
-		"circlet",
-		"camulet"
+		"sea",
+		"toxic",
+		"jar",
+		"tome",
+		"fur",
+		"meat",
+		"pouch",
+		"pursuit",
+		"book",
+		"scroll"
 	}
 )
-public class ChargesImprovedPlugin extends Plugin {
-	private final int VARBIT_MINUTES = 8354;
 
-	public static final int CHARGES_UNKNOWN = -1;
-	public static final int CHARGES_UNLIMITED = -2;
+public class ChargesImprovedPlugin extends Plugin implements KeyListener, MouseListener, MouseWheelListener {
+	private final int VARBIT_MINUTES = 8354;
 
 	@Inject
 	private Client client;
 
 	@Inject
-	private ClientThread client_thread;
+	private ClientThread clientThread;
 
 	@Inject
-	private ItemManager items;
+	private ItemManager itemManager;
 
 	@Inject
-	private ConfigManager configs;
+	private ConfigManager configManager;
 
 	@Inject
-	private InfoBoxManager infoboxes;
+	private InfoBoxManager infoBoxManager;
 
 	@Inject
-	private OverlayManager overlays;
+	private OverlayManager overlayManager;
 
 	@Inject
 	private ChargesImprovedConfig config;
 
 	@Inject
-	private ChatMessageManager chat_messages;
+	private ChatMessageManager chatMessageManager;
+
+	@Inject
+	private TooltipManager tooltipManager;
+
+	@Inject
+	private KeyManager keyManager;
+
+	@Inject
+	private MouseManager mouseManager;
 
 	@Inject
 	private Notifier notifier;
+	
+	@Inject
+	private Gson gson;
 
 	@Provides
 	ChargesImprovedConfig provideConfig(ConfigManager configManager) {
 		return configManager.getConfig(ChargesImprovedConfig.class);
 	}
 
-	private ChargedItemsOverlay overlay_charged_items;
+	private Store store;
 
-	private ChargedItemInfoBox[] infoboxes_charged_items;
+	private ChargedItemOverlay overlayChargedItems;
+
+	private ChargedItemBase[] chargedItems;
+	private List<InfoBox> chargedItemsInfoboxes = new ArrayList<>();
 
 	private final ZoneId timezone = ZoneId.of("Europe/London");
-	private String date = LocalDateTime.now(timezone).format(DateTimeFormatter.ISO_LOCAL_DATE);
 
 	@Override
 	protected void startUp() {
-		infoboxes_charged_items = new ChargedItemInfoBox[]{
+		keyManager.registerKeyListener(this);
+		mouseManager.registerMouseListener(this);
+		mouseManager.registerMouseWheelListener(this);
+		configMigration();
+
+		store = new Store(client, itemManager, configManager);
+
+		chargedItems = new ChargedItemBase[]{
 			// Weapons
-			new W_Arclight(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new W_TridentOfTheSeas(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new W_SkullSceptre(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new W_IbansStaff(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new W_PharaohsSceptre(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new W_BryophytasStaff(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new W_SanguinestiStaff(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new W_ToxicStaffOfTheDead(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
+			new W_Arclight(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new W_BowOfFaerdhinen(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new W_BryophytasStaff(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new W_CrystalBow(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new W_CrystalHalberd(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new W_EnchantedLyre(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new W_IbansStaff(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new W_PharaohsSceptre(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new W_SanguinestiStaff(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new W_SkullSceptre(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new W_SlayerStaffE(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new W_TridentOfTheSeas(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new W_VenatorBow(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new W_WarpedSceptre(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new W_WesternBanner(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
 
 			// Shields
-			new S_KharedstMemoirs(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new S_Chronicle(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new S_CrystalShield(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new S_FaladorShield(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new S_DragonfireShield(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
+			new S_Chronicle(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new S_CrystalShield(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new S_DragonfireShield(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new S_FaladorShield(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new S_KharedstMemoirs(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new S_TomeOfFire(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new S_TomeOfWater(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
 
-			// Jewellery
-			new J_BraceletOfClay(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new J_BraceletOfExpeditious(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new J_BraceletOfFlamtaer(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new J_BraceletOfSlaughter(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new J_CelestialRing(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new J_RingOfRecoil(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new J_RingOfSuffering(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new J_SlayerRing(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new J_XericsTalisman(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new J_Camulet(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
+			// Boots
+			new B_FremennikSeaBoots(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
 
 			// Helms
-			new H_CircletOfWater(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
+			new H_CircletOfWater(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new H_KandarinHeadgear(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
 
 			// Capes
-			new C_Coffin(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
+			new C_ArdougneCloak(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new C_Coffin(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new C_ForestryKit(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new C_MagicCape(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+
+			// Jewellery
+			new J_BindingNecklace(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_BraceletOfClay(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_BraceletOfExpeditious(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_BraceletOfFlamtaer(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_BraceletOfSlaughter(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_Camulet(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_DesertAmulet(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_DigsitePendant(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_EscapeCrystal(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_NecklaceOfPassage(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_NecklaceOfPhoenix(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_NecklaceOfDodgy(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_PendantOfAtes(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_RingOfCelestial(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_RingOfDueling(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_RingOfElements(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_RingOfExplorer(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_RingOfPursuit(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_RingOfRecoil(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_RingOfShadows(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_RingOfSlayer(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_RingOfSuffering(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new J_XericsTalisman(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
 
 			// Utilities
-			new U_AshSanctifier(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new U_BoneCrusher(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new U_BottomlessCompostBucket(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new U_FishBarrel(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new U_GricollersCan(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new U_SoulBearer(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new U_TeleportCrystal(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new U_Waterskin(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new U_OgreBellows(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
+			new U_AshSanctifier(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_BoneCrusher(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_BottomlessCompostBucket(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_CoalBag(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_CrystalSaw(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_ColossalPouch(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_FishBarrel(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_FungicideSpray(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_FurPouch(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_GemBag(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_GricollersCan(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_HerbSack(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_HuntsmansKit(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_JarGenerator(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_LogBasket(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_MasterScrollBook(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_MeatPouch(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_OgreBellows(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_QuetzalWhistle(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_PlankSack(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_SeedBox(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_SoulBearer(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_StrangeOldLockpick(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_TackleBox(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_TeleportCrystal(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new U_Waterskin(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
 
-			new BarrowsAhrimsHood(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new BarrowsAhrimsRobetop(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new BarrowsAhrimsRobeskirt(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new BarrowsAhrimsStaff(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
+			// Foods
+			new F_BlackWarlockMix(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new F_MoonlightMothMix(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new F_RubyHarvestMix(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new F_SapphireGlacialisMix(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new F_SnowyKnightMix(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new F_SunlightMothMix(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
 
-			new BarrowsDharoksHelm(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new BarrowsDharoksPlatebody(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new BarrowsDharoksPlatelegs(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new BarrowsDharoksGreataxe(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
 
-			new BarrowsGuthansHelm(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new BarrowsGuthansPlatebody(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new BarrowsGuthansChainskirt(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new BarrowsGuthansWarspear(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
+			// Crystal armor set
+			new A_CrystalBody(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new A_CrystalHelm(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new A_CrystalLegs(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
 
-			new BarrowsKarilsCoif(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new BarrowsKarilsLeathertop(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new BarrowsKarilsLeatherskirt(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new BarrowsKarilsCrossbow(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
+			// Barrows armor sets
+			new AhrimsHood(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new AhrimsRobetop(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new AhrimsRobeskirt(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new AhrimsStaff(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
 
-			new BarrowsToragsHelm(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new BarrowsToragsPlatebody(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new BarrowsToragsPlatelegs(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new BarrowsToragsHammers(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
+			new DharoksHelm(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new DharoksPlatebody(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new DharoksPlatelegs(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new DharoksGreataxe(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
 
-			new BarrowsVeracsHelm(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new BarrowsVeracsBrassard(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new BarrowsVeracsPlateskirt(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
-			new BarrowsVeracsFlail(client, client_thread, configs, items, infoboxes, chat_messages, notifier, config, this),
+			new GuthansHelm(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new GuthansPlatebody(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new GuthansChainskirt(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new GuthansWarspear(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+
+			new KarilsCoif(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new KarilsLeathertop(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new KarilsLeatherskirt(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new KarilsCrossbow(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+
+			new ToragsHelm(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new ToragsPlatebody(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new ToragsPlatelegs(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new ToragsHammers(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+
+			new VeracsHelm(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new VeracsBrassard(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new VeracsPlateskirt(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
+			new VeracsFlail(client, clientThread, configManager, itemManager, infoBoxManager, chatMessageManager, notifier, config, store, gson),
 		};
-		overlay_charged_items = new ChargedItemsOverlay(config, infoboxes_charged_items);
 
-		overlays.add(overlay_charged_items);
-		Arrays.stream(infoboxes_charged_items).forEach(infobox -> infoboxes.addInfoBox(infobox));
+		store.setChargedItems(chargedItems);
+
+		// Items overlays.
+		overlayChargedItems = new ChargedItemOverlay(client, tooltipManager, itemManager, configManager, config, chargedItems);
+		overlayManager.add(overlayChargedItems);
+
+		// Items infoboxes.
+		chargedItemsInfoboxes.clear();
+		Arrays.stream(chargedItems).forEach(chargedItem -> chargedItemsInfoboxes.add(new ChargedItemInfobox(chargedItem, itemManager, infoBoxManager, configManager, config, this)));
+		chargedItemsInfoboxes.forEach(chargedItemInfobox -> infoBoxManager.addInfoBox(chargedItemInfobox));
 	}
 
 	@Override
 	protected void shutDown() {
-		overlays.remove(overlay_charged_items);
-		Arrays.stream(infoboxes_charged_items).forEach(infobox -> infoboxes.removeInfoBox(infobox));
-	}
+		keyManager.unregisterKeyListener(this);
+		mouseManager.unregisterMouseListener(this);
+		mouseManager.unregisterMouseWheelListener(this);
 
-	@Subscribe
-	public void onItemContainerChanged(final ItemContainerChanged event) {
-		for (final ChargedItemInfoBox infobox : this.infoboxes_charged_items) {
-			infobox.onItemContainersChanged(event);
-		}
-
-		final ItemContainer inventory = client.getItemContainer(InventoryID.INVENTORY);
-		final ItemContainer equipment = client.getItemContainer(InventoryID.EQUIPMENT);
-
-		if (inventory != null && equipment != null) {
-			// We need to know about items to show messages about resetting charges.
-			if (!config.getResetDate().equals(date)) {
-				resetCharges(date);
-			}
-		}
+		overlayManager.remove(overlayChargedItems);
+		chargedItemsInfoboxes.forEach(chargedItemInfobox -> infoBoxManager.removeInfoBox(chargedItemInfobox));
 	}
 
 	@Subscribe
 	public void onChatMessage(final ChatMessage event) {
-		Arrays.stream(infoboxes_charged_items).forEach(infobox -> infobox.onChatMessage(event));
+		store.setLastChatMessage(event);
+		Arrays.stream(chargedItems).forEach(infobox -> infobox.onChatMessage(event));
+
 //		System.out.println("MESSAGE | " +
 //			"type: " + event.getType().name() +
-//			", message: " + event.getMessage().replaceAll("</?col.*?>", "") +
+//			", message: " + getCleanChatMessage(event) +
 //			", sender: " + event.getSender()
 //		);
 	}
 
 	@Subscribe
-	public void onAnimationChanged(final AnimationChanged event) {
-		Arrays.stream(infoboxes_charged_items).forEach(infobox -> infobox.onAnimationChanged(event));
-//		if (event.getActor() == client.getLocalPlayer()) {
-//			System.out.println("ANIMATION | " +
-//				"id: " + event.getActor().getAnimation()
-//			);
+	public void onItemContainerChanged(final ItemContainerChanged event) {
+		store.onItemContainerChanged(event);
+
+		for (final ChargedItemBase infobox : chargedItems) {
+			infobox.onItemContainerChanged(event);
+		}
+
+//		String itemContainer = String.valueOf(event.getContainerId());
+//		for (final Item item : event.getItemContainer().getItems()) {
+//			itemContainer += "\r\n" +
+//				item.getId() + ": " + itemManager.getItemComposition(item.getId()).getName() +
+//				", quantity: " + item.getQuantity();
 //		}
+//		System.out.println("ITEM CONTAINER | " +
+//			itemContainer
+//		);
 	}
 
 	@Subscribe
 	public void onGraphicChanged(final GraphicChanged event) {
-		Arrays.stream(infoboxes_charged_items).forEach(infobox -> infobox.onGraphicChanged(event));
-//		if (event.getActor() == client.getLocalPlayer()) {
-//			System.out.println("GRAPHIC | " +
-//				"id: " + event.getActor().getGraphic()
-//			);
-//		}
-	}
+		if (event.getActor() != client.getLocalPlayer()) return;
 
-	@Subscribe
-	public void onConfigChanged(final ConfigChanged event) {
-		Arrays.stream(infoboxes_charged_items).forEach(infobox -> infobox.onConfigChanged(event));
-//		if (event.getGroup().equals(ChargesImprovedConfig.group)) {
-//			System.out.println("CONFIG | " +
-//				"key: " + event.getKey() +
-//				", old value: " + event.getOldValue() +
-//				", new value: " + event.getNewValue()
-//			);
-//		}
+		Arrays.stream(chargedItems).forEach(infobox -> infobox.onGraphicChanged(event));
+
+		if (config.showDebugIds()) {
+			for (final ActorSpotAnim graphic : event.getActor().getSpotAnims()) {
+				chatMessageManager.queue(QueuedMessage.builder()
+					.type(ChatMessageType.CONSOLE)
+					.runeLiteFormattedMessage("[Item Charges Improved] Graphic ID: " + graphic.getId())
+					.build()
+				);
+			}
+		}
 	}
 
 	@Subscribe
 	public void onHitsplatApplied(final HitsplatApplied event) {
-		Arrays.stream(infoboxes_charged_items).forEach(infobox -> infobox.onHitsplatApplied(event));
-		System.out.println("HITSPLAT | " +
-			"actor: " + (event.getActor() == client.getLocalPlayer() ? "self" : "enemy") +
-			", type: " + event.getHitsplat().getHitsplatType() +
-			", amount:" + event.getHitsplat().getAmount() +
-			", others = " + event.getHitsplat().isOthers() +
-			", mine = " + event.getHitsplat().isMine()
-		);
+		Arrays.stream(chargedItems).forEach(infobox -> infobox.onHitsplatApplied(event));
+
+//		System.out.println("HITSPLAT | " +
+//			"actor: " + (event.getActor() == client.getLocalPlayer() ? "self" : "enemy") +
+//			", type: " + event.getHitsplat().getHitsplatType() +
+//			", amount:" + event.getHitsplat().getAmount() +
+//			", others = " + event.getHitsplat().isOthers() +
+//			", mine = " + event.getHitsplat().isMine()
+//		);
+	}
+
+	@Subscribe
+	public void onAnimationChanged(final AnimationChanged event) {
+		if (event.getActor() != client.getLocalPlayer() || event.getActor().getAnimation() == -1) return;
+
+		Arrays.stream(chargedItems).forEach(infobox -> infobox.onAnimationChanged(event));
+
+		if (config.showDebugIds()) {
+			chatMessageManager.queue(QueuedMessage.builder()
+				.type(ChatMessageType.CONSOLE)
+				.runeLiteFormattedMessage("[Item Charges Improved] Animation ID: " + event.getActor().getAnimation())
+				.build()
+			);
+		}
 	}
 
 	@Subscribe
 	public void onWidgetLoaded(final WidgetLoaded event) {
-		Arrays.stream(infoboxes_charged_items).forEach(infobox -> infobox.onWidgetLoaded(event));
+		Arrays.stream(chargedItems).forEach(infobox -> infobox.onWidgetLoaded(event));
+
 //		System.out.println("WIDGET | " +
 //			"group: " + event.getGroupId()
 //		);
@@ -344,46 +436,261 @@ public class ChargesImprovedPlugin extends Plugin {
 
 	@Subscribe
 	public void onMenuOptionClicked(final MenuOptionClicked event) {
-		Arrays.stream(infoboxes_charged_items).forEach(infobox -> infobox.onMenuOptionClicked(event));
-//		System.out.println("OPTION | " +
-//			"option: " + event.getMenuOption() +
-//			", target: " + event.getMenuTarget() +
-//			", action name: " + event.getMenuAction().name() +
-//			", action id: " + event.getMenuAction().getId()
+		final AdvancedMenuEntry advancedMenuEntry = new AdvancedMenuEntry(event, client);
+		if (
+			advancedMenuEntry.option.equals("Use") && advancedMenuEntry.action.equals("WIDGET_TARGET") ||
+			advancedMenuEntry.action.equals("CANCEL")
+		) return;
+
+		store.onMenuOptionClicked(advancedMenuEntry);
+
+		for (final ChargedItemBase chargedItem : chargedItems) {
+			chargedItem.onMenuOptionClicked(advancedMenuEntry);
+		}
+
+//		System.out.println("MENU OPTION | " +
+//			"event id: " + advancedMenuEntry.eventId +
+//			", option: " + advancedMenuEntry.option +
+//			", target: " + advancedMenuEntry.target +
+//			", action id: " + advancedMenuEntry.actionId +
+//			", action name: " + advancedMenuEntry.action +
+//			", item id: " + advancedMenuEntry.itemId +
+//			", impostor id: " + advancedMenuEntry.impostorId
 //		);
 	}
 
 	@Subscribe
+	public void onScriptPreFired(final ScriptPreFired event) {
+		switch (event.getScriptId()) {
+			case 1004: case 2100: case 2512: case 3174: case 3350:
+			case 4029: case 4517: case 4518: case 4671: case 4716:
+			case 4721: case 4730: case 5933: case 5935: case 5939:
+				return;
+			default:
+				for (final ChargedItemBase chargedItem : chargedItems) {
+					chargedItem.onScriptPreFired(event);
+				}
+		}
+
+	}
+
+	@Subscribe
+	public void onGameStateChanged(final GameStateChanged event) {
+		if (event.getGameState() == GameState.LOGGING_IN) {
+			checkForChargesReset();
+		}
+
+		if (event.getGameState() != GameState.LOGGED_IN) return;
+	}
+
+	@Subscribe
+	public void onStatChanged(final StatChanged event) {
+//		String statChanged =
+//			event.getSkill().getName() +
+//			", level: " + event.getLevel() +
+//			", total xp: " + event.getXp();
+//
+//		if (store.getSkillXp(event.getSkill()).isPresent()) {
+//			statChanged += ", xp drop: " + (event.getXp() - store.getSkillXp(event.getSkill()).get());
+//		}
+//		System.out.println("STAT CHANGED | " +
+//			statChanged
+//		);
+
+		Arrays.stream(chargedItems).forEach(infobox -> infobox.onStatChanged(event));
+		store.onStatChanged(event);
+	}
+
+	@Subscribe
+	public void onItemDespawned(final ItemDespawned event) {
+		Arrays.stream(chargedItems).forEach(infobox -> infobox.onItemDespawned(event));
+	}
+
+	@Subscribe
 	public void onVarbitChanged(final VarbitChanged event) {
+		Arrays.stream(chargedItems).forEach(infobox -> infobox.onVarbitChanged(event));
+
 		// If server minutes are 0, it's a new day!
 		if (event.getVarbitId() == VARBIT_MINUTES && client.getGameState() == GameState.LOGGED_IN && event.getValue() == 0) {
-			final String date = LocalDateTime.now(timezone).format(DateTimeFormatter.ISO_LOCAL_DATE);
-			resetCharges(date);
+			checkForChargesReset();
 		}
+
+//		System.out.println("VARBIT CHANGED | " +
+//			"id: " + event.getVarbitId() +
+//			", value: " + event.getValue()
+//		);
+	}
+
+	@Subscribe
+	public void onMenuEntryAdded(final MenuEntryAdded event) {
+		Arrays.stream(chargedItems).forEach(infobox -> infobox.onMenuEntryAdded(event));
+
+//		if (event.getMenuEntry().getItemId() != -1) {
+//			System.out.println("MENU ENTRY ADDED | " +
+//				"item id: " + event.getMenuEntry().getItemId() +
+//				", option: " + event.getOption() +
+//				", target: " + event.getTarget()
+//			);
+//		}
 	}
 
 	@Subscribe
 	public void onGameTick(final GameTick gametick) {
-		for (final ChargedItemInfoBox infobox : this.infoboxes_charged_items) {
-			infobox.onGameTick(gametick);
+		store.onGameTick(gametick);
+	}
+
+	@Subscribe
+	public void onConfigChanged(final ConfigChanged event) {
+		if (event.getGroup().equals(ChargesImprovedConfig.group) && event.getKey().equals(ChargesImprovedConfig.debug_ids)) {
+			chatMessageManager.queue(QueuedMessage.builder()
+				.type(ChatMessageType.CONSOLE)
+				.runeLiteFormattedMessage(config.showDebugIds()
+					? "<colHIGHLIGHT>[Item Charges Improved] Debug information is now enabled."
+					: "<colHIGHLIGHT>[Item Charges Improved] Debug information is now disabled."
+				).build()
+			);
 		}
 	}
 
-	private void resetCharges(final String date) {
-		configs.setConfiguration(ChargesImprovedConfig.group, ChargesImprovedConfig.date, date);
-		Arrays.stream(infoboxes_charged_items).forEach(ChargedItemInfoBox::resetCharges);
+	private void onUserAction() {
+		Arrays.stream(chargedItems).forEach(infobox -> infobox.onUserAction());
 	}
 
-	public static String getChargesMinified(final int charges) {
-		if (charges == CHARGES_UNLIMITED) return "∞";
-		if (charges == CHARGES_UNKNOWN) return "?";
-		if (charges < 1000) return String.valueOf(charges);
-		if (charges >= 1000000) return charges / 1000000 + "M";
+	private void checkForChargesReset() {
+		final String date = LocalDateTime.now(timezone).format(DateTimeFormatter.ISO_LOCAL_DATE);
+		if (date.equals(config.getResetDate())) return;
 
-		final int thousands = charges / 1000;
-		final int hundreds = Math.min((charges % 1000 + 50) / 100, 9);
+		configManager.setConfiguration(ChargesImprovedConfig.group, ChargesImprovedConfig.date, date);
+		Arrays.stream(chargedItems).forEach(infobox -> infobox.onResetDaily());
 
-		return thousands + (thousands < 10 && hundreds > 0 ? "." + hundreds : "") + "K";
+		chatMessageManager.queue(QueuedMessage.builder()
+			.type(ChatMessageType.CONSOLE)
+			.runeLiteFormattedMessage("<colHIGHLIGHT>Daily item charges have been reset.")
+			.build()
+		);
+	}
+
+	private void configMigration() {
+		// Migrate old hidden infoboxes multi-select to checkboxes.
+		final Optional<String> necklaceOfPassageOverlay = Optional.ofNullable(configManager.getConfiguration(ChargesImprovedConfig.group, "necklage_of_passage_overlay"));
+		final Optional<String> necklaceOfPassageInfobox = Optional.ofNullable(configManager.getConfiguration(ChargesImprovedConfig.group, "necklage_of_passage_infobox"));
+
+		if (necklaceOfPassageOverlay.isPresent()) {
+			configManager.setConfiguration(ChargesImprovedConfig.group, ChargesImprovedConfig.necklace_of_passage + ChargesImprovedConfig.overlay, necklaceOfPassageOverlay.get().equals("true"));
+			configManager.unsetConfiguration(ChargesImprovedConfig.group, "necklage_of_passage_overlay");
+		}
+
+		if (necklaceOfPassageInfobox.isPresent()) {
+			configManager.setConfiguration(ChargesImprovedConfig.group, ChargesImprovedConfig.necklace_of_passage + ChargesImprovedConfig.infobox, necklaceOfPassageInfobox.get().equals("true"));
+			configManager.unsetConfiguration(ChargesImprovedConfig.group, "necklage_of_passage_infobox");
+		}
+	}
+
+	@Override
+	public void keyPressed(final KeyEvent keyEvent) {
+		onUserAction();
+	}
+
+	@Override
+	public void keyTyped(final KeyEvent keyEvent) {}
+
+	@Override
+	public void keyReleased(final KeyEvent keyEvent) {}
+
+	@Override
+	public MouseEvent mousePressed(final MouseEvent mouseEvent) {
+		onUserAction();
+		return mouseEvent;
+	}
+
+	@Override
+	public MouseEvent mouseDragged(final MouseEvent mouseEvent) {
+		onUserAction();
+		return mouseEvent;
+	}
+
+	@Override
+	public MouseEvent mouseMoved(final MouseEvent mouseEvent) {
+		onUserAction();
+		return mouseEvent;
+	}
+
+	@Override
+	public MouseWheelEvent mouseWheelMoved(final MouseWheelEvent mouseWheelEvent) {
+		onUserAction();
+		return mouseWheelEvent;
+	}
+
+	@Override
+	public MouseEvent mouseClicked(final MouseEvent mouseEvent) {
+		return mouseEvent;
+	}
+
+	@Override
+	public MouseEvent mouseReleased(final MouseEvent mouseEvent) {
+		return mouseEvent;
+	}
+
+	@Override
+	public MouseEvent mouseEntered(final MouseEvent mouseEvent) {
+		return mouseEvent;
+	}
+
+	@Override
+	public MouseEvent mouseExited(final MouseEvent mouseEvent) {
+		return mouseEvent;
+	}
+
+	public static String getCleanChatMessage(final ChatMessage event) {
+		return event.getMessage().replaceAll("</?col.*?>", "").replaceAll("<br>", " ").replaceAll("\u00A0"," ");
+	}
+
+	public static int getNumberFromCommaString(final String charges) {
+		return Integer.parseInt(charges.replaceAll(",", "").replaceAll("\\.", ""));
+	}
+
+	public static Optional<Widget> getWidget(final Client client, final int parent, final int child) {
+		@Nullable
+		final Widget widget = client.getWidget(parent, child);
+		return Optional.ofNullable(widget);
+	}
+
+	public static Optional<Widget> getWidget(final Client client, final int parent, final int child, final int subChild) {
+		@Nullable
+		final Widget widget = client.getWidget(parent, child);
+		if (widget == null) return Optional.empty();
+
+		@Nullable
+		final Widget subWidget = widget.getChild(subChild);
+		return Optional.ofNullable(subWidget);
+	}
+	
+	private static final ImmutableMap<String, Integer> TEXT_TO_NUMBER_MAP = ImmutableMap.<String, Integer>builder()
+		.put("zero", 0).put("one", 1).put("two", 2).put("three", 3).put("four", 4).put("five", 5)
+		.put("six", 6).put("seven", 7).put("eight", 8).put("nine", 9).put("ten", 10)
+		.put("eleven", 11).put("twelve", 12).put("thirteen", 13).put("fourteen", 14).put("fifteen", 15)
+		.put("sixteen", 16).put("seventeen", 17).put("eighteen", 18).put("nineteen", 19).put("twenty", 20)
+		.put("thirty", 30).put("forty", 40).put("fifty", 50).put("sixty", 60).put("seventy", 70)
+		.put("eighty", 80).put("ninety", 90).put("hundred", 100).build();
+
+	public static int getNumberFromWordRepresentation(final String charges) {
+		// Support strings like "twenty two" and "twenty-two"
+		final String[] words = charges.toLowerCase().split("[ -]");
+		int result = 0;
+		int current = 0;
+
+		for (final String word : words) {
+			if (TEXT_TO_NUMBER_MAP.containsKey(word)) {
+				current += TEXT_TO_NUMBER_MAP.get(word);
+			} else if (word.equals("hundred")) {
+				current *= 100;
+			} else if (word.equals("thousand")) {
+				result += current * 1000;
+				current = 0;
+			}
+		}
+
+		return result + current;
 	}
 }
 

@@ -45,6 +45,12 @@ public class TextComponent implements RenderableEntity
 	private Point position = new Point();
 	private Color color = Color.WHITE;
 	private boolean outline;
+
+	public static String textWithoutColTags(String text)
+	{
+		return COL_TAG_PATTERN.matcher(text).replaceAll("");
+	}
+
 	/**
 	 * The text font.
 	 */
