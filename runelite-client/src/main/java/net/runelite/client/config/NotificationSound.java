@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Adam <Adam@sigterm.info>
+ * Copyright (c) 2016-2017, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,42 +22,24 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.menuentryswapper;
+package net.runelite.client.config;
 
-import java.util.ArrayList;
-import java.util.List;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-class TeleportSwap
+@Getter
+@RequiredArgsConstructor
+public enum NotificationSound
 {
-	boolean worn;
-	boolean held;
-	String option;
-	List<TeleportSub> subs = new ArrayList<>();
+	NATIVE("Native"),
+	CUSTOM("Custom"),
+	OFF("Off");
 
-	TeleportSwap addSub(String option, Runnable r)
+	private final String name;
+
+	@Override
+	public String toString()
 	{
-		var sub = new TeleportSub();
-		sub.option = option;
-		sub.execute = r;
-		subs.add(sub);
-		return this;
+		return name;
 	}
-
-	TeleportSwap worn()
-	{
-		worn = true;
-		return this;
-	}
-
-	TeleportSwap held()
-	{
-		held = true;
-		return this;
-	}
-}
-
-class TeleportSub
-{
-	String option;
-	Runnable execute;
 }

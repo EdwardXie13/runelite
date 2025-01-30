@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Abex
+ * Copyright (c) 2025, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,52 +22,19 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.devtools;
+package net.runelite.api;
 
-import net.runelite.client.config.Config;
-import net.runelite.client.config.ConfigGroup;
-import net.runelite.client.config.ConfigItem;
-import net.runelite.client.config.Keybind;
-import net.runelite.client.config.Notification;
-
-@ConfigGroup("devtools")
-public interface DevToolsConfig extends Config
+public interface MidiRequest
 {
-	@ConfigItem(
-		keyName = "inspectorAlwaysOnTop",
-		name = "",
-		description = "",
-		hidden = true
-	)
-	default boolean inspectorAlwaysOnTop()
-	{
-		return false;
-	}
+	/**
+	 * True if this midi request is a jingle, otherwise it is a track.
+	 * @return
+	 */
+	boolean isJingle();
 
-	@ConfigItem(
-		keyName = "inspectorAlwaysOnTop",
-		name = "",
-		description = ""
-	)
-	void inspectorAlwaysOnTop(boolean value);
-
-	@ConfigItem(
-		keyName = "swingInspectorHotkey",
-		name = "Swing inspector",
-		description = "Hotkey to open the Swing inspector, if available."
-	)
-	default Keybind swingInspectorHotkey()
-	{
-		return Keybind.NOT_SET;
-	}
-
-	@ConfigItem(
-		keyName = "notification",
-		name = "Notification",
-		description = ""
-	)
-	default Notification notification()
-	{
-		return Notification.ON;
-	}
+	/**
+	 * Currently playing track/jingle id
+	 * @return
+	 */
+	int getArchiveId();
 }
