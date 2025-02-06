@@ -976,4 +976,23 @@ public final class Varbits
 	public static final int LEAGUES_MELEE_COMBAT_MASTERY_LEVEL = 11580;
 	public static final int LEAGUES_RANGED_COMBAT_MASTERY_LEVEL = 11581;
 	public static final int LEAGUES_MAGIC_COMBAT_MASTERY_LEVEL = 11582;
+
+	/**
+	 * The slayer master which is present at Burthorpe.
+	 * <p>
+	 * 0 = Turael
+	 * 1, 2 = Aya
+	 * 3 = Null
+	 */
+	public static final int BURTHORPE_SLAYER_MASTER = 10782;
+
+	/**
+	 * The state of Jarvis' gravestone.
+	 * <p>
+	 * 0, 2, 3 = Bush (eg. saved Jarvis, or did not partake in the 2017 Halloween event)
+	 * 1 = Gravestone
+	 *
+	 * @see <a href="https://oldschool.runescape.wiki/w/Gravestone_(Jarvis)">Gravestone (Jarvis) - OSRS Wiki</a>
+	 */
+	public static final int JARVIS_GRAVESTONE = 6008;
 }
