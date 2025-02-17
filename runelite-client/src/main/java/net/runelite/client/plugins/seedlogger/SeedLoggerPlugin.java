@@ -1,7 +1,6 @@
 package net.runelite.client.plugins.seedlogger;
 
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializer;
+
 import net.runelite.api.*;
 import net.runelite.api.events.*;
 import net.runelite.api.widgets.InterfaceID;
@@ -11,7 +10,6 @@ import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
 import java.io.*;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

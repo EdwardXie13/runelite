@@ -10,7 +10,6 @@ import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
 import java.awt.*;
-import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;

@@ -173,16 +173,18 @@ public class PressSpacePlugin extends Plugin {
     private int getRecipe() {
         if( doesInventoryContainGrimyHerbs() ||
             doesInventoryContainCleanHerbs() ||
-            doesInventoryContainRecipe() ||
-            containsItem(ItemID.RAW_SALMON) ||
-            containsItem(ItemID.RAW_TROUT)
+            doesInventoryContainRecipe()
         ) {
             return 1;
         }
-        // return -1 for not close bank but only press space
+        // return -1 to not close bank but only press space
         else if(
                 (containsItem(ItemID.ARROW_SHAFT) && containsItem(ItemID.FEATHER)) ||
-                (containsItem(ItemID.SILVER_BOLTS_UNF) && containsItem(ItemID.FEATHER))
+                (containsItem(ItemID.SILVER_BOLTS_UNF) && containsItem(ItemID.FEATHER)) ||
+                // Piscarilius cooking
+                (containsItem(ItemID.RAW_TUNA) && containsItem(ItemID.COINS_995)) ||
+                (containsItem(ItemID.RAW_BASS) && containsItem(ItemID.COINS_995)) ||
+                (containsItem(ItemID.RAW_SWORDFISH) && containsItem(ItemID.COINS_995))
         ) {
             return -1;
         } else if (config.glassBlowing() && countItem(ItemID.MOLTEN_GLASS, 27) && countItem(ItemID.GLASSBLOWING_PIPE, 1))

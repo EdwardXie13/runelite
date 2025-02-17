@@ -71,10 +71,11 @@ public class Potions {
             Set.of(Pair.of(ItemID.SILVER_BAR, 26), Pair.of(ItemID.SILVER_BOLTS_UNF, 1), Pair.of(ItemID.BOLT_MOULD, 1)),
             Set.of(Pair.of(ItemID.SILVER_BAR, 27), Pair.of(ItemID.BOLT_MOULD, 1)),
             Set.of(Pair.of(ItemID.SEAWEED, 28)),
+            Set.of(Pair.of(ItemID.GIANT_SEAWEED, 5)),
             Set.of(Pair.of(ItemID.JUG, 28)),
             Set.of(Pair.of(ItemID.JUG_OF_WATER, 14), Pair.of(ItemID.GRAPES, 14)),
-            Set.of(Pair.of(ItemID.CAKE_TIN, 6), Pair.of(ItemID.BUCKET_OF_MILK, 6), Pair.of(ItemID.POT_OF_FLOUR, 6), Pair.of(ItemID.EGG, 6)),
-            Set.of(Pair.of(ItemID.UNCOOKED_CAKE, 6))
+            Set.of(Pair.of(ItemID.RAW_TROUT, 28)),
+            Set.of(Pair.of(ItemID.RAW_SALMON, 28))
         )
     );
 }
