@@ -10,6 +10,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -59,12 +60,18 @@ public class BankPinInputerPlugin extends Plugin {
         }
     }
 
+    private void pressKey(int key) {
+        KeyEvent keyTyped = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_TYPED, System.currentTimeMillis(), 0, KeyEvent.VK_UNDEFINED, (char) key);
+        this.client.getCanvas().dispatchEvent(keyTyped);
+    }
+
     public void processFourDigitString(String str) {
         Executors.newSingleThreadExecutor().submit(() -> {
             try {
                 Robot robot = new Robot();
                 for (char ch : str.toCharArray()) {
-                    robot.keyPress(ch);
+                    pressKey(ch);
+//                    robot.keyPress(ch);
                     robot.delay(100);
                 }
                 robot.delay(1500);

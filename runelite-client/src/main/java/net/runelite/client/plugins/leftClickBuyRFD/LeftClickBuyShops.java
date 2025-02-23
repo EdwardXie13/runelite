@@ -12,13 +12,12 @@ import net.runelite.client.plugins.PluginDescriptor;
 
 import javax.inject.Inject;
 import java.awt.*;
-import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.List;
 
-@PluginDescriptor(name = "Left Click Buy RFD")
-public class LeftClickBuyRFD extends Plugin {
+@PluginDescriptor(name = "Left Click Buy Shops")
+public class LeftClickBuyShops extends Plugin {
     @Inject
     private Client client;
 
@@ -31,12 +30,13 @@ public class LeftClickBuyRFD extends Plugin {
 
     @Subscribe
     public void onGameTick(GameTick event) {
+        // RFD Chest
         if(Objects.equals(client.getLocalPlayer().getWorldLocation(), new WorldPoint(3218, 9623, 0))) {
             if (isBankOpen() &&
                     getCountInventoryItems() == 1 &&
                     containsItem(ItemID.COINS_995)) {
                 pressKey(KeyEvent.VK_ESCAPE);
-            } else if (isRFDChestOpen() &&
+            } else if (isShopOpen() &&
                     ((getWidgetCount(19660816, 1) == 0 &&
                             getWidgetCount(19660816, 5) == 0) ||
                             getCountInventoryItems() == 28)) {
@@ -44,6 +44,30 @@ public class LeftClickBuyRFD extends Plugin {
 
                 if (chocolateBarCount == 0 && grapeCount == 0)
                     quickHop();
+            }
+        }
+        // Piscarilius shop
+        else if (client.getLocalPlayer().getWorldLocation().getRegionID() == 7226) {
+            int rawTunaCount = Integer.MAX_VALUE;
+            int rawBassCount = Integer.MAX_VALUE;
+            int rawSwordfishCount = Integer.MAX_VALUE;
+            if (isShopOpen()) {
+                rawTunaCount = getWidgetCount(19660816, 7);
+                rawBassCount = getWidgetCount(19660816, 9);
+                rawSwordfishCount = getWidgetCount(19660816, 10);
+
+                if (getCountInventoryItems() == 28 &&
+                        (containsItem(ItemID.RAW_TUNA) ||
+                        containsItem(ItemID.RAW_BASS) ||
+                        containsItem(ItemID.RAW_SWORDFISH)
+                        )
+                )
+                    pressKey(KeyEvent.VK_ESCAPE);
+            }
+
+            if (rawTunaCount < 10 && rawBassCount < 10 && rawSwordfishCount < 10) {
+                pressKey(KeyEvent.VK_ESCAPE);
+                quickHop();
             }
         }
     }
@@ -126,12 +150,7 @@ public class LeftClickBuyRFD extends Plugin {
 
     private int getWidgetCount(int widgetId, int index) {
         try {
-            int quantity = client.getWidget(widgetId).getChild(index).getItemQuantity();
-            if(index == 1)
-                chocolateBarCount = quantity;
-            else if(index == 5)
-                grapeCount = quantity;
-            return quantity;
+            return client.getWidget(widgetId).getChild(index).getItemQuantity();
         } catch(Exception ignored) {
             return 0;
         }
@@ -141,7 +160,7 @@ public class LeftClickBuyRFD extends Plugin {
         return client.getWidget(WidgetInfo.BANK_CONTAINER) != null;
     }
 
-    private boolean isRFDChestOpen() {
+    private boolean isShopOpen() {
         return client.getWidget(WidgetInfo.SHOP_INVENTORY_ITEMS_CONTAINER) != null;
     }
 

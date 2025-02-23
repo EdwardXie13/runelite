@@ -25,10 +25,11 @@
 package net.runelite.client.plugins.itemidentificationExtended;
 
 import com.google.inject.Inject;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Color;
+
+import java.awt.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.WidgetItem;
 import net.runelite.client.game.ItemManager;
@@ -66,8 +67,51 @@ class ItemIdentificationOverlay extends WidgetItemOverlay
 	{
 		final TextComponent textComponent = new TextComponent();
 		textComponent.setPosition(new Point(bounds.x - 1, bounds.y + bounds.height - 1));
-		textComponent.setColor(Color.WHITE);
-		textComponent.setText(iden.name);
+		textComponent.setColor(Color.WHITE);  // Default color for main text
+
+		String text = iden.name;
+		int subscriptYOffset = 4;  // Adjust this value to move the subscript lower
+
+		// Check if the text contains a subscript (inside parentheses)
+		Pattern pattern = Pattern.compile("\\((.*?)\\)\\s*(.*)");  // Matches "(subscriptText) mainText"
+		Matcher matcher = pattern.matcher(text);
+
+		if (matcher.matches())
+		{
+			String subscriptText = matcher.group(1).trim();  // Subscript text inside parentheses
+			String mainText = matcher.group(2).trim();  // Text after parentheses
+
+			// Apply a static font size of 10 for the subscript
+			Font originalFont = graphics.getFont();
+			Font subscriptFont = originalFont.deriveFont(15f);  // Set font size to 10
+			graphics.setFont(subscriptFont);
+
+			// Set the color for the subscript (e.g., Red)
+			Color subscriptColor = Color.RED;
+			textComponent.setColor(subscriptColor);
+
+			// Render the subscript slightly lower
+			textComponent.setText(subscriptText);
+			textComponent.setPosition(new Point(bounds.x, bounds.y + bounds.height - 1 + subscriptYOffset));  // Move down
+			textComponent.render(graphics);
+
+			// Restore original font
+			graphics.setFont(originalFont);
+
+			// Render main text after the subscript
+			textComponent.setColor(Color.WHITE);  // Reset color to white for main text
+			textComponent.setText(mainText);
+			textComponent.setPosition(new Point(
+					bounds.x + graphics.getFontMetrics().stringWidth(subscriptText),
+					bounds.y + bounds.height - 1  // Position after subscript
+			));
+			textComponent.render(graphics);
+
+			return;
+		}
+
+		// If no subscript pattern found, render normally
+		textComponent.setText(text);
 		textComponent.render(graphics);
 	}
 

@@ -76,7 +76,7 @@ public class LeftClickConstructionPlugin extends Plugin {
         // 30015492 - 30015499
         Widget constructionWindow = client.getWidget(30015489);
         if(constructionWindow != null && constructionWindow.getChild(1).getText().contains("Furniture Creation Menu")) {
-            pressOtherKey(KeyEvent.VK_3); // Teak
+            pressOtherKey('3'); // Teak
         }
     }
 
@@ -87,23 +87,23 @@ public class LeftClickConstructionPlugin extends Plugin {
                 removeBox.getChild(0).getText().contains("Repeat last task") ||
                 removeBox.getChild(0).getText().contains("Take tea?"))
         ) {
-            pressOtherKey(KeyEvent.VK_1);
+            pressOtherKey('1');
         } else if (removeBox != null && removeBox.getChild(3).getText().contains("Adept Contract")) {
-            pressOtherKey(KeyEvent.VK_3);
+            pressOtherKey('3');
         }
     }
 
     private void buildBox1() {
         Widget removeBox = client.getWidget(30015492);
         if (removeBox != null && removeBox.getName().contains("Oak door")) {
-            pressOtherKey(KeyEvent.VK_1);
+            pressOtherKey('1');
         }
     }
 
     private void buildBox2() {
         Widget removeBox = client.getWidget(30015493);
         if(removeBox != null && removeBox.getName().contains("Oak larder")) {
-            pressOtherKey(KeyEvent.VK_2);
+            pressOtherKey('2');
         }
     }
 
@@ -125,7 +125,7 @@ public class LeftClickConstructionPlugin extends Plugin {
                 (removeBox.getChild(1).getText().contains("Okay, here's") ||
                 removeBox.getChild(1).getText().contains("text take tea"))
         ) {
-            pressOtherKey(KeyEvent.VK_1);
+            pressOtherKey('1');
         }
     }
 
@@ -137,10 +137,7 @@ public class LeftClickConstructionPlugin extends Plugin {
     }
 
     private void pressOtherKey(int key) {
-        try {
-            Robot robot = new Robot();
-            robot.keyPress(key);
-        } catch (Exception ignored){
-        }
+        KeyEvent keyTyped = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_TYPED, System.currentTimeMillis(), 0, KeyEvent.VK_UNDEFINED, (char) key);
+        this.client.getCanvas().dispatchEvent(keyTyped);
     }
 }

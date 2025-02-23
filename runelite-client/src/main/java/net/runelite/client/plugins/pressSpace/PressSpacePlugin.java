@@ -187,8 +187,7 @@ public class PressSpacePlugin extends Plugin {
                 (containsItem(ItemID.RAW_SWORDFISH) && containsItem(ItemID.COINS_995))
         ) {
             return -1;
-        } else if (config.glassBlowing() && countItem(ItemID.MOLTEN_GLASS, 27) && countItem(ItemID.GLASSBLOWING_PIPE, 1))
-            return 6;
+        }
         else
             return 0;
     }
@@ -205,10 +204,10 @@ public class PressSpacePlugin extends Plugin {
             // If at blast furnace
             if(client.getLocalPlayer().getWorldLocation().getRegionID() == 7757)
                 pressKey(KeyEvent.VK_SPACE);
-            if(recipe == 0) return;
+            else if(recipe == 0) {}
 
-            if (recipe == 6 && getWidget()) {
-                pressOtherKey(KeyEvent.VK_6);
+            else if (countItem(ItemID.MOLTEN_GLASS, 27) && countItem(ItemID.GLASSBLOWING_PIPE, 1)) {
+                pressOtherKey('6');
             } else {
                 pressKey(KeyEvent.VK_SPACE);
             }
@@ -224,11 +223,11 @@ public class PressSpacePlugin extends Plugin {
                 if(containsItem(ItemID.CAKE_TIN)) {
                     Integer leastcakeIngredients = checkCakeIngredients();
                     if (leastcakeIngredients.intValue() == 1927) // milk
-                        pressOtherKey(KeyEvent.VK_2);
+                        pressOtherKey('2');
                     else if (leastcakeIngredients.intValue() == 1944) // egg
-                        pressOtherKey(KeyEvent.VK_3);
+                        pressOtherKey('3');
                     else if (leastcakeIngredients.intValue() == 1933) // flour
-                        pressOtherKey(KeyEvent.VK_4);
+                        pressOtherKey('4');
 
                 }
             }
@@ -251,16 +250,9 @@ public class PressSpacePlugin extends Plugin {
         return client.getWidget(WidgetInfo.BANK_CONTAINER) != null;
     }
 
-    private boolean getWidget() {
-        return client.getWidget(17694733).getChild(5).getText().equals("6");
-    }
-
     private void pressOtherKey(int key) {
-        try {
-            Robot robot = new Robot();
-            robot.keyPress(key);
-        } catch (Exception ignored){
-        }
+        KeyEvent keyTyped = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_TYPED, System.currentTimeMillis(), 0, KeyEvent.VK_UNDEFINED, (char) key);
+        this.client.getCanvas().dispatchEvent(keyTyped);
     }
 
     private void pressKey(int key) {
