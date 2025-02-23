@@ -46,7 +46,7 @@ public class TwoClickCraftingMain implements Runnable {
 
     Thread t;
 
-    TwoClickCraftingMain(Client client, ClientThread clientThread) throws AWTException {
+    TwoClickCraftingMain(Client client, ClientThread clientThread) {
         this.client = client;
         this.clientThread = clientThread;
 
@@ -64,9 +64,28 @@ public class TwoClickCraftingMain implements Runnable {
 
             if (isAtWorldPoint(new WorldPoint(3094, 3489, 0))
                 || isAtWorldPoint(new WorldPoint(3185, 3444, 0)))
-                    doCrafting();
+                doPotionMaking();
         }
         System.out.println("Thread has stopped.");
+    }
+
+    private void doPotionMaking() {
+        if(!isBankOpen() && getInventoryCount() == 14) {
+            client.setCameraPitchTarget(512);
+            changeCameraYaw(0);
+            setCameraZoom(977);
+            delay(500);
+            scheduledPointDelay(new Point(691, 539), 10);
+        } else if(isBankOpen() && getInventoryCount() == 14) {
+            delay(300);
+            bankingSequence();
+        } else if(!isBankOpen() && checkInventoryCount(ImmutableSet.of(ItemID.VIAL_OF_WATER), 14)) {
+            delay(300);
+            scheduledPointDelay(new Point(824, 876), 3); // row 4 col 2
+            delay(300);
+            scheduledPointDelay(new Point(866, 876), 3); // row 4 col 3
+            delay(1000);
+        }
     }
 
     private void doCrafting() {
@@ -86,6 +105,10 @@ public class TwoClickCraftingMain implements Runnable {
             scheduledPointDelay(new Point(782, 804), 3); // row 2 col 1
             delay(300);
         }
+    }
+
+    private int getInventoryCount() {
+        return inventoryItems.size();
     }
 
     private boolean checkInventoryCount(Set<Integer> itemSet, int count) {
@@ -112,9 +135,13 @@ public class TwoClickCraftingMain implements Runnable {
 
         // deposit slot 1
         scheduledPointDelay(new Point(782, 768), 3);
-        delay(700);
+        delay(300);
 
-        // withdraw hides
+        // withdraw lower right - 1
+        scheduledPointDelay(new Point(473, 793), 3);
+        delay(300);
+
+        // withdraw lower right
         scheduledPointDelay(new Point(524, 793), 3);
         delay(1000);
         isIdle = true;

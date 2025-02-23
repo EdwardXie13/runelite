@@ -50,11 +50,11 @@ public class TwoClickCraftingPlugin extends Plugin {
         if(chatBoxMessage.equals("1") && !TwoClickCraftingMain.isRunning) {
             thread = new TwoClickCraftingMain(client, clientThread);
             TwoClickCraftingMain.isRunning = true;
-            System.out.println("status is go");
+            System.out.println("status is go (two click crafting");
         } else if (chatBoxMessage.equals("2") && TwoClickCraftingMain.isRunning) {
             thread.t.interrupt();
             TwoClickCraftingMain.isRunning = false;
-            System.out.println("status is stop");
+            System.out.println("status is stop (two click crafting)");
         }
     }
 
