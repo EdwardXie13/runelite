@@ -30,7 +30,7 @@ public class TwoClickCraftingPlugin extends Plugin {
     @Inject
     private ClientThread clientThread;
 
-    TwoClickCraftingMain thread;
+    static TwoClickCraftingMain thread;
 
     @Subscribe
     public void onGameTick(GameTick event) throws AWTException {
