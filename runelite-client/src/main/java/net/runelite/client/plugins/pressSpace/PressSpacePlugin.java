@@ -1,12 +1,10 @@
 package net.runelite.client.plugins.pressSpace;
 
 import com.google.inject.Provides;
-import net.runelite.api.Client;
-import net.runelite.api.InventoryID;
-import net.runelite.api.Item;
-import net.runelite.api.ItemID;
+import net.runelite.api.*;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
+import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.config.ConfigManager;
@@ -20,6 +18,9 @@ import java.awt.Robot;
 import java.awt.event.KeyEvent;
 import java.sql.SQLOutput;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Predicate;
 
 @PluginDescriptor(
         name = "Press Space",
@@ -29,9 +30,6 @@ import java.util.*;
 public class PressSpacePlugin extends Plugin {
     @Inject
     private Client client;
-
-    @Inject
-    private PressSpaceConfig config;
 
     private int recipe = 0;
 
@@ -71,12 +69,8 @@ public class PressSpacePlugin extends Plugin {
         ItemID.SNAPDRAGON
     );
 
-    List<Integer> cakeIngredients = new ArrayList<>(Arrays.asList(ItemID.BUCKET_OF_MILK, ItemID.POT_OF_FLOUR, ItemID.EGG));
-
-    @Provides
-    PressSpaceConfig provideConfig(ConfigManager configManager) {
-        return configManager.getConfig(PressSpaceConfig.class);
-    }
+    int countToWithdraw = 0;
+    private boolean lockout = false;
 
     @Subscribe
     public void onGameTick(GameTick event) {
@@ -84,14 +78,81 @@ public class PressSpacePlugin extends Plugin {
         craftBox();
         smithingDarts();
         smeltingSilverBolts();
-        gatherIngredients();
         bountyHunterWorldHop();
+        withdrawSeedBox();
     }
 
     @Subscribe
     public void onItemContainerChanged(ItemContainerChanged event) {
         if (event.getItemContainer() == client.getItemContainer(InventoryID.INVENTORY)) {
             inventoryItems = Arrays.asList(event.getItemContainer().getItems());
+        }
+    }
+
+    @Subscribe
+    public void onMenuEntryAdded(MenuEntryAdded event) {
+        if (Optional.ofNullable(client.getWidget(8388611))
+                .filter(Predicate.not(Widget::isHidden))
+                .map(Widget::getText)
+                .filter("Seed Box"::equals)
+                .isPresent()) {
+            String target = event.getTarget();
+            List<Widget> seedBoxList = new ArrayList<>(
+                    Arrays.asList(Objects.requireNonNull(client.getWidget(8388619)).getChildren())
+            );
+            // remove useless element
+            seedBoxList.remove(seedBoxList.size() - 1);
+            for(Widget widget : seedBoxList) {
+                if (widget.getName().equals(target)) {
+                    if (widget.getItemQuantity() > 1)
+                        countToWithdraw = widget.getItemQuantity() - 1;
+                    else
+                        countToWithdraw = 0;
+                }
+            }
+
+            //Swap withdraw X
+            MenuEntry[] menuEntries = client.getMenuEntries();
+            for (int i = menuEntries.length - 1; i >= 0; --i) {
+                MenuEntry entry = menuEntries[i];
+                if(entry.getOption().equals("Withdraw X")) {
+                    entry.setType(MenuAction.CC_OP);
+
+                    menuEntries[i] = menuEntries[menuEntries.length - 1];
+                    menuEntries[menuEntries.length - 1] = entry;
+
+                    client.setMenuEntries(menuEntries);
+                    break;
+                }
+            }
+        }
+    }
+
+    private void withdrawSeedBox() {
+        if (Optional.ofNullable(client.getWidget(10616874))
+                .filter(Predicate.not(Widget::isHidden))
+                .map(Widget::getText)
+                .filter("How many seeds?"::equals)
+                .isPresent() &&
+                countToWithdraw > 1 &&
+                !lockout) {
+            lockout = true;
+
+            Executors.newSingleThreadExecutor().submit(() -> {
+                try {
+                    Robot robot = new Robot();
+                    for (char ch : String.valueOf(countToWithdraw).toCharArray()) {
+                        pressOtherKey(ch);
+                        robot.delay(50);
+                    }
+                    robot.delay(50);
+                    pressKey(KeyEvent.VK_ENTER);
+                    robot.delay(100);
+                } catch (Exception ignored) {
+                } finally {
+                    lockout = false;
+                }
+            });
         }
     }
 
@@ -212,38 +273,6 @@ public class PressSpacePlugin extends Plugin {
                 pressKey(KeyEvent.VK_SPACE);
             }
         }
-    }
-
-    private void gatherIngredients() {
-        Widget chatBox = client.getWidget(14352385);
-        if (chatBox != null) {
-            Widget[] chatBoxChildren = chatBox.getChildren();
-            if(chatBoxChildren != null && Arrays.stream(chatBoxChildren).findAny().isPresent()) {
-                // Cake Items
-                if(containsItem(ItemID.CAKE_TIN)) {
-                    Integer leastcakeIngredients = checkCakeIngredients();
-                    if (leastcakeIngredients.intValue() == 1927) // milk
-                        pressOtherKey('2');
-                    else if (leastcakeIngredients.intValue() == 1944) // egg
-                        pressOtherKey('3');
-                    else if (leastcakeIngredients.intValue() == 1933) // flour
-                        pressOtherKey('4');
-
-                }
-            }
-        }
-    }
-
-    private Integer checkCakeIngredients() {
-        Map<Integer, Integer> ingredientCounts = new HashMap<>();
-
-        // Populate the map with item counts
-        cakeIngredients.forEach(item -> {
-            int count = getCountItems(item);
-            ingredientCounts.put(item, count);
-        });
-
-        return Collections.min(ingredientCounts.entrySet(), Map.Entry.comparingByValue()).getKey();
     }
 
     private boolean isBankOpen() {
