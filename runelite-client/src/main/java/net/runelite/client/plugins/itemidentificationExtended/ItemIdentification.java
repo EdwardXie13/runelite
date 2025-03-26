@@ -26,6 +26,8 @@ package net.runelite.client.plugins.itemidentificationExtended;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+
+import net.runelite.api.Item;
 import net.runelite.api.ItemID;
 
 enum ItemIdentification
@@ -61,6 +63,24 @@ enum ItemIdentification
 	CLEAN_DWARF_WEED( "D", ItemID.DWARF_WEED),
 	CLEAN_TORSTOL("TOR", ItemID.TORSTOL),
 
+	GRIMY_GOLPAR("(g)G", ItemID.GRIMY_GOLPAR),
+	GRIMY_BUCHU("(g)B", ItemID.GRIMY_BUCHU_LEAF),
+	GRIMY_NOXIFER("(g)N", ItemID.GRIMY_NOXIFER),
+
+	GOLPAR("G", ItemID.GOLPAR),
+	BUCHU("B", ItemID.BUCHU_LEAF),
+	NOXIFER("N", ItemID.NOXIFER),
+
+	//Seeds
+	GOLPAR_SEED("G", ItemID.GOLPAR_SEED),
+	BUCHU_SEED("B", ItemID.BUCHU_SEED),
+	NOXIFER_SEED("N", ItemID.NOXIFER_SEED),
+
+	//COX secondary
+	ENDARKENED_JUICE("J", ItemID.ENDARKENED_JUICE),
+	STINKHORN_MUSHROOM("M", ItemID.STINKHORN_MUSHROOM),
+	CICELY("C", ItemID.CICELY),
+	
 	//LEO Random event
 	COFFIN_CRAFT("Craft", ItemID.COFFIN),
 	COFFIN_MINE("Mine", ItemID.COFFIN_7588),
