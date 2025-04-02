@@ -80,6 +80,7 @@ public class PressSpacePlugin extends Plugin {
         smeltingSilverBolts();
         bountyHunterWorldHop();
         withdrawSeedBox();
+        isfillingSand();
     }
 
     @Subscribe
@@ -177,6 +178,17 @@ public class PressSpacePlugin extends Plugin {
         Widget dialogBox = client.getWidget(12648450);
         if(dialogBox != null && dialogBox.getText().contains("Bounty Hunter")) {
             pressKey(KeyEvent.VK_SPACE);
+        }
+    }
+
+    private void isfillingSand() {
+        Widget adventureLogBox = client.getWidget(WidgetInfo.ADVENTURE_LOG);
+        if(adventureLogBox != null &&
+                adventureLogBox.getChild(1).getText().contains("House portal teleports") &&
+                countItem(ItemID.BUCKET, 27) &&
+                (countItem(ItemID.CONSTRUCT_CAPE, 1) || countItem(ItemID.CONSTRUCT_CAPET, 1))
+        ) {
+            pressOtherKey('9');
         }
     }
 

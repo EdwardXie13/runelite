@@ -9,10 +9,7 @@ import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.api.events.FocusChanged;
-import net.runelite.api.events.MenuOpened;
-import net.runelite.api.events.PostMenuSort;
-import net.runelite.api.events.VarbitChanged;
+import net.runelite.api.events.*;
 import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.Widget;
@@ -66,6 +63,7 @@ public class HotkeyableMenuSwapsPlugin extends Plugin implements KeyListener
 	@Inject private MenuEntrySwapperConfig menuEntrySwapperConfig;
 	@Inject private ItemManager itemManager;
 	@Inject private GroundItemsStuff groundItemsStuff;
+	@Inject private CustomSwapUtils customSwapUtils;
 
 	// If a hotkey corresponding to a swap is currently held, these variables will be non-null. currentBankModeSwap is an exception because it uses menu entry swapper's bank swap enum, which already has an "off" value.
 	// These variables do not factor in left-click swaps.
@@ -93,10 +91,29 @@ public class HotkeyableMenuSwapsPlugin extends Plugin implements KeyListener
 	// Mirrors config field. This field is read quite often so doing this might be good for performance.
 	private boolean examineCancelLateRemoval = true;
 
+	public List<Item> inventoryItems = new ArrayList<>();
+
 	@Provides
 	HotkeyableMenuSwapsConfig provideConfig(ConfigManager configManager)
 	{
 		return configManager.getConfig(HotkeyableMenuSwapsConfig.class);
+	}
+
+	@Subscribe
+	public void onItemContainerChanged(ItemContainerChanged event) {
+		if (event.getItemContainer() == client.getItemContainer(InventoryID.INVENTORY)) {
+			inventoryItems = Arrays.asList(event.getItemContainer().getItems());
+		}
+	}
+
+	@Subscribe
+	public void onGameTick(GameTick event) {
+		// Yanille Sand pit
+		if (customSwapUtils.isAtTile(client, 2542, 3102, 0) && customSwapUtils.isSandFilling(inventoryItems)) {
+			customSwaps.add(CustomSwap.fromString(customSwapUtils.POH_CONCAPET));
+		} else {
+			reloadCustomSwaps();
+		}
 	}
 
 	@Override
@@ -1196,6 +1213,7 @@ public class HotkeyableMenuSwapsPlugin extends Plugin implements KeyListener
 			if (customSwap.trim().equals("")) continue;
 			swaps.add(CustomSwap.fromString(customSwap));
 		}
+
 		return swaps;
 	}
 

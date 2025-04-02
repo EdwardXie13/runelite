@@ -75,7 +75,8 @@ public class Potions {
             Set.of(Pair.of(ItemID.JUG, 28)),
             Set.of(Pair.of(ItemID.JUG_OF_WATER, 14), Pair.of(ItemID.GRAPES, 14)),
             Set.of(Pair.of(ItemID.RAW_TROUT, 28)),
-            Set.of(Pair.of(ItemID.RAW_SALMON, 28))
+            Set.of(Pair.of(ItemID.RAW_SALMON, 28)),
+            Set.of(Pair.of(ItemID.CONSTRUCT_CAPET, 1), Pair.of(ItemID.BUCKET, 27))
         )
     );
 }

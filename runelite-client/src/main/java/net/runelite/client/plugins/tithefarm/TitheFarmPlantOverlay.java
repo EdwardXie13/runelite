@@ -37,7 +37,9 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
+import net.runelite.client.ui.overlay.components.ProgressBarComponent;
 import net.runelite.client.ui.overlay.components.ProgressPieComponent;
+import net.runelite.client.ui.overlay.components.TextComponent;
 import net.runelite.client.util.ColorUtil;
 
 public class TitheFarmPlantOverlay extends Overlay
@@ -104,6 +106,11 @@ public class TitheFarmPlantOverlay extends Overlay
 				progressPieComponent.setBorderColor(borders.get(plant.getState()));
 				progressPieComponent.setFill(fills.get(plant.getState()));
 				progressPieComponent.render(graphics);
+
+				final TextComponent textComponent = new TextComponent();
+				textComponent.setPosition(new java.awt.Point(canvasLocation.getX(), canvasLocation.getY()));
+				textComponent.setText(String.format("%.1f", (1 - plant.getPlantTimeRelative()) * 60) + "s");
+				textComponent.render(graphics);
 			}
 		}
 

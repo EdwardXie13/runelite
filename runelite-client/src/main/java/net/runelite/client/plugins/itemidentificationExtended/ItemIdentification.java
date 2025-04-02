@@ -80,14 +80,18 @@ enum ItemIdentification
 	ENDARKENED_JUICE("J", ItemID.ENDARKENED_JUICE),
 	STINKHORN_MUSHROOM("M", ItemID.STINKHORN_MUSHROOM),
 	CICELY("C", ItemID.CICELY),
-	
+
+	//=========QOL=========
 	//LEO Random event
 	COFFIN_CRAFT("Craft", ItemID.COFFIN),
 	COFFIN_MINE("Mine", ItemID.COFFIN_7588),
 	COFFIN_CHEF("Chef", ItemID.COFFIN_7589),
 	COFFIN_FARM("Farm", ItemID.COFFIN_7590),
-	COFFIN_WC("WC", ItemID.COFFIN_7591);
+	COFFIN_WC("WC", ItemID.COFFIN_7591),
 
+	BUCKET_OF_SAND("Sand", ItemID.BUCKET_OF_SAND)
+
+	;
 	final String name;
 	final int[] itemIDs;
 
