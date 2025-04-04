@@ -140,17 +140,6 @@ public class SkillerIronFarmingTabPanel extends TabContentPanel
         }
     }
 
-    public SkillerIronFarmingTabPanel(SkillerIronFarmingTracker farmingTracker, CompostTracker compostTracker, PaymentTracker paymentTracker, ItemManager itemManager, ConfigManager configManager, TimeTrackingConfig config, List<TimeablePanel<FarmingPatch>> patchPanels, FarmingContractManager farmingContractManager) {
-        this.farmingTracker = farmingTracker;
-        this.compostTracker = compostTracker;
-        this.paymentTracker = paymentTracker;
-        this.itemManager = itemManager;
-        this.configManager = configManager;
-        this.config = config;
-        this.patchPanels = patchPanels;
-        this.farmingContractManager = farmingContractManager;
-    }
-
     @Override
     public int getUpdateInterval()
     {
