@@ -37,7 +37,6 @@ import net.runelite.client.plugins.timetracking.clocks.ClockManager;
 import net.runelite.client.plugins.timetracking.farming.CropState;
 import net.runelite.client.plugins.timetracking.farming.FarmingContractManager;
 import net.runelite.client.plugins.timetracking.farming.FarmingTracker;
-import net.runelite.client.plugins.timetracking.farming.SkillerIronFarmingTracker;
 import net.runelite.client.plugins.timetracking.hunter.BirdHouseTracker;
 import net.runelite.client.ui.ColorScheme;
 
@@ -46,7 +45,6 @@ class OverviewTabPanel extends TabContentPanel
 	private final TimeTrackingConfig config;
 	private final FarmingTracker farmingTracker;
 	private final BirdHouseTracker birdHouseTracker;
-	private final SkillerIronFarmingTracker skillerIronFarmingTracker;
 	private final ClockManager clockManager;
 	private final FarmingContractManager farmingContractManager;
 
@@ -55,16 +53,14 @@ class OverviewTabPanel extends TabContentPanel
 	private final Map<Tab, OverviewItemPanel> farmingOverviews;
 	private final OverviewItemPanel birdHouseOverview;
 	private final OverviewItemPanel farmingContractOverview;
-	private final OverviewItemPanel skillerIronOverview;
 
 	OverviewTabPanel(ItemManager itemManager, TimeTrackingConfig config, TimeTrackingPanel pluginPanel,
-					 FarmingTracker farmingTracker, BirdHouseTracker birdHouseTracker, SkillerIronFarmingTracker skillerIronFarmingTracker, ClockManager clockManager,
-					 FarmingContractManager farmingContractManager)
+		FarmingTracker farmingTracker, BirdHouseTracker birdHouseTracker, ClockManager clockManager,
+		FarmingContractManager farmingContractManager)
 	{
 		this.config = config;
 		this.farmingTracker = farmingTracker;
 		this.birdHouseTracker = birdHouseTracker;
-		this.skillerIronFarmingTracker = skillerIronFarmingTracker;
 		this.clockManager = clockManager;
 		this.farmingContractManager = farmingContractManager;
 
@@ -95,9 +91,6 @@ class OverviewTabPanel extends TabContentPanel
 		farmingContractOverview = new OverviewItemPanel(itemManager, () -> pluginPanel.switchTab(farmingContractManager.getContractTab()),
 			farmingContractManager::hasContract, ItemID.SEEDBOX, "Farming Contract");
 		add(farmingContractOverview);
-
-		skillerIronOverview = new OverviewItemPanel(itemManager, pluginPanel, Tab.SKILLER_IRON, "Skiller Iron");
-		add(skillerIronOverview);
 	}
 
 	@Override
