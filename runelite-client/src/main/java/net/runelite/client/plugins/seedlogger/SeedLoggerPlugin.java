@@ -36,6 +36,7 @@ public class SeedLoggerPlugin extends Plugin {
             ItemID.SNAPDRAGON_SEED,
             ItemID.CADANTINE_SEED,
             ItemID.LANTADYME_SEED,
+            ItemID.DWARF_WEED_SEED,
             ItemID.TORSTOL_SEED
     );
 
@@ -50,6 +51,7 @@ public class SeedLoggerPlugin extends Plugin {
             ItemID.GRIMY_SNAPDRAGON,
             ItemID.GRIMY_CADANTINE,
             ItemID.GRIMY_CADANTINE,
+            ItemID.GRIMY_DWARF_WEED,
             ItemID.GRIMY_TORSTOL
     );
 
@@ -64,6 +66,7 @@ public class SeedLoggerPlugin extends Plugin {
             ItemID.SNAPDRAGON,
             ItemID.CADANTINE,
             ItemID.CADANTINE,
+            ItemID.DWARF_WEED,
             ItemID.TORSTOL
     );
 
@@ -78,6 +81,7 @@ public class SeedLoggerPlugin extends Plugin {
             ItemID.SNAPDRAGON_POTION_UNF,
             ItemID.CADANTINE_POTION_UNF,
             ItemID.LANTADYME_POTION_UNF,
+            ItemID.DWARF_WEED_POTION_UNF,
             ItemID.TORSTOL_POTION_UNF
     );
 
@@ -106,7 +110,7 @@ public class SeedLoggerPlugin extends Plugin {
 
         // Populate the LinkedHashMap with default values in the desired order
         List<String> orderedKeys = List.of("skillExperience", "guam", "harralander", "ranarr", "toadflax", "irit",
-                "avantoe", "kwuarm", "snapdragon", "cadantine", "lantadyme", "torstol");
+                "avantoe", "kwuarm", "snapdragon", "cadantine", "lantadyme", "dwarfweed", "torstol");
         for (String key : orderedKeys) {
             seedData.put(key, createDefaultSeedData(key));
         }
@@ -179,6 +183,8 @@ public class SeedLoggerPlugin extends Plugin {
                 return "cadantine";
             case ItemID.LANTADYME_SEED:
                 return "lantadyme";
+            case ItemID.DWARF_WEED_SEED:
+                return "dwarfweed";
             case ItemID.TORSTOL_SEED:
                 return "torstol";
             default:
@@ -228,6 +234,10 @@ public class SeedLoggerPlugin extends Plugin {
             case ItemID.LANTADYME:
             case ItemID.LANTADYME_POTION_UNF:
                 return "lantadyme";
+            case ItemID.GRIMY_DWARF_WEED:
+            case ItemID.DWARF_WEED:
+            case ItemID.DWARF_WEED_POTION_UNF:
+                return "dwarfweed";
             case ItemID.GRIMY_TORSTOL:
             case ItemID.TORSTOL:
             case ItemID.TORSTOL_POTION_UNF:
@@ -243,7 +253,7 @@ public class SeedLoggerPlugin extends Plugin {
             case "guam":
                 data.put("seedRate", 0.0148809523809524);
                 data.put("potXp", 25.0);
-                data.put("herbXp", 11.0);
+                data.put("herbXp", 12.0);
                 data.put("cleanGrimyXp", 2.5);
                 break;
             case "harralander":
@@ -299,6 +309,12 @@ public class SeedLoggerPlugin extends Plugin {
                 data.put("potXp", 172.5);
                 data.put("herbXp", 134.5);
                 data.put("cleanGrimyXp", 13.1);
+                break;
+            case "dwarfweed":
+                data.put("seedRate", 0.0001440092165898618);
+                data.put("potXp", 162.5);
+                data.put("herbXp", 134.5);
+                data.put("cleanGrimyXp", 13.8);
                 break;
             case "torstol":
                 data.put("seedRate", 0.0001078518288);
