@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Adam <Adam@sigterm.info>
+ * Copyright (c) 2025, Jordan Atwood <nightfirecat@nightfirec.at>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,23 +22,25 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.util;
+package net.runelite.client.plugins.mining;
 
-import static net.runelite.client.util.WildcardMatcher.matches;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
-public class WildcardMatcherTest
+public class PickaxeTest
 {
 	@Test
-	public void testMatches()
+	public void testInit()
 	{
-		assertTrue(matches("rune*", "rune pouch"));
-		assertTrue(matches("rune*", "Rune pouch"));
-		assertFalse(matches("Abyssal whip", "Adamant dagger"));
-		assertTrue(matches("rune*", "Runeite Ore"));
-		assertTrue(matches("Abyssal whip", "Abyssal whip"));
-		assertTrue(matches("string $ with special character", "string $ with special character"));
+		Pickaxe.fromAnimation(0);
+	}
+
+	@Test
+	public void listAllAnimations()
+	{
+		for (Pickaxe pickaxe : Pickaxe.values())
+		{
+			assertEquals(pickaxe.name() + " does not have the expected 3 animations. (default, wall, noreachforward)", 3, pickaxe.getAnimIds().length);
+		}
 	}
 }
