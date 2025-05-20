@@ -1424,12 +1424,6 @@ public class LootTrackerPlugin extends Plugin
 		return region == THEATRE_OF_BLOOD_REGION || region == THEATRE_OF_BLOOD_LOBBY;
 	}
 
-	private boolean inAraxxorRegion()
-	{
-		int region = WorldPoint.fromLocalInstance(client, client.getLocalPlayer().getLocalLocation()).getRegionID();
-		return region == ARAXXOR_LAIR;
-	}
-
 	private void processMasterFarmerSeedBoxLoot(String itemName, int quantityStolen)
 	{
 		List<ItemStack> seeds = Collections.singletonList(new ItemStack(itemManager.search(itemName).get(0).getId(), quantityStolen, client.getLocalPlayer().getLocalLocation()));
