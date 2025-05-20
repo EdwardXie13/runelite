@@ -169,7 +169,6 @@ public class LootTrackerPlugin extends Plugin
 		put(5179, "Brimstone Chest").
 		put(11573, "Crystal Chest").
 		put(12093, "Larran's big chest").
-		put(12127, "The Gauntlet").
 		put(13113, "Larran's small chest").
 		put(13151, "Elven Crystal Chest").
 		put(5277, "Stone chest").
@@ -221,11 +220,6 @@ public class LootTrackerPlugin extends Plugin
 		put(ObjectID.SHADECHEST_GOLD_BLACK, "Gold key black").
 		put(ObjectID.SHADECHEST_GOLD_PURPLE, "Gold key purple").
 		build();
-
-	// Hallow Sepulchre Coffin handling
-	private static final String COFFIN_LOOTED_MESSAGE = "You push the coffin lid aside.";
-	private static final String HALLOWED_SEPULCHRE_COFFIN_EVENT = "Coffin (Hallowed Sepulchre)";
-	private static final Set<Integer> HALLOWED_SEPULCHRE_MAP_REGIONS = ImmutableSet.of(8797, 10077, 9308, 10074, 9050); // one map region per floor
 
 	private static final String HALLOWED_SACK_EVENT = "Hallowed Sack";
 
@@ -292,23 +286,6 @@ public class LootTrackerPlugin extends Plugin
 	// Mahogany Homes
 	private static final String MAHOGANY_CRATE_EVENT = "Supply crate (Mahogany Homes)";
 
-	// Implings
-	private static final Set<Integer> IMPLING_JARS = ImmutableSet.of(
-		ItemID.II_CAPTURED_IMPLING_1,
-		ItemID.II_CAPTURED_IMPLING_2,
-		ItemID.II_CAPTURED_IMPLING_3,
-		ItemID.II_CAPTURED_IMPLING_4,
-		ItemID.II_CAPTURED_IMPLING_5,
-		ItemID.II_CAPTURED_IMPLING_6,
-		ItemID.II_CAPTURED_IMPLING_7,
-		ItemID.II_CAPTURED_IMPLING_8,
-		ItemID.II_CAPTURED_IMPLING_9,
-		ItemID.II_CAPTURED_IMPLING_12,
-		ItemID.II_CAPTURED_IMPLING_10,
-		ItemID.II_CAPTURED_IMPLING_11
-	);
-	private static final String IMPLING_CATCH_MESSAGE = "You manage to catch the impling and acquire some loot.";
-
 	// Raids
 	private static final String CHAMBERS_OF_XERIC = "Chambers of Xeric";
 	private static final String THEATRE_OF_BLOOD = "Theatre of Blood";
@@ -370,6 +347,7 @@ public class LootTrackerPlugin extends Plugin
 	private boolean chestLooted;
 	private boolean lastLoadingIntoInstance;
 	private String lastPickpocketTarget;
+	private int ignorePickpocketLoot;
 
 	private List<String> ignoredItems = new ArrayList<>();
 	private List<String> ignoredEvents = new ArrayList<>();
@@ -705,6 +683,12 @@ public class LootTrackerPlugin extends Plugin
 		final String name = npc.getName();
 		final int combat = npc.getCombatLevel();
 
+		if (ignorePickpocketLoot == client.getTickCount())
+		{
+			// server sends npc loot for pickpockets, ignore it
+			return;
+		}
+
 		addLoot(name, combat, LootRecordType.NPC, buildNpcMetadata(npc), items);
 
 		if (config.npcKillChatMessage())
@@ -926,13 +910,6 @@ public class LootTrackerPlugin extends Plugin
 			return;
 		}
 
-		if (message.equals(COFFIN_LOOTED_MESSAGE) &&
-			isPlayerWithinMapRegion(HALLOWED_SEPULCHRE_MAP_REGIONS))
-		{
-			onInvChange(collectInvAndGroundItems(LootRecordType.EVENT, HALLOWED_SEPULCHRE_COFFIN_EVENT));
-			return;
-		}
-
 		if (message.equals(HERBIBOAR_LOOTED_MESSAGE))
 		{
 			if (processHerbiboarHerbSackLoot(event.getTimestamp()))
@@ -979,6 +956,7 @@ public class LootTrackerPlugin extends Plugin
 				pickpocketTarget = lastPickpocketTarget;
 			}
 
+			ignorePickpocketLoot = client.getTickCount();
 			onInvChange(collectInvAndGroundItems(LootRecordType.PICKPOCKET, pickpocketTarget));
 			return;
 		}
@@ -1058,12 +1036,6 @@ public class LootTrackerPlugin extends Plugin
 		if (regionID == WINTERTODT_REGION && message.contains(WINTERTODT_LOOT_STRING))
 		{
 			onInvChange(collectInvItems(LootRecordType.EVENT, WINTERTODT_REWARD_CART_EVENT, client.getBoostedSkillLevel(Skill.FIREMAKING)));
-			return;
-		}
-
-		if (message.equals(IMPLING_CATCH_MESSAGE))
-		{
-			onInvChange(collectInvItems(LootRecordType.EVENT, client.getLocalPlayer().getInteracting().getName()));
 			return;
 		}
 
@@ -1230,19 +1202,6 @@ public class LootTrackerPlugin extends Plugin
 						})));
 						break;
 				}
-			}
-			else if (event.getMenuOption().equals("Loot") && IMPLING_JARS.contains(event.getItemId()))
-			{
-				final int itemId = event.getItemId();
-				onInvChange(((invItems, groundItems, removedItems) ->
-				{
-					int cnt = removedItems.count(itemId);
-					if (cnt > 0)
-					{
-						String name = itemManager.getItemComposition(itemId).getMembersName();
-						addLoot(name, -1, LootRecordType.EVENT, null, invItems, cnt);
-					}
-				}));
 			}
 		}
 	}
