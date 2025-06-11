@@ -102,12 +102,13 @@ public class MasteringMixologyOverlay3D extends Overlay
 		var targetRefinery = state.getTargetRefinementType() == RefinementType.AGITATOR ? agitator :
 			state.getTargetRefinementType() == RefinementType.ALEMBIC ? alembic : retort;
 
-		if (targetRefinery == alembic && config.isStationSpeedupHighlightEnabled() && uiHelper.isAlembicSpeedupObjectPresent()) {
-			outlineObject(targetRefinery, config.refinerySpeedupOutline());
+		if (config.isStationSpeedupHighlightEnabled() && uiHelper.isAlembicSpeedupObjectPresent()) {
+			outlineObject(alembic, config.refinerySpeedupOutline());
 			return;
 		}
-		else if (targetRefinery == agitator && config.isStationSpeedupHighlightEnabled() && uiHelper.isAgitatorSpeedupObjectPresent()) {
-			outlineObject(targetRefinery, config.refinerySpeedupOutline());
+
+		if (config.isStationSpeedupHighlightEnabled() && uiHelper.isAgitatorSpeedupObjectPresent()) {
+			outlineObject(agitator, config.refinerySpeedupOutline());
 			return;
 		}
 
