@@ -58,6 +58,8 @@ public class MasteringMixologyOverlay3D extends Overlay
 
 	@Override
 	public Dimension render(Graphics2D graphics) {
+		outlineDigweed();
+
 		if (!state.isStarted()) {
 			return null;
 		}
@@ -80,8 +82,6 @@ public class MasteringMixologyOverlay3D extends Overlay
 				drawConveyorBelt();
 				break;
 		}
-
-		outlineDigweed();
 
 		return null;
 	}

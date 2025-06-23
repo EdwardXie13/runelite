@@ -280,7 +280,7 @@ public class PressSpacePlugin extends Plugin {
             else if(recipe == 0) {}
 
             else if (countItem(ItemID.MOLTEN_GLASS, 27) && countItem(ItemID.GLASSBLOWING_PIPE, 1)) {
-                pressOtherKey('6');
+                pressOtherKey('8');
             } else {
                 pressKey(KeyEvent.VK_SPACE);
             }
