@@ -234,7 +234,7 @@ public class PressSpacePlugin extends Plugin {
     private boolean countItem(int item, int count) {
         return inventoryItems.stream()
                 .filter(items -> items.getId() == item)
-                .count() >= count;
+                .count() == count;
     }
 
     private boolean containsItem(int item) {
