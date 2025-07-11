@@ -9,6 +9,8 @@ import net.runelite.api.GraphicsObject;
 import net.runelite.api.ObjectComposition;
 import net.runelite.client.plugins.masteringmixology.constants.MixologyIDs;
 
+import java.util.Optional;
+
 @Singleton
 public class UIHelper
 {
@@ -33,10 +35,11 @@ public class UIHelper
 	}
 
 	public GameObject getMatureDigweedObjectOrNull() {
-		var compositionNE = getObjectComposition(digweedNE.getId());
-		var compositionSE = getObjectComposition(digweedSE.getId());
-		var compositionSW = getObjectComposition(digweedSW.getId());
-		var compositionNW = getObjectComposition(digweedNW.getId());
+		Optional.ofNullable(digweedNE).map(GameObject::getId).orElse(null);
+		var compositionNE = Optional.ofNullable(digweedNE).map(GameObject::getId).map(this::getObjectComposition).orElse(null);
+		var compositionSE = Optional.ofNullable(digweedSE).map(GameObject::getId).map(this::getObjectComposition).orElse(null);
+		var compositionSW = Optional.ofNullable(digweedSW).map(GameObject::getId).map(this::getObjectComposition).orElse(null);
+		var compositionNW = Optional.ofNullable(digweedNW).map(GameObject::getId).map(this::getObjectComposition).orElse(null);
 
 		if (compositionNE != null && compositionNE.getId() == MixologyIDs.MATURE_DIGWEED_COMPOSITION_ID) {
 			return digweedNE;

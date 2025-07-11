@@ -32,6 +32,9 @@ import net.runelite.api.ItemID;
 
 enum ItemIdentification
 {
+	//QOL
+	TEASING_STICK("stick", ItemID.TEASING_STICK),
+
 	//Herbs
 	GRIMY_GUAM("(g)G", ItemID.GRIMY_GUAM_LEAF),
 	GRIMY_MARRENTILL("(g)M", ItemID.GRIMY_MARRENTILL),

@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @PluginDescriptor(
         name = "Press Space",
@@ -218,23 +219,28 @@ public class PressSpacePlugin extends Plugin {
     }
 
     public boolean doesInventoryContainRecipe(Set<Pair<Integer, Integer>> set) {
-        List<Boolean> values = new ArrayList<>();
-        for (Pair<Integer, Integer> pair : set) {
-            values.add(countItem(pair.getKey(), pair.getValue()));
-        }
-        return values.stream().allMatch(Boolean::booleanValue);
+        Map<Integer, Integer> recipeMap = set.stream()
+            .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+
+        Map<Integer, Integer> inventoryMap = inventoryItems.stream()
+            .map(Item::getId)
+            .distinct()
+            .filter(id -> id != -1)
+            .collect(Collectors.toMap(id -> id, this::getCountItems));
+
+        return recipeMap.equals(inventoryMap);
     }
 
     private int getCountItems(int item) {
         return (int) inventoryItems.stream()
-                .filter(items -> items.getId() == item)
-                .count();
+            .filter(items -> items.getId() == item)
+            .count();
     }
 
     private boolean countItem(int item, int count) {
         return inventoryItems.stream()
-                .filter(items -> items.getId() == item)
-                .count() == count;
+            .filter(items -> items.getId() == item)
+            .count() == count;
     }
 
     private boolean containsItem(int item) {
