@@ -33,44 +33,6 @@ import net.runelite.client.plugins.timetracking.Tab;
 @Getter
 public enum PatchImplementation
 {
-	BELLADONNA(Tab.SPECIAL, "", false)
-		{
-			@Override
-			PatchState forVarbitValue(int value)
-			{
-				if (value >= 0 && value <= 3)
-				{
-					// Belladonna patch[Rake,Inspect,Guide] 7560,7559,7558,7557
-					return new PatchState(Produce.WEEDS, CropState.GROWING, 3 - value);
-				}
-				if (value >= 4 && value <= 7)
-				{
-					// Belladonna[Inspect,Guide] 7561,7562,7563,7564
-					return new PatchState(Produce.BELLADONNA, CropState.GROWING, value - 4);
-				}
-				if (value == 8)
-				{
-					// Belladonna[Pick,Inspect,Guide] 7565
-					return new PatchState(Produce.BELLADONNA, CropState.HARVESTABLE, 0);
-				}
-				if (value >= 9 && value <= 11)
-				{
-					// Diseased Belladonna[Cure,Inspect,Guide] 7566,7567,7568
-					return new PatchState(Produce.BELLADONNA, CropState.DISEASED, value - 8);
-				}
-				if (value >= 12 && value <= 14)
-				{
-					// Dead Belladonna[Clear,Inspect,Guide] 7569,7570,7571
-					return new PatchState(Produce.BELLADONNA, CropState.DEAD, value - 11);
-				}
-				if (value >= 15 && value <= 255)
-				{
-					// Belladonna patch[Rake,Inspect,Guide] 7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560,7560
-					return new PatchState(Produce.WEEDS, CropState.GROWING, 3);
-				}
-				return null;
-			}
-		},
 	SKILLER_BELLADONNA(Tab.SKILLER_IRON, "", false)
 		{
 			@Override
