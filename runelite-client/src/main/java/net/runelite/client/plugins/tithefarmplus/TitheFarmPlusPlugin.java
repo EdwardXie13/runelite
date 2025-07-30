@@ -28,9 +28,10 @@ public class TitheFarmPlusPlugin extends Plugin {
     @Inject
     private ClientThread clientThread;
 
-    TitheFarmPlusMain thread;
+    TitheFarmPlusMain main;
 
     private boolean hasStarted = false;
+    public long start;
 
     @Subscribe
     public void onGameTick(GameTick event) throws AWTException {
@@ -48,12 +49,14 @@ public class TitheFarmPlusPlugin extends Plugin {
         if(chatBoxMessage == null) return;
 
         if(chatBoxMessage.equals("1") && !TitheFarmPlusMain.isRunning && !hasStarted) {
-            thread = new TitheFarmPlusMain(client, clientThread);
+            start = System.currentTimeMillis();
+            main = new TitheFarmPlusMain(client, clientThread, start);
+
             TitheFarmPlusMain.isRunning = true;
             hasStarted = true;
             System.out.println("status is go");
         } else if (chatBoxMessage.equals("2") && TitheFarmPlusMain.isRunning && hasStarted) {
-            thread.t.stop();
+            main.stop();
             TitheFarmPlusMain.isRunning = false;
             hasStarted = false;
             System.out.println("status is stop");
@@ -95,7 +98,6 @@ public class TitheFarmPlusPlugin extends Plugin {
         TitheFarmPlusWorldPoints.patchNumByTile.clear();
         TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.clear();
         TitheFarmPlusWorldPoints.waterBarrelWorldPoint = null;
-        TitheFarmPlusMain.isIdle = true;
         TitheFarmPlusMain.isRunning = false;
         TitheFarmPlusMain.hasInit = false;
         TitheFarmPlusMain.fillWateringCan = false;

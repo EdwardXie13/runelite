@@ -1,7 +1,10 @@
 package net.runelite.client.plugins.tithefarmplus;
 
+import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.GameObject;
 import net.runelite.api.Tile;
+import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameObjectSpawned;
 
 import java.util.ArrayList;
@@ -12,6 +15,7 @@ import java.util.Map;
 import static net.runelite.client.plugins.tithefarmplus.TitheFarmPlusMain.hasInit;
 import static net.runelite.client.plugins.tithefarmplus.TitheFarmPlusMain.patchStates;
 
+@Slf4j
 public class TitheFarmPlusObjectIDs {
     enum PatchState {
         EMPTY,

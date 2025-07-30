@@ -1,4 +1,4 @@
-package net.runelite.client.plugins.agilityPlus;
+package net.runelite.client.plugins.agilityAid;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
@@ -14,7 +14,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 import javax.inject.Inject;
 import java.awt.*;
 
-import static net.runelite.client.plugins.agilityPlus.AgilityAidWorldPoints.*;
+import static net.runelite.client.plugins.agilityAid.AgilityAidWorldPoints.*;
 
 @PluginDescriptor(name = "Agility Aid", description = "Agility Aid")
 @Slf4j

@@ -1,4 +1,4 @@
-package net.runelite.client.plugins.agilityPlus;
+package net.runelite.client.plugins.agilityAid;
 
 import net.runelite.api.coords.WorldPoint;
 
