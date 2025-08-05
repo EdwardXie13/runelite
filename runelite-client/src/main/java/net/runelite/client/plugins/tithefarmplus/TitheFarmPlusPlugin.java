@@ -13,6 +13,8 @@ import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.tithefarm.TitheFarmPlantOverlay;
+import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import java.awt.AWTException;
@@ -28,6 +30,12 @@ public class TitheFarmPlusPlugin extends Plugin {
     @Inject
     private ClientThread clientThread;
 
+    @Inject
+    private OverlayManager overlayManager;
+
+    @Inject
+    private StepOverlay overlay;
+
     TitheFarmPlusMain main;
 
     private boolean hasStarted = false;
@@ -36,6 +44,12 @@ public class TitheFarmPlusPlugin extends Plugin {
     @Subscribe
     public void onGameTick(GameTick event) throws AWTException {
         toggleStatus();
+    }
+
+    @Override
+    protected void startUp() throws Exception
+    {
+        overlayManager.add(overlay);
     }
 
     private String stripTargetAnchors(String text) {
@@ -50,7 +64,7 @@ public class TitheFarmPlusPlugin extends Plugin {
 
         if(chatBoxMessage.equals("1") && !TitheFarmPlusMain.isRunning && !hasStarted) {
             start = System.currentTimeMillis();
-            main = new TitheFarmPlusMain(client, clientThread, start);
+            main = new TitheFarmPlusMain(client, clientThread, overlay);
 
             TitheFarmPlusMain.isRunning = true;
             hasStarted = true;
@@ -101,5 +115,6 @@ public class TitheFarmPlusPlugin extends Plugin {
         TitheFarmPlusMain.isRunning = false;
         TitheFarmPlusMain.hasInit = false;
         TitheFarmPlusMain.fillWateringCan = false;
+        overlayManager.remove(overlay);
     }
 }

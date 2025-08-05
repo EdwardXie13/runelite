@@ -72,7 +72,11 @@ public class TitheFarmPlusWorldPoints {
 
         // 9 col 2 row 1
         TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
-                returnRightTilesDescending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(15)));
+                returnTopAndRightTiles(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(15)));
+
+//        TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
+//                returnRightTilesDescending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(15)));
+
         // 10 col 3 row 1
         TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
                 returnLeftTilesDescending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(24)));
@@ -91,11 +95,11 @@ public class TitheFarmPlusWorldPoints {
 
         // 14 col 3 row 3
         TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
-                returnLeftTilesDescending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(22)));
+                returnTopLeftTile(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(22)));
 
         // 15 col 2 row 4
         TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
-                returnLeftTilesDescending(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(21)));
+                returnTopLeftTile(TitheFarmPlusWorldPoints.SWTileOfAllTitheFarmPatches.get(21)));
 
         // 16 col 3 row 4
         TitheFarmPlusWorldPoints.patchWalkTilesByWorldPoint.add(
@@ -216,5 +220,22 @@ public class TitheFarmPlusWorldPoints {
         return ImmutableList.of(
                 new WorldPoint(worldPoint.getX(), worldPoint.getY() + 3, worldPoint.getPlane())
         );
+    }
+
+    private static List<WorldPoint> returnTopAndRightTiles(Tile tile) {
+        WorldPoint worldPoint = tile.getWorldLocation();
+        return ImmutableList.of(
+                new WorldPoint(worldPoint.getX() + 3, worldPoint.getY(), worldPoint.getPlane()),
+                new WorldPoint(worldPoint.getX() + 3, worldPoint.getY() + 1, worldPoint.getPlane()),
+                new WorldPoint(worldPoint.getX() + 3, worldPoint.getY() + 2, worldPoint.getPlane()),
+                new WorldPoint(worldPoint.getX(), worldPoint.getY() + 3, worldPoint.getPlane()),
+                new WorldPoint(worldPoint.getX() + 1, worldPoint.getY() + 3, worldPoint.getPlane()),
+                new WorldPoint(worldPoint.getX() + 2, worldPoint.getY() + 3, worldPoint.getPlane())
+        );
+    }
+
+    public static WorldPoint returnWaterBarrel(Tile tile) {
+        WorldPoint worldPoint = tile.getWorldLocation();
+        return new WorldPoint(worldPoint.getX() + 3, worldPoint.getY() + 3, worldPoint.getPlane());
     }
 }

@@ -10,6 +10,7 @@ import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.agilityPlusV2.AgilityPlusWorldPoints;
 
 import javax.inject.Inject;
 import java.awt.*;
@@ -30,6 +31,8 @@ public class AgilityAidPlugin extends Plugin {
     public void checkLocation() {
         if(getRegionID() == 10553 || getRegionID() == 10297) {
             doRelleka();
+        } else if (getRegionID() == 10547) {
+            doArdy();
         }
     }
 
@@ -57,6 +60,32 @@ public class AgilityAidPlugin extends Plugin {
         } else if (isAtWorldPoint(RELLEKA_FINISH) || isAtWorldPoint(RELLEKA_FAIL1) || isAtWorldPoint(RELLEKA_FAIL2)) {
             detachCameraPoint(3264, 6847, 512, 1024, 896);
         } else if (isDestinationTile(RELLEKA_START)) {
+            resetZoomPitchYaw(200, 512, 1024);
+        }
+    }
+
+    public void doArdy() {
+        if (isAtWorldPoint(ARDY_START)) {
+            setZoomPitchYaw(896, 300, 0);
+        } else if(isAtWorldPoint(ARDY_FIRST_ROOF)) {
+            setZoomPitchYaw(-47, 240, 965);
+        } else if(isAtWorldPoint(ARDY_FIRST_ROOF_RUN_POINT)) {
+            setZoomPitchYaw(896, 512, 1024);
+        } else if(isAtWorldPoint(ARDY_SECOND_ROOF)) {
+            setZoomPitchYaw(670, 512, 1420);
+        } else if(isAtWorldPoint(ARDY_THIRD_ROOF)) {
+            setZoomPitchYaw(709, 512, 1536);
+        } else if(isAtWorldPoint(ARDY_FOURTH_ROOF)) {
+            setZoomPitchYaw(523, 512, 1926);
+        } else if(isAtWorldPoint(ARDY_FIFTH_ROOF)) {
+            setZoomPitchYaw(375, 512, 0);
+        } else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_SIXTH_ROOF)) {
+            setZoomPitchYaw(896, 512, 0);
+        } else if (isAtWorldPoint(ARDY_FINISH)) {
+            setZoomPitchYaw(896, 4, 570);
+        } else if(isAtWorldPoint(ARDY_FAIL1) || isAtWorldPoint(ARDY_FAIL2)) {
+            detachCameraPoint(7338, 6336, 512, 0, 896);
+        } else if (isDestinationTile(ARDY_START)) {
             resetZoomPitchYaw(200, 512, 1024);
         }
     }
