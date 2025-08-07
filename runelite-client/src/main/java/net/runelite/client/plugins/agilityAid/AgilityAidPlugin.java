@@ -66,13 +66,13 @@ public class AgilityAidPlugin extends Plugin {
 
     public void doArdy() {
         if (isAtWorldPoint(ARDY_START)) {
-            setZoomPitchYaw(896, 300, 0);
+            setZoomPitchYaw(896, 125, 0);
         } else if(isAtWorldPoint(ARDY_FIRST_ROOF)) {
             setZoomPitchYaw(-47, 240, 965);
         } else if(isAtWorldPoint(ARDY_FIRST_ROOF_RUN_POINT)) {
             setZoomPitchYaw(896, 512, 1024);
         } else if(isAtWorldPoint(ARDY_SECOND_ROOF)) {
-            setZoomPitchYaw(670, 512, 1420);
+            setZoomPitchYaw(680, 512, 1420);
         } else if(isAtWorldPoint(ARDY_THIRD_ROOF)) {
             setZoomPitchYaw(709, 512, 1536);
         } else if(isAtWorldPoint(ARDY_FOURTH_ROOF)) {
