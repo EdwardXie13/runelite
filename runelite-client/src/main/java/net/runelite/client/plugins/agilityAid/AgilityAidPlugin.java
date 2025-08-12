@@ -1,11 +1,12 @@
 package net.runelite.client.plugins.agilityAid;
 
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
-import net.runelite.api.ScriptID;
+import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.ItemDespawned;
+import net.runelite.api.events.ItemSpawned;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
@@ -28,34 +29,124 @@ public class AgilityAidPlugin extends Plugin {
         checkLocation();
     }
 
+    @Subscribe
+    public void onItemSpawned(ItemSpawned itemSpawned)
+    {
+        final TileItem item = itemSpawned.getItem();
+        final Tile tile = itemSpawned.getTile();
+
+        if (item.getId() == ItemID.MARK_OF_GRACE)
+        {
+            WorldPoint MOG_TILE = tile.getWorldLocation();
+            if(MOG_TILE.equals(CANFIS_GRACEFULMARK1))
+                MOG_CANFIS1 = true;
+            else if(MOG_TILE.equals(CANFIS_GRACEFULMARK2))
+                MOG_CANFIS2 = true;
+            else if(MOG_TILE.equals(CANFIS_GRACEFULMARK3))
+                MOG_CANFIS3 = true;
+            else if(MOG_TILE.equals(CANFIS_GRACEFULMARK4))
+                MOG_CANFIS4 = true;
+            else if(MOG_TILE.equals(CANFIS_GRACEFULMARK5))
+                MOG_CANFIS5 = true;
+        }
+    }
+
+    @Subscribe
+    public void onItemDespawned(ItemDespawned itemDespawned)
+    {
+        final TileItem item = itemDespawned.getItem();
+        final Tile tile = itemDespawned.getTile();
+
+        if (item.getId() == ItemID.MARK_OF_GRACE)
+        {
+            WorldPoint MOG_TILE = tile.getWorldLocation();
+            if(MOG_TILE.equals(CANFIS_GRACEFULMARK1))
+                MOG_CANFIS1 = false;
+            else if(MOG_TILE.equals(CANFIS_GRACEFULMARK2))
+                MOG_CANFIS2 = false;
+            else if(MOG_TILE.equals(CANFIS_GRACEFULMARK3))
+                MOG_CANFIS3 = false;
+            else if(MOG_TILE.equals(CANFIS_GRACEFULMARK4))
+                MOG_CANFIS4 = false;
+            else if(MOG_TILE.equals(CANFIS_GRACEFULMARK5))
+                MOG_CANFIS5 = false;
+        }
+    }
+
     public void checkLocation() {
-        if(getRegionID() == 10553 || getRegionID() == 10297) {
+        if(getRegionID() == 13878) {
+            doCanfis();
+        } else if(getRegionID() == 10553 || getRegionID() == 10297) {
             doRelleka();
         } else if (getRegionID() == 10547) {
             doArdy();
         }
     }
 
+    public void doCanfis() {
+        if (isAtWorldPoint(CANFIS_START)) {
+            setZoomPitchYaw(730, 110, 1342);
+        } else if(isAtWorldPoint(CANFIS_FIRST_ROOF) && !MOG_CANFIS1) {
+            setZoomPitchYaw(130, 60, 1041);
+        } else if(isAtWorldPoint(CANFIS_FIRST_ROOF) && MOG_CANFIS1) {
+            setZoomPitchYaw(750, 512, 1024);
+        } else if(isAtWorldPoint(CANFIS_GRACEFULMARK1)) {
+            setZoomPitchYaw(800, 512, 1024);
+        } else if(isAtWorldPoint(CANFIS_SECOND_ROOF) && !MOG_CANFIS2) {
+            setZoomPitchYaw(340, 20, 1536);
+        } else if(isAtWorldPoint(CANFIS_SECOND_ROOF) && MOG_CANFIS2) {
+            setZoomPitchYaw(896, 512, 1536);
+        } else if(isAtWorldPoint(CANFIS_GRACEFULMARK2)) {
+            setZoomPitchYaw(255, 52, 1631);
+        } else if(isAtWorldPoint(CANFIS_THIRD_ROOF) && !MOG_CANFIS3) {
+            setZoomPitchYaw(-47, 190, 1757);
+        } else if(isAtWorldPoint(CANFIS_THIRD_ROOF) && MOG_CANFIS3) {
+            setZoomPitchYaw(695, 472, 1748);
+        } else if(isAtWorldPoint(CANFIS_GRACEFULMARK3)) {
+            setZoomPitchYaw(223, 60, 1700);
+        } else if(isAtWorldPoint(CANFIS_FOURTH_ROOF) && !MOG_CANFIS4) {
+            setZoomPitchYaw(-47, 103, 2002);
+        } else if(isAtWorldPoint(CANFIS_FOURTH_ROOF) && MOG_CANFIS4) {
+            setZoomPitchYaw(758, 512, 1836);
+        } else if(isAtWorldPoint(CANFIS_GRACEFULMARK4)) {
+            setZoomPitchYaw(896, 20, 1024);
+        } else if(isAtWorldPoint(CANFIS_FIFTH_ROOF) && !MOG_CANFIS5) {
+            setZoomPitchYaw(430, 25, 205);
+        } else if(isAtWorldPoint(CANFIS_FIFTH_ROOF) && MOG_CANFIS5) {
+            setZoomPitchYaw(870, 512, 0);
+        } else if(isAtWorldPoint(CANFIS_GRACEFULMARK5)) {
+            setZoomPitchYaw(770, 434, 260);
+        } else if(isAtWorldPoint(CANFIS_SIXTH_ROOF)) {
+            setZoomPitchYaw(815, 70, 1536);
+        } else if(isAtWorldPoint(CANFIS_SEVENTH_ROOF)) {
+            setZoomPitchYaw(896, 50, 0);
+        } else if (isAtWorldPoint(CANFIS_FAIL1)) {
+            detachCameraPoint(6460, 7235, 512, 0, 896);
+        } else if (isDestinationTile(CANFIS_BUSH)) {
+            resetZoomPitchYaw(896, 512, 1024);
+        }
+    }
+
     public void doRelleka() {
         if (isAtWorldPoint(RELLEKA_START)) {
             setZoomPitchYaw(896, 300, 1024);
-        } else if(isAtWorldPoint(AgilityAidWorldPoints.RELLEKA_FIRST_ROOF)) {
+        } else if(isAtWorldPoint(RELLEKA_FIRST_ROOF)) {
             setZoomPitchYaw(390, 512, 0);
-        } else if(isAtWorldPoint(AgilityAidWorldPoints.RELLEKA_GRACEFULMARK1)) {
+        } else if(isAtWorldPoint(RELLEKA_GRACEFULMARK1)) {
             setZoomPitchYaw(460, 512, 0);
-        } else if(isAtWorldPoint(AgilityAidWorldPoints.RELLEKA_SECOND_ROOF)) {
+        } else if(isAtWorldPoint(RELLEKA_SECOND_ROOF)) {
             setZoomPitchYaw(300, 512, 0);
-        } else if(isAtWorldPoint(AgilityAidWorldPoints.RELLEKA_THIRD_ROOF)) {
+        } else if(isAtWorldPoint(RELLEKA_THIRD_ROOF)) {
             setZoomPitchYaw(540, 512, 0);
-        } else if((isAtWorldPoint(AgilityAidWorldPoints.RELLEKA_GRACEFULMARK3_1) || isAtWorldPoint(AgilityAidWorldPoints.RELLEKA_GRACEFULMARK3_2))) {
+        } else if((isAtWorldPoint(RELLEKA_GRACEFULMARK3_1) || isAtWorldPoint(RELLEKA_GRACEFULMARK3_2))) {
             setZoomPitchYaw(570, 512, 1024);
-        } else if(isAtWorldPoint(AgilityAidWorldPoints.RELLEKA_FOURTH_ROOF)) {
+        } else if(isAtWorldPoint(RELLEKA_FOURTH_ROOF)) {
             setZoomPitchYaw(540, 512, 0);
-        } else if((isAtWorldPoint(AgilityAidWorldPoints.RELLEKA_GRACEFULMARK4_1) || isAtWorldPoint(AgilityAidWorldPoints.RELLEKA_GRACEFULMARK4_2))) {
+        } else if((isAtWorldPoint(RELLEKA_GRACEFULMARK4_1) || isAtWorldPoint(RELLEKA_GRACEFULMARK4_2))) {
             setZoomPitchYaw(570, 512, 1024);
-        } else if(isAtWorldPoint(AgilityAidWorldPoints.RELLEKA_FIFTH_ROOF)) {
+        } else if(isAtWorldPoint(RELLEKA_FIFTH_ROOF)) {
             setZoomPitchYaw(500, 512, 1536);
-        } else if(isAtWorldPoint(AgilityAidWorldPoints.RELLEKA_SIXTH_ROOF)) {
+        } else if(isAtWorldPoint(RELLEKA_SIXTH_ROOF)) {
             setZoomPitchYaw(430, 512, 1024);
         } else if (isAtWorldPoint(RELLEKA_FINISH) || isAtWorldPoint(RELLEKA_FAIL1) || isAtWorldPoint(RELLEKA_FAIL2)) {
             detachCameraPoint(3264, 6847, 512, 1024, 896);
@@ -79,7 +170,7 @@ public class AgilityAidPlugin extends Plugin {
             setZoomPitchYaw(523, 512, 1926);
         } else if(isAtWorldPoint(ARDY_FIFTH_ROOF)) {
             setZoomPitchYaw(375, 512, 0);
-        } else if(isAtWorldPoint(AgilityPlusWorldPoints.ARDY_SIXTH_ROOF)) {
+        } else if(isAtWorldPoint(ARDY_SIXTH_ROOF)) {
             setZoomPitchYaw(896, 512, 0);
         } else if (isAtWorldPoint(ARDY_FINISH)) {
             setZoomPitchYaw(896, 4, 570);
