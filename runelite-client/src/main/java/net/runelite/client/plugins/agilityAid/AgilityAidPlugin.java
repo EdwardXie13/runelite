@@ -87,7 +87,7 @@ public class AgilityAidPlugin extends Plugin {
         if (isAtWorldPoint(CANFIS_START)) {
             setZoomPitchYaw(730, 110, 1342);
         } else if(isAtWorldPoint(CANFIS_FIRST_ROOF) && !MOG_CANFIS1) {
-            setZoomPitchYaw(130, 60, 1041);
+            setZoomPitchYaw(-47, 157, 1024);
         } else if(isAtWorldPoint(CANFIS_FIRST_ROOF) && MOG_CANFIS1) {
             setZoomPitchYaw(750, 512, 1024);
         } else if(isAtWorldPoint(CANFIS_GRACEFULMARK1)) {
