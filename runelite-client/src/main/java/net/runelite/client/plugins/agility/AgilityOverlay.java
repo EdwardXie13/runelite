@@ -47,7 +47,7 @@ import net.runelite.client.util.ColorUtil;
 
 class AgilityOverlay extends Overlay
 {
-	private static final int MAX_DISTANCE = 4000;
+	private static final int MAX_DISTANCE = 8000;
 	private static final Color SHORTCUT_HIGH_LEVEL_COLOR = Color.ORANGE;
 
 	private final Client client;

@@ -93,8 +93,12 @@ public class TitheFarmPlusMain implements Runnable {
             }
             else if (isAtCurrentPatch(0) && isAllEmptyPatches() && pause) {
                 int nextDelay = scheduler.getNextBreakDuration();
-                overlay.setCurrentStep("delay " + nextDelay + "s");
-                robot.delay(nextDelay);
+                overlay.setCurrentStep("delay " + nextDelay + "ms");
+                // break delay into safe chunks
+                for (long d = nextDelay; d > 0; d -= 60_000) {
+                    robot.delay((int) Math.min(d, 60_000));
+                }
+//                robot.delay(nextDelay);
                 pause = false;
             }
             else if (!pause) {
@@ -161,14 +165,14 @@ public class TitheFarmPlusMain implements Runnable {
                                 fillWateringCan = false;
                             }
                         }
-                        incrementPatch();
                         if (currentPatch == 24) {
-                            // generate randomStamina
-                            randomStamina = new Random().nextInt(16) + 20;
+//                            // generate randomStamina
+//                            randomStamina = new Random().nextInt(16) + 20;
                             pause = true;
                             overlay.setCurrentStep("pause init");
                         }
 
+                        incrementPatch();
                         moveToNextTile();
                     }
                 } else if (patchStates.get(currentPatch) == PatchState.DEAD && (isAtCurrentPatch(currentPatch) || skipWalkToNext)) {
@@ -345,5 +349,18 @@ public class TitheFarmPlusMain implements Runnable {
     public void stop() {
         isRunning = false;
         t.interrupt(); // in case it's sleeping or waiting
+        reset();
+    }
+
+    public void reset() {
+        isRunning = false;
+        hasInit = false;
+        currentPatch = 0;
+        hasSetZoom = false;
+        fillWateringCan = false;
+        logout = false;
+        randomStamina = 85;
+        skipWalkToNext = false;
+        pause = false;
     }
 }

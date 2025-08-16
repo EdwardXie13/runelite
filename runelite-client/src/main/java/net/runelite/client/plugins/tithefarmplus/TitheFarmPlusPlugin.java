@@ -65,14 +65,17 @@ public class TitheFarmPlusPlugin extends Plugin {
         if(chatBoxMessage.equals("1") && !TitheFarmPlusMain.isRunning && !hasStarted) {
             start = System.currentTimeMillis();
             main = new TitheFarmPlusMain(client, clientThread, overlay);
+            main.reset();
 
             TitheFarmPlusMain.isRunning = true;
             hasStarted = true;
+            overlay.setCurrentStep("status is go");
             System.out.println("status is go");
         } else if (chatBoxMessage.equals("2") && TitheFarmPlusMain.isRunning && hasStarted) {
             main.stop();
             TitheFarmPlusMain.isRunning = false;
             hasStarted = false;
+            overlay.setCurrentStep("status is stop");
             System.out.println("status is stop");
         }
     }
