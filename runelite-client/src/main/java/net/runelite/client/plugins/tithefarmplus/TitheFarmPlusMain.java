@@ -94,7 +94,11 @@ public class TitheFarmPlusMain implements Runnable {
             else if (isAtCurrentPatch(0) && isAllEmptyPatches() && pause) {
                 int nextDelay = scheduler.getNextBreakDuration();
                 overlay.setCurrentStep("delay " + nextDelay + "ms");
-                robot.delay(nextDelay);
+                // break delay into safe chunks
+                for (long d = nextDelay; d > 0; d -= 60_000) {
+                    robot.delay((int) Math.min(d, 60_000));
+                }
+//                robot.delay(nextDelay);
                 pause = false;
             }
             else if (!pause) {

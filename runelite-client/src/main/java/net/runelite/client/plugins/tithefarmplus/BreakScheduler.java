@@ -39,10 +39,6 @@ public class BreakScheduler {
         long nextMajorBreakAt = getRandomInterval(20, 40); // mins
         long nextMajorMajorBreakAt = 60 * 60_000L; // 1 hour mark
 
-        int microCount = 0;
-        int majorCount = 0;
-        int majorMajorCount = 0;
-
         while (elapsed < TOTAL_SESSION_MS) {
             if (elapsed >= nextMajorMajorBreakAt) {
                 long majorMajorBreak = gaussianClamped(
@@ -50,7 +46,6 @@ public class BreakScheduler {
                         MAJOR_MAJOR_MIN_MS, MAJOR_MAJOR_MAX_MS
                 );
                 scheduledBreaks.add(majorMajorBreak);
-                majorMajorCount++;
                 nextMajorMajorBreakAt += 60 * 60_000L; // every ~1hr
             } else if (elapsed >= nextMajorBreakAt) {
                 long majorBreak = gaussianClamped(
@@ -58,7 +53,6 @@ public class BreakScheduler {
                         MAJOR_MIN_MS, MAJOR_MAX_MS
                 );
                 scheduledBreaks.add(majorBreak);
-                majorCount++;
                 nextMajorBreakAt += getRandomInterval(20, 40);
             } else {
                 long microBreak = gaussianClamped(
@@ -66,14 +60,10 @@ public class BreakScheduler {
                         MICRO_MIN_MS, MICRO_MAX_MS
                 );
                 scheduledBreaks.add(microBreak);
-                microCount++;
             }
 
             elapsed += TARGET_INTERVAL_MS;
         }
-
-        System.out.printf("Scheduled %d breaks total (%d micro, %d major, %d major-major)%n",
-                scheduledBreaks.size(), microCount, majorCount, majorMajorCount);
     }
 
     private long getRandomInterval(int minMinutes, int maxMinutes) {
@@ -88,9 +78,5 @@ public class BreakScheduler {
     public int getNextBreakDuration() {
         Long duration = scheduledBreaks.poll();
         return duration != null ? duration.intValue() : 0; // or throw if null is unexpected
-    }
-
-    public boolean hasMoreBreaks() {
-        return !scheduledBreaks.isEmpty();
     }
 }
