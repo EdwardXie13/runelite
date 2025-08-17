@@ -87,6 +87,8 @@ public class TitheFarmPlusMain implements Runnable {
             }
         } else {
             if (isAtCurrentPatch(0) && isAllEmptyPatches() && logout) {
+                overlay.setCurrentStep("logout time");
+                logout();
                 isRunning = false;
                 t.interrupt();
                 System.out.println("interrupted");
@@ -103,7 +105,7 @@ public class TitheFarmPlusMain implements Runnable {
             }
             else if (!pause) {
                 if (patchStates.get(currentPatch) == PatchState.EMPTY && (isAtCurrentPatch(currentPatch) || skipWalkToNext)) {
-                    overlay.setCurrentStep("planting");
+                    overlay.setCurrentStep("planting: " + currentPatch);
                     clickFirstSlot();
                     Point toClick = clicker.clickTile(patchNumByTile.get(currentPatch));
                     clicker.clickPointHumanized(toClick, 70, 120, 20, 50);
@@ -112,7 +114,7 @@ public class TitheFarmPlusMain implements Runnable {
                         robot.delay(new Random().nextInt(35) + 20);
                     }
                 } else if (patchStates.get(currentPatch) == PatchState.UNWATERED && (isAtCurrentPatch(currentPatch) || skipWalkToNext)) {
-                    overlay.setCurrentStep("watering");
+                    overlay.setCurrentStep("watering: " + currentPatch);
                     Point toClick = clicker.clickTile(patchNumByTile.get(currentPatch));
                     clicker.clickPointHumanized(toClick, 70, 120, 20, 50);
 
@@ -138,12 +140,12 @@ public class TitheFarmPlusMain implements Runnable {
                     }
 
                 } else if (patchStates.get(currentPatch) == PatchState.WATERED && (isAtCurrentPatch(currentPatch) || skipWalkToNext)) {
-                    overlay.setCurrentStep("watered");
+                    overlay.setCurrentStep("watered: " + currentPatch);
                     while (patchStates.get(currentPatch) == PatchState.WATERED) {
                         robot.delay(new Random().nextInt(35) + 20);
                     }
                 } else if (patchStates.get(currentPatch) == PatchState.GROWN && isAtCurrentPatch(currentPatch)) {
-                    overlay.setCurrentStep("grown");
+                    overlay.setCurrentStep("grown: " + currentPatch);
                     Point toClick = clicker.clickTile(patchNumByTile.get(currentPatch));
                     //                clicker.clickPoint(toClick);
                     clicker.clickPointHumanized(toClick, 70, 120, 20, 50);
@@ -165,6 +167,7 @@ public class TitheFarmPlusMain implements Runnable {
                                 fillWateringCan = false;
                             }
                         }
+                        incrementPatch();
                         if (currentPatch == 24) {
 //                            // generate randomStamina
 //                            randomStamina = new Random().nextInt(16) + 20;
@@ -176,7 +179,7 @@ public class TitheFarmPlusMain implements Runnable {
                         moveToNextTile();
                     }
                 } else if (patchStates.get(currentPatch) == PatchState.DEAD && (isAtCurrentPatch(currentPatch) || skipWalkToNext)) {
-                    overlay.setCurrentStep("dead");
+                    overlay.setCurrentStep("dead: " + currentPatch);
                     Point toClick = clicker.clickTile(patchNumByTile.get(currentPatch));
                     clicker.clickPoint(toClick);
 
@@ -350,6 +353,13 @@ public class TitheFarmPlusMain implements Runnable {
         isRunning = false;
         t.interrupt(); // in case it's sleeping or waiting
         reset();
+    }
+
+    public void logout() {
+        robot.keyPress(KeyEvent.VK_F12);
+        robot.keyRelease(KeyEvent.VK_F12);
+        robot.delay(1500);
+        clicker.clickPoint(new Point(828, 971));
     }
 
     public void reset() {
