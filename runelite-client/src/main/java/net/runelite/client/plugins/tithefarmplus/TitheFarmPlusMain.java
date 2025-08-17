@@ -349,5 +349,18 @@ public class TitheFarmPlusMain implements Runnable {
     public void stop() {
         isRunning = false;
         t.interrupt(); // in case it's sleeping or waiting
+        reset();
+    }
+
+    public void reset() {
+        isRunning = false;
+        hasInit = false;
+        currentPatch = 0;
+        hasSetZoom = false;
+        fillWateringCan = false;
+        logout = false;
+        randomStamina = 85;
+        skipWalkToNext = false;
+        pause = false;
     }
 }

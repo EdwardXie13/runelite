@@ -65,6 +65,7 @@ public class TitheFarmPlusPlugin extends Plugin {
         if(chatBoxMessage.equals("1") && !TitheFarmPlusMain.isRunning && !hasStarted) {
             start = System.currentTimeMillis();
             main = new TitheFarmPlusMain(client, clientThread, overlay);
+            main.reset();
 
             TitheFarmPlusMain.isRunning = true;
             hasStarted = true;
