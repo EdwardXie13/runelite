@@ -12,10 +12,10 @@ public class BreakScheduler {
     private static final long TARGET_INTERVAL_MS = 3 * 60 * 1000L; // every ~3 minutes
 
     // Micro break config
-    private static final double MICRO_MEAN_MS = 15_000;
+    private static final double MICRO_MEAN_MS = 10_000;
     private static final double MICRO_STDDEV_MS = 5_000;
     private static final long MICRO_MIN_MS = 5_000;
-    private static final long MICRO_MAX_MS = 30_000;
+    private static final long MICRO_MAX_MS = 25_000;
 
     // Major break config
     private static final double MAJOR_MEAN_MS = 120_000;

@@ -167,7 +167,6 @@ public class TitheFarmPlusMain implements Runnable {
                                 fillWateringCan = false;
                             }
                         }
-                        incrementPatch();
                         if (currentPatch == 24) {
 //                            // generate randomStamina
 //                            randomStamina = new Random().nextInt(16) + 20;
