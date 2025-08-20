@@ -39,7 +39,6 @@ public class TitheFarmPlusPlugin extends Plugin {
     TitheFarmPlusMain main;
 
     private boolean hasStarted = false;
-    public long start;
 
     @Subscribe
     public void onGameTick(GameTick event) throws AWTException {
@@ -63,7 +62,6 @@ public class TitheFarmPlusPlugin extends Plugin {
         if(chatBoxMessage == null) return;
 
         if(chatBoxMessage.equals("1") && !TitheFarmPlusMain.isRunning && !hasStarted) {
-            start = System.currentTimeMillis();
             main = new TitheFarmPlusMain(client, clientThread, overlay);
             main.reset();
 
