@@ -96,6 +96,9 @@ public class TitheFarmPlusMain implements Runnable {
 
             pause = false;
         }
+        else if (isAtCurrentPatch(0) && !isAllEmptyPatches() && !pause){
+            overlay.setCurrentStep("BROKEN");
+        }
         else if (!pause) {
             if (patchStates.get(currentPatch) == PatchState.EMPTY && (isAtCurrentPatch(currentPatch) || skipWalkToNext)) {
                 overlay.setCurrentStep("planting: " + currentPatch);
@@ -342,8 +345,8 @@ public class TitheFarmPlusMain implements Runnable {
 
     public void stop() {
         isRunning = false;
-        t.interrupt(); // in case it's sleeping or waiting
         reset();
+        t.interrupt(); // in case it's sleeping or waiting
     }
 
     public void logout() {
