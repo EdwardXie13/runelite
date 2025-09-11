@@ -78,6 +78,7 @@ public interface ChargesImprovedConfig extends Config {
     String huntsmans_kit = "huntsmans_kit";
     String necklace_of_passage = "necklace_of_passage";
     String ogre_bellows = "ogre_bellows";
+    String ogre_bow = "ogre_bow";
     String pharaohs_sceptre = "pharaohs_sceptre";
     String phoenix_necklace = "phoenix_necklace";
     String plank_sack = "plank_sack";
@@ -742,6 +743,13 @@ public interface ChargesImprovedConfig extends Config {
         ) default boolean ogreBellowsInfobox() { return true; }
 
         @ConfigItem(
+            keyName = ogre_bow + infobox,
+            name = "Ogre bow",
+            description = "",
+            section = infoboxes
+        ) default boolean ogreBowInfobox() { return true; }
+
+        @ConfigItem(
             keyName = plank_sack + infobox,
             name = "Plank sack",
             description = "",
@@ -1314,6 +1322,13 @@ public interface ChargesImprovedConfig extends Config {
             description = "",
             section = overlays
         ) default boolean ogreBellowsOverlay() { return true; }
+
+        @ConfigItem(
+            keyName = ogre_bow + overlay,
+            name = "Ogre bow",
+            description = "",
+            section = overlays
+        ) default boolean ogreBowOverlay() { return true; }
 
         @ConfigItem(
             keyName = phoenix_necklace + overlay,
