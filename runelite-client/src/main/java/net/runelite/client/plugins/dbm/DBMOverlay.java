@@ -24,9 +24,6 @@ public class DBMOverlay extends Overlay
         setLayer(OverlayLayer.ABOVE_SCENE);
     }
 
-    /**
-     * Update tracked tiles with their AoE size + expiration tick
-     */
     public void update(Map<WorldPoint, ProjectileInfo> trackedTiles)
     {
         this.trackedTiles = trackedTiles;
@@ -35,20 +32,24 @@ public class DBMOverlay extends Overlay
     @Override
     public Dimension render(Graphics2D graphics)
     {
-        if (trackedTiles == null) return null;
+        if (trackedTiles == null)
+            return null;
 
         for (Map.Entry<WorldPoint, ProjectileInfo> entry : trackedTiles.entrySet())
         {
             WorldPoint wp = entry.getKey();
             ProjectileInfo info = entry.getValue();
 
-            for (int dx = -info.getSize(); dx <= info.getSize(); dx++)
+            int radius = info.getRadius();
+
+            for (int dx = -radius; dx <= radius; dx++)
             {
-                for (int dy = -info.getSize(); dy <= info.getSize(); dy++)
+                for (int dy = -radius; dy <= radius; dy++)
                 {
                     WorldPoint drawPoint = wp.dx(dx).dy(dy);
                     LocalPoint lp = LocalPoint.fromWorld(client, drawPoint);
-                    if (lp == null) continue;
+                    if (lp == null)
+                        continue;
 
                     Polygon poly = Perspective.getCanvasTilePoly(client, lp);
                     if (poly != null)
@@ -61,9 +62,9 @@ public class DBMOverlay extends Overlay
                         if (dx == 0 && dy == 0)
                         {
                             graphics.drawString(
-                                    "Projectile!",
-                                    (int) poly.getBounds().getCenterX(),
-                                    (int) poly.getBounds().getCenterY()
+                                info.getName(),
+                                (int) poly.getBounds().getCenterX(),
+                                (int) poly.getBounds().getCenterY()
                             );
                         }
                     }

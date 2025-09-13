@@ -2,22 +2,31 @@ package net.runelite.client.plugins.dbm;
 
 public class ProjectileInfo
 {
-    public final int expireTick;
-    public final int size;
+    private final String name;
+    private final int radius; // 0 = 1x1, 1 = 3x3, 2 = 5x5, etc.
+    private final int lifetimeTicks;
 
-    public ProjectileInfo(int expireTick, int size)
+    public ProjectileInfo(String name, int radius, int lifetimeTicks)
     {
-        this.expireTick = expireTick;
-        this.size = size;
+        this.name = name;
+        this.radius = radius;
+        this.lifetimeTicks = lifetimeTicks;
     }
 
-    public int getExpireTick()
+    public String getName()
     {
-        return expireTick;
+        return name;
     }
 
-    public int getSize()
+    public int getRadius()
     {
-        return size;
+        return radius;
+    }
+
+    public int getLifetimeTicks()
+    {
+        return lifetimeTicks;
     }
 }
+
+

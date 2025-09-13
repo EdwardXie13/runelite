@@ -2,19 +2,19 @@ package net.runelite.client.plugins.dbm;
 
 import java.util.List;
 import java.util.Arrays;
+import java.util.Map;
+
+import static java.util.Map.entry;
 
 public class ProjectilesList {
-    public static final List<Integer> PROJECTILES_1x1 = Arrays.asList(
-            // Add default 1x1 projectile IDs here
-            1477
+    public static final Map<Integer, ProjectileInfo> PROJECTILES = Map.ofEntries(
+        // VORKATH
+        Map.entry(1481, new ProjectileInfo("Bomb", 1, 1)), // BOMB
+        Map.entry(1483, new ProjectileInfo("Acid", 0, 24)), // ACID
+        Map.entry(1484, new ProjectileInfo("Spawn", 0,0)) // ZOMBIE_SPAWN
     );
 
-    public static final List<Integer> PROJECTILES_3x3 = Arrays.asList(
-            // Add default 3x3 projectile IDs here, e.g., Vorkath fireball
-            1481 //VORKATH_FIRE_BOMB_ATTACK
-    );
+    public static final Map<Integer, ProjectileInfo> GRAPHICS_OBJECTS = Map.ofEntries(
 
-    public static final List<Integer> GRAPHICS_OBJECTS = Arrays.asList(
-            // Add default graphics object IDs here, e.g., Olm lightning
     );
 }

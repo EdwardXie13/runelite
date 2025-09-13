@@ -39,6 +39,7 @@ import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.imageio.ImageIO;
@@ -90,12 +91,18 @@ public class ExternalPluginClient
 
 	private <T> T downloadManifest(String name, Class<T> clazz) throws IOException, VerificationException
 	{
+		String[] parts = net.runelite.client.RuneLiteProperties.getPluginHubVersion()
+				.replace("-SNAPSHOT", "")
+				.split("\\.");
+		parts[parts.length - 1] = String.valueOf(Integer.parseInt(parts[parts.length - 1]) - 1);
+		String result = String.join(".", parts) + "_full.js";
+
 		HttpUrl manifest = pluginHubBase
-			.newBuilder()
-			.addPathSegment("manifest")
-//			.addPathSegment(RuneLiteProperties.getPluginHubVersion() + "_" + name + ".js")
-			.addPathSegment("1.11.13_full.js")
-			.build();
+				.newBuilder()
+				.addPathSegment("manifest")
+				.addEncodedPathSegment(result)
+				.build();
+
 		try (Response res = okHttpClient.newCall(new Request.Builder().url(manifest).build()).execute())
 		{
 			if (res.code() != 200)

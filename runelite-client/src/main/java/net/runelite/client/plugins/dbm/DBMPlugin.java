@@ -19,7 +19,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
 @Slf4j
 @PluginDescriptor(
         name = "DBM",
-        description = "Boss mechanic alerts and overlays like WeakAuras/DBM",
+        description = "DBM",
         tags = {"pvm", "bossing", "raids", "timers"}
 )
 public class DBMPlugin extends Plugin
@@ -39,6 +39,7 @@ public class DBMPlugin extends Plugin
     protected void startUp()
     {
         overlayManager.add(overlay);
+        trackedTiles.clear();
     }
 
     @Override
@@ -52,7 +53,7 @@ public class DBMPlugin extends Plugin
     public void onGraphicsObjectCreated(GraphicsObjectCreated event)
     {
         GraphicsObject obj = event.getGraphicsObject();
-        if (ProjectilesList.GRAPHICS_OBJECTS.contains(obj.getId()))
+        if (ProjectilesList.GRAPHICS_OBJECTS.containsKey(obj.getId()))
         {
             log.debug("Graphics object {} at {}", obj.getId(), obj.getLocation());
         }
@@ -61,36 +62,34 @@ public class DBMPlugin extends Plugin
     @Subscribe
     public void onClientTick(ClientTick tick)
     {
+        // Expire old projectiles
+        trackedTiles.entrySet().removeIf(
+                e -> e.getValue().getLifetimeTicks() < client.getTickCount()
+        );
+
+        // Add new projectiles
         for (Projectile p : client.getProjectiles())
         {
-            WorldPoint targetPoint = p.getTargetPoint();
             int id = p.getId();
+            WorldPoint targetPoint = p.getTargetPoint();
+            if (targetPoint == null)
+                continue;
 
-            // 1x1 projectiles
-            if (ProjectilesList.PROJECTILES_1x1.contains(id))
+            ProjectileInfo projectile = ProjectilesList.PROJECTILES.get(id);
+            if (projectile != null)
             {
                 trackedTiles.put(
-                        targetPoint,
-                        new ProjectileInfo(client.getTickCount() + 3, 0) // size=0 → 1x1
+                    targetPoint,
+                    new ProjectileInfo(
+                        projectile.getName(),
+                        projectile.getRadius(),
+                        client.getTickCount() + projectile.getLifetimeTicks()
+                    )
                 );
-                log.debug("1x1 Projectile {} affects tile {}", id, targetPoint);
-            }
 
-            // 3x3 projectiles
-            if (ProjectilesList.PROJECTILES_3x3.contains(id))
-            {
-                trackedTiles.put(
-                        targetPoint,
-                        new ProjectileInfo(client.getTickCount() + 3, 1) // size=1 → 3x3
-                );
-                log.debug("3x3 Projectile {} affects tile {}", id, targetPoint);
+//                log.debug("{} ({}x{}) affects tile {}", projectile.getName(), projectile.getRadius(), projectile.getRadius(), targetPoint);
             }
-
-            // Future: size=2 → 5x5, size=3 → 7x7, etc.
         }
-
-        // Remove expired
-        trackedTiles.entrySet().removeIf(e -> e.getValue().expireTick < client.getTickCount());
 
         // Push to overlay
         overlay.update(trackedTiles);
