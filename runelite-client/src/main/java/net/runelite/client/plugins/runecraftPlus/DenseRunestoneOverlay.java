@@ -666,7 +666,7 @@ public class DenseRunestoneOverlay extends Overlay
             String target = stripTargetAnchors(entry);
             MenuAction targetType = entry.getType();
             if (
-                (RCpouch.contains(target) && entry.getIdentifier() == 3 && menuEntries.length == 7 && isAtRCAltar()) ||
+                (RCpouch.contains(target) && entry.getIdentifier() == 2 && menuEntries.length == 7 && isAtRCAltar()) ||
                 (Capes.contains(target) && entry.getIdentifier() == 4 && menuEntries.length == 6) ||
                 (UnchargedGlory.contains(target) && entry.getIdentifier() == 6 && menuEntries.length == 6) ||
                 (isZammyMage(entry) && targetType == MenuAction.NPC_FOURTH_OPTION && menuEntries.length == 6)

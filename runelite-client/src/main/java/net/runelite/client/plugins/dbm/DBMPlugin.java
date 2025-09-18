@@ -93,6 +93,17 @@ public class DBMPlugin extends Plugin
 
         // Push to overlay
         overlay.update(trackedTiles);
+
+        // Pray correct prayer
+//        Player local = client.getLocalPlayer();
+//        if (local != null) {
+//            HeadIcon overhead = local.getOverheadIcon();
+//            if (overhead != null) {
+//                client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Your overhead icon: " + overhead, null);
+//            } else {
+//                client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "No overhead icon active.", null);
+//            }
+//        }
     }
 
 }

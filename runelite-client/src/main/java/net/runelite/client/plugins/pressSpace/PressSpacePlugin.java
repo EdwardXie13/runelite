@@ -1,13 +1,11 @@
 package net.runelite.client.plugins.pressSpace;
 
-import com.google.inject.Provides;
 import net.runelite.api.*;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
-import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -16,9 +14,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import javax.inject.Inject;
 import java.awt.Robot;
 import java.awt.event.KeyEvent;
-import java.sql.SQLOutput;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -210,7 +206,7 @@ public class PressSpacePlugin extends Plugin {
     }
 
     private boolean doesInventoryContainRecipe() {
-        for (Set<Pair<Integer, Integer>> recipe : Potions.potionRecipe) {
+        for (Set<Pair<Integer, Integer>> recipe : Recipes.recipe) {
             if(doesInventoryContainRecipe(recipe))
                 return true;
         }
