@@ -141,6 +141,21 @@ public class LootTrackerPlugin extends Plugin
 	private static final int THEATRE_OF_BLOOD_REGION = 12867;
 	private static final int THEATRE_OF_BLOOD_LOBBY = 14642;
 	private static final int BA_LOBBY_REGION = 10039;
+	// PvP loot keys (Wilderness/Deadman) reuse the Deadman loot containers, one per tab
+	private static final List<Integer> PVP_LOOT_KEY_CONTAINERS = List.of(
+		InventoryID.DEADMAN_LOOT_INV0,
+		InventoryID.DEADMAN_LOOT_INV1,
+		InventoryID.DEADMAN_LOOT_INV2,
+		InventoryID.DEADMAN_LOOT_INV3,
+		InventoryID.DEADMAN_LOOT_INV4
+	);
+	private static final List<Integer> PVP_LOOT_KEYS = List.of(
+		ItemID.WILDY_LOOT_KEY0,
+		ItemID.WILDY_LOOT_KEY1,
+		ItemID.WILDY_LOOT_KEY2,
+		ItemID.WILDY_LOOT_KEY3,
+		ItemID.WILDY_LOOT_KEY4
+	);
 
 	// Herbiboar loot handling
 	@VisibleForTesting
@@ -151,6 +166,9 @@ public class LootTrackerPlugin extends Plugin
 	// Master Farmer loot handling
 	private static final Pattern MASTER_FARMER_SEED_BOX_MULTIPLE_PATTERN = Pattern.compile("The following stolen loot gets added to your seed box: (.+?) x (\\d+)\\.");
 	private static final Pattern MASTER_FARMER_SEED_BOX_SINGLE_PATTERN = Pattern.compile("You put the stolen (.+?) into your seed box\\.");
+	// Zombie Pirate Locker loot handling
+	static final String ZOMBIE_PIRATE_LOCKER_EVENT = "Zombie Pirate's Locker";
+	private static final Pattern ZOMBIE_PIRATE_LOCKER_PATTERN = Pattern.compile("You loot the locker and receive <col=[\\da-f]{6}>(?<qty>[\\d,]+) x (?<item>.+)</col>\\.");
 
 	// Seed Pack loot handling
 	private static final String SEEDPACK_EVENT = "Seed pack";
@@ -351,6 +369,7 @@ public class LootTrackerPlugin extends Plugin
 	private NavigationButton navButton;
 
 	private boolean chestLooted;
+	private boolean pvpKeysLooted;
 	private boolean lastLoadingIntoInstance;
 	private String lastPickpocketTarget;
 	private int ignorePickpocketLoot;
@@ -815,14 +834,12 @@ public class LootTrackerPlugin extends Plugin
 				container = client.getItemContainer(InventoryID.MACRO_CERTER);
 				break;
 			case InterfaceID.WILDY_LOOT_CHEST:
-				if (chestLooted)
+				if (pvpKeysLooted)
 				{
 					return;
 				}
-				event = "Loot Chest";
-				container = client.getItemContainer(InventoryID.LOOT_INV_ACCESS);
-				chestLooted = true;
-				break;
+				pvpKeysLooted = addPvpChestLoot();
+				return;
 			case InterfaceID.PMOON_REWARD:
 				event = "Lunar Chest";
 				container = client.getItemContainer(InventoryID.PMOON_REWARDINV);
@@ -845,11 +862,7 @@ public class LootTrackerPlugin extends Plugin
 			return;
 		}
 
-		// Convert container items to array of ItemStack
-		final Collection<ItemStack> items = Arrays.stream(container.getItems())
-			.filter(item -> item.getId() > -1)
-			.map(item -> new ItemStack(item.getId(), item.getQuantity()))
-			.collect(Collectors.toList());
+		final Collection<ItemStack> items = toItemStacks(container);
 
 		if (config.showRaidsLootValue() && (event.equals(THEATRE_OF_BLOOD) || event.equals(CHAMBERS_OF_XERIC) || event.equals(TOMBS_OF_AMASCUT)))
 		{
@@ -884,18 +897,50 @@ public class LootTrackerPlugin extends Plugin
 		addLoot(event, -1, LootRecordType.EVENT, metadata, items);
 	}
 
+	/**
+	 * Creates loot chest entries for each loot key's tab in the PVP loot chest interface.
+	 *
+	 * @return {@code true} if loot was added, {@code false} otherwise.
+	 */
+	private boolean addPvpChestLoot()
+	{
+		boolean recordedLoot = false;
+
+		for (int containerId : PVP_LOOT_KEY_CONTAINERS)
+		{
+			final Collection<ItemStack> items = toItemStacks(client.getItemContainer(containerId));
+			if (items.isEmpty())
+			{
+				continue;
+			}
+
+			addLoot("Loot Chest", -1, LootRecordType.EVENT, null, items);
+			recordedLoot = true;
+		}
+
+		return recordedLoot;
+	}
+
+	private static Collection<ItemStack> toItemStacks(@Nullable ItemContainer container)
+	{
+		if (container == null)
+		{
+			return Collections.emptyList();
+		}
+
+		return Arrays.stream(container.getItems())
+			.filter(item -> item.getId() > -1)
+			.map(item -> new ItemStack(item.getId(), item.getQuantity()))
+			.collect(Collectors.toList());
+	}
+
 	@Subscribe
 	public void onScriptPreFired(ScriptPreFired event)
 	{
 		if (event.getScriptId() == ScriptID.DOM_LOOT_CLAIM)
 		{
 			// this is called after the loot has been claimed
-			ItemContainer inv = client.getItemContainer(InventoryID.DOM_LOOTPILE);
-
-			final Collection<ItemStack> items = Arrays.stream(inv.getItems())
-				.filter(item -> item.getId() > -1)
-				.map(item -> new ItemStack(item.getId(), item.getQuantity()))
-				.collect(Collectors.toList());
+			final Collection<ItemStack> items = toItemStacks(client.getItemContainer(InventoryID.DOM_LOOTPILE));
 
 			String title = client.getWidget(InterfaceID.DomEndLevelUi.FRAME).getChild(1).getText(); // Level 2 Complete!
 			int level = Integer.parseInt(title.split(" ")[1]);
@@ -945,6 +990,12 @@ public class LootTrackerPlugin extends Plugin
 
 			onInvChange(collectInvAndGroundItems(LootRecordType.EVENT, CHEST_EVENT_TYPES.get(regionID)));
 			return;
+		}
+
+		final Matcher zombiePirateLockerMatcher = ZOMBIE_PIRATE_LOCKER_PATTERN.matcher(message);
+		if (zombiePirateLockerMatcher.matches())
+		{
+			processZombiePirateLockerLoot(zombiePirateLockerMatcher);
 		}
 
 		if (message.equals(HERBIBOAR_LOOTED_MESSAGE))
@@ -1118,12 +1169,10 @@ public class LootTrackerPlugin extends Plugin
 	@Subscribe
 	public void onItemContainerChanged(ItemContainerChanged event)
 	{
-		// when the wilderness chest empties, clear chest loot flag for the next key
-		if (event.getContainerId() == InventoryID.LOOT_INV_ACCESS
-			&& Arrays.stream(event.getItemContainer().getItems()).noneMatch(i -> i.getId() > -1))
+		if (pvpKeysLooted && event.getContainerId() == InventoryID.INV)
 		{
-			log.debug("Resetting chest loot flag");
-			chestLooted = false;
+			final ItemContainer inventory = client.getItemContainer(InventoryID.INV);
+			pvpKeysLooted = PVP_LOOT_KEYS.stream().anyMatch((lootKeyId) -> inventory.contains(lootKeyId));
 		}
 
 		if (inventoryId == -1 || event.getContainerId() != inventoryId)
@@ -1441,6 +1490,14 @@ public class LootTrackerPlugin extends Plugin
 		int herbloreLevel = client.getBoostedSkillLevel(Skill.HERBLORE);
 		addLoot(HERBIBOAR_EVENT, -1, LootRecordType.EVENT, herbloreLevel, herbs);
 		return true;
+	}
+
+	private void processZombiePirateLockerLoot(Matcher matcher)
+	{
+		final int quantity = Integer.parseInt(matcher.group("qty").replaceAll(",", ""));
+		final String itemName = matcher.group("item");
+		final int itemId = "Coins".equals(itemName) ? ItemID.COINS : itemManager.search(itemName).get(0).getId();
+		addLoot(ZOMBIE_PIRATE_LOCKER_EVENT, -1, LootRecordType.EVENT, null, List.of(new ItemStack(itemId, quantity)));
 	}
 
 	@VisibleForTesting
