@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Adam <Adam@sigterm.info>
+ * Copyright (c) 2025, Adam <Adam@sigterm.info>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,61 +22,71 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package net.runelite.client.plugins.gpu;
 
-#define PI 3.1415926535897932384626433832795f
-#define UNIT PI / 1024.0f
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import static org.lwjgl.opengl.GL33C.*;
 
-layout(std140) uniform uniforms {
-  float cameraYaw;
-  float cameraPitch;
-  int centerX;
-  int centerY;
-  int zoom;
-  float cameraX;
-  float cameraY;
-  float cameraZ;
-};
+class VBO
+{
+	final int size;
+	int bufId;
+	private ByteBuffer buffer;
+	IntBuffer vb;
+	int len;
+	boolean mapped;
 
-struct modelinfo {
-  int offset;   // offset into vertex buffer
-  int toffset;  // offset into texture buffer
-  int size;     // length in faces
-  int idx;      // write idx in target buffer
-  int flags;    // buffer, hillskew, plane, orientation
-  int x;        // scene position x
-  int y;        // scene position y
-  int z;        // scene position z
-};
+	VBO(int size)
+	{
+		this.size = size;
+	}
 
-struct vert {
-  vec3 pos;
-  int ahsl;
-};
+	void init(int usage)
+	{
+		bufId = glGenBuffers();
 
-layout(std430, binding = 0) readonly buffer modelbuffer_in {
-  modelinfo ol[];
-};
+		glBindBuffer(GL_ARRAY_BUFFER, bufId);
+		glBufferData(GL_ARRAY_BUFFER, size, usage);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
 
-layout(std430, binding = 1) readonly buffer vertexbuffer_in {
-  vert vb[];
-};
+	void destroy()
+	{
+		if (mapped)
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, bufId);
+			glUnmapBuffer(GL_ARRAY_BUFFER);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			mapped = false;
+		}
+		glDeleteBuffers(bufId);
+		bufId = 0;
+	}
 
-layout(std430, binding = 2) readonly buffer tempvertexbuffer_in {
-  vert tempvb[];
-};
+	void map()
+	{
+		assert !mapped;
+		glBindBuffer(GL_ARRAY_BUFFER, bufId);
+		buffer = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY, buffer);
+		if (buffer == null)
+		{
+			throw new RuntimeException("unable to map GL buffer " + bufId + " size " + size);
+		}
+		this.vb = buffer.asIntBuffer();
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		mapped = true;
+	}
 
-layout(std430, binding = 3) writeonly buffer vertex_out {
-  vert vout[];
-};
+	void unmap()
+	{
+		assert mapped;
+		len = vb.position();
+		vb = null;
 
-layout(std430, binding = 4) writeonly buffer uv_out {
-  vec4 uvout[];
-};
-
-layout(std430, binding = 5) readonly buffer texturebuffer_in {
-  vec4 texb[];
-};
-
-layout(std430, binding = 6) readonly buffer temptexturebuffer_in {
-  vec4 temptexb[];
-};
+		glBindBuffer(GL_ARRAY_BUFFER, bufId);
+		glUnmapBuffer(GL_ARRAY_BUFFER);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		mapped = false;
+	}
+}
