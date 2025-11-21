@@ -1182,7 +1182,14 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 			m.calculateBoundsCylinder();
 			VAO o = vaoO.get(size), a = vaoA.get(size);
 			int start = a.vbo.vb.position();
-			facePrioritySorter.uploadSortedModel(worldProjection, m, orient, x, y, z, o.vbo.vb, a.vbo.vb);
+			try
+			{
+				facePrioritySorter.uploadSortedModel(worldProjection, m, orient, x, y, z, o.vbo.vb, a.vbo.vb);
+			}
+			catch (Exception ex)
+			{
+				log.debug("error drawing entity", ex);
+			}
 			int end = a.vbo.vb.position();
 
 			if (end > start)
@@ -1257,6 +1264,11 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 	public void invalidateZone(Scene scene, int zx, int zz)
 	{
 		SceneContext ctx = context(scene);
+		if (ctx == null)
+		{
+			return;
+		}
+
 		Zone z = ctx.zones[zx][zz];
 		if (!z.invalidate)
 		{
@@ -1865,7 +1877,8 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 		SceneContext ctx0 = subs[worldViewId];
 		if (ctx0 != null)
 		{
-			throw new RuntimeException("Reload of an already loaded worldview?");
+			log.info("Reload of an already loaded worldview?");
+			return;
 		}
 
 		final SceneContext ctx = new SceneContext(worldView.getSizeX() >> 3, worldView.getSizeY() >> 3);
@@ -1940,7 +1953,13 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 		if (worldViewId > -1)
 		{
 			log.debug("WorldView despawn: {}", worldViewId);
-			subs[worldViewId].free();
+			var sub = subs[worldViewId];
+			if (sub == null)
+			{
+				return;
+			}
+
+			sub.free();
 			subs[worldViewId] = null;
 		}
 	}
@@ -1998,6 +2017,11 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 	private void swapSub(Scene scene)
 	{
 		SceneContext ctx = context(scene);
+		if (ctx == null)
+		{
+			return;
+		}
+
 		// setup vaos
 		for (int x = 0; x < ctx.sizeX; ++x)
 		{
