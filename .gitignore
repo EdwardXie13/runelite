@@ -13,6 +13,5 @@ project.properties
 *.txt
 .DS_Store
 *.env
-env.json
-seedsInBank.json
+*.json
 settings.properties
