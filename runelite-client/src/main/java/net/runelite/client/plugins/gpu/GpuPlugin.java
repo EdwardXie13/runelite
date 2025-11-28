@@ -94,7 +94,6 @@ import org.lwjgl.system.Configuration;
 @PluginDescriptor(
 	name = "GPU",
 	description = "Offloads rendering to GPU",
-	enabledByDefault = false,
 	tags = {"fog", "draw distance"},
 	loadInSafeMode = false
 )
@@ -276,7 +275,7 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 		subs = new SceneContext[MAX_WORLDVIEWS];
 		clientUploader = new SceneUploader(renderCallbackManager);
 		mapUploader = new SceneUploader(renderCallbackManager);
-		facePrioritySorter = new FacePrioritySorter(client, clientUploader);
+		facePrioritySorter = new FacePrioritySorter(clientUploader);
 		clientThread.invoke(() ->
 		{
 			try
@@ -1114,26 +1113,29 @@ public class GpuPlugin extends Plugin implements DrawCallbacks
 			{
 				glUniform3i(uniBase, 0, 0, 0);
 
-				var vaos = vaoO.unmap();
-				for (VAO vao : vaos)
+				int sz = vaoO.unmap();
+				for (int i = 0; i < sz; ++i)
 				{
+					VAO vao = vaoO.vaos.get(i);
 					vao.draw();
 					vao.reset();
 				}
 
-				vaos = vaoPO.unmap();
-				if (!vaos.isEmpty())
+				sz = vaoPO.unmap();
+				if (sz > 0)
 				{
 					glDepthMask(false);
-					for (VAO vao : vaos)
+					for (int i = 0; i < sz; ++i)
 					{
+						VAO vao = vaoPO.vaos.get(i);
 						vao.draw();
 					}
 					glDepthMask(true);
 
 					glColorMask(false, false, false, false);
-					for (VAO vao : vaos)
+					for (int i = 0; i < sz; ++i)
 					{
+						VAO vao = vaoPO.vaos.get(i);
 						vao.draw();
 						vao.reset();
 					}
