@@ -468,37 +468,47 @@ public class AgilityPlusMain implements Runnable {
         else if(isAtWorldPoint(CANFIS_BUSH) && isIdle) {
             tryAction(this::clickTreeFromBush);
         }
-        else if (isAtWorldPoint(CANFIS_FIRST_ROOF) && xpDrop && isIdle) {
-            tryAction(AgilityPlusWorldPoints.MOG_CANFIS1 ?
-                this::canfisPickupMOG1 : this::canfisNoMOG1);
+        else if(isAtWorldPoint(CANFIS_FIRST_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS1 && xpDrop && isIdle) {
+            tryAction(this::canfisPickupMOG1);
+        }
+        else if(isAtWorldPoint(CANFIS_FIRST_ROOF) && !AgilityPlusWorldPoints.MOG_CANFIS1 && xpDrop && isIdle) {
+            tryAction(this::canfisNoMOG1);
         }
         else if(isAtWorldPoint(CANFIS_GRACEFULMARK1) && invUpdate && isIdle) {
             tryAction(this::canfisAtMog1);
         }
-        else if (isAtWorldPoint(CANFIS_SECOND_ROOF) && xpDrop && isIdle) {
-            tryAction(AgilityPlusWorldPoints.MOG_CANFIS2 ?
-                this::canfisPickupMOG2 : this::canfisNoMOG2);
+        else if (isAtWorldPoint(CANFIS_SECOND_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS2 && xpDrop && isIdle) {
+            tryAction(this::canfisPickupMOG2);
+        }
+        else if (isAtWorldPoint(CANFIS_SECOND_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS2 && xpDrop && isIdle) {
+            tryAction(this::canfisNoMOG2);
         }
         else if(isAtWorldPoint(CANFIS_GRACEFULMARK2) && invUpdate && isIdle) {
             tryAction(this::canfisAtMog2);
         }
-        else if (isAtWorldPoint(CANFIS_THIRD_ROOF) && xpDrop && isIdle) {
-            tryAction(AgilityPlusWorldPoints.MOG_CANFIS3 ?
-                this::canfisPickupMOG3 : this::canfisNoMOG3);
+        else if (isAtWorldPoint(CANFIS_THIRD_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS3 && xpDrop && isIdle) {
+            tryAction(this::canfisPickupMOG3);
         }
-        else if (isAtWorldPoint(CANFIS_GRACEFULMARK3) && invUpdate && isIdle) {
+        else if (isAtWorldPoint(CANFIS_THIRD_ROOF) && !AgilityPlusWorldPoints.MOG_CANFIS3 && xpDrop && isIdle) {
+            tryAction(this::canfisNoMOG3);
+        }
+        else if(isAtWorldPoint(CANFIS_GRACEFULMARK3) && invUpdate && isIdle) {
             tryAction(this::canfisAtMog3);
         }
-        else if (isAtWorldPoint(CANFIS_FOURTH_ROOF) && xpDrop && isIdle) {
-            tryAction(AgilityPlusWorldPoints.MOG_CANFIS4 ?
-                this::canfisPickupMOG4 : this::canfisNoMOG4);
+        else if (isAtWorldPoint(CANFIS_FOURTH_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS4 && xpDrop && isIdle) {
+            tryAction(this::canfisPickupMOG4);
+        }
+        else if (isAtWorldPoint(CANFIS_FOURTH_ROOF) && !AgilityPlusWorldPoints.MOG_CANFIS4 && xpDrop && isIdle) {
+            tryAction(this::canfisNoMOG4);
         }
         else if (isAtWorldPoint(CANFIS_GRACEFULMARK4) && invUpdate && isIdle) {
             tryAction(this::canfisAtMog4);
         }
-        else if (isAtWorldPoint(CANFIS_FIFTH_ROOF) && xpDrop && isIdle) {
-            tryAction(AgilityPlusWorldPoints.MOG_CANFIS5 ?
-                    this::canfisPickupMOG5 : this::canfisNoMOG5);
+        else if (isAtWorldPoint(CANFIS_FIFTH_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS5 && xpDrop && isIdle) {
+            tryAction(this::canfisPickupMOG5);
+        }
+        else if (isAtWorldPoint(CANFIS_FIFTH_ROOF) && !AgilityPlusWorldPoints.MOG_CANFIS5 && xpDrop && isIdle) {
+            tryAction(this::canfisNoMOG5);
         }
         else if (isAtWorldPoint(CANFIS_GRACEFULMARK5) && invUpdate && isIdle) {
             tryAction(this::canfisAtMog5);
@@ -517,9 +527,8 @@ public class AgilityPlusMain implements Runnable {
 
     private void canfisFail() {
         overlay.setCurrentStep("CANFIS_FAIL");
-        while(!isMoving())
+        if(!isMoving())
             clicker.clickWorldPoint(CANFIS_BUSH);
-
     }
 
     private void canfisStart() {
@@ -542,92 +551,109 @@ public class AgilityPlusMain implements Runnable {
     // canfis mog1
     private void canfisPickupMOG1() {
         overlay.setCurrentStep("CANFIS MOG1");
-        clicker.clickWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK1);
+        if(!isMoving())
+            clicker.clickWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK1);
     }
 
     private void canfisNoMOG1() {
         overlay.setCurrentStep("CANFIS no MOG1");
-        clickPointObject(AgilityPlusObjectIDs.canfisFirstRoofGap);
+        if(!isMoving())
+            clickPointObject(AgilityPlusObjectIDs.canfisFirstRoofGap);
     }
 
     private void canfisAtMog1() {
         overlay.setCurrentStep("At MOG1");
-        clickPointObject(AgilityPlusObjectIDs.canfisFirstRoofGap);
+        if(!isMoving())
+            clickPointObject(AgilityPlusObjectIDs.canfisFirstRoofGap);
 
     }
 
     // canfis mog2
     private void canfisPickupMOG2() {
         overlay.setCurrentStep("CANFIS MOG2");
-        clicker.clickWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2);
+        if(!isMoving())
+            clicker.clickWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2);
     }
 
     private void canfisNoMOG2() {
         overlay.setCurrentStep("CANFIS no MOG2");
-        clickPointObject(AgilityPlusObjectIDs.canfisSecondRoofGap);
+        if(!isMoving())
+            clickPointObject(AgilityPlusObjectIDs.canfisSecondRoofGap);
     }
 
     private void canfisAtMog2() {
         overlay.setCurrentStep("At MOG2");
-        clickPointObject(AgilityPlusObjectIDs.canfisSecondRoofGap);
+        if(!isMoving())
+            clickPointObject(AgilityPlusObjectIDs.canfisSecondRoofGap);
     }
 
     // canfis mog3
     private void canfisPickupMOG3() {
         overlay.setCurrentStep("CANFIS MOG3");
-        clicker.clickWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3);
+        if(!isMoving())
+            clicker.clickWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3);
     }
 
     private void canfisNoMOG3() {
         overlay.setCurrentStep("CANFIS no MOG3");
-        clickPointObject(AgilityPlusObjectIDs.canfisThirdRoofGap);
+        if(!isMoving())
+            clickPointObject(AgilityPlusObjectIDs.canfisThirdRoofGap);
     }
 
     private void canfisAtMog3() {
         overlay.setCurrentStep("At MOG3");
-        clickPointObject(AgilityPlusObjectIDs.canfisThirdRoofGap);
+        if(!isMoving())
+            clickPointObject(AgilityPlusObjectIDs.canfisThirdRoofGap);
     }
 
     // canfis mog4
     private void canfisPickupMOG4() {
         overlay.setCurrentStep("CANFIS MOG4");
-        clicker.clickWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK4);
+        if(!isMoving())
+            clicker.clickWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK4);
     }
 
     private void canfisNoMOG4() {
         overlay.setCurrentStep("CANFIS no MOG4");
-        clickPointObject(AgilityPlusObjectIDs.canfisFourthRoofGap);
+        if(!isMoving())
+            clickPointObject(AgilityPlusObjectIDs.canfisFourthRoofGap);
     }
 
     private void canfisAtMog4() {
         overlay.setCurrentStep("At MOG4");
-        clickPointObject(AgilityPlusObjectIDs.canfisFourthRoofGap);
+        if(!isMoving())
+            clickPointObject(AgilityPlusObjectIDs.canfisFourthRoofGap);
     }
 
     // canfis mog5
     private void canfisPickupMOG5() {
         overlay.setCurrentStep("CANFIS MOG5");
-        clicker.clickWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK5);
+        if(!isMoving())
+            clicker.clickWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK5);
     }
 
     private void canfisNoMOG5() {
         overlay.setCurrentStep("CANFIS no MOG5");
-        clickPointObject(AgilityPlusObjectIDs.canfisFifthRoofGap);
+        if(!isMoving())
+            clickPointObject(AgilityPlusObjectIDs.canfisFifthRoofGap);
     }
 
     private void canfisAtMog5() {
         overlay.setCurrentStep("At MOG5");
-        clickPointObject(AgilityPlusObjectIDs.canfisFifthRoofGap);
+        if(!isMoving())
+            clickPointObject(AgilityPlusObjectIDs.canfisFifthRoofGap);
     }
 
     private void canfisRoof6() {
         overlay.setCurrentStep("CANFIS roof6");
-        clickPointObject(AgilityPlusObjectIDs.canfisSixthRoofGap);
+        if(!isMoving())
+            clickPointObject(AgilityPlusObjectIDs.canfisSixthRoofGap);
     }
 
     private void canfisRoof7() {
         overlay.setCurrentStep("CANFIS roof6");
-        clickPointObject(AgilityPlusObjectIDs.canfisSeventhRoofGap);
+        if(!isMoving())
+            clickPointObject(AgilityPlusObjectIDs.canfisSeventhRoofGap);
     }
 
 //    private void doSeersAgility() {
