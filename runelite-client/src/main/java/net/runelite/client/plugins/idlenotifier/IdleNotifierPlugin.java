@@ -59,6 +59,7 @@ import net.runelite.client.config.Notification;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.agilityPlusV2.AgilityPlusMain;
 
 @PluginDescriptor(
 	name = "Idle Notifier",
@@ -594,6 +595,7 @@ public class IdleNotifierPlugin extends Plugin
 		if (checkMovementIdle(waitDuration, local))
 		{
 			notifier.notify(config.movementIdle(), "You have stopped moving!");
+			AgilityPlusMain.isIdle = true;
 		}
 
 		if (checkInteractionIdle(waitDuration, local))

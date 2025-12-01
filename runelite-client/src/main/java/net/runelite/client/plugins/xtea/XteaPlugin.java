@@ -123,45 +123,45 @@ public class XteaPlugin extends Plugin
 		}
 	}
 
-	@Subscribe
-	public void onWorldViewLoaded(WorldViewLoaded event)
-	{
-		WorldView wv = event.getWorldView();
-
-		int revision = client.getRevision();
-		int[] regions = wv.getMapRegions();
-		int[][] xteaKeys = wv.getXteaKeys();
-
-		XteaRequest xteaRequest = new XteaRequest();
-		xteaRequest.setRevision(revision);
-
-		for (int idx = 0; idx < regions.length; ++idx)
-		{
-			int region = regions[idx];
-			int[] keys = xteaKeys[idx];
-
-			int[] seenKeys = xteas.get(region);
-			if (Arrays.equals(seenKeys, keys))
-			{
-				continue;
-			}
-
-			xteas.put(region, keys);
-
-			log.debug("World {} region {} keys {}, {}, {}, {}", wv.getId(), region, keys[0], keys[1], keys[2], keys[3]);
-
-			XteaKey xteaKey = new XteaKey();
-			xteaKey.setRegion(region);
-			xteaKey.setKeys(keys);
-			xteaRequest.addKey(xteaKey);
-		}
-
-		if (xteaRequest.getKeys().isEmpty())
-		{
-			return;
-		}
-
-		xteaClient.submit(xteaRequest);
-		executorService.execute(this::save);
-	}
+//	@Subscribe
+//	public void onWorldViewLoaded(WorldViewLoaded event)
+//	{
+//		WorldView wv = event.getWorldView();
+//
+//		int revision = client.getRevision();
+//		int[] regions = wv.getMapRegions();
+//		int[][] xteaKeys = wv.getXteaKeys();
+//
+//		XteaRequest xteaRequest = new XteaRequest();
+//		xteaRequest.setRevision(revision);
+//
+//		for (int idx = 0; idx < regions.length; ++idx)
+//		{
+//			int region = regions[idx];
+//			int[] keys = xteaKeys[idx];
+//
+//			int[] seenKeys = xteas.get(region);
+//			if (Arrays.equals(seenKeys, keys))
+//			{
+//				continue;
+//			}
+//
+//			xteas.put(region, keys);
+//
+//			log.debug("World {} region {} keys {}, {}, {}, {}", wv.getId(), region, keys[0], keys[1], keys[2], keys[3]);
+//
+//			XteaKey xteaKey = new XteaKey();
+//			xteaKey.setRegion(region);
+//			xteaKey.setKeys(keys);
+//			xteaRequest.addKey(xteaKey);
+//		}
+//
+//		if (xteaRequest.getKeys().isEmpty())
+//		{
+//			return;
+//		}
+//
+//		xteaClient.submit(xteaRequest);
+//		executorService.execute(this::save);
+//	}
 }

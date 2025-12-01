@@ -102,16 +102,6 @@ public class SkillerItem extends Plugin {
         }
     }
 
-    private Map<String, Object> createDefaultSeedData(String seedName) {
-        Map<String, Object> data = new LinkedHashMap<>();
-        data.put("moltenGlass", 0);
-        data.put("sodaAsh", 0);
-        data.put("bucketOfSand", 0);
-        data.put("seaweed", 0);
-        data.put("giantSeaweed", 0);
-        return data;
-    }
-
     private void writeDataToJson(Map<String, Object> data) {
         Gson gson = new GsonBuilder()
                 .setPrettyPrinting()

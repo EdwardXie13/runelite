@@ -152,15 +152,6 @@ public class Notifier
 
 	public void notify(String message)
 	{
-		AgilityPlusMain.isIdle = true;
-		RCPlusMain.isIdle = true;
-		RCPlusTrueBloodsMain.isIdle = true;
-		MiningPlusMain.isIdle = true;
-		TanningPlusMain.isIdle = true;
-		PlankmakePlusMain.isIdle = true;
-		TwoClickCraftingMain.isIdle = true;
-		ThievingPlusMain.isIdle = true;
-
 		var notif = defaultNotification(TrayIcon.MessageType.NONE);
 		notify(notif, message);
 	}

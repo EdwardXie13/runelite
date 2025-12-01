@@ -1,34 +1,29 @@
 package net.runelite.client.plugins.agilityPlusV2;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
-import net.runelite.api.GameState;
-import net.runelite.api.ItemID;
-import net.runelite.api.Tile;
-import net.runelite.api.TileItem;
+import net.runelite.api.*;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.api.events.DecorativeObjectDespawned;
-import net.runelite.api.events.DecorativeObjectSpawned;
-import net.runelite.api.events.GameObjectDespawned;
-import net.runelite.api.events.GameObjectSpawned;
-import net.runelite.api.events.GameStateChanged;
-import net.runelite.api.events.GameTick;
-import net.runelite.api.events.GroundObjectDespawned;
-import net.runelite.api.events.GroundObjectSpawned;
-import net.runelite.api.events.ItemDespawned;
-import net.runelite.api.events.ItemSpawned;
+import net.runelite.api.events.*;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.client.Notifier;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.plusUtils.Clicker;
+import net.runelite.client.plugins.plusUtils.StepOverlay;
+import net.runelite.client.plugins.tithefarmplus.TitheFarmPlusMain;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import java.awt.AWTException;
+import java.awt.Point;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static net.runelite.api.Skill.AGILITY;
 
 @PluginDescriptor(name = "Agility Plus2", enabledByDefault = false)
 @Slf4j
@@ -42,23 +37,51 @@ public class AgilityPlusPlugin extends Plugin {
     @Inject
     private OverlayManager overlayManager;
 
-    AgilityPlusMain thread;
+    @Inject
+    private StepOverlay overlay;
+
+
+    AgilityPlusMain main;
+
     private boolean hasStarted = false;
+
+    @Subscribe
+    public void onStatChanged(StatChanged statChanged) {
+        if (statChanged.getSkill() != AGILITY) {
+            return;
+        }
+        AgilityPlusMain.xpDrop = true;
+        overlay.setCurrentStep("xpDrop = true");
+        log.info("xpDrop = true");
+    }
+
+    @Subscribe
+    public void onItemContainerChanged(ItemContainerChanged event)
+    {
+        // Only detect inventory changes
+        if (event.getContainerId() == InventoryID.INVENTORY.getId())
+        {
+            AgilityPlusMain.invUpdate = true;
+            overlay.setCurrentStep("invUpdate = true");
+            log.info("invUpdate = true");
+        }
+    }
 
     @Override
     protected void startUp() throws Exception {
         AgilityPlusObjectIDs.setAllVarsNull();
+        overlayManager.add(overlay);
     }
 
     @Override
     protected void shutDown() throws Exception {
         AgilityPlusObjectIDs.setAllVarsNull();
+        overlayManager.remove(overlay);
     }
 
     @Subscribe
-    public void onGameTick(GameTick event) throws AWTException {
+    public void onClientTick(ClientTick event) throws AWTException {
         toggleStatus();
-        checkOculusReset();
     }
 
     private String stripTargetAnchors(String text) {
@@ -68,31 +91,25 @@ public class AgilityPlusPlugin extends Plugin {
 
     private void toggleStatus() throws AWTException {
         Widget chatboxInput = client.getWidget(WidgetInfo.CHATBOX_INPUT);
+        if (chatboxInput == null) return;
+
         String chatBoxMessage = stripTargetAnchors(chatboxInput.getText());
         if(chatBoxMessage == null) return;
 
         if(chatBoxMessage.equals("1") && !AgilityPlusMain.isRunning && !hasStarted) {
-            thread = new AgilityPlusMain(client, clientThread);
+            main = new AgilityPlusMain(client, clientThread, overlay);
+            main.reset();
+
             AgilityPlusMain.isRunning = true;
             hasStarted = true;
+            overlay.setCurrentStep("status is go");
             System.out.println("status is go");
         } else if (chatBoxMessage.equals("2") && AgilityPlusMain.isRunning && hasStarted) {
-            thread.t.interrupt();
+            main.stop();
             AgilityPlusMain.isRunning = false;
-            AgilityPlusMain.isIdle = true;
             hasStarted = false;
+            overlay.setCurrentStep("status is stop");
             System.out.println("status is stop");
-        }
-    }
-
-    public int getRegionID() {
-        return client.getLocalPlayer().getWorldLocation().getRegionID();
-    }
-
-    private void checkOculusReset() {
-        if(AgilityPlusMain.resetOculusOrb){
-            client.setOculusOrbState(0);
-            AgilityPlusMain.resetOculusOrb = false;
         }
     }
 
@@ -102,7 +119,6 @@ public class AgilityPlusPlugin extends Plugin {
         if (event.getGameState() == GameState.LOGIN_SCREEN && AgilityPlusMain.isRunning && hasStarted)
         {
             AgilityPlusMain.isRunning = false;
-            AgilityPlusMain.isIdle = true;
             hasStarted = false;
             System.out.println("status is stop (login screen)");
         }

@@ -13,7 +13,7 @@ import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.plugins.tithefarm.TitheFarmPlantOverlay;
+import net.runelite.client.plugins.plusUtils.StepOverlay;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
@@ -76,10 +76,6 @@ public class TitheFarmPlusPlugin extends Plugin {
             overlay.setCurrentStep("status is stop");
             System.out.println("status is stop");
         }
-    }
-
-    public int getRegionID() {
-        return client.getLocalPlayer().getWorldLocation().getRegionID();
     }
 
     @Subscribe

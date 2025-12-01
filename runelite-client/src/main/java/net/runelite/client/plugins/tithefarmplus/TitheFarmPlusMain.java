@@ -5,9 +5,10 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
+import net.runelite.client.plugins.plusUtils.StepOverlay;
+import net.runelite.client.plugins.plusUtils.Clicker;
 import net.runelite.client.plugins.tithefarmplus.TitheFarmPlusObjectIDs.PatchState;
 
-import javax.inject.Inject;
 import java.awt.AWTException;
 import java.awt.Point;
 import java.awt.Polygon;
@@ -39,7 +40,7 @@ public class TitheFarmPlusMain implements Runnable {
     private boolean skipWalkToNext = false;
     private boolean pause = false;
 
-    TitheClicker clicker;
+    Clicker clicker;
     BreakScheduler scheduler;
 
     public static List<PatchState> patchStates = new ArrayList<>(Collections.nCopies(patches, PatchState.EMPTY));
@@ -50,7 +51,7 @@ public class TitheFarmPlusMain implements Runnable {
         this.client = client;
         this.clientThread = clientThread;
         this.overlay = overlay;
-        clicker = new TitheClicker(client);
+        clicker = new Clicker(client);
         scheduler = new BreakScheduler();
 
         t = new Thread(this);

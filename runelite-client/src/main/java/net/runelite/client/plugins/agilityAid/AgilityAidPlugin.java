@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.events.ClientTick;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemDespawned;
 import net.runelite.api.events.ItemSpawned;
@@ -25,7 +26,7 @@ public class AgilityAidPlugin extends Plugin {
     @Inject private ClientThread clientThread;
 
     @Subscribe
-    public void onGameTick(GameTick event) throws AWTException {
+    public void onClientTick(ClientTick tick) throws AWTException {
         checkLocation();
     }
 
@@ -121,10 +122,13 @@ public class AgilityAidPlugin extends Plugin {
         } else if(isAtWorldPoint(CANFIS_SEVENTH_ROOF)) {
             setZoomPitchYaw(896, 50, 0);
         } else if (isAtWorldPoint(CANFIS_FAIL1)) {
-            detachCameraPoint(6460, 7235, 512, 0, 896);
-        } else if (isDestinationTile(CANFIS_BUSH)) {
+            detachCameraPoint(6460, 7235, 512, 1024, 896);
+        } else if (isDestinationTile(CANFIS_BUSH) || isAtWorldPoint(CANFIS_BUSH)) {
             resetZoomPitchYaw(896, 512, 1024);
         }
+//        else if (isDestinationTile(CANFIS_BUSH) || isAtWorldPoint(CANFIS_BUSH)) {
+//            resetZoomPitchYaw(896, 84, 655);
+//        }
     }
 
     public void doRelleka() {

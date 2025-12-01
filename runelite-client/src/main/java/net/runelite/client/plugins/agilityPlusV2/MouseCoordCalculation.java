@@ -23,9 +23,9 @@ import java.util.Random;
 public class MouseCoordCalculation {
     Point generatedPoint = null;
 
-//    public void generatePointToClick(Shape shape) {
-//        generatePointToClick(convertShapeToPolygon(shape));
-//    }
+    public void generatePointToClick(Shape shape) {
+        generatePointToClick(convertShapeToPolygon(shape));
+    }
 
 //    public void generatePointToClick(Polygon polygon) {
 ////        Polygon polygon = convertShapeToPolygon(shape);
