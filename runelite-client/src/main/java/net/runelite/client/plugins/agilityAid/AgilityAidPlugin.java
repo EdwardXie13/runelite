@@ -121,14 +121,11 @@ public class AgilityAidPlugin extends Plugin {
             setZoomPitchYaw(815, 70, 1536);
         } else if(isAtWorldPoint(CANFIS_SEVENTH_ROOF)) {
             setZoomPitchYaw(896, 50, 0);
-        } else if (isAtWorldPoint(CANFIS_FAIL1)) {
+        } else if (isAtWorldPoint(CANFIS_FAIL)) {
             detachCameraPoint(6460, 7235, 512, 1024, 896);
         } else if (isDestinationTile(CANFIS_BUSH) || isAtWorldPoint(CANFIS_BUSH)) {
             resetZoomPitchYaw(896, 512, 1024);
         }
-//        else if (isDestinationTile(CANFIS_BUSH) || isAtWorldPoint(CANFIS_BUSH)) {
-//            resetZoomPitchYaw(896, 84, 655);
-//        }
     }
 
     public void doRelleka() {

@@ -4,9 +4,7 @@ import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
-import net.runelite.client.Notifier;
 import net.runelite.client.callback.ClientThread;
-import net.runelite.client.plugins.agilityPlusV2.steps.CanfisSteps;
 import net.runelite.client.plugins.plusUtils.Clicker;
 import net.runelite.client.plugins.plusUtils.StepOverlay;
 
@@ -26,15 +24,14 @@ public class AgilityPlusMain implements Runnable {
     public static boolean isIdle = true;
     public static boolean xpDrop = false;
     public static boolean invUpdate = false;
-    private CanfisSteps pendingStep = CanfisSteps.NONE;
-    private CanfisSteps activeStep = CanfisSteps.NONE;
     private Runnable pendingAction = null;
     public long start;
-    Robot robot = new Robot();
+//    Robot robot = new Robot();
     private int healthyThreshold = 1;
     public static boolean isRunning = false;
 
     Clicker clicker;
+    BreakScheduler scheduler;
 
     Thread t;
 
@@ -43,6 +40,7 @@ public class AgilityPlusMain implements Runnable {
         this.clientThread = clientThread;
         this.overlay = overlay;
         clicker = new Clicker(client);
+        scheduler = new BreakScheduler();
 
         t = new Thread(this);
         System.out.println("New thread: " + t);
@@ -458,95 +456,58 @@ public class AgilityPlusMain implements Runnable {
         // Retry pending actions if necessary
         checkActionSuccess();
 
-//        if(isAtWorldPoint(CANFIS_FAIL1) && isIdle) {
-//            robot.delay(1000);
-//            setZoomPitchYaw(896, 512, 0);
-//            robot.delay(500);
-//            getWorldPointCoords(LocalPoint.fromWorld(client, AgilityPlusWorldPoints.CANFIS_START));
-//            robot.delay(500);
-//            client.setOculusOrbState(0);
-//            client.setOculusOrbNormalSpeed(12);
-//            robot.delay(1500);
-//            tryAction(this::canfisStart);
-//            activeStep = CanfisSteps.CANFIS_FAIL;
-//            pendingStep = CanfisSteps.NONE;
-//        } else
-            if(isAtWorldPoint(CANFIS_START) && isIdle) {
+        // humanizer???
+        clicker.randomDelayStDev(400,700,50);
+
+        if(isAtWorldPoint(CANFIS_FAIL) && isIdle) {
+            tryAction(this::canfisFail);
+        }
+        else if(isAtWorldPoint(CANFIS_START) && isIdle) {
             tryAction(this::canfisStart);
-            activeStep = CanfisSteps.CANFIS_START;
-            pendingStep = CanfisSteps.NONE;
-        } else if(isAtWorldPoint(CANFIS_BUSH) && isIdle) {
+        }
+        else if(isAtWorldPoint(CANFIS_BUSH) && isIdle) {
             tryAction(this::clickTreeFromBush);
-            activeStep = CanfisSteps.CANFIS_BUSH;
-            pendingStep = CanfisSteps.NONE;
-        } else if(isAtWorldPoint(CANFIS_FIRST_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS1 && xpDrop && isIdle) {
-            tryAction(this::canfisPickupMOG1);
-            activeStep = CanfisSteps.CANFIS_FIRST_ROOF_MOG;
-            pendingStep = CanfisSteps.NONE;
-        } else if(isAtWorldPoint(CANFIS_FIRST_ROOF) && !AgilityPlusWorldPoints.MOG_CANFIS1 && xpDrop && isIdle) {
-            tryAction(this::canfisNoMOG1);
-            activeStep = CanfisSteps.CANFIS_FIRST_ROOF_NO_MOG;
-            pendingStep = CanfisSteps.NONE;
-        } else if(isAtWorldPoint(CANFIS_GRACEFULMARK1) && invUpdate && isIdle) {
+        }
+        else if (isAtWorldPoint(CANFIS_FIRST_ROOF) && xpDrop && isIdle) {
+            tryAction(AgilityPlusWorldPoints.MOG_CANFIS1 ?
+                this::canfisPickupMOG1 : this::canfisNoMOG1);
+        }
+        else if(isAtWorldPoint(CANFIS_GRACEFULMARK1) && invUpdate && isIdle) {
             tryAction(this::canfisAtMog1);
-            activeStep = CanfisSteps.CANFIS_GRACEFULMARK1;
-            pendingStep = CanfisSteps.NONE;
-        } else if(isAtWorldPoint(CANFIS_SECOND_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS2 && xpDrop && isIdle) {
-            tryAction(this::canfisPickupMOG2);
-            activeStep = CanfisSteps.CANFIS_SECOND_ROOF_MOG;
-            pendingStep = CanfisSteps.NONE;
-        } else if(isAtWorldPoint(CANFIS_SECOND_ROOF) && !AgilityPlusWorldPoints.MOG_CANFIS2 && xpDrop && isIdle) {
-            tryAction(this::canfisNoMOG2);
-            activeStep = CanfisSteps.CANFIS_SECOND_ROOF_NO_MOG;
-            pendingStep = CanfisSteps.NONE;
-        } else if(isAtWorldPoint(CANFIS_GRACEFULMARK2) && invUpdate && isIdle) {
+        }
+        else if (isAtWorldPoint(CANFIS_SECOND_ROOF) && xpDrop && isIdle) {
+            tryAction(AgilityPlusWorldPoints.MOG_CANFIS2 ?
+                this::canfisPickupMOG2 : this::canfisNoMOG2);
+        }
+        else if(isAtWorldPoint(CANFIS_GRACEFULMARK2) && invUpdate && isIdle) {
             tryAction(this::canfisAtMog2);
-            activeStep = CanfisSteps.CANFIS_GRACEFULMARK1;
-            pendingStep = CanfisSteps.NONE;
-        } else if (isAtWorldPoint(CANFIS_THIRD_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS3 && xpDrop && isIdle) {
-            tryAction(this::canfisPickupMOG3);
-            activeStep = CanfisSteps.CANFIS_THIRD_ROOF_MOG;
-            pendingStep = CanfisSteps.NONE;
-        } else if (isAtWorldPoint(CANFIS_THIRD_ROOF) && !AgilityPlusWorldPoints.MOG_CANFIS3 && xpDrop && isIdle) {
-            tryAction(this::canfisNoMOG3);
-            activeStep = CanfisSteps.CANFIS_THIRD_ROOF_NO_MOG;
-            pendingStep = CanfisSteps.NONE;
-        } else if (isAtWorldPoint(CANFIS_GRACEFULMARK3) && invUpdate && isIdle) {
+        }
+        else if (isAtWorldPoint(CANFIS_THIRD_ROOF) && xpDrop && isIdle) {
+            tryAction(AgilityPlusWorldPoints.MOG_CANFIS3 ?
+                this::canfisPickupMOG3 : this::canfisNoMOG3);
+        }
+        else if (isAtWorldPoint(CANFIS_GRACEFULMARK3) && invUpdate && isIdle) {
             tryAction(this::canfisAtMog3);
-            activeStep = CanfisSteps.CANFIS_GRACEFULMARK3;
-            pendingStep = CanfisSteps.NONE;
-        } else if (isAtWorldPoint(CANFIS_FOURTH_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS4 && xpDrop && isIdle) {
-            tryAction(this::canfisPickupMOG4);
-            activeStep = CanfisSteps.CANFIS_FOURTH_ROOF_MOG;
-            pendingStep = CanfisSteps.NONE;
-        } else if (isAtWorldPoint(CANFIS_FOURTH_ROOF) && !AgilityPlusWorldPoints.MOG_CANFIS4 && xpDrop && isIdle) {
-            tryAction(this::canfisNoMOG4);
-            activeStep = CanfisSteps.CANFIS_FOURTH_ROOF_NO_MOG;
-            pendingStep = CanfisSteps.NONE;
-        } else if (isAtWorldPoint(CANFIS_GRACEFULMARK4) && invUpdate && isIdle) {
+        }
+        else if (isAtWorldPoint(CANFIS_FOURTH_ROOF) && xpDrop && isIdle) {
+            tryAction(AgilityPlusWorldPoints.MOG_CANFIS4 ?
+                this::canfisPickupMOG4 : this::canfisNoMOG4);
+        }
+        else if (isAtWorldPoint(CANFIS_GRACEFULMARK4) && invUpdate && isIdle) {
             tryAction(this::canfisAtMog4);
-            activeStep = CanfisSteps.CANFIS_GRACEFULMARK4;
-            pendingStep = CanfisSteps.NONE;
-        } else if (isAtWorldPoint(CANFIS_FIFTH_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS5 && xpDrop && isIdle) {
-            tryAction(this::canfisPickupMOG5);
-            activeStep = CanfisSteps.CANFIS_FIFTH_ROOF_MOG;
-            pendingStep = CanfisSteps.NONE;
-        } else if (isAtWorldPoint(CANFIS_FIFTH_ROOF) && !AgilityPlusWorldPoints.MOG_CANFIS5 && xpDrop && isIdle) {
-            tryAction(this::canfisNoMOG5);
-            activeStep = CanfisSteps.CANFIS_FIFTH_ROOF_NO_MOG;
-            pendingStep = CanfisSteps.NONE;
-        } else if (isAtWorldPoint(CANFIS_GRACEFULMARK5) && invUpdate && isIdle) {
+        }
+        else if (isAtWorldPoint(CANFIS_FIFTH_ROOF) && xpDrop && isIdle) {
+            tryAction(AgilityPlusWorldPoints.MOG_CANFIS5 ?
+                    this::canfisPickupMOG5 : this::canfisNoMOG5);
+        }
+        else if (isAtWorldPoint(CANFIS_GRACEFULMARK5) && invUpdate && isIdle) {
             tryAction(this::canfisAtMog5);
-            activeStep = CanfisSteps.CANFIS_GRACEFULMARK5;
-            pendingStep = CanfisSteps.NONE;
-        } else if (isAtWorldPoint(CANFIS_SIXTH_ROOF) && xpDrop && isIdle) {
+        }
+        else if (isAtWorldPoint(CANFIS_SIXTH_ROOF) && xpDrop && isIdle) {
             tryAction(this::canfisRoof6);
-            activeStep = CanfisSteps.CANFIS_SIXTH_ROOF;
-            pendingStep = CanfisSteps.NONE;
-        } else if (isAtWorldPoint(CANFIS_SEVENTH_ROOF) && xpDrop && isIdle) {
+        }
+        else if (isAtWorldPoint(CANFIS_SEVENTH_ROOF) && xpDrop && isIdle) {
             tryAction(this::canfisRoof7);
-            activeStep = CanfisSteps.CANFIS_SEVENTH_ROOF;
-            pendingStep = CanfisSteps.NONE;
         }
 //        else if(isNotHealthly()) {
 //            overlay.setCurrentStep("waiting to heal");
@@ -554,17 +515,28 @@ public class AgilityPlusMain implements Runnable {
 //        }
     }
 
+    private void canfisFail() {
+        overlay.setCurrentStep("CANFIS_FAIL");
+        while(!isMoving())
+            clicker.clickWorldPoint(CANFIS_BUSH);
+
+    }
+
     private void canfisStart() {
         overlay.setCurrentStep("CANFIS_START");
         Point toClick = new Point(461, 614);
-        while(isAtWorldPoint(CANFIS_START)) {
+        while(!isMoving()) {
             clicker.spamPoint(toClick);
         }
     }
 
     private void clickTreeFromBush() {
         overlay.setCurrentStep("CANFIS_BUSH");
-        clickPointObject(AgilityPlusObjectIDs.canfisTallTree);
+        WorldPoint tile = new WorldPoint(3508, 3488, 0);
+        if (isTileOnScreen(tile) && !isMoving()) {
+            clicker.randomDelayStDev(400,600,50);
+            clickPointObject(AgilityPlusObjectIDs.canfisTallTree);
+        }
     }
 
     // canfis mog1
@@ -1225,12 +1197,6 @@ public class AgilityPlusMain implements Runnable {
         }
     }
 
-    private void waitTillNotMoving() {
-        while(!isIdle) {
-            robot.delay(300);
-        }
-    }
-
     private void scheduledPointDelay(Point point, int sigma) {
         isIdle = false;
         try {
@@ -1311,7 +1277,7 @@ public class AgilityPlusMain implements Runnable {
         return false;
     }
 
-    public boolean isTileOnScreen(Client client, WorldPoint wp)
+    public boolean isTileOnScreen(WorldPoint wp)
     {
         if (client == null || wp == null)
             return false;
