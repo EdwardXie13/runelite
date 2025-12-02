@@ -527,7 +527,7 @@ public class AgilityPlusMain implements Runnable {
 
     private void canfisFail() {
         overlay.setCurrentStep("CANFIS_FAIL");
-        if(!isMoving())
+        while(!isMoving())
             clicker.clickWorldPoint(CANFIS_BUSH);
     }
 
@@ -542,8 +542,8 @@ public class AgilityPlusMain implements Runnable {
     private void clickTreeFromBush() {
         overlay.setCurrentStep("CANFIS_BUSH");
         WorldPoint tile = new WorldPoint(3508, 3488, 0);
-        clicker.randomDelayStDev(700,1000,50);
         if (isTileOnScreen(tile) && !isMoving()) {
+            clicker.randomDelayStDev(1500,3000,100);
             clickPointObject(AgilityPlusObjectIDs.canfisTallTree, true);
         }
     }
