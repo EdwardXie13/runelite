@@ -457,7 +457,7 @@ public class AgilityPlusMain implements Runnable {
         checkActionSuccess();
 
         // humanizer???
-        clicker.randomDelayStDev(400,700,50);
+        clicker.randomDelayStDev(150,200,25);
 
         if(isAtWorldPoint(CANFIS_FAIL) && isIdle) {
             tryAction(this::canfisFail);
@@ -480,7 +480,7 @@ public class AgilityPlusMain implements Runnable {
         else if (isAtWorldPoint(CANFIS_SECOND_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS2 && xpDrop && isIdle) {
             tryAction(this::canfisPickupMOG2);
         }
-        else if (isAtWorldPoint(CANFIS_SECOND_ROOF) && AgilityPlusWorldPoints.MOG_CANFIS2 && xpDrop && isIdle) {
+        else if (isAtWorldPoint(CANFIS_SECOND_ROOF) && !AgilityPlusWorldPoints.MOG_CANFIS2 && xpDrop && isIdle) {
             tryAction(this::canfisNoMOG2);
         }
         else if(isAtWorldPoint(CANFIS_GRACEFULMARK2) && invUpdate && isIdle) {
@@ -542,118 +542,151 @@ public class AgilityPlusMain implements Runnable {
     private void clickTreeFromBush() {
         overlay.setCurrentStep("CANFIS_BUSH");
         WorldPoint tile = new WorldPoint(3508, 3488, 0);
+        clicker.randomDelayStDev(700,1000,50);
         if (isTileOnScreen(tile) && !isMoving()) {
-            clicker.randomDelayStDev(400,600,50);
-            clickPointObject(AgilityPlusObjectIDs.canfisTallTree);
+            clickPointObject(AgilityPlusObjectIDs.canfisTallTree, true);
         }
     }
 
     // canfis mog1
     private void canfisPickupMOG1() {
         overlay.setCurrentStep("CANFIS MOG1");
+        clicker.randomDelayStDev(100,200,25);
         if(!isMoving())
             clicker.clickWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK1);
+        clicker.randomDelayStDev(100,200,25);
     }
 
     private void canfisNoMOG1() {
         overlay.setCurrentStep("CANFIS no MOG1");
+        clicker.randomDelayStDev(100,200,25);
         if(!isMoving())
-            clickPointObject(AgilityPlusObjectIDs.canfisFirstRoofGap);
+            clickPointObject(AgilityPlusObjectIDs.canfisFirstRoofGap, false);
+        clicker.randomDelayStDev(100,200,25);
     }
 
     private void canfisAtMog1() {
         overlay.setCurrentStep("At MOG1");
+        clicker.randomDelayStDev(100,200,25);
         if(!isMoving())
-            clickPointObject(AgilityPlusObjectIDs.canfisFirstRoofGap);
-
+            clickPointObject(AgilityPlusObjectIDs.canfisFirstRoofGap, false);
+        clicker.randomDelayStDev(100,200,25);
     }
 
     // canfis mog2
     private void canfisPickupMOG2() {
         overlay.setCurrentStep("CANFIS MOG2");
+        clicker.randomDelayStDev(100,200,25);
         if(!isMoving())
             clicker.clickWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK2);
+        clicker.randomDelayStDev(100,200,25);
     }
 
     private void canfisNoMOG2() {
         overlay.setCurrentStep("CANFIS no MOG2");
+        clicker.randomDelayStDev(100,200,25);
         if(!isMoving())
-            clickPointObject(AgilityPlusObjectIDs.canfisSecondRoofGap);
+            clickPointObject(AgilityPlusObjectIDs.canfisSecondRoofGap, false);
+        clicker.randomDelayStDev(100,200,25);
     }
 
     private void canfisAtMog2() {
         overlay.setCurrentStep("At MOG2");
+        clicker.randomDelayStDev(100,200,25);
         if(!isMoving())
-            clickPointObject(AgilityPlusObjectIDs.canfisSecondRoofGap);
+            clickPointObject(AgilityPlusObjectIDs.canfisSecondRoofGap, false);
+        clicker.randomDelayStDev(100,200,25);
     }
 
     // canfis mog3
     private void canfisPickupMOG3() {
         overlay.setCurrentStep("CANFIS MOG3");
+        clicker.randomDelayStDev(100,200,25);
         if(!isMoving())
             clicker.clickWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK3);
+        clicker.randomDelayStDev(100,200,25);
     }
 
     private void canfisNoMOG3() {
         overlay.setCurrentStep("CANFIS no MOG3");
+        clicker.randomDelayStDev(100,200,25);
         if(!isMoving())
-            clickPointObject(AgilityPlusObjectIDs.canfisThirdRoofGap);
+            clickPointObject(AgilityPlusObjectIDs.canfisThirdRoofGap, false);
+        clicker.randomDelayStDev(100,200,25);
     }
 
     private void canfisAtMog3() {
         overlay.setCurrentStep("At MOG3");
+        clicker.randomDelayStDev(100,200,25);
         if(!isMoving())
-            clickPointObject(AgilityPlusObjectIDs.canfisThirdRoofGap);
+            clickPointObject(AgilityPlusObjectIDs.canfisThirdRoofGap, false);
+        clicker.randomDelayStDev(100,200,25);
     }
 
     // canfis mog4
     private void canfisPickupMOG4() {
         overlay.setCurrentStep("CANFIS MOG4");
+        clicker.randomDelayStDev(100,200,25);
         if(!isMoving())
             clicker.clickWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK4);
+        clicker.randomDelayStDev(100,200,25);
     }
 
     private void canfisNoMOG4() {
         overlay.setCurrentStep("CANFIS no MOG4");
+        clicker.randomDelayStDev(100,200,25);
         if(!isMoving())
-            clickPointObject(AgilityPlusObjectIDs.canfisFourthRoofGap);
+            clickPointObject(AgilityPlusObjectIDs.canfisFourthRoofGap, false);
+        clicker.randomDelayStDev(100,200,25);
     }
 
     private void canfisAtMog4() {
         overlay.setCurrentStep("At MOG4");
+        clicker.randomDelayStDev(100,200,25);
         if(!isMoving())
-            clickPointObject(AgilityPlusObjectIDs.canfisFourthRoofGap);
+            clickPointObject(AgilityPlusObjectIDs.canfisFourthRoofGap, false);
+        clicker.randomDelayStDev(100,200,25);
     }
 
     // canfis mog5
     private void canfisPickupMOG5() {
         overlay.setCurrentStep("CANFIS MOG5");
+        clicker.randomDelayStDev(100,200,25);
         if(!isMoving())
             clicker.clickWorldPoint(AgilityPlusWorldPoints.CANFIS_GRACEFULMARK5);
+        clicker.randomDelayStDev(100,200,25);
     }
 
     private void canfisNoMOG5() {
         overlay.setCurrentStep("CANFIS no MOG5");
+        clicker.randomDelayStDev(100,200,25);
         if(!isMoving())
-            clickPointObject(AgilityPlusObjectIDs.canfisFifthRoofGap);
+            clickPointObject(AgilityPlusObjectIDs.canfisFifthRoofGap, true);
+        clicker.randomDelayStDev(100,200,25);
     }
 
     private void canfisAtMog5() {
         overlay.setCurrentStep("At MOG5");
+        clicker.randomDelayStDev(100,200,25);
         if(!isMoving())
-            clickPointObject(AgilityPlusObjectIDs.canfisFifthRoofGap);
+            clickPointObject(AgilityPlusObjectIDs.canfisFifthRoofGap, true);
+        clicker.randomDelayStDev(100,200,25);
     }
 
     private void canfisRoof6() {
         overlay.setCurrentStep("CANFIS roof6");
+        clicker.randomDelayStDev(100,200,25);
         if(!isMoving())
-            clickPointObject(AgilityPlusObjectIDs.canfisSixthRoofGap);
+            clickPointObject(AgilityPlusObjectIDs.canfisSixthRoofGap, true);
+        clicker.randomDelayStDev(100,200,25);
     }
 
     private void canfisRoof7() {
         overlay.setCurrentStep("CANFIS roof6");
+        clicker.randomDelayStDev(100,200,25);
         if(!isMoving())
-            clickPointObject(AgilityPlusObjectIDs.canfisSeventhRoofGap);
+            clickPointObject(AgilityPlusObjectIDs.canfisSeventhRoofGap, false);
+        clicker.randomDelayStDev(100,200,25);
     }
 
 //    private void doSeersAgility() {
@@ -1155,7 +1188,7 @@ public class AgilityPlusMain implements Runnable {
         clientThread.invokeLater(() -> client.runScript(ScriptID.CAMERA_DO_ZOOM, zoom, zoom));
     }
 
-    private void clickPointObject(TileObject o) {
+    private void clickPointObject(TileObject o, boolean delay) {
         if (o == null) return;
 
         Shape s = o.getClickbox();
@@ -1165,11 +1198,34 @@ public class AgilityPlusMain implements Runnable {
         if (p != null && p.x > 0 && p.y > 0) {
             clicker.clickPoint(p);
         }
+
+        if (delay)
+            clicker.randomDelayStDev(300,500,50);
     }
+
+//    public boolean isMoving()
+//    {
+//        return client.getLocalDestinationLocation() != null;
+//    }
 
     public boolean isMoving()
     {
-        return client.getLocalDestinationLocation() != null;
+        Player p = client.getLocalPlayer();
+        if (p == null)
+            return false;
+
+        // 1. Walking movement (destination exists)
+        if (client.getLocalDestinationLocation() != null)
+            return true;
+
+        // 2. Animation-based movement (agility obstacles)
+        int anim = p.getAnimation();
+
+        // Animation -1 = idle
+        if (anim != -1 && anim != 808) // 808 = idle look-around animation
+            return true;
+
+        return false;
     }
 
     public void updateIdleStatus()
