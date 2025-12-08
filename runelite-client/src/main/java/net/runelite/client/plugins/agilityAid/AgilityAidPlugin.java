@@ -5,14 +5,12 @@ import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.ClientTick;
-import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemDespawned;
 import net.runelite.api.events.ItemSpawned;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.plugins.agilityPlusV2.AgilityPlusWorldPoints;
 
 import javax.inject.Inject;
 import java.awt.*;
@@ -122,7 +120,7 @@ public class AgilityAidPlugin extends Plugin {
         } else if(isAtWorldPoint(CANFIS_SEVENTH_ROOF)) {
             setZoomPitchYaw(896, 50, 0);
         } else if (isAtWorldPoint(CANFIS_FAIL)) {
-            detachCameraPoint(6460, 7235, 512, 1024, 896);
+            detachCameraPoint(CANFIS_BUSH, 512, 1024, 896);
         } else if (isDestinationTile(CANFIS_BUSH) || isAtWorldPoint(CANFIS_BUSH)) {
             resetZoomPitchYaw(896, 512, 1024);
         }
@@ -150,7 +148,7 @@ public class AgilityAidPlugin extends Plugin {
         } else if(isAtWorldPoint(RELLEKA_SIXTH_ROOF)) {
             setZoomPitchYaw(430, 512, 1024);
         } else if (isAtWorldPoint(RELLEKA_FINISH) || isAtWorldPoint(RELLEKA_FAIL1) || isAtWorldPoint(RELLEKA_FAIL2)) {
-            detachCameraPoint(3264, 6847, 512, 1024, 896);
+            detachCameraPoint(RELLEKA_START, 512, 1024, 896);
         } else if (isDestinationTile(RELLEKA_START)) {
             resetZoomPitchYaw(200, 512, 1024);
         }
@@ -176,7 +174,7 @@ public class AgilityAidPlugin extends Plugin {
         } else if (isAtWorldPoint(ARDY_FINISH)) {
             setZoomPitchYaw(896, 4, 570);
         } else if(isAtWorldPoint(ARDY_FAIL1) || isAtWorldPoint(ARDY_FAIL2)) {
-            detachCameraPoint(7338, 6336, 512, 0, 896);
+            detachCameraPoint(ARDY_START, 512, 0, 896);
         } else if (isDestinationTile(ARDY_START)) {
             resetZoomPitchYaw(200, 512, 1024);
         }
@@ -207,12 +205,23 @@ public class AgilityAidPlugin extends Plugin {
         setCameraYaw(yaw);
     }
 
-    private void detachCameraPoint(double x, double z, int pitch, int yaw, int zoom) {
+    private void detachCameraPoint(WorldPoint wp, int pitch, int yaw, int zoom) {
         setZoomPitchYaw(zoom, pitch, yaw);
-        client.setCameraMode(1);
-        client.setCameraFocalPointX(x);
-        client.setCameraFocalPointZ(z);
+        centerCameraOnTile(wp);
     }
+
+    public void centerCameraOnTile(WorldPoint tile)
+    {
+        client.setCameraMode(1);
+
+        LocalPoint lp = LocalPoint.fromWorld(client, tile);
+        if (lp == null)
+            return;  // Tile not in loaded scene
+
+        client.setCameraFocalPointX(lp.getX());
+        client.setCameraFocalPointZ(lp.getY());
+    }
+
 
     private boolean isAtWorldPoint(WorldPoint worldPoint) {
         boolean playerX = client.getLocalPlayer().getWorldLocation().getX() == worldPoint.getX();

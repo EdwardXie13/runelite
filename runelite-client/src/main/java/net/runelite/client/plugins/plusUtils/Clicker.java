@@ -31,11 +31,8 @@ public class Clicker {
         this.client = client;
     }
 
-    public int randomDelaySkewLow(int minMs, int maxMs)
-    {
-        double r = Math.random();      // uniform 0–1
-        double skewed = r * r;         // squaring biases toward 0
-        return (int)(minMs + skewed * (maxMs - minMs));
+    public void delay(int delay) {
+        robot.delay(delay);
     }
 
     public void randomDelay(int minMs, int maxMs) {
@@ -57,12 +54,14 @@ public class Clicker {
         robot.delay((int) delay);
     }
 
-    public void spamClickPoint(Point p) {
-        int count = getHumanSpamClickCount();
+    public void spamClickPoint(Point p, int min, int max, double mean, double stdDev) {
+        int count = getHumanSpamClickCount(min, max, mean, stdDev);
         for (int i = 0; i < count; i++) {
+            System.out.println("count++");
             clickPoint(p);
             randomDelay(110, 160);
         }
+        delay(500);
     }
 
     public void spamPoint(Point p) {
@@ -76,8 +75,8 @@ public class Clicker {
         randomDelay(110, 140);
     }
 
-    public void spamClickWorldPoint(WorldPoint wp) {
-        int count = getHumanSpamClickCount();
+    public void spamClickWorldPoint(WorldPoint wp, int min, int max, double mean, double stdDev) {
+        int count = getHumanSpamClickCount(min, max, mean, stdDev);
         for (int i = 0; i < count; i++) {
             Point toClick = worldPointToPoint(wp);
             clickPoint(toClick);
@@ -97,14 +96,29 @@ public class Clicker {
         return getCenterOfRectangle(boundingBox);
     }
 
-    public int getHumanSpamClickCount() {
-        double mean = 2.0;
-        double stdDev = 0.6;
+    private Point localPointToPoint(LocalPoint lp) {
+        Polygon poly = Perspective.getCanvasTileAreaPoly(this.client, lp, 1);
+        if (poly == null)
+        {
+            return new Point(0,0);
+        }
 
-        // Get a Gaussian value, round it, and clamp between 2 and 7
-        int clicks = (int) Math.round(mean + random.nextGaussian() * stdDev);
-        return Math.max(1, Math.min(4, clicks));
+        Rectangle boundingBox = poly.getBounds();
+
+        return getCenterOfRectangle(boundingBox);
     }
+
+    public int getHumanSpamClickCount(int min, int max, double mean, double stdDev)
+    {
+        // Gaussian around your mean
+        double value = mean + random.nextGaussian() * stdDev;
+
+        int clicks = (int) Math.round(value);
+
+        // Clamp to range
+        return Math.max(min, Math.min(max, clicks));
+    }
+
 
     private Point getCenterOfRectangle(Rectangle rectangle) {
         // +26 to the Y coordinate because calculations are taken from canvas, not window
@@ -136,7 +150,6 @@ public class Clicker {
     }
 
     public void clickPointHumanized(Point p, int minHover, int maxHover, int minPost, int maxPost) {
-        log.debug("clickPointHumanized: {}", p);
         robot.mouseMove(p.x, p.y);
 
         robot.delay(minHover + random.nextInt(maxHover - minHover + 1));
@@ -210,49 +223,9 @@ public class Clicker {
         return new Point(bestX, bestY);
     }
 
-
-//    public Point getCentroidFromShape(Shape polygon)
-//    {
-//        if (polygon == null)
-//            return null;
-//
-//        Rectangle bounds = polygon.getBounds();
-//
-//        // Ensure margin doesn't exceed half the size
-//        int margin = 10;
-//        margin = Math.min(margin, Math.min(bounds.width / 2, bounds.height / 2));
-//
-//        int step = 3; // grid step, can increase for speed
-//        int bestX = 0, bestY = 0;
-//        double maxDist = -1;
-//
-//        // Iterate only inside the margin
-//        for (int x = bounds.x + margin; x < bounds.x + bounds.width - margin; x += step)
-//        {
-//            for (int y = bounds.y + margin; y < bounds.y + bounds.height - margin; y += step)
-//            {
-//                if (!polygon.contains(x, y))
-//                    continue;
-//
-//                // Optional: approximate distance to bounding box edges
-//                double dist = Math.min(
-//                        Math.min(x - bounds.x, bounds.x + bounds.width - x),
-//                        Math.min(y - bounds.y, bounds.y + bounds.height - y)
-//                );
-//
-//                if (dist > maxDist)
-//                {
-//                    maxDist = dist;
-//                    bestX = x;
-//                    bestY = y;
-//                }
-//            }
-//        }
-//
-//        // Fallback: bounding box center
-//        if (maxDist < 0)
-//            return new Point(bounds.x + bounds.width/2, bounds.y + bounds.height/2);
-//
-//        return new Point(bestX, bestY);
-//    }
+    public void pressKey(int key) {
+        robot.keyPress(key);
+        robot.delay(100);
+        robot.keyRelease(key);
+    }
 }

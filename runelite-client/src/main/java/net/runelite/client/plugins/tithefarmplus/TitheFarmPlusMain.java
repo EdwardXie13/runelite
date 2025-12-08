@@ -223,7 +223,7 @@ public class TitheFarmPlusMain implements Runnable {
 
     private void moveToNextTile() {
         List<WorldPoint> newPatchWorldPoints = patchWalkTilesByWorldPoint.get(currentPatch);
-        clicker.spamClickWorldPoint(newPatchWorldPoints.get(0));
+        clicker.spamClickWorldPoint(newPatchWorldPoints.get(0), 1, 4, 2.0, 0.6);
     }
 
     private void clickFirstSlot() {

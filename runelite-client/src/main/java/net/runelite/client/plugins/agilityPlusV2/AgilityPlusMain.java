@@ -11,7 +11,6 @@ import net.runelite.client.plugins.plusUtils.StepOverlay;
 import java.awt.AWTException;
 import java.awt.Point;
 import java.awt.Polygon;
-import java.awt.Robot;
 import java.awt.Shape;
 
 import static net.runelite.client.plugins.agilityAid.AgilityAidWorldPoints.*;
