@@ -62,14 +62,6 @@ import net.runelite.client.config.Notification;
 import net.runelite.client.config.RuneLiteConfig;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.events.NotificationFired;
-import net.runelite.client.plugins.agilityPlusV2.AgilityPlusMain;
-import net.runelite.client.plugins.miningPlus.MiningPlusMain;
-import net.runelite.client.plugins.plankmakeplus.PlankmakePlusMain;
-import net.runelite.client.plugins.rcPlus.RCPlusMain;
-import net.runelite.client.plugins.rcPlusTrueBloods.RCPlusTrueBloodsMain;
-import net.runelite.client.plugins.tanningPlus.TanningPlusMain;
-import net.runelite.client.plugins.theivingPlus.ThievingPlusMain;
-import net.runelite.client.plugins.twoclickcrafting.TwoClickCraftingMain;
 import net.runelite.client.ui.ClientUI;
 import net.runelite.client.util.OSType;
 

@@ -1,25 +1,20 @@
 package net.runelite.client.plugins.agilityPlusV2;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
-import net.runelite.client.Notifier;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.plugins.plusUtils.Clicker;
 import net.runelite.client.plugins.plusUtils.StepOverlay;
-import net.runelite.client.plugins.tithefarmplus.TitheFarmPlusMain;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import java.awt.AWTException;
-import java.awt.Point;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
