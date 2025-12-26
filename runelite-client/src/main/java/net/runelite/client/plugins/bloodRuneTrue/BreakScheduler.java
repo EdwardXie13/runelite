@@ -6,70 +6,110 @@ import java.util.Random;
 
 public class BreakScheduler {
 
-    private final Queue<Long> scheduledBreaks = new LinkedList<>();
-    private final Random random = new Random();
+    private static class Break {
+        final long offsetMs;    // when break should occur (session time)
+        final long durationMs;  // break length
 
-    // Total session time (7 hours)
-    private static final long TOTAL_SESSION_MS = 7 * 60 * 60 * 1000L;
-    private static final long TARGET_INTERVAL_MS = 3 * 60 * 1000L; // every ~3 minutes
-
-    // Micro break config
-    private static final double MICRO_MEAN_MS = 10_000;
-    private static final double MICRO_STDDEV_MS = 5_000;
-    private static final long MICRO_MIN_MS = 5_000;
-    private static final long MICRO_MAX_MS = 25_000;
-
-    // Major break config
-    private static final double MAJOR_MEAN_MS = 120_000;
-    private static final double MAJOR_STDDEV_MS = 30_000;
-    private static final long MAJOR_MIN_MS = 60_000;
-    private static final long MAJOR_MAX_MS = 180_000;
-
-    // Major-Major break config
-    private static final double MAJOR_MAJOR_MEAN_MS = 300_000;
-    private static final double MAJOR_MAJOR_STDDEV_MS = 60_000;
-    private static final long MAJOR_MAJOR_MIN_MS = 180_000;
-    private static final long MAJOR_MAJOR_MAX_MS = 420_000;
-
-    public BreakScheduler() {
-        generateBreakSchedule();
-    }
-
-    private void generateBreakSchedule() {
-        long elapsed = 0;
-
-        long nextMajorBreakAt = getRandomInterval(20, 40); // mins
-        long nextMajorMajorBreakAt = 60 * 60_000L; // 1 hour mark
-
-        while (elapsed < TOTAL_SESSION_MS) {
-            if (elapsed >= nextMajorMajorBreakAt) {
-                long majorMajorBreak = gaussianClamped(
-                        MAJOR_MAJOR_MEAN_MS, MAJOR_MAJOR_STDDEV_MS,
-                        MAJOR_MAJOR_MIN_MS, MAJOR_MAJOR_MAX_MS
-                );
-                scheduledBreaks.add(majorMajorBreak);
-                nextMajorMajorBreakAt += 60 * 60_000L; // every ~1hr
-            } else if (elapsed >= nextMajorBreakAt) {
-                long majorBreak = gaussianClamped(
-                        MAJOR_MEAN_MS, MAJOR_STDDEV_MS,
-                        MAJOR_MIN_MS, MAJOR_MAX_MS
-                );
-                scheduledBreaks.add(majorBreak);
-                nextMajorBreakAt += getRandomInterval(20, 40);
-            } else {
-                long microBreak = gaussianClamped(
-                        MICRO_MEAN_MS, MICRO_STDDEV_MS,
-                        MICRO_MIN_MS, MICRO_MAX_MS
-                );
-                scheduledBreaks.add(microBreak);
-            }
-
-            elapsed += TARGET_INTERVAL_MS;
+        Break(long offsetMs, long durationMs) {
+            this.offsetMs = offsetMs;
+            this.durationMs = durationMs;
         }
     }
 
-    private long getRandomInterval(int minMinutes, int maxMinutes) {
-        return minMinutes * 60_000L + random.nextInt((maxMinutes - minMinutes + 1) * 60_000);
+    /* ===================== */
+    /* ===== CONFIG ======= */
+    /* ===================== */
+
+    private static final int TOTAL_HOURS = 7;
+    private static final long HOUR_MS = 60 * 60 * 1000L;
+
+    // Micro break duration (10–25s)
+    private static final long MICRO_MIN_MS = 10_000;
+    private static final long MICRO_MAX_MS = 25_000;
+
+    // Micro timing (20–40 min, centered at 30)
+    private static final double MICRO_TIME_MEAN_MS = 30 * 60_000.0;
+    private static final double MICRO_TIME_STDDEV_MS = 5 * 60_000.0;
+    private static final long MICRO_TIME_MIN_MS = 20 * 60_000L;
+    private static final long MICRO_TIME_MAX_MS = 40 * 60_000L;
+
+    // Major duration (2–3 min, centered at 2.5)
+    private static final double MAJOR_MEAN_MS = 2.5 * 60_000.0;
+    private static final double MAJOR_STDDEV_MS = 15_000.0;
+    private static final long MAJOR_MIN_MS = 2 * 60_000L;
+    private static final long MAJOR_MAX_MS = 3 * 60_000L;
+
+    /* ===================== */
+    /* ===== STATE ======== */
+    /* ===================== */
+
+    private final Queue<Break> scheduledBreaks = new LinkedList<>();
+    private final Random random = new Random();
+    private final long sessionStartMs;
+
+    /* ===================== */
+    /* ===== SETUP ======== */
+    /* ===================== */
+
+    public BreakScheduler() {
+        this.sessionStartMs = System.currentTimeMillis();
+        generateSchedule();
+    }
+
+    /* ===================== */
+    /* ===== PUBLIC API ==== */
+    /* ===================== */
+
+    /**
+     * Call every tick.
+     * @return break duration in ms, or 0 if no break now
+     */
+    public long isBreak(long nowMs) {
+        Break next = scheduledBreaks.peek();
+        if (next == null) {
+            return 0;
+        }
+
+        long elapsedMs = nowMs - sessionStartMs;
+
+        // Not time yet
+        if (elapsedMs < next.offsetMs) {
+            return 0;
+        }
+
+        // Break is due (or overdue)
+        scheduledBreaks.poll();
+        return next.durationMs;
+    }
+
+    /* ===================== */
+    /* ===== INTERNAL ===== */
+    /* ===================== */
+
+    private void generateSchedule() {
+        for (int hour = 0; hour < TOTAL_HOURS; hour++) {
+            long hourStart = hour * HOUR_MS;
+
+            // Micro break
+            long microOffset = hourStart + gaussianClamped(
+                    MICRO_TIME_MEAN_MS,
+                    MICRO_TIME_STDDEV_MS,
+                    MICRO_TIME_MIN_MS,
+                    MICRO_TIME_MAX_MS
+            );
+            long microDuration = randomBetween(MICRO_MIN_MS, MICRO_MAX_MS);
+            scheduledBreaks.add(new Break(microOffset, microDuration));
+
+            // Major break (hour mark)
+            long majorOffset = hourStart + HOUR_MS;
+            long majorDuration = gaussianClamped(
+                    MAJOR_MEAN_MS,
+                    MAJOR_STDDEV_MS,
+                    MAJOR_MIN_MS,
+                    MAJOR_MAX_MS
+            );
+            scheduledBreaks.add(new Break(majorOffset, majorDuration));
+        }
     }
 
     private long gaussianClamped(double mean, double stddev, long min, long max) {
@@ -77,8 +117,7 @@ public class BreakScheduler {
         return Math.max(min, Math.min(max, value));
     }
 
-    public int getNextBreakDuration() {
-        Long duration = scheduledBreaks.poll();
-        return duration != null ? duration.intValue() : 0; // or throw if null is unexpected
+    private long randomBetween(long min, long max) {
+        return min + (long) (random.nextDouble() * (max - min));
     }
 }

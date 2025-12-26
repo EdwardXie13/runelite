@@ -232,6 +232,16 @@ public class BloodRuneTrueMain implements Runnable {
                         // if bank is open
                         clicker.randomDelayStDev(150, 250, 25);
                         if (isBankOpen()) {
+                            // break check
+                            long breakMs = scheduler.isBreak(System.currentTimeMillis());
+                            if (breakMs > 0) {
+                                overlay.setCurrentStep("delay " + breakMs + "ms");
+                                // break delay into safe chunks
+                                for (long d = breakMs; d > 0; d -= 60_000) {
+                                    clicker.delay((int) Math.min(d, 60_000));
+                                }
+                            }
+
                             isDuelingRingEquipped();
                             isBloodEssenceActive();
 
