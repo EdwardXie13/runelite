@@ -92,6 +92,7 @@ public class BloodRuneTrueMain implements Runnable {
     public final Point depositAllSlot = new Point(540, 823); // bank deposit all
     public final Point bankPureEssence = new Point(523, 788); // bank dueling ring(8)
     public final Point bankDuelingRing8 = new Point(523, 750); // bank dueling ring(8)
+    public final Point bankBloodEssenceActive = new Point(472, 785); // bank active blood essence
     public final Point bankBloodEssence = new Point(523, 715); // bank blood essence
 
     private Runnable pendingAction = null;
@@ -199,17 +200,17 @@ public class BloodRuneTrueMain implements Runnable {
                 }
 
                 // TRUE BLOOD ALTAR
-                else if(isAtWorldPoint(BloodRuneTrueWorldPoints.TRUE_MYSTERIOUS_RUINS_SPAWN_IN_TILE) && getRegionID() == 12875 && isIdle) {
+                else if(isAtWorldPoint(BloodRuneTrueWorldPoints.TRUE_MYSTERIOUS_RUINS_SPAWN_IN_TILE) && isIdle) {
                     clickToBindInitialRunes();
                 }
 
                 // NEXT TO BLOOD ALTAR
-                else if (isAtWorldPoint(BloodRuneTrueWorldPoints.INFRONT_OF_BLOOD_ALTAR) && getRegionID() == 12875 && (essenceRemaining > 0 || hasItem(currentInventory, ItemID.PURE_ESSENCE))) {
+                else if (isAtWorldPoint(BloodRuneTrueWorldPoints.INFRONT_OF_BLOOD_ALTAR) && (essenceRemaining > 0 || hasItem(currentInventory, ItemID.PURE_ESSENCE))) {
                     clickToBindPouchRunes();
                 }
 
                 // BLOOD ALTAR DONE TP OUT
-                else if (isAtWorldPoint(BloodRuneTrueWorldPoints.INFRONT_OF_BLOOD_ALTAR) && getRegionID() == 12875 && essenceRemaining == 0 && !isTeleportingCW && isIdle) {
+                else if (isAtWorldPoint(BloodRuneTrueWorldPoints.INFRONT_OF_BLOOD_ALTAR) && essenceRemaining == 0 && !isTeleportingCW && isIdle) {
                     tryAction(this::clickDuelRing);
                 }
 //
@@ -245,7 +246,7 @@ public class BloodRuneTrueMain implements Runnable {
                                     clickDepositBloodRunes();
                                 }
 
-                                if (getItemCount(currentInventory, ItemID.RING_OF_DUELING8) > 1 && !needRingOfDueling) {
+                                if (hasItem(currentInventory, ItemID.RING_OF_DUELING8) && !needRingOfDueling) {
                                     System.out.println("FIND WHICH SLOT RING IS IN");
                                     getSlotOfItem(currentInventory, ItemID.RING_OF_DUELING8)
                                         .forEach(i -> {
@@ -255,11 +256,8 @@ public class BloodRuneTrueMain implements Runnable {
                                 }
 
                                 // and has blood ess in bank
-                                if (needBloodEssence && hasItem(currentBank, ItemID.BLOOD_ESSENCE)) {
-                                    // withdraw blood essence
-//                                    while (!hasItem(currentInventory, ItemID.BLOOD_ESSENCE)) {
-                                        withdrawBloodEssence();
-//                                    }
+                                if (needBloodEssence && (hasItem(currentBank, ItemID.BLOOD_ESSENCE) || hasItem(currentBank, ItemID.BLOOD_ESSENCE_ACTIVE))) {
+                                    withdrawBloodEssence();
                                 }
 
                                 if (needRingOfDueling) {
@@ -491,20 +489,29 @@ public class BloodRuneTrueMain implements Runnable {
         overlay.setCurrentStep("click deposit blood runes");
         System.out.println("click deposit blood runes");
         clicker.randomDelayStDev(250,350,25);
-        if (hasItem(currentInventory, ItemID.BLOOD_RUNE)) {
-            if (hasItem(currentInventory, ItemID.BLOOD_ESSENCE) || hasItem(currentInventory, ItemID.BLOOD_ESSENCE_ACTIVE)) {
-                clicker.clickPoint(invSlot3);
-            } else {
-                clicker.clickPoint(invSlot2);
-            }
-        }
-        clicker.randomDelayStDev(250,350,25);
+        getSlotOfItem(currentInventory, ItemID.BLOOD_RUNE)
+                .forEach(i -> {
+                    clicker.clickPoint(inventoryCoords.get(i));
+                    clicker.randomDelayStDev(250,350,25);
+                });
+//        if (hasItem(currentInventory, ItemID.BLOOD_RUNE)) {
+//            if (hasItem(currentInventory, ItemID.BLOOD_ESSENCE) || hasItem(currentInventory, ItemID.BLOOD_ESSENCE_ACTIVE)) {
+//                clicker.clickPoint(invSlot3);
+//            } else {
+//                clicker.clickPoint(invSlot2);
+//            }
+//        }
+//        clicker.randomDelayStDev(250,350,25);
     }
 
     private void withdrawBloodEssence() {
         overlay.setCurrentStep("withdraw blood essence");
         System.out.println("withdraw blood essence");
-        clicker.clickPoint(bankBloodEssence);
+        if (hasItem(currentBank, ItemID.BLOOD_ESSENCE_ACTIVE)) {
+            clicker.clickPoint(bankBloodEssenceActive);
+        } else {
+            clicker.clickPoint(bankBloodEssence);
+        }
         clicker.randomDelayStDev(350,450,25);
     }
 
@@ -761,7 +768,7 @@ public class BloodRuneTrueMain implements Runnable {
 
         // Teleports or cave-entering animation (~2796)
         int anim = p.getAnimation();
-        if (anim == 2796 || anim == 3265 || anim == 3266 || anim == 714 || anim == 4069 || anim == 4071 || anim == 7305 || anim == 4412 || anim == 4413) {
+        if (anim == 2796 || anim == 3265 || anim == 3266 || anim == 714 || anim == 4069 || anim == 4071 || anim == 7305 || anim == 4412 || anim == 4413 || anim == 791) {
             if (anim == 714)
                 isTeleportingCW = true;
             else if (anim == 4069 || anim == 4071)
@@ -770,6 +777,8 @@ public class BloodRuneTrueMain implements Runnable {
                 needRechargeStamina = false;
             else if (anim == 4412 || anim == 4413)
                 isNpcContact = true;
+            else if (anim == 791)
+                return false;
             return true;
         }
 
