@@ -3,6 +3,7 @@ package net.runelite.client.plugins.bloodRuneTrue;
 import com.google.common.collect.ImmutableList;
 import net.runelite.api.*;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
@@ -23,7 +24,7 @@ public class BloodRuneTrueMain implements Runnable {
 
     public static boolean needRechargeStamina = false;
     public static boolean isIdle = true;
-    public static boolean xpDrop = false;
+//    public static boolean xpDrop = false;
     public static boolean isEquipmentOpen = false;
     public static int essenceRemaining = 0;
     private static int maxEssenceAvailible = 40;
@@ -101,6 +102,7 @@ public class BloodRuneTrueMain implements Runnable {
     public long start;
     private final int STAMINA_THRESHOLD = 20;
     public static boolean isRunning = false;
+    public int breakCounter = 0;
 
     Clicker clicker;
     BreakScheduler scheduler;
@@ -144,6 +146,9 @@ public class BloodRuneTrueMain implements Runnable {
 
             // Retry pending actions if necessary
             checkActionSuccess();
+//            System.out.println("wp: " + isAtWorldPoint(BloodRuneTrueWorldPoints.INFRONT_OF_BLOOD_ALTAR));
+//            System.out.println("ess remaining: " + (essenceRemaining > 0));
+//            System.out.println("hasPure ess: " + hasItem(currentInventory, ItemID.PURE_ESSENCE));
 
             if (!isMoving()) {
                 if (isInsidePOH()) {
@@ -206,6 +211,7 @@ public class BloodRuneTrueMain implements Runnable {
 
                 // NEXT TO BLOOD ALTAR
                 else if (isAtWorldPoint(BloodRuneTrueWorldPoints.INFRONT_OF_BLOOD_ALTAR) && (essenceRemaining > 0 || hasItem(currentInventory, ItemID.PURE_ESSENCE))) {
+                    System.out.println("inside is moving");
                     clickToBindPouchRunes();
                 }
 
@@ -227,35 +233,41 @@ public class BloodRuneTrueMain implements Runnable {
                     if (isWorldPointInArea(myWorldPoint(), BloodRuneTrueWorldPoints.CASTLE_WARS_TP_ZONE) && isIdle) {
                         clicker.pressKey(KeyEvent.VK_ESCAPE);
                         clicker.randomDelayStDev(150, 250, 25);
-                        tryAction(this::clickBank);
-                    } else if (isAtWorldPoint(BloodRuneTrueWorldPoints.CASTLE_WARS_BANK_CHEST_INFRONT)) {
+                        clickBank();
+                    }
+                    else if (isAtWorldPoint(BloodRuneTrueWorldPoints.CASTLE_WARS_BANK_CHEST_INFRONT)) {
                         // if bank is open
                         clicker.randomDelayStDev(150, 250, 25);
                         if (isBankOpen()) {
                             // break check
                             long breakMs = scheduler.isBreak(System.currentTimeMillis());
                             if (breakMs > 0) {
-                                overlay.setCurrentStep("delay " + breakMs + "ms");
+                                breakCounter++;
+                                overlay.setCurrentStep("delay " + breakMs + "ms" + "(" + breakCounter + ")");
+                                System.out.println("break for " + breakMs + "ms" + "(" + breakCounter + ")");
                                 // break delay into safe chunks
                                 for (long d = breakMs; d > 0; d -= 60_000) {
                                     clicker.delay((int) Math.min(d, 60_000));
                                 }
+                            } else {
+                                overlay.setCurrentStep("break not needed" + "(" + breakCounter + ")");
+                                System.out.println("break not needed" + "(" + breakCounter + ")");
                             }
 
                             isDuelingRingEquipped();
                             isBloodEssenceActive();
 
-                            if (needRepairPouch) {
+                            if (hasItem(currentInventory, ItemID.BLOOD_RUNE)) {
+                                clickDepositBloodRunes();
+                            }
+
+                            else if (needRepairPouch) {
                                 System.out.println("post fill pouch repair needed");
                                 clicker.pressKey(KeyEvent.VK_ESCAPE);
                                 clicker.randomDelayStDev(150, 250, 25);
                             }
 
                             else if (!isReadyForAltar()) {
-                                if (hasItem(currentInventory, ItemID.BLOOD_RUNE)) {
-                                    clickDepositBloodRunes();
-                                }
-
                                 if (hasItem(currentInventory, ItemID.RING_OF_DUELING8) && !needRingOfDueling) {
                                     System.out.println("FIND WHICH SLOT RING IS IN");
                                     getSlotOfItem(currentInventory, ItemID.RING_OF_DUELING8)
@@ -309,14 +321,17 @@ public class BloodRuneTrueMain implements Runnable {
                                     clicker.randomDelayStDev(150, 250, 25);
                                     clicker.clickPoint(new Point(346, 375));
                                     clicker.randomDelayStDev(150, 250, 25);
+                                    while(!isChattingDarkMage()) {
+                                        clicker.delay(100);
+                                    }
                                 } else if (isChattingDarkMage()) {
                                     overlay.setCurrentStep("chatting with dark mage");
                                     darkMageChat();
                                 }
-                                else if (isNpcContact) {
-                                    overlay.setCurrentStep("delay 300ms");
-                                    clicker.delay(300);
-                                }
+//                                else if (isNpcContact) {
+//                                    overlay.setCurrentStep("delay 300ms");
+//                                    clicker.delay(300);
+//                                }
                                 else if (isLunarBookOpen) {
                                     overlay.setCurrentStep("lunar book open");
                                     clicker.clickPoint(new Point(769, 858));
@@ -352,6 +367,11 @@ public class BloodRuneTrueMain implements Runnable {
                 else if(getRegionID() == 11826) {
                     System.out.println("AT HOUSE");
                 }
+            }
+            // NEXT TO BLOOD ALTAR
+            else if (isAtWorldPoint(BloodRuneTrueWorldPoints.INFRONT_OF_BLOOD_ALTAR) && (essenceRemaining > 0 || hasItem(currentInventory, ItemID.PURE_ESSENCE))) {
+                System.out.println("outside is moving");
+                clickToBindPouchRunes();
             }
 
         }
@@ -456,6 +476,7 @@ public class BloodRuneTrueMain implements Runnable {
         // pre turn camera
         clicker.delay(100);
         setZoomPitchYaw(615, 200, 1588);
+        clicker.delay(500);
     }
 
     private void clickToBindPouchRunes() {
@@ -492,7 +513,9 @@ public class BloodRuneTrueMain implements Runnable {
 //        setZoomPitchYaw(520, 15, 1536);
 
         clickPointObject(BloodRuneTrueObjectIDs.castleWarsBankChest, false);
-        clicker.delay(500);
+        while(!isBankOpen()) {
+            clicker.delay(500);
+        }
     }
 
     private void clickDepositBloodRunes() {
@@ -698,10 +721,16 @@ public class BloodRuneTrueMain implements Runnable {
             pendingClickboxObject = o;
             System.out.println("shape pulled from plugin");
 
-            while (pendingClickboxShape == null) {
+            int count = 0;
+            while (pendingClickboxShape == null && count <= 10) {
                 clicker.delay(100);
+                count++;
             }
 
+            if (count >= 10) {
+                System.out.println("break from infinite loop");
+                return;
+            }
             s = pendingClickboxShape;
         }
 
@@ -802,7 +831,7 @@ public class BloodRuneTrueMain implements Runnable {
             // Movement started → reset all event signals
             overlay.setCurrentStep("moving to next");
             isIdle = false;
-            xpDrop = false;
+//            xpDrop = false;
 //            invUpdate = false;
         }
         else
@@ -856,7 +885,7 @@ public class BloodRuneTrueMain implements Runnable {
 
     private boolean isStaminaBelow(int threshold) {
         // Widget IDs may vary per client; confirm these are correct
-        Widget staminaWidget = client.getWidget(10485788);
+        Widget staminaWidget = client.getWidget(InterfaceID.Orbs.RUNENERGY_TEXT);
         if (staminaWidget == null) {
             return false; // widget not loaded
         }
@@ -921,10 +950,14 @@ public class BloodRuneTrueMain implements Runnable {
     }
 
     private void darkMageChat() {
+        System.out.println("chatting with mage");
         Widget chatboxLeft = client.getWidget(WidgetInfo.DIALOG_NPC_TEXT);
         Widget chatboxRight = client.getWidget(WidgetInfo.DIALOG_PLAYER_TEXT);
         Widget chatOptions = client.getWidget(WidgetInfo.DIALOG_OPTION_OPTIONS);
 
+        System.out.println("chatboxLeft: " + (chatboxLeft != null));
+        System.out.println("chatboxRight: " + (chatboxRight != null));
+        System.out.println("chatOptions: " + (chatOptions != null));
         if (chatboxLeft != null) {
             String s = chatboxLeft.getText();
             if (s.contains("What do you want? Can't you see I'm busy?")) {
@@ -939,13 +972,40 @@ public class BloodRuneTrueMain implements Runnable {
                 clicker.pressKey(KeyEvent.VK_SPACE);
             }
         } else if (chatOptions != null) {
-            List<Widget> chatOptionsList = new ArrayList<>(Arrays.asList(chatOptions.getChildren()));
-            if (!chatOptionsList.isEmpty()) {
-                String s = chatOptionsList.get(2).getText();
-                if (s.contains("Can you repair my pouches?")) {
-                    clicker.pressKey(KeyEvent.VK_2);
-                }
+            List<Widget> chatOptionsList =
+                    Optional.ofNullable(chatOptions.getChildren())
+                            .map(Arrays::asList)
+                            .orElse(Collections.emptyList());
+
+            if (chatOptionsList.size() <= 2) {
+                return;
+            }
+
+            Widget widget = chatOptionsList.get(2);
+            if (widget == null) {
+                return;
+            }
+
+            String s = widget.getText();
+            if (s != null && s.contains("Can you repair my pouches?")) {
+                clicker.pressKey(KeyEvent.VK_2);
             }
         }
+//        else if (chatOptions != null) {
+//            try {
+//                System.out.println("chatOptions.getChildren(): " + (chatOptions.getChildren() == null));
+//                List<Widget> chatOptionsList = new ArrayList<>(Arrays.asList(chatOptions.getChildren()));
+//                System.out.println("chatOptionsList.isEmpty(): " + (chatOptionsList.isEmpty()));
+//                if (!chatOptionsList.isEmpty()) {
+//                    String s = chatOptionsList.get(2).getText();
+//                    System.out.println("chatString: " + s);
+//                    if (s.contains("Can you repair my pouches?")) {
+//                        clicker.pressKey(KeyEvent.VK_2);
+//                    }
+//                }
+//            } catch (Exception e) {
+//                System.out.println("dark mage chat edge case");
+//            }
+//        }
     }
 }

@@ -56,15 +56,15 @@ public class BloodRuneTruePlugin extends Plugin {
             BloodRuneTrueObjectIDs.CASTLE_WARS_BANK_CHEST
     );
 
-    @Subscribe
-    public void onStatChanged(StatChanged statChanged) {
-        if (statChanged.getSkill() != AGILITY) {
-            return;
-        }
-        BloodRuneTrueMain.xpDrop = true;
-        overlay.setCurrentStep("xpDrop = true");
-        log.info("xpDrop = true");
-    }
+//    @Subscribe
+//    public void onStatChanged(StatChanged statChanged) {
+//        if (statChanged.getSkill() != AGILITY) {
+//            return;
+//        }
+//        BloodRuneTrueMain.xpDrop = true;
+//        overlay.setCurrentStep("xpDrop = true");
+//        log.info("xpDrop = true");
+//    }
 
     @Subscribe
     public void onItemContainerChanged(ItemContainerChanged event) {
