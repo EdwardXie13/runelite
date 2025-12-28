@@ -195,8 +195,6 @@ public class BloodRuneTruePlugin extends Plugin {
             overlay.setCurrentStep("status is stop");
             System.out.println("status is stop");
         }
-//        else if (chatBoxMessage.equals("3")) {
-//        }
     }
 
     @Subscribe

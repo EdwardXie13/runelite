@@ -137,10 +137,6 @@ public class BloodRuneTrueMain implements Runnable {
     public void run()
     {
         while (isRunning) {
-//            if (checkIdle(100)) {
-//                isIdle = true;
-//            }
-
             // Update idle based on movement
             updateIdleStatus();
 
@@ -216,7 +212,7 @@ public class BloodRuneTrueMain implements Runnable {
                 }
 
                 // BLOOD ALTAR DONE TP OUT
-                else if (isAtWorldPoint(BloodRuneTrueWorldPoints.INFRONT_OF_BLOOD_ALTAR) && essenceRemaining == 0 && !isTeleportingCW && isIdle) {
+                else if (getRegionID() == 12875 && essenceRemaining == 0 && !isTeleportingCW && isIdle) {
                     tryAction(this::clickDuelRing);
                 }
 //
@@ -231,7 +227,7 @@ public class BloodRuneTrueMain implements Runnable {
                     }
 
                     if (isWorldPointInArea(myWorldPoint(), BloodRuneTrueWorldPoints.CASTLE_WARS_TP_ZONE) && isIdle) {
-                        clicker.pressKey(KeyEvent.VK_ESCAPE);
+//                        clicker.pressKey(KeyEvent.VK_ESCAPE);
                         clicker.randomDelayStDev(150, 250, 25);
                         clickBank();
                     }
@@ -264,7 +260,8 @@ public class BloodRuneTrueMain implements Runnable {
                             else if (needRepairPouch) {
                                 System.out.println("post fill pouch repair needed");
                                 clicker.pressKey(KeyEvent.VK_ESCAPE);
-                                clicker.randomDelayStDev(150, 250, 25);
+                                setZoomPitchYaw(896, 512, 0);
+//                                clicker.randomDelayStDev(150, 250, 25);
                             }
 
                             else if (!isReadyForAltar()) {
@@ -373,7 +370,6 @@ public class BloodRuneTrueMain implements Runnable {
                 System.out.println("outside is moving");
                 clickToBindPouchRunes();
             }
-
         }
         System.out.println("Thread has stopped.");
     }
@@ -483,12 +479,16 @@ public class BloodRuneTrueMain implements Runnable {
         overlay.setCurrentStep("bind runes2");
         System.out.println("bind runes2");
 //        setZoomPitchYaw(615, 200, 1588);
-        clicker.randomDelayStDev(250,350,25);
+//        clicker.randomDelayStDev(250,350,25);
+        clicker.delay(100);
+
+        if (hasItem(currentInventory, ItemID.PURE_ESSENCE)) { return; }
+
         while(essenceRemaining > 0) {
             clicker.clickPoint(invSlot1);
-            clicker.randomDelayStDev(200,300,20);
+            clicker.randomDelayStDev(200, 300, 25);
             clickPointObject(BloodRuneTrueObjectIDs.trueBloodAltar, false);
-            clicker.randomDelayStDev(200,300,20);
+            clicker.randomDelayStDev(200, 300, 25);
         }
 //        clicker.delay(500);
     }
@@ -505,6 +505,7 @@ public class BloodRuneTrueMain implements Runnable {
             setZoomPitchYaw(350, 280, 1185);
         }
         clicker.delay(500);
+        clicker.pressKey(KeyEvent.VK_ESCAPE);
     }
 
     private void clickBank() {
@@ -573,14 +574,20 @@ public class BloodRuneTrueMain implements Runnable {
         System.out.println("withdraw pure essence");
         while(essenceRemaining != maxEssenceAvailible) {
             if (needRepairPouch) { return; }
+
+//            if (hasItem(currentInventory, ItemID.PURE_ESSENCE)) { continue; }
             clicker.clickPoint(bankPureEssence);
             clicker.randomDelayStDev(350,450,25);
+
+//            if (!hasItem(currentInventory, ItemID.PURE_ESSENCE)) { continue; }
             clicker.clickPoint(invSlot1);
             clicker.randomDelayStDev(350,450,25);
         }
 
-        clicker.clickPoint(bankPureEssence);
-        clicker.randomDelayStDev(350,450,25);
+        if (!hasEnoughPureEssence()) {
+            clicker.clickPoint(bankPureEssence);
+            clicker.randomDelayStDev(350, 450, 25);
+        }
     }
 
     private void activateBloodEssence() {
