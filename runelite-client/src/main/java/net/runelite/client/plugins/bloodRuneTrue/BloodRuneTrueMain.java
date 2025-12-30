@@ -821,8 +821,10 @@ public class BloodRuneTrueMain implements Runnable {
                 isTeleportingPOH = true;
             else if (anim == 7305)
                 needRechargeStamina = false;
-            else if (anim == 4412 || anim == 4413)
+            else if (/*anim == 4412 || */anim == 4413) {
                 isNpcContact = true;
+                clicker.delay(100);
+            }
             else if (anim == 791)
                 return false;
             return true;
