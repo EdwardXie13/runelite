@@ -207,6 +207,12 @@ public class LootTrackerPlugin extends Plugin
 		put(5422, "Chest (Aldarin Villas)").
 		put(6550, "Chest (Moon key)").
 		put(5521, "Chest (Alchemist's signet)").
+		put(12073, "Rusty chest").
+		put(7470, "Rusty chest").
+		put(6187, "Tarnished chest").
+		put(6953, "Tarnished chest").
+		put(7743, "Reinforced chest").
+		put(8758, "Reinforced chest").
 		build();
 
 	// Chests opened with keys from slayer tasks
@@ -678,7 +684,7 @@ public class LootTrackerPlugin extends Plugin
 			queuedLoots.add(lootRecord);
 		}
 
-		eventBus.post(new LootReceived(name, combatLevel, type, items, amount));
+		eventBus.post(new LootReceived(name, combatLevel, type, items, amount, metadata));
 	}
 
 	private Integer getLootWorldId()
