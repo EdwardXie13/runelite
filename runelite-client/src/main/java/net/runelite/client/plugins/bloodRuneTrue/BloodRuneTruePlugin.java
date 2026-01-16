@@ -14,6 +14,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -145,6 +146,7 @@ public class BloodRuneTruePlugin extends Plugin {
         getShapeForTileObject();
         BloodRuneTrueMain.isEquipmentOpen = isEquipmentOpen();
         BloodRuneTrueMain.isLunarBookOpen = isLunarBookOpen();
+        BloodRuneTrueMain.isInventoryHidden = isInventoryHidden();
     }
 
     @Subscribe
@@ -307,5 +309,10 @@ public class BloodRuneTruePlugin extends Plugin {
         {
             BloodRuneTrueMain.pendingClickboxObject = null;
         }
+    }
+
+    private boolean isInventoryHidden() {
+        Widget inv = client.getWidget(9764864);
+        return inv != null && inv.isHidden();
     }
 }

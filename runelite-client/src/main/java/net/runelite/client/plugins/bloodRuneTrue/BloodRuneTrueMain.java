@@ -33,6 +33,7 @@ public class BloodRuneTrueMain implements Runnable {
     public static boolean isTeleportingPOH = false;
     public static boolean isNpcContact = false;
     public static boolean isLunarBookOpen = false;
+    public static boolean isInventoryHidden = false;
     public static boolean needRepairPouch = true;
     public static boolean needRingOfDueling = false;
     public static boolean needBloodEssence = false;
@@ -470,8 +471,8 @@ public class BloodRuneTrueMain implements Runnable {
         clicker.randomDelayStDev(150, 250, 25);
         clickPointObject(BloodRuneTrueObjectIDs.trueBloodAltar, false);
         // pre turn camera
-        clicker.delay(100);
-        setZoomPitchYaw(615, 200, 1588);
+//        clicker.delay(100);
+//        setZoomPitchYaw(615, 200, 1588);
         clicker.delay(500);
     }
 
@@ -600,6 +601,7 @@ public class BloodRuneTrueMain implements Runnable {
     private void clickTeletab() {
         overlay.setCurrentStep("click teletab");
         System.out.println("click teletab");
+        isInventoryHidden();
         clicker.clickPoint(invSlot28);
         clicker.randomDelayStDev(250,350,25);
         clicker.delay(500);
@@ -823,7 +825,7 @@ public class BloodRuneTrueMain implements Runnable {
                 needRechargeStamina = false;
             else if (/*anim == 4412 || */anim == 4413) {
                 isNpcContact = true;
-                clicker.delay(100);
+                clicker.delay(300);
             }
             else if (anim == 791)
                 return false;
@@ -946,6 +948,14 @@ public class BloodRuneTrueMain implements Runnable {
 //        return bank != null && !bank.isHidden();
     }
 
+    private void isInventoryHidden() {
+        if (isInventoryHidden){
+            System.out.println("clicking escape to get inv");
+            clicker.pressKey(KeyEvent.VK_ESCAPE);
+            clicker.delay(100);
+        }
+    }
+
     private boolean isNPCContactWindowOpen() {
         Widget chatModal = client.getWidget(4915204);
         return chatModal != null;
@@ -964,21 +974,21 @@ public class BloodRuneTrueMain implements Runnable {
         Widget chatboxRight = client.getWidget(WidgetInfo.DIALOG_PLAYER_TEXT);
         Widget chatOptions = client.getWidget(WidgetInfo.DIALOG_OPTION_OPTIONS);
 
-        System.out.println("chatboxLeft: " + (chatboxLeft != null));
-        System.out.println("chatboxRight: " + (chatboxRight != null));
-        System.out.println("chatOptions: " + (chatOptions != null));
         if (chatboxLeft != null) {
             String s = chatboxLeft.getText();
             if (s.contains("What do you want? Can't you see I'm busy?")) {
                 clicker.pressKey(KeyEvent.VK_SPACE);
+                clicker.delay(200);
             } else if (s.contains("A simple transfiguration spell should resolve things")) {
                 needRepairPouch = false;
                 isNpcContact = false;
+//                clicker.delay(100);
             }
         } else if (chatboxRight != null) {
             String s = chatboxRight.getText();
             if (s.contains("Can you repair my pouches?")) {
                 clicker.pressKey(KeyEvent.VK_SPACE);
+                clicker.delay(200);
             }
         } else if (chatOptions != null) {
             List<Widget> chatOptionsList =
@@ -998,23 +1008,8 @@ public class BloodRuneTrueMain implements Runnable {
             String s = widget.getText();
             if (s != null && s.contains("Can you repair my pouches?")) {
                 clicker.pressKey(KeyEvent.VK_2);
+                clicker.delay(200);
             }
         }
-//        else if (chatOptions != null) {
-//            try {
-//                System.out.println("chatOptions.getChildren(): " + (chatOptions.getChildren() == null));
-//                List<Widget> chatOptionsList = new ArrayList<>(Arrays.asList(chatOptions.getChildren()));
-//                System.out.println("chatOptionsList.isEmpty(): " + (chatOptionsList.isEmpty()));
-//                if (!chatOptionsList.isEmpty()) {
-//                    String s = chatOptionsList.get(2).getText();
-//                    System.out.println("chatString: " + s);
-//                    if (s.contains("Can you repair my pouches?")) {
-//                        clicker.pressKey(KeyEvent.VK_2);
-//                    }
-//                }
-//            } catch (Exception e) {
-//                System.out.println("dark mage chat edge case");
-//            }
-//        }
     }
 }
