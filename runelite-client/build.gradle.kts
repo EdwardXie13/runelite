@@ -69,6 +69,7 @@ dependencies {
         exclude("com.google.guava", "guava")
     }
     api(libs.gson)
+    api(libs.jackson.databind)
     api(libs.flatlaf.core)
     implementation(libs.flatlaf.extras)
     api(libs.commons.text)

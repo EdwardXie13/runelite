@@ -1,0 +1,127 @@
+{
+  "skillExperience": {
+    "herbloreXp": 13062297,
+    "thievingXp": 36273467,
+    "farmingXp": 13613816
+  },
+  "guam": {
+    "seedRate": 0.0148809523809524,
+    "potXp": 25.0,
+    "herbXp": 12.0,
+    "cleanGrimyXp": 2.5,
+    "currentSeeds": 12032,
+    "grimyHerb": 0,
+    "cleanHerb": 3,
+    "unfPot": 0
+  },
+  "harralander": {
+    "seedRate": 0.004854368932,
+    "potXp": 67.5,
+    "herbXp": 21.5,
+    "cleanGrimyXp": 6.3,
+    "currentSeeds": 4332,
+    "grimyHerb": 0,
+    "cleanHerb": 0,
+    "unfPot": 0
+  },
+  "ranarr": {
+    "seedRate": 0.0037209302325581,
+    "potXp": 87.5,
+    "herbXp": 27.0,
+    "cleanGrimyXp": 7.5,
+    "currentSeeds": 0,
+    "grimyHerb": 0,
+    "cleanHerb": 9,
+    "unfPot": 0
+  },
+  "toadflax": {
+    "seedRate": 0.002257336343,
+    "potXp": 180.0,
+    "herbXp": 34.0,
+    "cleanGrimyXp": 8.0,
+    "currentSeeds": 1158,
+    "grimyHerb": 0,
+    "cleanHerb": 39,
+    "unfPot": 119
+  },
+  "irit": {
+    "seedRate": 0.00153609831,
+    "potXp": 100.0,
+    "herbXp": 43.0,
+    "cleanGrimyXp": 8.8,
+    "currentSeeds": 2,
+    "grimyHerb": 0,
+    "cleanHerb": 47,
+    "unfPot": 4
+  },
+  "avantoe": {
+    "seedRate": 0.001055966209,
+    "potXp": 112.5,
+    "herbXp": 54.5,
+    "cleanGrimyXp": 10.0,
+    "currentSeeds": 904,
+    "grimyHerb": 0,
+    "cleanHerb": 0,
+    "unfPot": 6
+  },
+  "kwuarm": {
+    "seedRate": 7.199424046E-4,
+    "potXp": 125.0,
+    "herbXp": 69.0,
+    "cleanGrimyXp": 11.3,
+    "currentSeeds": 4,
+    "grimyHerb": 0,
+    "cleanHerb": 0,
+    "unfPot": 3
+  },
+  "snapdragon": {
+    "seedRate": 5.392579810181191E-4,
+    "potXp": 142.5,
+    "herbXp": 87.5,
+    "cleanGrimyXp": 11.8,
+    "currentSeeds": 7,
+    "grimyHerb": 0,
+    "cleanHerb": 275,
+    "unfPot": 2600
+  },
+  "cadantine": {
+    "seedRate": 3.360215054E-4,
+    "potXp": 150.0,
+    "herbXp": 106.5,
+    "cleanGrimyXp": 12.5,
+    "currentSeeds": 0,
+    "grimyHerb": 0,
+    "cleanHerb": 2,
+    "unfPot": 0
+  },
+  "lantadyme": {
+    "seedRate": 2.399808015E-4,
+    "potXp": 172.5,
+    "herbXp": 134.5,
+    "cleanGrimyXp": 13.1,
+    "currentSeeds": 170,
+    "grimyHerb": 0,
+    "cleanHerb": 0,
+    "unfPot": 5
+  },
+  "dwarfweed": {
+    "seedRate": 1.440092165898618E-4,
+    "potXp": 162.5,
+    "herbXp": 134.5,
+    "cleanGrimyXp": 13.8,
+    "currentSeeds": 208,
+    "grimyHerb": 0,
+    "cleanHerb": 52,
+    "unfPot": 40
+  },
+  "torstol": {
+    "seedRate": 1.078518288E-4,
+    "potXp": 175.0,
+    "herbXp": 199.5,
+    "cleanGrimyXp": 15.0,
+    "currentSeeds": 90,
+    "grimyHerb": 0,
+    "cleanHerb": 9,
+    "unfPot": 0
+  }
+}
