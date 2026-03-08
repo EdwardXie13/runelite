@@ -1,4 +1,4 @@
-package net.runelite.client.plugins.seedlogger;
+package net.runelite.client.plugins.itemlogger;
 
 
 import net.runelite.api.*;
