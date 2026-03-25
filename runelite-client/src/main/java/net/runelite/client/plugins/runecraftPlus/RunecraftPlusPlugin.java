@@ -42,6 +42,7 @@ import net.runelite.api.events.GameObjectSpawned;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.events.VarbitChanged;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
@@ -92,6 +93,9 @@ public class RunecraftPlusPlugin extends Plugin
 
     @Inject
     private Client client;
+
+    @Inject
+    private ClientThread clientThread;
 
     @Getter(AccessLevel.PACKAGE)
     private GameObject denseRunestoneSouth;

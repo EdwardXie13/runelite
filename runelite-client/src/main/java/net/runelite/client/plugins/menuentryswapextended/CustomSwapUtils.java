@@ -5,12 +5,20 @@ import net.runelite.api.Client;
 import net.runelite.api.Item;
 import net.runelite.api.ItemID;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.widgets.WidgetInfo;
 
 import java.util.List;
 import java.util.Optional;
 
 public class CustomSwapUtils {
     String POH_CONCAPET = "Tele to POH, Construct. cape*";
+    String COALBAG_EMPTY = "Empty, Coal bag";
+    String STEEL_PLATESKIRT_WITHDRAW1 = "Withdraw-1, Steel plateskirt";
+    String STEEL_PLATESKIRT_WITHDRAW5 = "Withdraw-5, Steel plateskirt";
+    String STEEL_PLATESKIRT_EXAMINE = "Examine, Steel plateskirt";
+    String MITH_PLATESKIRT_WITHDRAW1 = "Withdraw-1, Mithril plateskirt";
+    String MITH_PLATESKIRT_WITHDRAW5 = "Withdraw-5, Mithril plateskirt";
+    String MITH_PLATESKIRT_EXAMINE = "Examine, Mithril plateskirt";
     public boolean isAtTile(Client client, int x, int y, int z) {
         WorldPoint localWP =
                 Optional.ofNullable(client)
@@ -33,9 +41,21 @@ public class CustomSwapUtils {
                 countItem(inventoryItems, sandbucket, 27);
     }
 
-    private boolean countItem(List<Item> inventoryItems, int item, int count) {
-        return inventoryItems.stream()
+    public int getCountItem(List<Item> inventoryItems, int item) {
+        return (int) inventoryItems.stream()
                 .filter(items -> items.getId() == item)
-                .count() >= count;
+                .count();
+    }
+
+    public boolean countItem(List<Item> inventoryItems, int item, int count) {
+        return getCountItem(inventoryItems, item) >= count;
+    }
+
+    public int getRegionID(Client client) {
+        return client.getLocalPlayer().getWorldLocation().getRegionID();
+    }
+
+    public boolean isBankOpen(Client client) {
+        return client.getWidget(WidgetInfo.BANK_CONTAINER) != null;
     }
 }

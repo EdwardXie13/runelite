@@ -1,8 +1,8 @@
 {
   "skillExperience": {
-    "herbloreXp": 13062297,
-    "thievingXp": 36273467,
-    "farmingXp": 13613816
+    "herbloreXp": 13071174,
+    "thievingXp": 36273510,
+    "farmingXp": 13653557
   },
   "guam": {
     "seedRate": 0.0148809523809524,
@@ -10,7 +10,7 @@
     "herbXp": 12.0,
     "cleanGrimyXp": 2.5,
     "currentSeeds": 12032,
-    "grimyHerb": 0,
+    "grimyHerb": 18,
     "cleanHerb": 3,
     "unfPot": 0
   },
@@ -31,18 +31,18 @@
     "cleanGrimyXp": 7.5,
     "currentSeeds": 0,
     "grimyHerb": 0,
-    "cleanHerb": 9,
-    "unfPot": 0
+    "cleanHerb": 0,
+    "unfPot": 13
   },
   "toadflax": {
     "seedRate": 0.002257336343,
     "potXp": 180.0,
     "herbXp": 34.0,
     "cleanGrimyXp": 8.0,
-    "currentSeeds": 1158,
-    "grimyHerb": 0,
-    "cleanHerb": 39,
-    "unfPot": 119
+    "currentSeeds": 1122,
+    "grimyHerb": 4,
+    "cleanHerb": 5,
+    "unfPot": 399
   },
   "irit": {
     "seedRate": 0.00153609831,
@@ -51,8 +51,8 @@
     "cleanGrimyXp": 8.8,
     "currentSeeds": 2,
     "grimyHerb": 0,
-    "cleanHerb": 47,
-    "unfPot": 4
+    "cleanHerb": 0,
+    "unfPot": 59
   },
   "avantoe": {
     "seedRate": 0.001055966209,
@@ -61,7 +61,7 @@
     "cleanGrimyXp": 10.0,
     "currentSeeds": 904,
     "grimyHerb": 0,
-    "cleanHerb": 0,
+    "cleanHerb": 2,
     "unfPot": 6
   },
   "kwuarm": {
@@ -72,7 +72,7 @@
     "currentSeeds": 4,
     "grimyHerb": 0,
     "cleanHerb": 0,
-    "unfPot": 3
+    "unfPot": 9
   },
   "snapdragon": {
     "seedRate": 5.392579810181191E-4,
@@ -81,7 +81,7 @@
     "cleanGrimyXp": 11.8,
     "currentSeeds": 7,
     "grimyHerb": 0,
-    "cleanHerb": 275,
+    "cleanHerb": 282,
     "unfPot": 2600
   },
   "cadantine": {
@@ -90,7 +90,7 @@
     "herbXp": 106.5,
     "cleanGrimyXp": 12.5,
     "currentSeeds": 0,
-    "grimyHerb": 0,
+    "grimyHerb": 17,
     "cleanHerb": 2,
     "unfPot": 0
   },
@@ -111,8 +111,8 @@
     "cleanGrimyXp": 13.8,
     "currentSeeds": 208,
     "grimyHerb": 0,
-    "cleanHerb": 52,
-    "unfPot": 40
+    "cleanHerb": 9,
+    "unfPot": 96
   },
   "torstol": {
     "seedRate": 1.078518288E-4,
@@ -120,8 +120,8 @@
     "herbXp": 199.5,
     "cleanGrimyXp": 15.0,
     "currentSeeds": 90,
-    "grimyHerb": 0,
-    "cleanHerb": 9,
+    "grimyHerb": 37,
+    "cleanHerb": 17,
     "unfPot": 0
   }
 }

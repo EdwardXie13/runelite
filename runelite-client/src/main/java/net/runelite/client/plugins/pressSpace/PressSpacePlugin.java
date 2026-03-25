@@ -73,11 +73,12 @@ public class PressSpacePlugin extends Plugin {
     public void onGameTick(GameTick event) {
         closeBank();
         craftBox();
-        smithingDarts();
+        smithing();
         smeltingSilverBolts();
         bountyHunterWorldHop();
         withdrawSeedBox();
         isfillingSand();
+        chatbox();
     }
 
     @Subscribe
@@ -154,11 +155,24 @@ public class PressSpacePlugin extends Plugin {
         }
     }
 
-    private void smithingDarts() {
+    private boolean hasExactChildren(Widget widget, int count) {
+        return widget != null
+                && widget.getChildren() != null
+                && widget.getChildren().length == count;
+    }
+
+    private void smithing() {
 //        20447261 size == 4 means press space
         if(client.getWidget(WidgetInfo.SMITHING_INVENTORY_ITEMS_CONTAINER) != null) {
+            boolean smithingCheck = false;
             Widget dartBox = client.getWidget(20447261);
-            if(dartBox != null && Objects.requireNonNull(dartBox.getChildren()).length == 4) {
+            Widget plateskirtBox = client.getWidget(20447253);
+
+            if (hasExactChildren(dartBox, 4) || hasExactChildren(plateskirtBox, 4)) {
+                smithingCheck = true;
+            }
+
+            if (smithingCheck) {
                 pressKey(KeyEvent.VK_SPACE);
             }
         }
@@ -284,6 +298,16 @@ public class PressSpacePlugin extends Plugin {
             else if (countItem(ItemID.MOLTEN_GLASS, 27) && countItem(ItemID.GLASSBLOWING_PIPE, 1)) {
                 pressOtherKey('8');
             } else {
+                pressKey(KeyEvent.VK_SPACE);
+            }
+        }
+    }
+
+    private void chatbox() {
+        Widget chatBox = client.getWidget(15007747);
+        if (chatBox != null && chatBox.getText().contains("from the dispenser")) {
+            // If at blast furnace
+            if(client.getLocalPlayer().getWorldLocation().getRegionID() == 7757) {
                 pressKey(KeyEvent.VK_SPACE);
             }
         }

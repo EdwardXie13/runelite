@@ -17,6 +17,7 @@ import java.io.Writer;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @PluginDescriptor(
         name = "Ore Logger",
@@ -93,13 +94,13 @@ public class OreLoggerPlugin extends Plugin {
                 if (ORES.contains(itemID)) {
                     String name = getOreName(itemID);
                     Map<String, Object> data = oreData.computeIfAbsent(name, this::createDefaultOreData);
-                    data.put("currentOres", quantity);
+                    data.put("currentOres", Optional.of(quantity).orElse(0));
                 }
                 // Process bars
                 else if (BARS.contains(itemID)) {
                     String name = getBarName(itemID);
                     Map<String, Object> data = oreData.computeIfAbsent(name, this::createDefaultOreData);
-                    data.put("currentBars", quantity);
+                    data.put("currentBars", Optional.of(quantity).orElse(0));
                 }
                 // Process gear
                 else if (GEAR.contains(itemID)) {
@@ -194,26 +195,39 @@ public class OreLoggerPlugin extends Plugin {
                 data.put("barXp", 37.5);
                 data.put("oreCost", 25.0);
                 data.put("coalRequired", 1);
+                data.put("currentOres", 0);
+                data.put("currentBars", 0);
+                data.put("convertedBars", 0);
                 break;
             case "mith":
                 data.put("smeltXP", 30.0);
                 data.put("barXp", 50.0);
                 data.put("oreCost", 243.0);
                 data.put("coalRequired", 2);
+                data.put("currentOres", 0);
+                data.put("currentBars", 0);
+                data.put("convertedBars", 0);
                 break;
             case "addy":
                 data.put("smeltXP", 30.0);
                 data.put("barXp", 50.0);
                 data.put("oreCost", 27.0);
                 data.put("coalRequired", 3);
+                data.put("currentOres", 0);
+                data.put("currentBars", 0);
+                data.put("convertedBars", 0);
                 break;
             case "coal":
                 data.put("oreCost", 67);
+                data.put("currentOres", 0);
                 break;
             default:
                 data.put("smeltXP", 0.0);
                 data.put("barXp", 0.0);
                 data.put("oreCost", 0.0);
+                data.put("currentOres", 0);
+                data.put("currentBars", 0);
+                data.put("convertedBars", 0);
                 break;
         }
         return data;

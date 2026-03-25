@@ -27,23 +27,14 @@ package net.runelite.client.plugins.runecraftPlus;
 
 import com.google.common.collect.ImmutableSet;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
-import net.runelite.api.DecorativeObject;
-import net.runelite.api.GameObject;
-import net.runelite.api.GroundObject;
-import net.runelite.api.InventoryID;
-import net.runelite.api.Item;
-import net.runelite.api.ItemID;
-import net.runelite.api.MenuAction;
-import net.runelite.api.MenuEntry;
-import net.runelite.api.Perspective;
+import net.runelite.api.*;
 import net.runelite.api.Point;
-import net.runelite.api.Tile;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -212,12 +203,14 @@ public class DenseRunestoneOverlay extends Overlay
     ));
 
     private final Client client;
+    private final ClientThread clientThread;
     private final RunecraftPlusPlugin plugin;
     private final RunecraftPlusConfig config;
 
     @Inject
-    private DenseRunestoneOverlay(Client client, RunecraftPlusPlugin plugin, RunecraftPlusConfig config) throws AWTException {
+    private DenseRunestoneOverlay(Client client, ClientThread clientThread, RunecraftPlusPlugin plugin, RunecraftPlusConfig config) throws AWTException {
         this.client = client;
+        this.clientThread = clientThread;
         this.plugin = plugin;
         this.config = config;
 
@@ -803,5 +796,49 @@ public class DenseRunestoneOverlay extends Overlay
     private boolean isAtRCAltar() {
         int regionID = getRegionID();
         return RCAltarRegionIDs.contains(regionID);
+    }
+
+    public void centerCameraOnTile(WorldPoint tile)
+    {
+        client.setCameraMode(1);
+
+        LocalPoint lp = LocalPoint.fromWorld(client, tile);
+        if (lp == null)
+            return;  // Tile not in loaded scene
+
+        client.setCameraFocalPointX(lp.getX());
+        client.setCameraFocalPointZ(lp.getY());
+    }
+
+    private void detachCameraPoint(WorldPoint wp, int pitch, int yaw, int zoom) {
+        setZoomPitchYaw(zoom, pitch, yaw);
+        centerCameraOnTile(wp);
+    }
+
+    private void setZoomPitchYaw(int zoom, int pitch, int yaw) {
+        setCameraZoom(zoom);
+        setCameraPitch(pitch);
+        setCameraYaw(yaw);
+    }
+
+    private void setCameraZoom(int zoom) {
+        clientThread.invokeLater(() -> client.runScript(ScriptID.CAMERA_DO_ZOOM, zoom, zoom));
+    }
+
+    private void resetZoomPitchYaw(int zoom, int pitch, int yaw) {
+        setZoomPitchYaw(zoom, pitch, yaw);
+        client.setCameraMode(0);
+    }
+
+    private void setCameraYaw(int yaw) {
+        if(client.getCameraYaw() == yaw)
+            return;
+        client.setCameraYawTarget(yaw);
+    }
+
+    private void setCameraPitch(int pitch) {
+        if(client.getCameraPitch() == pitch)
+            return;
+        client.setCameraPitchTarget(pitch);
     }
 }

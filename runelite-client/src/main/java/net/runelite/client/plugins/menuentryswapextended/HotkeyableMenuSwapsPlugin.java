@@ -108,9 +108,45 @@ public class HotkeyableMenuSwapsPlugin extends Plugin implements KeyListener
 
 	@Subscribe
 	public void onGameTick(GameTick event) {
+		int regionID = customSwapUtils.getRegionID(client);
 		// Yanille Sand pit
 		if (customSwapUtils.isAtTile(client, 2542, 3102, 0) && customSwapUtils.isSandFilling(inventoryItems)) {
 			customSwaps.add(CustomSwap.fromString(customSwapUtils.POH_CONCAPET));
+		} else if (customSwapUtils.isAtTile(client, 1942, 4967, 0)) {
+			customSwaps.add(CustomSwap.fromString(customSwapUtils.COALBAG_EMPTY));
+		}
+		// Giants foundry
+		else if (regionID == 13491) {
+			if (customSwapUtils.isAtTile(client, 3374, 11493, 0) && customSwapUtils.isBankOpen(client)) {
+                int steelPlatelegsCount = customSwapUtils.getCountItem(inventoryItems, ItemID.STEEL_PLATESKIRT);
+				int mithPlatelegsCount = customSwapUtils.getCountItem(inventoryItems, ItemID.MITHRIL_PLATESKIRT);
+
+				if (steelPlatelegsCount > 0) {
+					if (steelPlatelegsCount < 7) {
+						if (steelPlatelegsCount + 5 <= 7) {
+							customSwaps.add(CustomSwap.fromString(customSwapUtils.STEEL_PLATESKIRT_WITHDRAW5));
+						} else {
+							customSwaps.add(CustomSwap.fromString(customSwapUtils.STEEL_PLATESKIRT_WITHDRAW1));
+						}
+					} else {
+						customSwaps.add(CustomSwap.fromString(customSwapUtils.STEEL_PLATESKIRT_EXAMINE));
+					}
+				}
+
+				if (mithPlatelegsCount > 0) {
+					if (mithPlatelegsCount < 7) {
+						if (mithPlatelegsCount + 5 <= 7) {
+							customSwaps.add(CustomSwap.fromString(customSwapUtils.MITH_PLATESKIRT_WITHDRAW5));
+						} else {
+							customSwaps.add(CustomSwap.fromString(customSwapUtils.MITH_PLATESKIRT_WITHDRAW1));
+						}
+					} else {
+						customSwaps.add(CustomSwap.fromString(customSwapUtils.MITH_PLATESKIRT_EXAMINE));
+					}
+				}
+            } else {
+				reloadCustomSwaps();
+			}
 		} else {
 			reloadCustomSwaps();
 		}
