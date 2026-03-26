@@ -94,7 +94,7 @@ public class ExternalPluginClient
 			.newBuilder()
 			.addPathSegment("manifest")
 //			.addPathSegment(RuneLiteProperties.getPluginHubVersion() + "_" + name + ".js")
-			.addPathSegment("1.12.18_full.js")
+			.addPathSegment("1.12.22_full.js")
 			.build();
 		try (Response res = okHttpClient.newCall(new Request.Builder().url(manifest).build()).execute())
 		{

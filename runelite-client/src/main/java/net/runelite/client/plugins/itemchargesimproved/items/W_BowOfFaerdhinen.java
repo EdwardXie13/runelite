@@ -33,7 +33,6 @@ public class W_BowOfFaerdhinen extends ChargedItem {
         this.items = new TriggerItem[]{
             new TriggerItem(ItemID.BOW_OF_FAERDHINEN_INACTIVE).fixedCharges(0),
             new TriggerItem(ItemID.BOW_OF_FAERDHINEN),
-            new TriggerItem(ItemID.BOW_OF_FAERDHINEN_27187),
             new TriggerItem(ItemID.BOW_OF_FAERDHINEN_C).fixedCharges(Charges.UNLIMITED),
             new TriggerItem(ItemID.BOW_OF_FAERDHINEN_C_25869).fixedCharges(Charges.UNLIMITED),
             new TriggerItem(ItemID.BOW_OF_FAERDHINEN_C_25884).fixedCharges(Charges.UNLIMITED),
