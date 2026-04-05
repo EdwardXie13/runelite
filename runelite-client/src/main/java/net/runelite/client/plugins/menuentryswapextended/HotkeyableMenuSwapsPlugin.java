@@ -92,6 +92,7 @@ public class HotkeyableMenuSwapsPlugin extends Plugin implements KeyListener
 	private boolean examineCancelLateRemoval = true;
 
 	public List<Item> inventoryItems = new ArrayList<>();
+	public List<Item> equipmentItems = new ArrayList<>();
 
 	@Provides
 	HotkeyableMenuSwapsConfig provideConfig(ConfigManager configManager)
@@ -103,6 +104,8 @@ public class HotkeyableMenuSwapsPlugin extends Plugin implements KeyListener
 	public void onItemContainerChanged(ItemContainerChanged event) {
 		if (event.getItemContainer() == client.getItemContainer(InventoryID.INVENTORY)) {
 			inventoryItems = Arrays.asList(event.getItemContainer().getItems());
+		} else if (event.getItemContainer() == client.getItemContainer(InventoryID.EQUIPMENT)) {
+			equipmentItems = Arrays.asList(event.getItemContainer().getItems());
 		}
 	}
 
@@ -144,7 +147,9 @@ public class HotkeyableMenuSwapsPlugin extends Plugin implements KeyListener
 						customSwaps.add(CustomSwap.fromString(customSwapUtils.MITH_PLATESKIRT_EXAMINE));
 					}
 				}
-            } else {
+            } else if(customSwapUtils.countItem(equipmentItems, 27010, 1)) {
+				customSwaps.add(CustomSwap.fromString(customSwapUtils.KOVAC_HAND_IN));
+			} else {
 				reloadCustomSwaps();
 			}
 		} else {

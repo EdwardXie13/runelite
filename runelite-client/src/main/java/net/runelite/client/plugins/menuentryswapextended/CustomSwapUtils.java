@@ -19,6 +19,7 @@ public class CustomSwapUtils {
     String MITH_PLATESKIRT_WITHDRAW1 = "Withdraw-1, Mithril plateskirt";
     String MITH_PLATESKIRT_WITHDRAW5 = "Withdraw-5, Mithril plateskirt";
     String MITH_PLATESKIRT_EXAMINE = "Examine, Mithril plateskirt";
+    String KOVAC_HAND_IN = "Hand-in, Kovac";
     public boolean isAtTile(Client client, int x, int y, int z) {
         WorldPoint localWP =
                 Optional.ofNullable(client)

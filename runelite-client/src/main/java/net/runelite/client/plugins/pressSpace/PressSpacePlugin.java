@@ -77,8 +77,9 @@ public class PressSpacePlugin extends Plugin {
         smeltingSilverBolts();
         bountyHunterWorldHop();
         withdrawSeedBox();
-        isfillingSand();
+        isFillingSand();
         chatbox();
+        giantFoundry();
     }
 
     @Subscribe
@@ -178,6 +179,32 @@ public class PressSpacePlugin extends Plugin {
         }
     }
 
+    private void giantFoundry() {
+        if(client.getLocalPlayer().getWorldLocation().getRegionID() == 13491) {
+            // adding to cauldron
+            Widget cauldron = client.getWidget(14352385);
+            if(cauldron != null) {
+                if (Objects.requireNonNull(cauldron.getChildren()).length == 8) {
+                    pressOtherKey('5');
+                } else if (Objects.requireNonNull(cauldron.getChildren()).length == 5) {
+                    pressOtherKey('1');
+                }
+            }
+
+            // hand in sword
+            Widget dialogBox = client.getWidget(15138822);
+            if(dialogBox != null && dialogBox.getText().contains("Hand over")) {
+                pressKey(KeyEvent.VK_SPACE);
+            }
+
+            // sword hand in info
+            Widget swordInfo = client.getWidget(15007748);
+            if(swordInfo != null && swordInfo.getText().contains("continue")) {
+                pressKey(KeyEvent.VK_SPACE);
+            }
+        }
+    }
+
     private void smeltingSilverBolts() {
         Widget silverBoltBox = client.getWidget(393243);
         if(silverBoltBox != null && Objects.requireNonNull(silverBoltBox.getChildren()).length == 4) {
@@ -192,7 +219,7 @@ public class PressSpacePlugin extends Plugin {
         }
     }
 
-    private void isfillingSand() {
+    private void isFillingSand() {
         Widget adventureLogBox = client.getWidget(WidgetInfo.ADVENTURE_LOG);
         if(adventureLogBox != null &&
                 adventureLogBox.getChild(1).getText().contains("House portal teleports") &&
