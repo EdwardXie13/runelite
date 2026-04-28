@@ -323,7 +323,20 @@ public class PressSpacePlugin extends Plugin {
             else if(recipe == 0) {}
 
             else if (countItem(ItemID.MOLTEN_GLASS, 27) && countItem(ItemID.GLASSBLOWING_PIPE, 1)) {
-                pressOtherKey('8');
+                int craftingLevel = getSkillLevel(client, Skill.CRAFTING);
+
+                if (craftingLevel >= 87)
+                    pressOtherKey('8');
+                else if (craftingLevel >= 49)
+                    pressOtherKey('7');
+                else if (craftingLevel >= 46)
+                    pressOtherKey('6');
+                else if (craftingLevel >= 42)
+                    pressOtherKey('5');
+                else if (craftingLevel >= 33)
+                    pressOtherKey('4');
+                else
+                    pressKey(KeyEvent.VK_SPACE);
             } else {
                 pressKey(KeyEvent.VK_SPACE);
             }
@@ -354,5 +367,10 @@ public class PressSpacePlugin extends Plugin {
         this.client.getCanvas().dispatchEvent(keyPress);
         KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key, KeyEvent.CHAR_UNDEFINED);
         this.client.getCanvas().dispatchEvent(keyRelease);
+    }
+
+    private int getSkillLevel(Client client, Skill skill)
+    {
+        return client.getRealSkillLevel(skill);
     }
 }
