@@ -5,6 +5,7 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.MenuEntryAdded;
+import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
@@ -25,22 +26,23 @@ public class LeftClickBuyShops extends Plugin {
 
     public ItemContainer inventoryContainer = null;
 
-    private int chocolateBarCount = 0;
-    private int grapeCount = 0;
-
     @Subscribe
     public void onGameTick(GameTick event) {
         // RFD Chest
         if(Objects.equals(client.getLocalPlayer().getWorldLocation(), new WorldPoint(3218, 9623, 0))) {
+            int chocolateBarCount = Integer.MAX_VALUE;
+            int grapeCount = Integer.MAX_VALUE;
+
             if (isBankOpen() &&
                     getCountInventoryItems() == 1 &&
                     containsItem(ItemID.COINS_995)) {
                 pressKey(KeyEvent.VK_ESCAPE);
-            } else if (isShopOpen() &&
-                    ((getWidgetCount(19660816, 1) == 0 &&
-                            getWidgetCount(19660816, 5) == 0) ||
-                            getCountInventoryItems() == 28)) {
-                pressKey(KeyEvent.VK_ESCAPE);
+            } else if (isShopOpen()) {
+                chocolateBarCount = getWidgetCount(19660816, 1);
+                grapeCount = getWidgetCount(19660816, 5);
+
+                if ((chocolateBarCount == 0 && grapeCount == 0) || getCountInventoryItems() == 28)
+                    pressKey(KeyEvent.VK_ESCAPE);
 
                 if (chocolateBarCount == 0 && grapeCount == 0)
                     quickHop();
@@ -144,12 +146,14 @@ public class LeftClickBuyShops extends Plugin {
 
     private boolean containsItem(int item) {
         return inventoryItems.stream().anyMatch(
-                items -> items.getId() == item
+            items -> items.getId() == item
         );
     }
 
     private int getWidgetCount(int widgetId, int index) {
         try {
+            int test = client.getWidget(widgetId).getChild(index).getItemQuantity();
+            System.out.println("quantity of " + widgetId + " is: " + test);
             return client.getWidget(widgetId).getChild(index).getItemQuantity();
         } catch(Exception ignored) {
             return 0;
@@ -157,11 +161,13 @@ public class LeftClickBuyShops extends Plugin {
     }
 
     private boolean isBankOpen() {
-        return client.getWidget(WidgetInfo.BANK_CONTAINER) != null;
+        Widget bank = client.getWidget(WidgetInfo.BANK_CONTAINER);
+        return bank != null && !bank.isHidden();
     }
 
     private boolean isShopOpen() {
-        return client.getWidget(WidgetInfo.SHOP_INVENTORY_ITEMS_CONTAINER) != null;
+        Widget shop = client.getWidget(WidgetInfo.SHOP_INVENTORY_ITEMS_CONTAINER);
+        return shop != null && !shop.isHidden();
     }
 
     private void quickHop() {

@@ -354,7 +354,8 @@ public class PressSpacePlugin extends Plugin {
     }
 
     private boolean isBankOpen() {
-        return client.getWidget(WidgetInfo.BANK_CONTAINER) != null;
+        Widget bank = client.getWidget(WidgetInfo.BANK_CONTAINER);
+        return bank != null && !bank.isHidden();
     }
 
     private void pressOtherKey(int key) {

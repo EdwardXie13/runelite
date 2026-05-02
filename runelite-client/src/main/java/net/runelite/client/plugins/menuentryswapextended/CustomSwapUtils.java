@@ -5,6 +5,7 @@ import net.runelite.api.Client;
 import net.runelite.api.Item;
 import net.runelite.api.ItemID;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 
 import java.util.List;
@@ -57,6 +58,7 @@ public class CustomSwapUtils {
     }
 
     public boolean isBankOpen(Client client) {
-        return client.getWidget(WidgetInfo.BANK_CONTAINER) != null;
+        Widget bank = client.getWidget(WidgetInfo.BANK_CONTAINER);
+        return bank != null && !bank.isHidden();
     }
 }
