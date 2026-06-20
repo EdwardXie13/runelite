@@ -23,6 +23,25 @@ public class AgilityAidWorldPoints {
     public static final WorldPoint CANFIS_GRACEFULMARK4 = new WorldPoint(3478, 3496, 3);
     public static final WorldPoint CANFIS_GRACEFULMARK5 = new WorldPoint(3478, 3484, 2);
 
+    // === SEERS ===
+    public static final WorldPoint SEERS_START = new WorldPoint(2729, 3488, 0);
+    public static final WorldPoint SEERS_FIRST_ROOF = new WorldPoint(2729, 3491, 3);
+    public static final WorldPoint SEERS_SECOND_ROOF = new WorldPoint(2713, 3494, 2);
+    public static final WorldPoint SEERS_THIRD_ROOF = new WorldPoint(2710, 3480, 2);
+    public static final WorldPoint SEERS_FOURTH_ROOF_1 = new WorldPoint(2710, 3472, 3);
+    public static final WorldPoint SEERS_FOURTH_ROOF_2 = new WorldPoint(2712, 3472, 3);
+    public static final WorldPoint SEERS_FIFTH_ROOF = new WorldPoint(2702, 3465, 2);
+    public static final WorldPoint SEERS_FINISH = new WorldPoint(2704, 3464, 0);
+
+    public static final WorldPoint SEERS_FAIL1 = new WorldPoint(2704, 3464, 0);
+    public static final WorldPoint SEERS_FAIL2 = new WorldPoint(2710, 3484, 0);
+
+    public static final WorldPoint SEERS_GRACEFULMARK1 = new WorldPoint(2727, 3493, 3);
+    public static final WorldPoint SEERS_GRACEFULMARK2_1 = new WorldPoint(2709, 3493, 2);
+    public static final WorldPoint SEERS_GRACEFULMARK2_2 = new WorldPoint(2706, 3493, 2);
+    public static final WorldPoint SEERS_GRACEFULMARK3 = new WorldPoint(2712, 3481, 2);
+    public static final WorldPoint SEERS_GRACEFULMARK5 = new WorldPoint(2698, 3465, 2);
+
     // === RELLEKA
     public static final WorldPoint RELLEKA_START = new WorldPoint(2625, 3677, 0);
     public static final WorldPoint RELLEKA_FIRST_ROOF = new WorldPoint(2625, 3676, 3);
@@ -61,4 +80,17 @@ public class AgilityAidWorldPoints {
     public static boolean MOG_CANFIS3 = false;
     public static boolean MOG_CANFIS4 = false;
     public static boolean MOG_CANFIS5 = false;
+
+    public static boolean MOG_SEERS1 = false;
+    public static boolean MOG_SEERS2_1 = false;
+    public static boolean MOG_SEERS2_2 = false;
+    public static boolean MOG_SEERS3 = false;
+    public static boolean MOG_SEERS5 = false;
+
+    public static boolean MOG_RELLEKA_1 = false;
+    public static boolean MOG_RELLEKA3_1 = false;
+    public static boolean MOG_RELLEKA3_2 = false;
+    public static boolean MOG_RELLEKA4_1 = false;
+    public static boolean MOG_RELLEKA4_2 = false;
+
 }
