@@ -159,12 +159,12 @@ public class BloodRuneTrueMain implements Runnable {
                     }
 
                     else if (isAtWorldPoint(BloodRuneTrueWorldPoints.INFRONT_OF_POOL)) {
-                        setZoomPitchYaw(640, 512, 0);
+                        setZoomPitchYaw(640, 4160, 0);
                         tryAction(this::clickFairyRingPOH);
                     }
 
                     else {
-                        setZoomPitchYaw(408, 512, 0);
+                        setZoomPitchYaw(408, 4160, 0);
                         tryAction(this::clickFairyRingPOH);
                     }
                 }
@@ -261,7 +261,7 @@ public class BloodRuneTrueMain implements Runnable {
                             else if (needRepairPouch) {
                                 System.out.println("post fill pouch repair needed");
                                 clicker.pressKey(KeyEvent.VK_ESCAPE);
-                                setZoomPitchYaw(896, 512, 0);
+                                setZoomPitchYaw(896, 4160, 0);
 //                                clicker.randomDelayStDev(150, 250, 25);
                             }
 
@@ -345,7 +345,7 @@ public class BloodRuneTrueMain implements Runnable {
                             else if (!isReadyForAltar() && isIdle && !hasItem(currentInventory, ItemID.BLOOD_RUNE)) {
                                 System.out.println("click bank infront");
 //                                clicker.randomDelayStDev(250,350,25);
-                                setZoomPitchYaw(896, 512, 0);
+                                setZoomPitchYaw(896, 4160, 0);
                                 clickBank();
                                 clicker.randomDelayStDev(500,650,25);
                             }
@@ -387,7 +387,7 @@ public class BloodRuneTrueMain implements Runnable {
     private void rechargeStamina() {
         overlay.setCurrentStep("click restorationPoolPOH");
         System.out.println("click restorationPoolPOH");
-        setZoomPitchYaw(595, 512, 0);
+        setZoomPitchYaw(595, 4160, 0);
         clickPointObject(BloodRuneTrueObjectIDs.restorationPoolPOH, false);
         clicker.delay(500);
     }

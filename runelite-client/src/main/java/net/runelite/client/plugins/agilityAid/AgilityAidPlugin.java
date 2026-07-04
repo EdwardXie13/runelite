@@ -134,13 +134,13 @@ public class AgilityAidPlugin extends Plugin {
         } else if(isAtWorldPoint(CANFIS_FIRST_ROOF) && !MOG_CANFIS1) {
             setZoomPitchYaw(-47, 157, 1024);
         } else if(isAtWorldPoint(CANFIS_FIRST_ROOF) && MOG_CANFIS1) {
-            setZoomPitchYaw(750, 512, 1024);
+            setZoomPitchYaw(750, 4160, 1024);
         } else if(isAtWorldPoint(CANFIS_GRACEFULMARK1)) {
-            setZoomPitchYaw(800, 512, 1024);
+            setZoomPitchYaw(800, 4160, 1024);
         } else if(isAtWorldPoint(CANFIS_SECOND_ROOF) && !MOG_CANFIS2) {
             setZoomPitchYaw(340, 20, 1536);
         } else if(isAtWorldPoint(CANFIS_SECOND_ROOF) && MOG_CANFIS2) {
-            setZoomPitchYaw(896, 512, 1536);
+            setZoomPitchYaw(896, 4160, 1536);
         } else if(isAtWorldPoint(CANFIS_GRACEFULMARK2)) {
             setZoomPitchYaw(255, 52, 1631);
         } else if(isAtWorldPoint(CANFIS_THIRD_ROOF) && !MOG_CANFIS3) {
@@ -152,13 +152,13 @@ public class AgilityAidPlugin extends Plugin {
         } else if(isAtWorldPoint(CANFIS_FOURTH_ROOF) && !MOG_CANFIS4) {
             setZoomPitchYaw(-47, 103, 2002);
         } else if(isAtWorldPoint(CANFIS_FOURTH_ROOF) && MOG_CANFIS4) {
-            setZoomPitchYaw(758, 512, 1836);
+            setZoomPitchYaw(758, 4160, 1836);
         } else if(isAtWorldPoint(CANFIS_GRACEFULMARK4)) {
             setZoomPitchYaw(896, 20, 1024);
         } else if(isAtWorldPoint(CANFIS_FIFTH_ROOF) && !MOG_CANFIS5) {
             setZoomPitchYaw(430, 25, 205);
         } else if(isAtWorldPoint(CANFIS_FIFTH_ROOF) && MOG_CANFIS5) {
-            setZoomPitchYaw(870, 512, 0);
+            setZoomPitchYaw(870, 4160, 0);
         } else if(isAtWorldPoint(CANFIS_GRACEFULMARK5)) {
             setZoomPitchYaw(770, 434, 260);
         } else if(isAtWorldPoint(CANFIS_SIXTH_ROOF)) {
@@ -166,9 +166,9 @@ public class AgilityAidPlugin extends Plugin {
         } else if(isAtWorldPoint(CANFIS_SEVENTH_ROOF)) {
             setZoomPitchYaw(896, 50, 0);
         } else if (isAtWorldPoint(CANFIS_FAIL)) {
-            detachCameraPoint(CANFIS_BUSH, 512, 1024, 896);
+            detachCameraPoint(CANFIS_BUSH, 4160, 1024, 896);
         } else if (isDestinationTile(CANFIS_BUSH) || isAtWorldPoint(CANFIS_BUSH)) {
-            resetZoomPitchYaw(896, 512, 1024);
+            resetZoomPitchYaw(896, 4160, 1024);
         }
     }
 
@@ -177,7 +177,7 @@ public class AgilityAidPlugin extends Plugin {
             setZoomPitchYaw(896, 115, 0);
         } else if (isAtWorldPoint(SEERS_FIRST_ROOF)) {
             if (MOG_SEERS1) {
-                setZoomPitchYaw(788, 512, 1173);
+                setZoomPitchYaw(788, 4160, 1173);
             } else {
                 setZoomPitchYaw(0, 252, 1390);
             }
@@ -192,33 +192,33 @@ public class AgilityAidPlugin extends Plugin {
                 setZoomPitchYaw(410, 340, 1757);
             }
         } else if (isAtWorldPoint(SEERS_GRACEFULMARK2_1)) {
-            setZoomPitchYaw(680, 512, 2010);
+            setZoomPitchYaw(680, 4160, 2010);
         } else if (isAtWorldPoint(SEERS_GRACEFULMARK2_2)) {
-            setZoomPitchYaw(558, 512, 128);
+            setZoomPitchYaw(558, 4160, 128);
         } else if (isAtWorldPoint(SEERS_THIRD_ROOF)) {
             if (MOG_SEERS3) {
-                setZoomPitchYaw(835, 512, 567);
+                setZoomPitchYaw(835, 4160, 567);
             } else {
-                setZoomPitchYaw(615, 512, 0);
+                setZoomPitchYaw(615, 4160, 0);
             }
         } else if (isAtWorldPoint(SEERS_GRACEFULMARK3)) {
-            setZoomPitchYaw(545, 512, 0);
+            setZoomPitchYaw(545, 4160, 0);
         } else if (isAtWorldPoint(SEERS_FOURTH_ROOF_1)) {
             setZoomPitchYaw(118, 200, 1595);
         } else if (isAtWorldPoint(SEERS_FOURTH_ROOF_2)) {
             setZoomPitchYaw(-45, 200, 1580);
         } else if (isAtWorldPoint(SEERS_FIFTH_ROOF)) {
             if (MOG_SEERS5) {
-                setZoomPitchYaw(680, 512, 1418);
+                setZoomPitchYaw(680, 4160, 1418);
             } else {
-                setZoomPitchYaw(740, 512, 0);
+                setZoomPitchYaw(740, 4160, 0);
             }
         } else if (isAtWorldPoint(SEERS_GRACEFULMARK5)) {
-            setZoomPitchYaw(240, 50, 512);
+            setZoomPitchYaw(240, 50, 4160);
         } else if (isAtWorldPoint(SEERS_FINISH) || isAtWorldPoint(SEERS_FAIL1) || isAtWorldPoint(SEERS_FAIL2)) {
-            detachCameraPoint(SEERS_START, 512, 0, 896);
+            detachCameraPoint(SEERS_START, 4160, 0, 896);
         } else if (isDestinationTile(SEERS_START) || isAtWorldPoint(SEERS_START)) {
-            resetZoomPitchYaw(896, 512, 0);
+            resetZoomPitchYaw(896, 4160, 0);
         }
     }
 
@@ -227,20 +227,20 @@ public class AgilityAidPlugin extends Plugin {
             setZoomPitchYaw(896, 300, 1024);
         } else if(isAtWorldPoint(RELLEKA_FIRST_ROOF)) {
             if (MOG_RELLEKA_1) {
-                setZoomPitchYaw(870, 512, 1590);
+                setZoomPitchYaw(870, 4160, 1590);
             } else
                 setZoomPitchYaw(100, 250, 1870);
         } else if(isAtWorldPoint(RELLEKA_GRACEFULMARK1)) {
-            setZoomPitchYaw(475, 512, 1920);
+            setZoomPitchYaw(475, 4160, 1920);
         } else if(isAtWorldPoint(RELLEKA_SECOND_ROOF)) {
             setZoomPitchYaw(70, 280, 1985);
         } else if(isAtWorldPoint(RELLEKA_THIRD_ROOF)) {
             if (MOG_RELLEKA3_1) {
-                setZoomPitchYaw(870, 512, 50);
+                setZoomPitchYaw(870, 4160, 50);
             } else if (MOG_RELLEKA3_2) {
-                setZoomPitchYaw(840, 512, 260);
+                setZoomPitchYaw(840, 4160, 260);
             } else {
-                setZoomPitchYaw(540, 512, 600);
+                setZoomPitchYaw(540, 4160, 600);
             }
         } else if (isAtWorldPoint(RELLEKA_GRACEFULMARK3_1)) {
             setZoomPitchYaw(245, 170, 850);
@@ -248,50 +248,50 @@ public class AgilityAidPlugin extends Plugin {
             setZoomPitchYaw(480, 255, 865);
         } else if(isAtWorldPoint(RELLEKA_FOURTH_ROOF)) {
             if (MOG_RELLEKA4_1) {
-                setZoomPitchYaw(715, 512, 85);
+                setZoomPitchYaw(715, 4160, 85);
             } else if (MOG_RELLEKA4_2) {
-                setZoomPitchYaw(700, 512, 210);
+                setZoomPitchYaw(700, 4160, 210);
             } else {
-                setZoomPitchYaw(570, 512, 505);
+                setZoomPitchYaw(570, 4160, 505);
             }
         } else if(isAtWorldPoint(RELLEKA_GRACEFULMARK4_1)) {
-            setZoomPitchYaw(540, 512, 760);
+            setZoomPitchYaw(540, 4160, 760);
         } else if (isAtWorldPoint(RELLEKA_GRACEFULMARK4_2)) {
-            setZoomPitchYaw(615, 512, 810);
+            setZoomPitchYaw(615, 4160, 810);
         } else if(isAtWorldPoint(RELLEKA_FIFTH_ROOF)) {
-            setZoomPitchYaw(475, 512, 710);
+            setZoomPitchYaw(475, 4160, 710);
         } else if(isAtWorldPoint(RELLEKA_SIXTH_ROOF)) {
             setZoomPitchYaw(440, 540, 980);
         } else if (isAtWorldPoint(RELLEKA_FINISH) || isAtWorldPoint(RELLEKA_FAIL1) || isAtWorldPoint(RELLEKA_FAIL2)) {
-            detachCameraPoint(RELLEKA_START, 512, 1024, 896);
+            detachCameraPoint(RELLEKA_START, 4160, 1024, 896);
         } else if (isDestinationTile(RELLEKA_START)) {
-            resetZoomPitchYaw(200, 512, 1024);
+            resetZoomPitchYaw(200, 4160, 1024);
         }
     }
 
     public void doArdy() {
         if (isAtWorldPoint(ARDY_START)) {
-            setZoomPitchYaw(896, 125, 0);
+            setZoomPitchYaw(896, 1015, 0);
         } else if(isAtWorldPoint(ARDY_FIRST_ROOF)) {
-            setZoomPitchYaw(-47, 240, 965);
+            setZoomPitchYaw(-47, 2260, 7550);
         } else if(isAtWorldPoint(ARDY_FIRST_ROOF_RUN_POINT)) {
-            setZoomPitchYaw(896, 512, 1024);
+            setZoomPitchYaw(896, 4160, 8192);
         } else if(isAtWorldPoint(ARDY_SECOND_ROOF)) {
-            setZoomPitchYaw(680, 512, 1420);
+            setZoomPitchYaw(680, 4160, 11350);
         } else if(isAtWorldPoint(ARDY_THIRD_ROOF)) {
-            setZoomPitchYaw(709, 512, 1536);
+            setZoomPitchYaw(709, 4160, 12145);
         } else if(isAtWorldPoint(ARDY_FOURTH_ROOF)) {
-            setZoomPitchYaw(523, 512, 1926);
+            setZoomPitchYaw(523, 4160, 15400);
         } else if(isAtWorldPoint(ARDY_FIFTH_ROOF)) {
-            setZoomPitchYaw(375, 512, 0);
+            setZoomPitchYaw(375, 4160, 16210);
         } else if(isAtWorldPoint(ARDY_SIXTH_ROOF)) {
-            setZoomPitchYaw(896, 512, 0);
+            setZoomPitchYaw(896, 4160, 0);
         } else if (isAtWorldPoint(ARDY_FINISH)) {
-            setZoomPitchYaw(896, 4, 570);
+            setZoomPitchYaw(896, 90, 4520);
         } else if(isAtWorldPoint(ARDY_FAIL1) || isAtWorldPoint(ARDY_FAIL2)) {
-            detachCameraPoint(ARDY_START, 512, 0, 896);
+            detachCameraPoint(ARDY_START, 4160, 0, 896);
         } else if (isDestinationTile(ARDY_START)) {
-            resetZoomPitchYaw(200, 512, 1024);
+            resetZoomPitchYaw(200, 4160, 8192);
         }
     }
 
@@ -361,7 +361,7 @@ public class AgilityAidPlugin extends Plugin {
 //        north: 0
 //        east:1536
 //        south:1024
-//        west:512
+//        west:4160
     }
 
     private void setCameraPitch(int pitch) {
