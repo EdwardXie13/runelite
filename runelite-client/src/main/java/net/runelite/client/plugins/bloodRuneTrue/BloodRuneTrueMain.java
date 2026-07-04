@@ -21,6 +21,7 @@ public class BloodRuneTrueMain implements Runnable {
     private final Client client;
     private final ClientThread clientThread;
     private final StepOverlay overlay;
+    private final BloodRuneTruePlugin plugin;
 
     public static boolean needRechargeStamina = false;
     public static boolean isIdle = true;
@@ -112,10 +113,11 @@ public class BloodRuneTrueMain implements Runnable {
 
     Thread t;
 
-    BloodRuneTrueMain(Client client, ClientThread clientThread, StepOverlay overlay) {
+    BloodRuneTrueMain(Client client, ClientThread clientThread, StepOverlay overlay, BloodRuneTruePlugin plugin) {
         this.client = client;
         this.clientThread = clientThread;
         this.overlay = overlay;
+        this.plugin = plugin;
         clicker = new Clicker(client);
         scheduler = new BreakScheduler();
 
@@ -376,7 +378,8 @@ public class BloodRuneTrueMain implements Runnable {
     }
 
     public int getRegionID() {
-        return client.getLocalPlayer().getWorldLocation().getRegionID();
+        Player p = client.getLocalPlayer();
+        return p.getWorldLocation().getRegionID();
     }
 
     public boolean isInsidePOH()
@@ -663,18 +666,20 @@ public class BloodRuneTrueMain implements Runnable {
     }
 
     private WorldPoint myWorldPoint() {
+        WorldPoint wp = plugin.getLocalPlayerLocation();
         return new WorldPoint(
-            client.getLocalPlayer().getWorldLocation().getX(),
-            client.getLocalPlayer().getWorldLocation().getY(),
-            client.getLocalPlayer().getWorldLocation().getPlane()
+            wp.getX(),
+            wp.getY(),
+            wp.getPlane()
         );
     }
 
     private boolean isAtWorldPoint(WorldPoint worldPoint) {
         if (worldPoint == null) return false;
-        boolean playerX = client.getLocalPlayer().getWorldLocation().getX() == worldPoint.getX();
-        boolean playerY = client.getLocalPlayer().getWorldLocation().getY() == worldPoint.getY();
-        boolean playerPlane = client.getLocalPlayer().getWorldLocation().getPlane() == worldPoint.getPlane();
+        WorldPoint wp = plugin.getLocalPlayerLocation();
+        boolean playerX = wp.getX() == worldPoint.getX();
+        boolean playerY = wp.getY() == worldPoint.getY();
+        boolean playerPlane = wp.getPlane() == worldPoint.getPlane();
         return playerX && playerY && playerPlane;
     }
 
@@ -791,11 +796,7 @@ public class BloodRuneTrueMain implements Runnable {
 
     public boolean isMoving()
     {
-        Player p = client.getLocalPlayer();
-        if (p == null)
-            return false;
-
-        WorldPoint current = p.getWorldLocation();
+        WorldPoint current = plugin.getLocalPlayerLocation();
 
         // First time
         if (lastLocation == null) {

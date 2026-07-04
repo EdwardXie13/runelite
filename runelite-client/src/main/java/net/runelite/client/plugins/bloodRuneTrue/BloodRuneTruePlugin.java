@@ -2,6 +2,7 @@ package net.runelite.client.plugins.bloodRuneTrue;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
@@ -37,6 +38,8 @@ public class BloodRuneTruePlugin extends Plugin {
 
     @Inject
     private StepOverlay overlay;
+
+    private volatile WorldPoint localPlayerLocation;
 
     BloodRuneTrueMain main;
 
@@ -147,6 +150,9 @@ public class BloodRuneTruePlugin extends Plugin {
         BloodRuneTrueMain.isEquipmentOpen = isEquipmentOpen();
         BloodRuneTrueMain.isLunarBookOpen = isLunarBookOpen();
         BloodRuneTrueMain.isInventoryHidden = isInventoryHidden();
+
+        Player p = client.getLocalPlayer();
+        localPlayerLocation = p != null ? p.getWorldLocation() : null;
     }
 
     @Subscribe
@@ -197,6 +203,11 @@ public class BloodRuneTruePlugin extends Plugin {
             overlay.setCurrentStep("status is stop");
             System.out.println("status is stop");
         }
+    }
+
+    public WorldPoint getLocalPlayerLocation()
+    {
+        return localPlayerLocation;
     }
 
     @Subscribe
