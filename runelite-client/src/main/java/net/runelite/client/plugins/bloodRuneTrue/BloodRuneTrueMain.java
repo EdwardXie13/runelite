@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import net.runelite.api.*;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
@@ -28,7 +29,7 @@ public class BloodRuneTrueMain implements Runnable {
 //    public static boolean xpDrop = false;
     public static boolean isEquipmentOpen = false;
     public static int essenceRemaining = 0;
-    private static int maxEssenceAvailible = 40;
+    public static int maxEssenceAvailible = 40;
     private boolean awaitingMovement = false;
     public static boolean isTeleportingCW = false;
     public static boolean isTeleportingPOH = false;
@@ -378,8 +379,7 @@ public class BloodRuneTrueMain implements Runnable {
     }
 
     public int getRegionID() {
-        Player p = client.getLocalPlayer();
-        return p.getWorldLocation().getRegionID();
+        return plugin.getLocalPlayerLocation().getRegionID();
     }
 
     public boolean isInsidePOH()
@@ -513,7 +513,7 @@ public class BloodRuneTrueMain implements Runnable {
     }
 
     private void clickBank() {
-        overlay.setCurrentStep("click bank");
+        overlay.setCurrentStep("click bank: (" + maxEssenceAvailible + " ess)");
         System.out.println("click bank");
 //        setZoomPitchYaw(520, 15, 1536);
 
@@ -659,9 +659,11 @@ public class BloodRuneTrueMain implements Runnable {
     }
 
     private void setZoomPitchYaw(int zoom, int pitch, int yaw) {
+        int newPitch = (int) (pitch * 8.125);
+        int newYaw = (int) (yaw * 8.125);
         setCameraZoom(zoom);
-        setCameraPitch(pitch);
-        setCameraYaw(yaw);
+        setCameraPitch(newPitch);
+        setCameraYaw(newYaw);
         clicker.randomDelayStDev(150,300,25);
     }
 
@@ -812,10 +814,11 @@ public class BloodRuneTrueMain implements Runnable {
         }
 
         // Smooth movement without tile change (model movement)
-        if (System.currentTimeMillis() - lastMovementTime < 500)
+        if (System.currentTimeMillis() - lastMovementTime < 600)
             return true;
 
         // Teleports or cave-entering animation (~2796)
+        Player p = client.getLocalPlayer();
         int anim = p.getAnimation();
         if (anim == 2796 || anim == 3265 || anim == 3266 || anim == 714 || anim == 4069 || anim == 4071 || anim == 7305 || anim == 4412 || anim == 4413 || anim == 791) {
             if (anim == 714)
@@ -944,9 +947,11 @@ public class BloodRuneTrueMain implements Runnable {
     }
 
     private boolean isBankOpen() {
-        return client.getWidget(WidgetInfo.BANK_EQUIPMENT_BUTTON) != null;
-//        Widget bank = client.getWidget(WidgetInfo.BANK_EQUIPMENT_BUTTON);
+//        return client.getWidget(ComponentID.BANK_CONTAINER) != null;
+//        return client.getWidget(WidgetInfo.BANK_EQUIPMENT_BUTTON) != null;
+//        Widget bank = client.getWidget(WidgetInfo.BANK_CONTAINER);
 //        return bank != null && !bank.isHidden();
+        return plugin.getIsBankOpen();
     }
 
     private void isInventoryHidden() {

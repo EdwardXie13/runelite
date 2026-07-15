@@ -40,6 +40,7 @@ public class BloodRuneTruePlugin extends Plugin {
     private StepOverlay overlay;
 
     private volatile WorldPoint localPlayerLocation;
+    private volatile boolean isBankOpen;
 
     BloodRuneTrueMain main;
 
@@ -142,6 +143,10 @@ public class BloodRuneTruePlugin extends Plugin {
         overlayManager.remove(overlay);
     }
 
+    public void onGameTick(GameTick event) {
+        determineColossalPouch();
+    }
+
     @Subscribe
     public void onClientTick(ClientTick event) throws AWTException {
         toggleStatus();
@@ -153,6 +158,9 @@ public class BloodRuneTruePlugin extends Plugin {
 
         Player p = client.getLocalPlayer();
         localPlayerLocation = p != null ? p.getWorldLocation() : null;
+
+        Widget bank = client.getWidget(WidgetInfo.BANK_CONTAINER);
+        isBankOpen = (bank != null && !bank.isHidden());
     }
 
     @Subscribe
@@ -189,7 +197,7 @@ public class BloodRuneTruePlugin extends Plugin {
         if(chatBoxMessage == null) return;
 
         if(chatBoxMessage.equals("1") && !BloodRuneTrueMain.isRunning && !hasStarted) {
-            main = new BloodRuneTrueMain(client, clientThread, overlay);
+            main = new BloodRuneTrueMain(client, clientThread, overlay, this);
             main.reset();
 
             BloodRuneTrueMain.isRunning = true;
@@ -205,9 +213,26 @@ public class BloodRuneTruePlugin extends Plugin {
         }
     }
 
-    public WorldPoint getLocalPlayerLocation()
-    {
+    public WorldPoint getLocalPlayerLocation() {
         return localPlayerLocation;
+    }
+
+    public boolean getIsBankOpen() {
+        return isBankOpen;
+    }
+
+    private void determineColossalPouch() {
+        int rc = client.getRealSkillLevel(Skill.RUNECRAFT);
+        int scaledMax;
+        if (rc >= 85)
+        {
+            scaledMax = 40;
+        }
+        else {
+            scaledMax = 27;
+        }
+
+        BloodRuneTrueMain.maxEssenceAvailible = scaledMax;
     }
 
     @Subscribe

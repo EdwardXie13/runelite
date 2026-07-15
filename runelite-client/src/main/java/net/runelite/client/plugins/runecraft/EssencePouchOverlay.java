@@ -36,6 +36,7 @@ import net.runelite.api.gameval.ItemID;
 import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.api.gameval.VarbitID;
 import net.runelite.api.widgets.WidgetItem;
+import net.runelite.client.plugins.bloodRuneTrue.BloodRuneTrueMain;
 import net.runelite.client.ui.overlay.WidgetItemOverlay;
 
 class EssencePouchOverlay extends WidgetItemOverlay
@@ -236,6 +237,7 @@ class EssencePouchOverlay extends WidgetItemOverlay
 		{
 			int limit = pouch.maxAmount(client);
 			int amount = pouch.getAmount(client);
+			BloodRuneTrueMain.essenceRemaining = amount;
 
 			if (amount != 0 && amount != limit)
 			{
