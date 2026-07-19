@@ -25,6 +25,7 @@ public class LeftClickConstructionPlugin extends Plugin {
         removeBox();
         buildBox1();
         buildBox2();
+        buildBox4();
         butlerChat();
         butlerPayment();
 
@@ -95,7 +96,12 @@ public class LeftClickConstructionPlugin extends Plugin {
 
     private void buildBox1() {
         Widget removeBox = client.getWidget(30015492);
-        if (removeBox != null && removeBox.getName().contains("Oak door")) {
+        if (removeBox != null &&
+            (
+                removeBox.getName().contains("Oak door") ||
+                removeBox.getName().contains("Teak garden bench")
+            )
+        ) {
             pressOtherKey('1');
         }
     }
@@ -104,6 +110,13 @@ public class LeftClickConstructionPlugin extends Plugin {
         Widget removeBox = client.getWidget(30015493);
         if(removeBox != null && removeBox.getName().contains("Oak larder")) {
             pressOtherKey('2');
+        }
+    }
+
+    private void buildBox4() {
+        Widget removeBox = client.getWidget(30015495);
+        if(removeBox != null && removeBox.getName().contains("Mythical cape")) {
+            pressOtherKey('4');
         }
     }
 

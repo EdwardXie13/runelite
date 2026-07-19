@@ -180,7 +180,7 @@ public class PressSpacePlugin extends Plugin {
     }
 
     private void giantFoundry() {
-        if(client.getLocalPlayer().getWorldLocation().getRegionID() == 13491) {
+        if(getRegionID() == 13491) {
             // adding to cauldron
             Widget cauldron = client.getWidget(14352385);
             if(cauldron != null) {
@@ -226,7 +226,11 @@ public class PressSpacePlugin extends Plugin {
                 countItem(ItemID.BUCKET, 27) &&
                 (countItem(ItemID.CONSTRUCT_CAPE, 1) || countItem(ItemID.CONSTRUCT_CAPET, 1))
         ) {
-            pressOtherKey('9');
+            if (getRegionID() == 10032) {
+                pressKey(KeyEvent.VK_ESCAPE);
+            } else {
+                pressOtherKey('9');
+            }
         }
     }
 
@@ -318,7 +322,7 @@ public class PressSpacePlugin extends Plugin {
         Widget craftBox = client.getWidget(17694724);
         if (craftBox != null && craftBox.getText().equals("Choose a quantity, then click an item to begin.")) {
             // If at blast furnace
-            if(client.getLocalPlayer().getWorldLocation().getRegionID() == 7757)
+            if(getRegionID() == 7757)
                 pressKey(KeyEvent.VK_SPACE);
             else if(recipe == 0) {}
 
@@ -347,7 +351,7 @@ public class PressSpacePlugin extends Plugin {
         Widget chatBox = client.getWidget(15007747);
         if (chatBox != null && chatBox.getText().contains("from the dispenser")) {
             // If at blast furnace
-            if(client.getLocalPlayer().getWorldLocation().getRegionID() == 7757) {
+            if(getRegionID() == 7757) {
                 pressKey(KeyEvent.VK_SPACE);
             }
         }
@@ -373,5 +377,9 @@ public class PressSpacePlugin extends Plugin {
     private int getSkillLevel(Client client, Skill skill)
     {
         return client.getRealSkillLevel(skill);
+    }
+
+    private int getRegionID() {
+        return client.getLocalPlayer().getWorldLocation().getRegionID();
     }
 }
