@@ -60,6 +60,8 @@ public class Olm
 	private Prayer prayer = null;
 	private long lastPrayTime = 0;
 
+	private WorldPoint pinkyTile = null;
+
 	@Inject
 	private Olm(final Client client, final CoxPlugin plugin, final CoxConfig config)
 	{
@@ -264,6 +266,8 @@ public class Olm
 			return;
 		}
 
+		this.pinkyTile = null;
+
 		switch (currentAnimation)
 		{
 			case HEAD_RISING_2:
@@ -277,11 +281,74 @@ public class Olm
 			case HEAD_ENRAGED_RIGHT:
 				this.finalPhase = true;
 				break;
-			case HEAD_AUTO_RIGHT:
-				
+
+			// heading towards left (melee hand)
+			case HEAD_MIDDLE_TO_LEFT:
+			case HEAD_ENRAGED_MIDDLE_TO_LEFT:
+			case HEAD_RIGHT_TO_MIDDLE:
+			case HEAD_ENRAGED_RIGHT_TO_MIDDLE:
+			case HEAD_RIGHT_TO_LEFT:
+			case HEAD_ENRAGED_RIGHT_TO_LEFT:
+				// highlight pinky tile
+				if (this.head != null && this.hand != null)
+				{
+					boolean olmOnWest = this.hand.getWorldLocation().getY() > this.head.getWorldLocation().getY();
+					int regionX = olmOnWest ? 28 : 37;
+					int regionY = olmOnWest ? 50 : 38;
+					this.pinkyTile = templateRegionToInstance(12889, regionX, regionY,
+							this.head.getWorldLocation().getPlane());
+				}
+				break;
+			// heading towards right (mage hand)
+			case HEAD_MIDDLE_TO_RIGHT:
+			case HEAD_ENRAGED_MIDDLE_TO_RIGHT:
+			case HEAD_LEFT_TO_MIDDLE:
+			case HEAD_ENRAGED_LEFT_TO_MIDDLE:
+			case HEAD_LEFT_TO_RIGHT:
+			case HEAD_ENRAGED_LEFT_TO_RIGHT:
+				// highlight pinky tile
+				if (this.head != null && this.hand != null)
+				{
+					boolean olmOnWest = this.hand.getWorldLocation().getY() > this.head.getWorldLocation().getY();
+					int regionX = olmOnWest ? 28 : 37;
+					int regionY = olmOnWest ? 38 : 50;
+					this.pinkyTile = templateRegionToInstance(12889, regionX, regionY,
+							this.head.getWorldLocation().getPlane());
+				}
+				break;
+
+//			case HEAD_AUTO_LEFT:
+//			case HEAD_ENRAGED_AUTO_LEFT:
+//				if (this.hand != null)
+//				{
+//					// 3x3 box centered on the visual center of Olm's hand.
+//					// GameObject.getWorldLocation() returns the SW tile; the hand is a 3x3 object,
+//					// so its center tile is (SW.x + 1, SW.y + 1).
+//					WorldPoint sw = this.hand.getWorldLocation();
+//					WorldPoint center = new WorldPoint(sw.getX() + 1, sw.getY() + 1, sw.getPlane());
+//					for (int dx = -1; dx <= 1; dx++)
+//					{
+//						for (int dy = -1; dy <= 1; dy++)
+//						{
+//							this.headAutoLeftTiles.add(new WorldPoint(center.getX() + dx, center.getY() + dy, center.getPlane()));
+//						}
+//					}
+//				}
+//				break;
 		}
 
 		this.headAnimation = currentAnimation;
+	}
+
+	private WorldPoint templateRegionToInstance(int regionId, int regionX, int regionY, int plane)
+	{
+		WorldPoint template = WorldPoint.fromRegion(regionId, regionX, regionY, plane);
+		java.util.Collection<WorldPoint> instances = WorldPoint.toLocalInstance(this.client, template);
+		if (instances == null || instances.isEmpty())
+		{
+			return null;
+		}
+		return instances.iterator().next();
 	}
 
 	private void handAnimations()

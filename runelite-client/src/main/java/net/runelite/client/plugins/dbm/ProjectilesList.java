@@ -10,9 +10,12 @@ public class ProjectilesList {
         Map.entry(1483, new ProjectileInfo("Acid", 0, 24)), // ACID
         Map.entry(1484, new ProjectileInfo("Spawn", 0,0)), // ZOMBIE_SPAWN
 
+        // VASA
+        Map.entry(1329, new ProjectileInfo("", 1,0)),
+
         // OLM
         Map.entry(1352, new ProjectileInfo("", 1, 0)), // falling crystal
-        Map.entry(1354, new ProjectileInfo("", 1, 0)), // acid spot
+        Map.entry(1354, new ProjectileInfo("", 0, 0)), // acid spot
         Map.entry(1357, new ProjectileInfo("", 1, 0)) // falling rock
     );
 

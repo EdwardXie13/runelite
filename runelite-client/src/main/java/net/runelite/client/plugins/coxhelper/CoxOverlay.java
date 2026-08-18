@@ -85,6 +85,12 @@ public class CoxOverlay extends Overlay
 			this.drawTile(graphics, point, this.config.tpColor(), 2, 150);
 		}
 
+		WorldPoint pinkyTile = this.olm.getPinkyTile();
+		if (pinkyTile != null)
+		{
+			this.drawTile(graphics, pinkyTile, Color.ORANGE, 2, 150);
+		}
+
 		if (this.plugin.inRaid())
 		{
 			for (NPCContainer npcs : this.plugin.getNpcContainers().values())
@@ -165,7 +171,7 @@ public class CoxOverlay extends Overlay
 					case NpcID.GUARDIAN_7570:
 					case NpcID.GUARDIAN_7571:
 					case NpcID.GUARDIAN_7572:
-						if (this.config.guardians())
+						if (this.config.guardians() && !npcs.getNpc().isDead())
 						{
 							hitSquares = this.getHitSquares(npcs.getNpc().getWorldLocation(), npcs.getNpcSize(), 2, true);
 							for (WorldPoint p : hitSquares)
