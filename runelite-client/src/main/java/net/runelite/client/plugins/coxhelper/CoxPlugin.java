@@ -221,19 +221,19 @@ public class CoxPlugin extends Plugin
 				case 1343: // orb
 					this.olm.setPrayer(Prayer.PROTECT_FROM_MISSILES);
 					break;
-				case 1354:
-					Actor actor = projectile.getInteracting();
-					if (actor instanceof Player)
-					{
-						this.olm.getVictims().add(new Victim((Player) actor, Victim.Type.ACID));
-					}
-					break;
-				case 1349:
-					System.out.println("burn with me");
-					break;
-				case 1347:
-					System.out.println("flame wall");
-					break;
+//				case 1354:
+//					Actor actor = projectile.getInteracting();
+//					if (actor instanceof Player)
+//					{
+//						this.olm.getVictims().add(new Victim((Player) actor, Victim.Type.ACID));
+//					}
+//					break;
+//				case 1349:
+//					System.out.println("burn with me");
+//					break;
+//				case 1347:
+//					System.out.println("flame wall");
+//					break;
 			}
 		}
 	}
@@ -445,28 +445,6 @@ public class CoxPlugin extends Plugin
 	boolean inRaid()
 	{
 		return this.client.getVar(Varbits.IN_RAID) == 1;
-	}
-
-	@Subscribe
-	public void onConfigChanged(ConfigChanged event)
-	{
-		if (!event.getGroup().equals("Cox"))
-		{
-			return;
-		}
-
-		if (event.getKey().equals("mirrorMode"))
-		{
-			this.coxOverlay.determineLayer();
-			this.coxInfoBox.determineLayer();
-			this.coxDebugBox.determineLayer();
-			this.overlayManager.remove(this.coxOverlay);
-			this.overlayManager.remove(this.coxInfoBox);
-			this.overlayManager.remove(this.coxDebugBox);
-			this.overlayManager.add(this.coxOverlay);
-			this.overlayManager.add(this.coxInfoBox);
-			this.overlayManager.add(this.coxDebugBox);
-		}
 	}
 
 	@Subscribe

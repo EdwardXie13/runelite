@@ -1,9 +1,6 @@
 package net.runelite.client.plugins.coxhelper;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.Getter;
@@ -138,7 +135,10 @@ public class Olm
 
 	public void incrementTickCycle()
 	{
-		if (this.ticksUntilNextAttack == 1)
+		if (this.ticksUntilNextAttack == 0) {
+			// highlight red metronome
+		}
+		else if (this.ticksUntilNextAttack == 1)
 		{
 			this.ticksUntilNextAttack = 4;
 			this.incrementAttackCycle();
@@ -147,6 +147,7 @@ public class Olm
 		{
 			this.ticksUntilNextAttack--;
 		}
+
 	}
 
 	public void incrementAttackCycle()
@@ -251,11 +252,26 @@ public class Olm
 		}
 	}
 
+	/**
+	 * Position within Olm's 16-tick attack cycle (0–15), or -1 if state is not yet initialized.
+	 * cycleTick = (attackCycle - 1) * 4 + (4 - ticksUntilNextAttack)
+	 * Layout: 0=post-attack empty, 3=Nauto attack tick, 7=Null slot end,
+	 * 11=Sauto attack tick, 15=Special attack tick.
+	 */
+	public int getCycleTick()
+	{
+		if (this.attackCycle < 1 || this.attackCycle > 4
+			|| this.ticksUntilNextAttack < 1 || this.ticksUntilNextAttack > 4)
+		{
+			return -1;
+		}
+		return (this.attackCycle - 1) * 4 + (4 - this.ticksUntilNextAttack);
+	}
+
 	private void headAnimations()
 	{
 		if (this.head == null)
 		{
-			System.out.println("the hand is head in headAnimations");
 			return;
 		}
 
@@ -265,8 +281,6 @@ public class Olm
 		{
 			return;
 		}
-
-		this.pinkyTile = null;
 
 		switch (currentAnimation)
 		{
@@ -289,16 +303,8 @@ public class Olm
 			case HEAD_ENRAGED_RIGHT_TO_MIDDLE:
 			case HEAD_RIGHT_TO_LEFT:
 			case HEAD_ENRAGED_RIGHT_TO_LEFT:
-				// highlight pinky tile
-				if (this.head != null && this.hand != null)
-				{
-					boolean olmOnWest = this.hand.getWorldLocation().getY() > this.head.getWorldLocation().getY();
-					int regionX = olmOnWest ? 28 : 37;
-					int regionY = olmOnWest ? 50 : 38;
-					this.pinkyTile = templateRegionToInstance(12889, regionX, regionY,
-							this.head.getWorldLocation().getPlane());
-				}
 				break;
+
 			// heading towards right (mage hand)
 			case HEAD_MIDDLE_TO_RIGHT:
 			case HEAD_ENRAGED_MIDDLE_TO_RIGHT:
@@ -306,15 +312,6 @@ public class Olm
 			case HEAD_ENRAGED_LEFT_TO_MIDDLE:
 			case HEAD_LEFT_TO_RIGHT:
 			case HEAD_ENRAGED_LEFT_TO_RIGHT:
-				// highlight pinky tile
-				if (this.head != null && this.hand != null)
-				{
-					boolean olmOnWest = this.hand.getWorldLocation().getY() > this.head.getWorldLocation().getY();
-					int regionX = olmOnWest ? 28 : 37;
-					int regionY = olmOnWest ? 38 : 50;
-					this.pinkyTile = templateRegionToInstance(12889, regionX, regionY,
-							this.head.getWorldLocation().getPlane());
-				}
 				break;
 
 //			case HEAD_AUTO_LEFT:
