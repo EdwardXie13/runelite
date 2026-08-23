@@ -115,7 +115,9 @@ public class HotkeyableMenuSwapsPlugin extends Plugin implements KeyListener
 		// Yanille Sand pit
 		if (customSwapUtils.isAtTile(client, 2542, 3102, 0) && customSwapUtils.isSandFilling(inventoryItems)) {
 			customSwaps.add(CustomSwap.fromString(customSwapUtils.POH_CONCAPET));
-		} else if (customSwapUtils.isAtTile(client, 1942, 4967, 0)) {
+		}
+		// Blast furnace
+		else if (customSwapUtils.isAtTile(client, 1942, 4967, 0)) {
 			customSwaps.add(CustomSwap.fromString(customSwapUtils.COALBAG_EMPTY));
 		}
 		// Giants foundry

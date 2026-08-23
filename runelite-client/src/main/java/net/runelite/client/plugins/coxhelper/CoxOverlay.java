@@ -85,12 +85,6 @@ public class CoxOverlay extends Overlay
 			this.drawTile(graphics, point, this.config.tpColor(), 2, 150);
 		}
 
-		WorldPoint pinkyTile = this.olm.getPinkyTile();
-		if (pinkyTile != null)
-		{
-			this.drawTile(graphics, pinkyTile, Color.ORANGE, 2, 150);
-		}
-
 		if (this.plugin.inRaid())
 		{
 			for (NPCContainer npcs : this.plugin.getNpcContainers().values())
@@ -109,6 +103,13 @@ public class CoxOverlay extends Overlay
 						if (this.config.tekton())
 						{
 							hitSquares = this.getHitSquares(npcs.getNpc().getWorldLocation(), npcs.getNpcSize(), 1, false);
+							// Strip corner tiles so the halo reads as a '+' instead of a square.
+							// A corner tile is one that sits outside Tekton's footprint on BOTH X and Y axes.
+							final WorldPoint tekLoc = npcs.getNpc().getWorldLocation();
+							final int tekSize = npcs.getNpcSize();
+							hitSquares.removeIf(p ->
+								(p.getX() < tekLoc.getX() || p.getX() >= tekLoc.getX() + tekSize)
+								&& (p.getY() < tekLoc.getY() || p.getY() >= tekLoc.getY() + tekSize));
 							for (WorldPoint p : hitSquares)
 							{
 								this.drawTile(graphics, p, this.config.tektonColor(), 0, 0);

@@ -365,4 +365,17 @@ public interface CoxConfig extends Config
 	{
 		return 128;
 	}
+
+	@ConfigItem(
+			position = 6,
+			keyName = "showFloorMetronomeTile",
+			name = "Show Floor Metronome Tile",
+			description = "Also render the metronome on the fixed E/D/C/A floor tile Olm's cycle points at. The player-tile metronome is always on.",
+			section = TileSettings
+	)
+	default boolean showFloorMetronomeTile()
+	{
+		return true;
+	}
+
 }

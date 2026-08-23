@@ -22,6 +22,33 @@ public class Olm
 	public static final int RIGHT_HAND_GAMEOBJECT_RISING = 29886;
 	public static final int RIGHT_HAND_GAMEOBJECT_READY = 29887;
 
+	// Metronome tiles. Indices: 0 = E, 1 = D, 2 = C, 3 = A. Ordered so tileIndex advances
+	// through the 16-tick cycle in the sequence E (ticks 15,0,1,2) -> D -> C -> A.
+	// Coords are template world points inside Olm chamber region 12889; WorldPoint.toLocalInstance
+	// converts them to the current instance at read time.
+	private static final WorldPoint[] WEST_METRONOME_TILES = {
+		new WorldPoint(3229, 5747, 0), // E
+		new WorldPoint(3229, 5745, 0), // D
+		new WorldPoint(3229, 5743, 0), // C
+		new WorldPoint(3229, 5741, 0), // B
+		new WorldPoint(3229, 5739, 0), // A
+	};
+
+	private static final WorldPoint[] EAST_METRONOME_TILES = {
+		new WorldPoint(3236, 5733, 0), // E
+		new WorldPoint(3236, 5735, 0), // D
+		new WorldPoint(3236, 5737, 0), // C
+		new WorldPoint(3236, 5739, 0), // B
+		new WorldPoint(3236, 5741, 0), // A
+	};
+
+	// cycleTick -> index into the METRONOME_TILES arrays (E=0, D=1, C=2, B=3, A=4).
+	// Same pattern for both orientations; only the WorldPoints differ.
+	//   0-1 E | 2-5 D | 6-9 C | 10 B | 11 A | 12 B | 13 C | 14 D | 15 E
+	private static final int[] TILE_INDEX_BY_TICK = {
+		0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 4, 3, 2, 1, 0
+	};
+
 	public static final int OLM_BURN = 1351;
 	public static final int OLM_LIGHTNING = 1356;
 	public static final int OLM_TELEPORT = 1359;
@@ -56,8 +83,6 @@ public class Olm
 
 	private Prayer prayer = null;
 	private long lastPrayTime = 0;
-
-	private WorldPoint pinkyTile = null;
 
 	@Inject
 	private Olm(final Client client, final CoxPlugin plugin, final CoxConfig config)
@@ -266,6 +291,49 @@ public class Olm
 			return -1;
 		}
 		return (this.attackCycle - 1) * 4 + (4 - this.ticksUntilNextAttack);
+	}
+
+	/**
+	 * Current metronome tile based on cycleTick and Olm's orientation.
+	 * Cycle mapping (cycleTick -> tile / color):
+	 *   ticks 15,0,1,2 -> E (red at 15, then yellow, green, blue)
+	 *   ticks 3-6     -> D (red at 3,  then yellow, green, blue)
+	 *   ticks 7-10    -> C (red at 7,  then yellow, green, blue)
+	 *   ticks 11-14   -> A (red at 11, then yellow, green, blue)
+	 * Returns null if outside a valid cycle or before Olm is positioned.
+	 */
+	public WorldPoint getMetronomeTile()
+	{
+		int tick = this.getCycleTick();
+		if (tick < 0 || this.hand == null || this.head == null)
+		{
+			return null;
+		}
+		boolean olmOnWest = this.hand.getWorldLocation().getY() > this.head.getWorldLocation().getY();
+		WorldPoint[] tiles = olmOnWest ? WEST_METRONOME_TILES : EAST_METRONOME_TILES;
+		int tileIndex = TILE_INDEX_BY_TICK[tick];
+		WorldPoint template = tiles[tileIndex];
+		java.util.Collection<WorldPoint> instances = WorldPoint.toLocalInstance(this.client, template);
+		if (instances == null || instances.isEmpty())
+		{
+			return null;
+		}
+		return instances.iterator().next();
+	}
+
+	/**
+	 * Color index for the current metronome tick: 1=red, 2=yellow, 3=green, 4=blue.
+	 * Returns 0 if outside a valid cycle. Red always coincides with the tile changing.
+	 */
+	public int getMetronomeColorIndex()
+	{
+		int tick = this.getCycleTick();
+		if (tick < 0)
+		{
+			return 0;
+		}
+		int shifted = (tick + 1) % 16;
+		return (shifted % 4) + 1;
 	}
 
 	private void headAnimations()

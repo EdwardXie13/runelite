@@ -44,6 +44,7 @@ import net.runelite.api.NPC;
 import net.runelite.api.NpcID;
 import net.runelite.api.Player;
 import net.runelite.api.Prayer;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.Projectile;
 import net.runelite.api.Varbits;
 import net.runelite.api.events.*;
@@ -132,6 +133,7 @@ public class CoxPlugin extends Plugin
 	protected int currentColorIndex = 0;
 	protected int tickCounter = 0;
 	protected Color currentColor = new Color(255, 35, 60);
+
 
 	@Provides
 	CoxConfig getConfig(ConfigManager configManager)
@@ -381,6 +383,8 @@ public class CoxPlugin extends Plugin
 			// exactly on the attack tick. Ticks 2/3/4 are the standard blue/green/yellow
 			// countdown; anything longer (e.g. 8-tick enrage-rise wait) cycles blue/green/yellow
 			// without ever showing red early. Falls back to the old wrap counter pre-fight.
+			// Both the floor E/D/C/A tile and the player tile read this same currentColor,
+			// so they always flash in lockstep.
 			int ticks = this.olm.getTicksUntilNextAttack();
 			if (ticks == 1) {
 				currentColorIndex = 1; // red — Olm attacks this tick
