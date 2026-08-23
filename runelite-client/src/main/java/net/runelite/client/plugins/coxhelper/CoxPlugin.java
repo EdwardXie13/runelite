@@ -28,6 +28,8 @@
 package net.runelite.client.plugins.coxhelper;
 
 import com.google.inject.Provides;
+
+import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -36,7 +38,6 @@ import javax.inject.Inject;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Actor;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.NPC;
@@ -51,7 +52,6 @@ import net.runelite.client.chat.ChatMessageManager;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
@@ -72,24 +72,34 @@ public class CoxPlugin extends Plugin
 	@Inject
 	@Getter(AccessLevel.NONE)
 	private Client client;
+
 	@Inject
 	@Getter(AccessLevel.NONE)
 	private ChatMessageManager chatMessageManager;
+
 	@Inject
 	@Getter(AccessLevel.NONE)
 	private CoxOverlay coxOverlay;
+
 	@Inject
 	@Getter(AccessLevel.NONE)
 	private CoxInfoBox coxInfoBox;
+
 	@Inject
 	@Getter(AccessLevel.NONE)
 	private CoxDebugBox coxDebugBox;
+
 	@Inject
 	@Getter(AccessLevel.NONE)
 	private CoxConfig config;
+
 	@Inject
 	@Getter(AccessLevel.NONE)
 	private OverlayManager overlayManager;
+
+	@Inject
+	private VisualMetronomeTileOverlay tileOverlay;
+
 	@Inject
 	@Getter(AccessLevel.NONE)
 	private EventBus eventBus;
@@ -119,6 +129,10 @@ public class CoxPlugin extends Plugin
 	public static final int GREAT_OLM_7554 = 7554;
 	public static final int GREAT_OLM_LEFT_CLAW_7555 = 7555;
 
+	protected int currentColorIndex = 0;
+	protected int tickCounter = 0;
+	protected Color currentColor = new Color(255, 35, 60);
+
 	@Provides
 	CoxConfig getConfig(ConfigManager configManager)
 	{
@@ -131,6 +145,7 @@ public class CoxPlugin extends Plugin
 		this.overlayManager.add(this.coxOverlay);
 		this.overlayManager.add(this.coxInfoBox);
 		this.overlayManager.add(this.coxDebugBox);
+		this.overlayManager.add(tileOverlay);
 		this.olm.hardRest();
 	}
 
@@ -140,6 +155,11 @@ public class CoxPlugin extends Plugin
 		this.overlayManager.remove(this.coxOverlay);
 		this.overlayManager.remove(this.coxInfoBox);
 		this.overlayManager.remove(this.coxDebugBox);
+		this.overlayManager.remove(tileOverlay);
+
+		tickCounter = 0;
+		currentColorIndex = 0;
+		currentColor = new Color(255, 35, 60);
 	}
 
 	@Subscribe
@@ -353,9 +373,32 @@ public class CoxPlugin extends Plugin
 
 		this.handleNpcs();
 
-		if (this.olm.isActive())
-		{
+		if (this.olm.isActive()) {
 			this.olm.update();
+
+			tickCounter = 0;
+			// Metronome color derived from Olm's ticksUntilNextAttack so red always lands
+			// exactly on the attack tick. Ticks 2/3/4 are the standard blue/green/yellow
+			// countdown; anything longer (e.g. 8-tick enrage-rise wait) cycles blue/green/yellow
+			// without ever showing red early. Falls back to the old wrap counter pre-fight.
+			int ticks = this.olm.getTicksUntilNextAttack();
+			if (ticks == 1) {
+				currentColorIndex = 1; // red — Olm attacks this tick
+			} else if (ticks >= 2) {
+				// ticks=2 -> blue (4), ticks=3 -> green (3), ticks=4 -> yellow (2),
+				// then cycle blue/green/yellow for any further-out ticks.
+				int distance = ticks - 1;
+				currentColorIndex = 4 - ((distance - 1) % 3);
+			} else {
+				// ticks == -1 (Olm not active) — keep the wrap-based cycling so the tile still animates.
+				if (currentColorIndex >= 4) {
+					currentColorIndex = 0;
+				}
+				currentColorIndex++;
+			}
+
+			setCurrentColorByColorIndex(currentColorIndex);
+			tickCounter++;
 		}
 	}
 
@@ -485,6 +528,25 @@ public class CoxPlugin extends Plugin
 		if (id == Olm.HEAD_GAMEOBJECT_READY)
 		{
 			this.olm.setHead(null);
+		}
+	}
+
+	private void setCurrentColorByColorIndex(int currentColorIndex)
+	{
+		switch (currentColorIndex)
+		{
+			case 1:
+				currentColor = new Color(255, 35, 60);
+				break;
+			case 2:
+				currentColor = new Color(255, 214, 57);
+				break;
+			case 3:
+				currentColor = new Color(43, 255, 107);
+				break;
+			case 4:
+				currentColor = new Color(88, 157, 255);
+				break;
 		}
 	}
 }

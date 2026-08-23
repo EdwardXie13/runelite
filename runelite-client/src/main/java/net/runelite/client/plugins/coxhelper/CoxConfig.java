@@ -29,11 +29,7 @@ import java.awt.Color;
 import java.awt.Font;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import net.runelite.client.config.Config;
-import net.runelite.client.config.ConfigGroup;
-import net.runelite.client.config.ConfigItem;
-import net.runelite.client.config.Range;
-import net.runelite.client.config.Units;
+import net.runelite.client.config.*;
 
 @ConfigGroup("Cox")
 
@@ -336,5 +332,37 @@ public interface CoxConfig extends Config
 		{
 			return this.getName();
 		}
+	}
+
+	@ConfigSection(
+			name = "True Tile Overlay Settings",
+			description = "Settings only applied to True Tile Overlay",
+			position = 7
+	)
+	String TileSettings = "True Tile Overlay Settings";
+
+	@ConfigItem(
+			position = 3,
+			keyName = "currentTileBorderWidth",
+			name = "True Tile Border Width",
+			description = "Border size of the true tile overlay",
+			section = TileSettings
+	)
+	default double currentTileBorderWidth()
+	{
+		return 2;
+	}
+
+	@Range(max = 255)
+	@ConfigItem(
+			position = 5,
+			keyName = "changeFillColorOpacity",
+			name = "Fill Color Metronome Opacity",
+			description = "Opacity of the tile fill metronome color if the option above is enabled. Otherwise, the opacity is determined by the True Tile Fill Color setting",
+			section = TileSettings
+	)
+	default int changeFillColorOpacity()
+	{
+		return 128;
 	}
 }
