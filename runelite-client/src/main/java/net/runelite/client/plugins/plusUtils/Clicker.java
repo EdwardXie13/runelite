@@ -8,6 +8,7 @@ import net.runelite.api.coords.WorldPoint;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.awt.geom.Area;
 import java.awt.geom.PathIterator;
 import java.util.Random;
@@ -119,7 +120,6 @@ public class Clicker {
         return Math.max(min, Math.min(max, clicks));
     }
 
-
     private Point getCenterOfRectangle(Rectangle rectangle) {
         // +26 to the Y coordinate because calculations are taken from canvas, not window
         return new Point((int) rectangle.getCenterX(), (int) rectangle.getCenterY() + 26);
@@ -224,8 +224,9 @@ public class Clicker {
     }
 
     public void pressKey(int key) {
-        robot.keyPress(key);
-        robot.delay(100);
-        robot.keyRelease(key);
+        KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, key, KeyEvent.CHAR_UNDEFINED);
+        this.client.getCanvas().dispatchEvent(keyPress);
+        KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, key, KeyEvent.CHAR_UNDEFINED);
+        this.client.getCanvas().dispatchEvent(keyRelease);
     }
 }
