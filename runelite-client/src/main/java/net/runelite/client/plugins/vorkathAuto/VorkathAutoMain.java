@@ -540,12 +540,6 @@ public class VorkathAutoMain implements Runnable {
     public void run()
     {
         while (isRunning) {
-            try {
-            // Transition gate: skip the entire iteration during login / region loads /
-            // instance swaps. Every accessor below can NPE in those states (climb-in,
-            // TP, world hop). LOGGED_IN + non-null local player is the minimum stable
-            // point. Sleep a hair longer when we're not doing anything so the gate
-            // doesn't burn CPU while a load screen is up.
             if (client.getGameState() != GameState.LOGGED_IN
                     || client.getLocalPlayer() == null) {
                 try { Thread.sleep(50); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
@@ -759,14 +753,6 @@ public class VorkathAutoMain implements Runnable {
                             boardedBoat = false;
                             clickOnTorfinn();
 
-                            // Bounded wait for the "You board the boat" chat message,
-                            // which flips boardedBoat=true (Plugin.onChatMessage).
-                            // Retry the click every ~2s in case the first attempt missed
-                            // (stale NPC index, menu didn't resolve, path deflected). Hard
-                            // cap total wait at ~15s and bail so the outer state loop
-                            // re-enters this branch and re-evaluates from scratch — better
-                            // than sitting here forever if something went wrong upstream.
-                            // Also breaks immediately when the user stops the plugin.
                             long torfinnStartMs = System.currentTimeMillis();
                             int torfinnIter = 0;
                             while (isRunning && !boardedBoat) {
@@ -776,7 +762,7 @@ public class VorkathAutoMain implements Runnable {
                                     overlay.setCurrentStep("retry click Torfinn");
                                     clickOnTorfinn();
                                 }
-                                if (System.currentTimeMillis() - torfinnStartMs > 15_000) {
+                                if (System.currentTimeMillis() - torfinnStartMs > 10_000) {
                                     overlay.setCurrentStep("Torfinn timeout — bail to reeval");
                                     System.out.println("[Torfinn] boardedBoat never flipped after "
                                         + torfinnIter + " retries; bailing to state re-eval");
@@ -793,12 +779,8 @@ public class VorkathAutoMain implements Runnable {
                         clicker.randomDelayStDev(150, 250, 25);
                         setZoomPitchYaw(600, 4160, 0);
                     }
-                    // NOTE: the old `isAtWorldPoint(TORFINN_RELLEKA_TILE) && isIdle`
-                    // branch that used to live here is now covered by the merged
-                    // `isDestinationTile || isAtWorldPoint` check above — kept a single
-                    // bounded-retry Torfinn-click site to avoid drift between two copies.
                 }
-                    // PRIORITIZE VORKATH COMBAT
+
                 else if (getRegionID() == UNGEAL_REGION) {
                     overlay.setCurrentStep("at Ungael");
                     isTalkingToBanker = false;
@@ -812,10 +794,7 @@ public class VorkathAutoMain implements Runnable {
                         }
                     }
                 }
-                // Vorkath arena (instanced from UNGEAL template). vorkathIceChunksInside
-                // doesn't despawn reliably on TP-out (same reason isInVorkathRegion exists
-                // at all), so the object-cache check would keep firing after we TP to POH
-                // and the POH branch below would never be reached.
+
                 else if (isInVorkathRegion()){
                     overlay.setCurrentStep("inside Vorkath zone");
                     doVorkath = true;
@@ -825,18 +804,12 @@ public class VorkathAutoMain implements Runnable {
                 else if(getRegionID() == 11826) {
                     overlay.setCurrentStep("AT HOUSE");
                 }
-                // POH instance (built from POH_REGION template). Was gated on
-                // isInsideInstance() && restorationPoolPOH != null, but isInsideInstance()
-                // is also true in the Vorkath instance and the pool cache has the same
-                // stale-despawn risk as the ice chunks — use the region check to detect
-                // "we are actually in POH", and keep the object guards on the clicks.
+
                 else if (isInPOHRegion()) {
                     overlay.setCurrentStep("in POH");
 
                     clicker.randomDelayStDev(150, 250, 25);
 
-                    // Scene may not have finished loading — pool object / INFRONT_OF_POOL
-                    // are only set once GameObjectSpawned fires. Wait a tick if so.
                     if (VorkathAutoObjectIDs.restorationPoolPOH == null
                             || VorkathAutoWorldPoints.INFRONT_OF_POOL == null) {
                         overlay.setCurrentStep("in POH — waiting for scene load");
@@ -848,31 +821,6 @@ public class VorkathAutoMain implements Runnable {
                     }
                 }
             }
-            } catch (Throwable ex) {
-                // Three sinks — one of them will always reach the user:
-                //  (1) slf4j → RuneLite's log (needs log-level config to show)
-                //  (2) overlay stamp → visible in-game briefly
-                //  (3) ~/vorkath-errors.log — appended, never rotated, always
-                //      accessible via any editor / `type` / `cat`. Timestamped
-                //      so a repro's trace is easy to isolate.
-                log.error("[worker loop] uncaught", ex);
-                overlay.setCurrentStep("ERR: " + ex.getClass().getSimpleName()
-                        + (ex.getMessage() != null ? ": " + ex.getMessage() : ""));
-                try {
-                    java.io.File f = new java.io.File(
-                            System.getProperty("user.home"), "vorkath-errors.log");
-                    try (java.io.PrintWriter pw = new java.io.PrintWriter(
-                            new java.io.FileWriter(f, true))) {
-                        pw.println("---- " + new java.util.Date() + " ----");
-                        ex.printStackTrace(pw);
-                    }
-                } catch (Throwable ignore) { /* file sink best-effort */ }
-            }
-
-            // Prevent CPU spin. 1ms is imperceptible (game tick is 600ms) but genuinely
-            // releases the CPU to the client thread — Thread.yield alone is treated as
-            // a no-op by many JVMs and can still burn a core.
-            try { Thread.sleep(1); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
         }
         System.out.println("Thread has stopped.");
     }
@@ -3852,6 +3800,38 @@ public class VorkathAutoMain implements Runnable {
                 }
             }
         }
+
+        // Sort each group's tiles by Chebyshev distance to the player so
+        // pickup planners visit the nearest pile first. Without this, we
+        // walk to whichever pile got added to currentGroundItems earliest
+        // — most visible when filling slots with blue dragonhide from
+        // multiple drop tiles: we'd walk past a pile at our feet to grab
+        // one across the room.
+        //
+        // Chebyshev (max of |dx|, |dy|) matches OSRS walk cost — orthogonal
+        // and diagonal steps both cost 1 tick. Ties preserve insertion
+        // order (sort is stable). Player location read on this thread — the
+        // aggregate is called from client-thread paths (planners inside
+        // startLootPass and the executor's client-thread invoke wrappers),
+        // so getLocalPlayer() is safe here.
+        Player me = client.getLocalPlayer();
+        WorldPoint playerTemplate = (me != null) ? toTemplate(me.getWorldLocation()) : null;
+        if (playerTemplate != null) {
+            final int px = playerTemplate.getX();
+            final int py = playerTemplate.getY();
+            for (GroundGroup g : byId.values()) {
+                if (g.tiles.size() < 2) continue;   // nothing to reorder
+                g.tiles.sort((a, b) -> {
+                    WorldPoint aT = toTemplate(a.tile);
+                    WorldPoint bT = toTemplate(b.tile);
+                    int aD = (aT == null) ? Integer.MAX_VALUE
+                        : Math.max(Math.abs(aT.getX() - px), Math.abs(aT.getY() - py));
+                    int bD = (bT == null) ? Integer.MAX_VALUE
+                        : Math.max(Math.abs(bT.getX() - px), Math.abs(bT.getY() - py));
+                    return Integer.compare(aD, bD);
+                });
+            }
+        }
         return new ArrayList<>(byId.values());
     }
 
@@ -4488,15 +4468,7 @@ public class VorkathAutoMain implements Runnable {
         // click) run in parallel — OSRS lets both resolve in the same tick.
         return true;
     }
-
-    /**
-     * Advance the loot-pickup state machine one action per game tick (humans
-     * spam the pile at this cadence when clearing loot). Runs from onClientTick
-     * and is a no-op in unsafe windows. When the queue is empty and there ARE
-     * ground items in a safe window, opportunistically re-plan (this is how
-     * mid-fight pickup and next-kill wake-up looting fire — we don't need
-     * explicit triggers on 8058 or attack-idle).
-     */
+    
     public void tickLootPass() {
         if (!canLootRightNow()) return;
 
@@ -4517,7 +4489,6 @@ public class VorkathAutoMain implements Runnable {
             if (sinceAttack < 0 || sinceAttack > 1) return;
         }
 
-        // Opportunistic re-plan: queue is empty but ground items exist → build now.
         if (pendingLootSteps.isEmpty() && !currentGroundItems.isEmpty()) {
             startLootPass();
         }
@@ -4532,10 +4503,7 @@ public class VorkathAutoMain implements Runnable {
             case DROP:    executeDrop(step.slot, step.itemId);   break;
             case CONSUME: executeConsume(step.consumeKey);       break;
         }
-        // Mid-fight re-attack: a pickup click may have broken the attack lock;
-        // clickOnVorkath is idempotent (isPlayerAttackingVorkath / 2-tick cooldown
-        // guards inside) so this is safe even if the lock was preserved. No-op
-        // when Vorkath is dead — the poke path handles that separately.
+
         if (step.kind == LootStep.Kind.PICKUP && vorkathAlive) {
             clickOnVorkath();
         }
@@ -4574,8 +4542,6 @@ public class VorkathAutoMain implements Runnable {
     private void executeDrop(int slot, int itemId) {
         if (!canLootRightNow()) return;
 
-        // Also refuse if we've flipped back to CONSERVATIVE since the plan was
-        // built (we're now still-killing, don't sacrifice supplies for loot).
         if (currentLootMode() == LootMode.CONSERVATIVE) return;
 
         clientThread.invoke(() -> {
