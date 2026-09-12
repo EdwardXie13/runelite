@@ -527,11 +527,22 @@ public class BloodRuneTrueMain implements Runnable {
         overlay.setCurrentStep("click deposit blood runes");
         System.out.println("click deposit blood runes");
         clicker.randomDelayStDev(250,350,25);
+//        getSlotOfItem(currentInventory, ItemID.BLOOD_RUNE)
+//                .forEach(i -> {
+//                    clicker.clickPoint(inventoryCoords.get(i));
+//                    clicker.randomDelayStDev(250,350,25);
+//                });
         getSlotOfItem(currentInventory, ItemID.BLOOD_RUNE)
-                .forEach(i -> {
-                    clicker.clickPoint(inventoryCoords.get(i));
-                    clicker.randomDelayStDev(250,350,25);
-                });
+                .forEach(i -> clientThread.invoke(() -> client.menuAction(
+                        i,                                                 // slot
+                        WidgetInfo.BANK_INVENTORY_ITEMS_CONTAINER.getId(), // param1 — packed widget id
+                        MenuAction.CC_OP,                                  // action (enum, not .getId())
+                        8,                                                 // identifier
+                        ItemID.BLOOD_RUNE,                                 // itemId (not used for prayer)
+                        "",                                     // option
+                        ""                     // target
+                )));
+
 //        if (hasItem(currentInventory, ItemID.BLOOD_RUNE)) {
 //            if (hasItem(currentInventory, ItemID.BLOOD_ESSENCE) || hasItem(currentInventory, ItemID.BLOOD_ESSENCE_ACTIVE)) {
 //                clicker.clickPoint(invSlot3);
