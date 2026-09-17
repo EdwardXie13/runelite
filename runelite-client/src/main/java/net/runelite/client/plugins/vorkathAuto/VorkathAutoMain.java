@@ -196,19 +196,26 @@ public class VorkathAutoMain implements Runnable {
     private static final List<Integer> SUPER_COMBAT_WITHDRAW_PREF = List.of(
         ItemID.SUPER_COMBAT_POTION2,
         ItemID.SUPER_COMBAT_POTION3,
-        ItemID.SUPER_COMBAT_POTION4);
+        ItemID.SUPER_COMBAT_POTION4
+    );
+
+    private static final List<Integer> DIVINE_SUPER_COMBAT_WITHDRAW_PREF = List.of(
+        ItemID.DIVINE_SUPER_COMBAT_POTION2,
+        ItemID.DIVINE_SUPER_COMBAT_POTION3,
+        ItemID.DIVINE_SUPER_COMBAT_POTION4
+    );
     // SUPER extended antifire — Vorkath's dragonbreath needs the super variant
     // to be fully nulled; regular extended antifire lets breath through and
     // breaks the fight setup. superAntifireExpiryTick / onSippedSuperAntifire
     // are the actual gates the fight uses, so the withdraw list must match.
     private static final List<Integer> EXTENDED_ANTIFIRE_WITHDRAW_PREF = List.of(
-//        ItemID.EXTENDED_SUPER_ANTIFIRE2,
         ItemID.EXTENDED_SUPER_ANTIFIRE3,
-        ItemID.EXTENDED_SUPER_ANTIFIRE4);
+        ItemID.EXTENDED_SUPER_ANTIFIRE4
+    );
     private static final List<Integer> EXTENDED_ANTIVENOM_WITHDRAW_PREF = List.of(
-//        ItemID.EXTENDED_ANTIVENOM2,
         ItemID.EXTENDED_ANTIVENOM3,
-        ItemID.EXTENDED_ANTIVENOM4);
+        ItemID.EXTENDED_ANTIVENOM4
+    );
 
     private Runnable pendingAction = null;          // [NON_COMBAT]
     private WorldPoint lastLocation = null;          // [NON_COMBAT]
@@ -430,7 +437,7 @@ public class VorkathAutoMain implements Runnable {
     public int SHARK_HEAL_HP             = 20;   // shark restores 20 HP — used by opportunisticTopOff
     public int KARAMBWAN_HEAL_HP         = 18;   // karambwan restores 18 HP
                                                 //  the shark+pot+karambwan triple-combo overheal check
-    public int NORMAL_PRAYER_THRESHOLD   = 50;
+    public int NORMAL_PRAYER_THRESHOLD   = 45;
 
     // [SHARED] MIN_* thresholds — read by hasEnoughSupplies (non-combat entry decision)
     public int MIN_BUFF_TIME_TICKS      = 200;
@@ -685,17 +692,17 @@ public class VorkathAutoMain implements Runnable {
                             // rotate camera so sirsal banker is bottom right
                             setZoomPitchYaw(896, 4160, 8192);
                             // break check
-                            long breakMs = scheduler.isBreak(System.currentTimeMillis());
-                            if (breakMs > 0) {
-                                breakCounter++;
-                                overlay.setCurrentStep("delay " + breakMs + "ms" + "(" + breakCounter + ")");
-                                // break delay into safe chunks
-                                for (long d = breakMs; d > 0; d -= 60_000) {
-                                    clicker.delay((int) Math.min(d, 60_000));
-                                }
-                            } else {
-                                overlay.setCurrentStep("break not needed" + "(" + breakCounter + ")");
-                            }
+//                            long breakMs = scheduler.isBreak(System.currentTimeMillis());
+//                            if (breakMs > 0) {
+//                                breakCounter++;
+//                                overlay.setCurrentStep("delay " + breakMs + "ms" + "(" + breakCounter + ")");
+//                                // break delay into safe chunks
+//                                for (long d = breakMs; d > 0; d -= 60_000) {
+//                                    clicker.delay((int) Math.min(d, 60_000));
+//                                }
+//                            } else {
+//                                overlay.setCurrentStep("break not needed" + "(" + breakCounter + ")");
+//                            }
 
                             if (hasItem(currentInventory, ItemID.SUPERIOR_DRAGON_BONES)) {
                                 System.out.println("click deposit");
@@ -862,7 +869,7 @@ public class VorkathAutoMain implements Runnable {
      *  200 sharks stockpiled). Rune pouch is inventory-specific and stays in
      *  isReadyForVorkath. */
     private boolean hasVorkathSupplies(List<Item> source) {
-        return hasAnyDose(source, SUPER_COMBAT_WITHDRAW_PREF)
+        return (hasAnyDose(source, SUPER_COMBAT_WITHDRAW_PREF) || hasAnyDose(source, DIVINE_SUPER_COMBAT_WITHDRAW_PREF))
             && hasAnyDose(source, EXTENDED_ANTIFIRE_WITHDRAW_PREF)
             && hasAnyDose(source, EXTENDED_ANTIVENOM_WITHDRAW_PREF)
             && getItemCount(source, ItemID.PRAYER_POTION4)   >= 3
@@ -2557,7 +2564,7 @@ public class VorkathAutoMain implements Runnable {
     public LinkedHashMap<Integer, BankWithdrawItem> buildVorkathWithdraw() {
         LinkedHashMap<Integer, BankWithdrawItem> plan = new LinkedHashMap<>();
 
-        int sc = pickAvailableDose(SUPER_COMBAT_WITHDRAW_PREF);
+        int sc = pickAvailableDose(DIVINE_SUPER_COMBAT_WITHDRAW_PREF);
         if (sc >= 0) plan.put(sc, new BankWithdrawItem(1, 2, "Withdraw-1", ""));
 
         int af = pickAvailableDose(EXTENDED_ANTIFIRE_WITHDRAW_PREF);
