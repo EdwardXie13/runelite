@@ -592,6 +592,42 @@ public class VorkathAutoMain implements Runnable {
                     pendingPostPokeAction = null;
                     clicker.delay(600);
                 }
+                // A') Wake-up re-check: pending already fired (or never queued) but the
+                //     wake-up NPC is still in the scene. If a pre-poke or post-poke sip
+                //     dropped on the floor (menuAction missed, cooldown race, whatever),
+                //     the buff never landed and we'd otherwise silently enter the fight
+                //     without antifire / antivenom / prayer. Re-evaluate what's still
+                //     needed and fire it now — same sip-cooldown gate as preFightTopOff
+                //     so we never spam within the 3-tick internal window, and only fires
+                //     for buffs where we still have a dose to sip.
+                else if (mirrorHasWakeupNpc) {
+                    int wuTick = client.getTickCount();
+                    int wuAntifireBuffTicks  = Math.max(superAntifireTicksLeft(), antifireTicksLeft());
+                    int wuAntivenomBuffTicks = antivenomTicksLeft();
+                    int wuPrayerRestore      = 7 + (mirrorMaxPrayer / 4);
+                    boolean needAntifire  = wuAntifireBuffTicks  < MIN_BUFF_TIME_TICKS
+                                          && countDoses(activeAntifireIds()) > 0
+                                          && (wuTick - lastAntifireSipTick) >= 3;
+                    boolean needAntivenom = wuAntivenomBuffTicks < MIN_BUFF_TIME_TICKS
+                                          && countDoses(EXTENDED_ANTIVENOM_IDS) > 0
+                                          && (wuTick - lastAntivenomSipTick) >= 3;
+                    boolean needPrayer    = mirrorCurrentPrayer + wuPrayerRestore <= mirrorMaxPrayer
+                                          && countDoses(PRAYER_POTION_IDS) > 0
+                                          && (wuTick - lastPrayerSipTick) >= 3;
+                    if (needAntifire || needAntivenom || needPrayer) {
+                        overlay.setCurrentStep("wake-up re-check: retry missed sip");
+                        System.out.println("[wakeUpRecheck] needAntifire=" + needAntifire
+                            + " needAntivenom=" + needAntivenom + " needPrayer=" + needPrayer
+                            + " antifireBuffLeft=" + wuAntifireBuffTicks
+                            + " antivenomBuffLeft=" + wuAntivenomBuffTicks);
+                        java.util.EnumSet<ConsumeKind> req = java.util.EnumSet.noneOf(ConsumeKind.class);
+                        if (needPrayer)    req.add(ConsumeKind.PRAYER);
+                        if (needAntifire)  req.add(ConsumeKind.ANTIFIRE);
+                        if (needAntivenom) req.add(ConsumeKind.ANTIVENOM);
+                        consume(req, java.util.EnumSet.of(ConsumeKind.SUPER_COMBAT));
+                        clicker.delay(600);
+                    }
+                }
                 // B) Sleeping-Vorkath window: pre-fight top-off / feasibility / poke
                 //    when fullSupplies OR canContinue (we can push one more kill).
                 //    Endgame branch (sort-loot + TP) fires only when BOTH fail —
@@ -1381,26 +1417,15 @@ public class VorkathAutoMain implements Runnable {
             pietyOn = false;
         }
 
-        // Prayer conservation: at or below NORMAL_PRAYER_THRESHOLD, force piety
-        // OFF only when we can't sip our way out (no prayer doses in inv). With
-        // doses available, one sip restores ~28 pray — far more than piety drains
-        // between reconciles — so flipping off at 50 caused flapping (piety-off
-        // at 50 → sip → prayer 78 → piety-on → drain to 50 → off again, every
-        // ~5 ticks). The conservation logic was written for the truly-out case
-        // where no sip is possible; there it correctly extends survivable time
-        // ~4x by keeping only mage prot up. With doses, no extension needed.
+        // Prayer conservation removed — prayer running low is no longer a
+        // signal to flip piety off. Fight continues with piety on until it
+        // organically bottoms out; the game itself won't let a 0-pray toggle
+        // fire, so the individual toggle branches below just no-op in that
+        // state (see noPrayerPoints gate).
         //
-        // Symmetric restore: once a prayer sip (or dose refill) puts us into
-        // "safe" territory AND we're mid-fight, flip pietyOn back to true.
-        // Guarded on vorkathAlive + region so a dead-Vorkath / out-of-region
-        // sip doesn't re-enable piety after the force-off at the top of this
-        // method.
-        boolean noDoses = countDoses(PRAYER_POTION_IDS) == 0;
-        if (mirrorCurrentPrayer <= NORMAL_PRAYER_THRESHOLD && noDoses) {
-            pietyOn = false;
-        } else if (vorkathAlive && isInVorkathRegion() && !spawnPhase) {
-            // Do not restore piety during 395/spawn — the force-off above just
-            // set it, and this branch would immediately override it.
+        // Restore branch remains: keep piety on while Vorkath is alive and we
+        // are in the region, gated off during 395/spawn.
+        if (vorkathAlive && isInVorkathRegion() && !spawnPhase) {
             pietyOn = true;
         }
 
@@ -1731,10 +1756,11 @@ public class VorkathAutoMain implements Runnable {
      *     Vorkath's dragonbreath one-shots without antifire.
      *   - Antivenom: at least MIN_BUFF_TIME_TICKS of active buff OR one dose.
      *     Poison stack from a single hit will drain us before we can react.
-     *   - Prayer: currentPrayer > 0 OR at least one prayer-pot dose. If we bottom
-     *     out on points with no way to restore, we lose protection prayers and
-     *     take full damage from every hit.
-     * Missing sharks/karambwan alone is uncomfortable but not fatal — no gate.
+     * Missing prayer / sharks / karambwan alone is uncomfortable but not fatal
+     * — no gate. Prayer used to gate here but the fight tolerates prayer-out
+     * (piety flips off via the low-pray branch in reconcilePrayers; mage prot
+     * keeps flapping as long as points allow), so an empty prayer bar no
+     * longer forces a TP by itself.
      */
     public boolean canContinueFight() {
         if (getCurrentHP() <= HP_THRESHOLD) return false;
@@ -1748,17 +1774,7 @@ public class VorkathAutoMain implements Runnable {
             || countDoses(EXTENDED_ANTIVENOM_IDS) > 0;
         if (!antivenomOK) return false;
 
-        boolean prayerOK = getCurrentPrayer() > 0
-            || countDoses(PRAYER_POTION_IDS) > 0;
-        if (!prayerOK) return false;
-
         return true;
-    }
-
-    public void degradePrayerIfNeeded() {
-        if (countDoses(PRAYER_POTION_IDS) == 0 && getCurrentPrayer() < 20) {
-            setPietyOn(false);
-        }
     }
 
     /** Current HP (boosted skill level of Hitpoints). */
