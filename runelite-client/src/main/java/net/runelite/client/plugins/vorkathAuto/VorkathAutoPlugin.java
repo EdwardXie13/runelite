@@ -374,7 +374,7 @@ public class VorkathAutoPlugin extends Plugin {
         try {
             main.wooxWalkStep();
             main.evaluateActionsThisTick();
-            main.degradePrayerIfNeeded();
+//            main.degradePrayerIfNeeded();
             main.syncSuperCombatFromSkills();
             // Re-issue the walk-to-loot-stack click every tick until we arrive or
             // the death-anim window expires (see VorkathAutoMain.tickWalkToLootStack).
