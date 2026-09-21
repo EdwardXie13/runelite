@@ -157,6 +157,11 @@ public class GemstoneCrabAutoPlugin extends Plugin {
                 main.crabDied = false;
                 main.travelingCave = false;
                 main.caveClickAllowedAtMs = 0L;
+                // Reset per-travel pre-walk state so a same-arrival-tile
+                // second travel doesn't inherit a stale (already-elapsed)
+                // preWalkFireTick and fire without the intended delay.
+                main.preWalkArrival = null;
+                main.preWalkFireTick = -1;
                 // Attack immediately — shaves one tick off vs the worker.
                 main.clickOnCrab();
             }
@@ -195,10 +200,17 @@ public class GemstoneCrabAutoPlugin extends Plugin {
                 int panim;
                 try { panim = ((Player) event.getActor()).getAnimation(); }
                 catch (Throwable t) { return; }
+                // Diagnostic: every local-player anim change shows up here.
+                // Use it to confirm the actual cave-travel animation id.
+                if (panim != -1) {
+                    System.out.println("[gemstoneCrabAuto] localPlayer anim=" + panim
+                        + " travelingCave(before)=" + main.travelingCave
+                        + " crabDied=" + main.crabDied);
+                }
                 if (panim == PLAYER_ANIM_CAVE_TRAVEL) {
                     main.travelingCave = true;
-                    // Crab-dead state is done — travel has started.
                     main.crabDied = false;
+                    System.out.println("[gemstoneCrabAuto] travelingCave LATCHED (anim 11580)");
                 }
                 return;
             }
