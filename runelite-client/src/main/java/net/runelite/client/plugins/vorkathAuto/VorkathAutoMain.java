@@ -587,6 +587,8 @@ public class VorkathAutoMain implements Runnable {
                 // A) Post-poke pending action fires during wake-up (8058) or first tick alive.
                 //    Runs whenever queued — the sip/eat it holds was budgeted before the poke.
                 if (pendingPostPokeAction != null && (mirrorHasWakeupNpc || vorkathAlive)) {
+                    System.out.println("[postPokeFire] FIRING pending action — mirror8058=" + mirrorHasWakeupNpc
+                        + " vorkathAlive=" + vorkathAlive + " tick=" + client.getTickCount());
                     overlay.setCurrentStep("post-poke pending action");
                     pendingPostPokeAction.run();
                     pendingPostPokeAction = null;
@@ -1709,16 +1711,10 @@ public class VorkathAutoMain implements Runnable {
     }
 
     public boolean hasEnoughSupplies() {
-        if (countDoses(PRAYER_POTION_IDS) < MIN_PRAYER_DOSES) return false;
-        // Effective prayer floor: currentPrayer + doses × per-pot restore. One
-        // dose restores 7 + maxPrayer/4 (game formula). At 99 prayer that's ~31
-        // points per dose. Fails if we don't have enough total prayer runway to
-        // start a fresh kill even after sipping. Worker-thread safe: reads
-        // prayer mirrors.
-        int prayerRestore = 7 + (mirrorMaxPrayer / 4);
-        int effectivePrayer = mirrorCurrentPrayer
-                            + countDoses(PRAYER_POTION_IDS) * prayerRestore;
-        if (effectivePrayer < MIN_PRAYER_POINTS_START) return false;
+        // Prayer no longer gates supplies. patch62 removed prayer from
+        // canContinueFight and patch63 removed prayer conservation; keeping
+        // MIN_PRAYER_DOSES / MIN_PRAYER_POINTS_START here would still force
+        // trip-end TPs on empty-prayer inventories.
         // 2 sharks is the true minimum — a gamble to eke out one more kill. Also
         // keeps hasEnoughSupplies honest regardless of the buff-time shortcut
         // path below (which otherwise doesn't check shark count).
@@ -1857,10 +1853,14 @@ public class VorkathAutoMain implements Runnable {
         if (required == null)      required      = EnumSet.noneOf(ConsumeKind.class);
         if (opportunistic == null) opportunistic = EnumSet.noneOf(ConsumeKind.class);
 
+        System.out.println("[consume] ENTER required=" + required + " opportunistic=" + opportunistic
+            + " mirror8058=" + mirrorHasWakeupNpc + " vorkathAlive=" + vorkathAlive
+            + " acidAnim=" + vorkathAcidAnim + " tick=" + client.getTickCount());
+
         // Acid-phase gate. All eat/sip is blocked during woox walk regardless of
         // caller intent — the walk owns movement and an inv action mid-walk risks
         // eating an acid tile.
-        if (vorkathAcidAnim) return;
+        if (vorkathAcidAnim) { System.out.println("[consume] BLOCKED by acidAnim"); return; }
 
         // Worker-thread safe: mirrors are updated from client thread every ~16ms.
         int hp     = mirrorCurrentHP;
@@ -1940,6 +1940,17 @@ public class VorkathAutoMain implements Runnable {
         int drinkCount = (firePrayer ? 1 : 0) + (fireAntifire ? 1 : 0)
                        + (fireAntivenom ? 1 : 0) + (fireSuperCombat ? 1 : 0);
         if (drinkCount > 1) {
+            // Log the drops so we can see when priority-chain silently
+            // suppresses antivenom / super_combat in favor of antifire.
+            String won;
+            if (firePrayer)              won = "prayer";
+            else if (fireAntifire)       won = "antifire";
+            else if (fireAntivenom)      won = "antivenom";
+            else if (fireSuperCombat)    won = "super_combat";
+            else                         won = "?";
+            System.out.println("[consume] drinkCount=" + drinkCount + " priority-chain won=" + won
+                    + " (fireAntifire=" + fireAntifire + " fireAntivenom=" + fireAntivenom
+                    + " firePrayer=" + firePrayer + " fireSuperCombat=" + fireSuperCombat + ")");
             if (firePrayer) {
                 fireAntifire = false; fireAntivenom = false; fireSuperCombat = false;
             } else if (fireAntifire) {
@@ -2216,10 +2227,20 @@ public class VorkathAutoMain implements Runnable {
         // clear the latch. If the sip actually missed and the flag stays true,
         // we retry after the 3-tick window — bounded retry, no runaway spam.
         int nowTick = client.getTickCount();
+        // Suppress chat-expire-driven antifire/antivenom sips when we're in
+        // the endgame loot/TP state (Vorkath dead + top-off math failed).
+        // Same predicate startLootPass uses to trigger the endgame plan —
+        // once we're there we're draining loot and TP-ing out, so a fresh
+        // dose is wasted on a fight we won't start. The expire-message
+        // flags stay latched; if we start a new trip (canAfford flips back
+        // true) the next tick's P1/P2 branch picks them up and sips.
+        boolean consolidatingForTp = !vorkathAlive && !canAffordTopOffAndFight();
         boolean superAntifireNeeded = antifireExpireMessage
-                                   && (nowTick - lastAntifireSipTick) >= 3;
+                                   && (nowTick - lastAntifireSipTick) >= 3
+                                   && !consolidatingForTp;
         boolean antivenomNeeded    = antivenomExpireMessage
-                                   && (nowTick - lastAntivenomSipTick) >= 3;
+                                   && (nowTick - lastAntivenomSipTick) >= 3
+                                   && !consolidatingForTp;
 
         if (hpLow) {
             // P1: need shark (critical HP). Pack in any expired/near-expired
@@ -2845,15 +2866,13 @@ public class VorkathAutoMain implements Runnable {
         int maxHp   = mirrorMaxHP;
         int sharksToTop = Math.max(0, (maxHp - curHp) / SHARK_HEAL_HP);
 
-        int curPray = mirrorCurrentPrayer;
-        int maxPray = mirrorMaxPrayer;
-        int prayRestore = 7 + (maxPray / 4);   // 7 + floor(0.25 * prayer level)
+        // Prayer no longer factors into affordability. patch62/63 removed
+        // prayer as a hard gate from canContinueFight and prayer conservation
+        // from reconcilePrayers, so it would be inconsistent to still require
+        // MIN_PRAYER_DOSES in inventory here. Left the variable declarations
+        // as zero so the FAIL diagnostic line below can still print without
+        // being rewritten.
         int prayerSipsToTop = 0;
-        int simPray = curPray;
-        while (simPray + prayRestore <= maxPray) {
-            prayerSipsToTop++;
-            simPray += prayRestore;
-        }
 
         // In practice the bank phase withdraws exactly one antifire type for the
         // active weapon, so it's safe (and simpler) to treat super and regular as
@@ -2869,7 +2888,7 @@ public class VorkathAutoMain implements Runnable {
         int antivenomSipsToTop = affordAntivenomBuffTicks < MIN_BUFF_TIME_TICKS ? 1 : 0;
 
         int currentSharks         = getItemCount(currentInventory, ItemID.SHARK);
-        int currentPrayerDoses    = countDoses(PRAYER_POTION_IDS);
+        int currentPrayerDoses    = countDoses(PRAYER_POTION_IDS);   // still counted for the diag line
         int currentAntifireDoses  = countDoses(EXTENDED_SUPER_ANTIFIRE_IDS)
                                   + countDoses(EXTENDED_ANTIFIRE_IDS);
         int currentAntivenomDoses = countDoses(EXTENDED_ANTIVENOM_IDS);
@@ -2885,7 +2904,7 @@ public class VorkathAutoMain implements Runnable {
         int minAntivenomDoses   = affordAntivenomBuffTicks >= MIN_BUFF_TIME_TICKS ? 0 : MIN_ANTIVENOM_DOSES;
 
         boolean sharkOK    = currentSharks         - sharksToTop         >= MIN_SHARKS;
-        boolean prayerOK   = currentPrayerDoses    - prayerSipsToTop     >= MIN_PRAYER_DOSES;
+        boolean prayerOK   = true;   // prayer no longer gates affordability — see patch62/63
         boolean antifireOK = currentAntifireDoses  - antifireSipsToTop   >= minAntifireDoses;
         boolean venomOK    = currentAntivenomDoses - antivenomSipsToTop  >= minAntivenomDoses;
 
@@ -2983,7 +3002,8 @@ public class VorkathAutoMain implements Runnable {
                 + " canAntivenom=" + canSipAntivenom
                 + " canSuperCombat=" + canSipSuperCombat
                 + " boostMin=" + superCombatBoostMin()
-                + " afford=" + canAffordTopOffAndFight());
+                + " afford=" + canAffordTopOffAndFight()
+                + " sipsRem=" + ((canSipPrayer?1:0)+(canSipAntifire?1:0)+(canSipAntivenom?1:0)+(canSipSuperCombat?1:0)));
 
         // Super combat rebuff counts toward "is a sip due" but is still NOT a
         // required supply — hasEnoughSupplies() / canAffordTopOffAndFight() do
@@ -3139,6 +3159,11 @@ public class VorkathAutoMain implements Runnable {
     private Runnable buildFinalPostPokeAction(boolean prayer, boolean antifire, boolean antivenom, boolean shark) {
         String sipKey = prayer ? "prayer" : antifire ? "antifire" : antivenom ? "antivenom" : null;
 
+        System.out.println("[buildPending] prayer=" + prayer + " antifire=" + antifire
+                + " antivenom=" + antivenom + " shark=" + shark
+                + " sipsRemainingChain -> sipKey=" + sipKey
+                + " (super_combat NOT in chain — sips only via Path 4)");
+
         if (sipKey == null && shark) return this::eatShark;
         if (sipKey == null)         return null;
 
@@ -3150,12 +3175,18 @@ public class VorkathAutoMain implements Runnable {
             // Fire the required sip + opportunistic shark/kara at the tick the
             // Runnable runs (during 8058 wake-up). HP room / inv / overheal are
             // re-checked inside consume() at fire time.
-            return () -> consume(EnumSet.of(sipCk),
-                                 EnumSet.of(ConsumeKind.SHARK, ConsumeKind.KARA,
-                                            ConsumeKind.SUPER_COMBAT));
+            return () -> {
+                System.out.println("[postPokeRunnable] fire (with shark combo) sipCk=" + sipCk);
+                consume(EnumSet.of(sipCk),
+                        EnumSet.of(ConsumeKind.SHARK, ConsumeKind.KARA,
+                                   ConsumeKind.SUPER_COMBAT));
+            };
         }
-        return () -> consume(EnumSet.of(sipCk),
-                             EnumSet.of(ConsumeKind.SUPER_COMBAT));
+        return () -> {
+            System.out.println("[postPokeRunnable] fire (no shark) sipCk=" + sipCk);
+            consume(EnumSet.of(sipCk),
+                    EnumSet.of(ConsumeKind.SUPER_COMBAT));
+        };
     }
 
     /**
