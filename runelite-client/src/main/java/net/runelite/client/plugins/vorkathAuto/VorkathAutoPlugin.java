@@ -608,6 +608,11 @@ public class VorkathAutoPlugin extends Plugin {
         // --- Reconcile desired prayer state against actual state ---
         main.reconcilePrayers();
 
+        // --- Mid-fight recenter: click back to LOOT_STACK_TILE when displaced ---
+        //     (throttled inside; only fires when Vorkath is alive and no
+        //      dangerous / owned-movement phase is active).
+        main.tickRecenterMidFight();
+
         // --- Advance the loot-pickup state machine (one action per two ticks) ---
         main.tickLootPass();
         } catch (Throwable ex) {
@@ -696,7 +701,7 @@ public class VorkathAutoPlugin extends Plugin {
     }
 
     private void toggleStatus() {
-        Widget chatboxInput = client.getWidget(WidgetInfo.CHATBOX_INPUT);
+        Widget chatboxInput = client.getWidget(WidgetInfo.CHATBOX_MESSAGE_LINES);
         if (chatboxInput == null) return;
 
         String chatBoxMessage = stripTargetAnchors(chatboxInput.getText());
@@ -816,7 +821,19 @@ public class VorkathAutoPlugin extends Plugin {
         NPCComposition old = event.getOld();
         if (now == null || old == null) return;
         try {
-            if (now.getId() == 8061 && old.getId() != 8061) {
+            int nowId = now.getId();
+            int oldId = old.getId();
+            // Vorkath wakes via COMPOSITION SWAP, not spawn/despawn:
+            //   8059 (sleeping) -> 8058 (wake anim) -> 8061 (alive combat).
+            // onNpcSpawned never fires for 8058, so mirror the wake-up NPC
+            // state here instead. Client-thread event — safe to touch mirror.
+            if (nowId == 8058 && oldId != 8058) {
+                main.mirrorHasWakeupNpc = true;
+            }
+            if (oldId == 8058 && nowId != 8058) {
+                main.mirrorHasWakeupNpc = false;
+            }
+            if (nowId == 8061 && oldId != 8061) {
                 main.onVorkathSpawn();
             }
         } catch (Throwable t) {

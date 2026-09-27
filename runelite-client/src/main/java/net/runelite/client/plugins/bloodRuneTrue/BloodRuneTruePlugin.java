@@ -190,7 +190,7 @@ public class BloodRuneTruePlugin extends Plugin {
     }
 
     private void toggleStatus() {
-        Widget chatboxInput = client.getWidget(WidgetInfo.CHATBOX_INPUT);
+        Widget chatboxInput = client.getWidget(WidgetInfo.CHATBOX_MESSAGE_LINES);
         if (chatboxInput == null) return;
 
         String chatBoxMessage = stripTargetAnchors(chatboxInput.getText());

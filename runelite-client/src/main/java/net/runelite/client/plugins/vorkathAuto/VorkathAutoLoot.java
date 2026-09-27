@@ -1,7 +1,6 @@
 package net.runelite.client.plugins.vorkathAuto;
 
-import net.runelite.api.ItemID;
-
+import net.runelite.api.gameval.ItemID;
 import java.util.Set;
 
 /**
@@ -17,19 +16,19 @@ public final class VorkathAutoLoot {
     private VorkathAutoLoot() {}
 
     /** Guaranteed Vorkath drop, unstackable — 2 per kill = 2 inventory slots. Always picked up. */
-    public static final int SUPERIOR_DRAGON_BONES = ItemID.SUPERIOR_DRAGON_BONES;
+    public static final int SUPERIOR_DRAGON_BONES = ItemID.DRAGON_BONES_SUPERIOR;
 
     /** Guaranteed Vorkath drop, unnoted here — 2 per kill = 2 slots. NOT always-pick;
      *  ranks against other loot by gePricePerSlot like everything else. */
-    public static final int BLUE_DRAGONHIDE = ItemID.BLUE_DRAGONHIDE;
+    public static final int BLUE_DRAGONHIDE = ItemID.DRAGONHIDE_BLUE;
 
     /**
      * Inventory items that must NEVER be dropped to make room for loot.
      * The user's setup carries exactly one rune pouch and one slayer staff.
      */
     public static final Set<Integer> PROTECTED_ITEM_IDS = Set.of(
-        ItemID.RUNE_POUCH,       // regular rune pouch (12791)
-        ItemID.SLAYERS_STAFF     // slayer staff (4170)
+        ItemID.BH_RUNE_POUCH,       // regular rune pouch (12791)
+        ItemID.SLAYER_STAFF     // slayer staff (4170)
     );
 
     /**

@@ -85,19 +85,31 @@ public class GemstoneCrabAutoPlugin extends Plugin {
     }
 
     private void startMain() {
-        if (mainThread != null && mainThread.isAlive()) return;
-        if (main == null) {
-            main = new GemstoneCrabAutoMain(client, clientThread, overlay, this,
-                    eventBus, itemManager);
+        System.out.println("[gc.startMain] ENTER threadAlive="
+            + (mainThread != null && mainThread.isAlive())
+            + " main==null?" + (main == null));
+        if (mainThread != null && mainThread.isAlive()) {
+            System.out.println("[gc.startMain] BAIL — thread already alive");
+            return;
         }
-        main.reset();
-        clientThread.invoke(() -> GemstoneCrabAutoNPCIDs.scanScene(client));
-        main.isRunning = true;
-        mainThread = new Thread(main, "gemstoneCrabAuto-worker");
-        mainThread.setDaemon(true);
-        mainThread.start();
-        overlay.setCurrentStep("status is go");
-        System.out.println("gemstoneCrabAuto status is go");
+        try {
+            if (main == null) {
+                main = new GemstoneCrabAutoMain(client, clientThread, overlay, this,
+                        eventBus, itemManager);
+                System.out.println("[gc.startMain] constructed new GemstoneCrabAutoMain");
+            }
+            main.reset();
+            clientThread.invoke(() -> GemstoneCrabAutoNPCIDs.scanScene(client));
+            main.isRunning = true;
+            mainThread = new Thread(main, "gemstoneCrabAuto-worker");
+            mainThread.setDaemon(true);
+            mainThread.start();
+            overlay.setCurrentStep("status is go");
+            System.out.println("gemstoneCrabAuto status is go");
+        } catch (Throwable ex) {
+            System.out.println("[gc.startMain] EXCEPTION: " + ex);
+            ex.printStackTrace(System.out);
+        }
     }
 
     private void stopMain() {
@@ -113,17 +125,25 @@ public class GemstoneCrabAutoPlugin extends Plugin {
     }
 
     private void toggleStatus() {
-        Widget chatboxInput = client.getWidget(WidgetInfo.CHATBOX_INPUT);
+        Widget chatboxInput = client.getWidget(WidgetInfo.CHATBOX_MESSAGE_LINES);
         if (chatboxInput == null) return;
         String txt = chatboxInput.getText();
         if (txt == null) return;
         java.util.regex.Matcher m = java.util.regex.Pattern
                 .compile("ff>(.*?)</c").matcher(txt);
         String msg = m.find() ? m.group(1) : "";
+        if ("1".equals(msg) || "2".equals(msg)) {
+            System.out.println("[gc.toggleStatus] msg=" + msg + " raw=" + txt
+                + " main==null?" + (main == null)
+                + " isRunning=" + (main == null ? "n/a" : String.valueOf(main.isRunning))
+                + " hasStarted=" + hasStarted);
+        }
         if (msg.equals("1") && (main == null || !main.isRunning) && !hasStarted) {
+            System.out.println("[gc.toggleStatus] START gate passed — calling startMain()");
             startMain();
             hasStarted = true;
         } else if (msg.equals("2") && main != null && main.isRunning && hasStarted) {
+            System.out.println("[gc.toggleStatus] STOP gate passed — calling stopMain()");
             stopMain();
             hasStarted = false;
         }
@@ -232,7 +252,7 @@ public class GemstoneCrabAutoPlugin extends Plugin {
                 main.crabDied = true;
                 main.travelingCave = false;
                 long delayMs = java.util.concurrent.ThreadLocalRandom.current()
-                        .nextLong(3000, 5001);
+                        .nextLong(3000, 60001);
                 main.caveClickAllowedAtMs = System.currentTimeMillis() + delayMs;
                 System.out.println("[gemstoneCrabAuto] crab died — cave click in "
                         + delayMs + "ms");

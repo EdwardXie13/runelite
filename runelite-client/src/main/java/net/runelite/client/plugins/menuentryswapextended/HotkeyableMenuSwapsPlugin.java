@@ -24,12 +24,10 @@ import net.runelite.client.game.ItemManager;
 import net.runelite.client.input.KeyListener;
 import net.runelite.client.input.KeyManager;
 import net.runelite.client.plugins.Plugin;
-import net.runelite.client.plugins.PluginDependency;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.menuentryswapextended.GroundItemsStuff.GroundItem;
 import net.runelite.client.plugins.menuentryswapextended.GroundItemsStuff.NamedQuantity;
 import net.runelite.client.plugins.menuentryswapper.MenuEntrySwapperConfig;
-import net.runelite.client.plugins.menuentryswapper.MenuEntrySwapperPlugin;
 import net.runelite.client.util.Text;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -52,7 +50,6 @@ import static net.runelite.client.plugins.menuentryswapextended.GroundItemPriceS
 	name = "Custom Menu Swaps",
 	tags = {"entry", "swapper", "custom", "text"}
 )
-@PluginDependency(MenuEntrySwapperPlugin.class)
 @Slf4j
 public class HotkeyableMenuSwapsPlugin extends Plugin implements KeyListener
 {
@@ -60,7 +57,7 @@ public class HotkeyableMenuSwapsPlugin extends Plugin implements KeyListener
 	@Inject private HotkeyableMenuSwapsConfig config;
 	@Inject private KeyManager keyManager;
 	@Inject private ConfigManager configManager;
-	@Inject private MenuEntrySwapperConfig menuEntrySwapperConfig;
+	private MenuEntrySwapperConfig menuEntrySwapperConfig;
 	@Inject private ItemManager itemManager;
 	@Inject private GroundItemsStuff groundItemsStuff;
 	@Inject private CustomSwapUtils customSwapUtils;
@@ -161,6 +158,7 @@ public class HotkeyableMenuSwapsPlugin extends Plugin implements KeyListener
 
 	@Override
 	protected void startUp() {
+		menuEntrySwapperConfig = configManager.getConfig(MenuEntrySwapperConfig.class);
 
 		migrate();
 

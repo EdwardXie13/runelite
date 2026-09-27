@@ -162,7 +162,7 @@ public class GroundItemsStuff
 		private WorldPoint location;
 		private int height;
 		private int haPrice;
-		private int gePrice;
+		private long gePrice;
 		private int offset;
 		private boolean tradeable;
 		@Nullable
@@ -176,7 +176,7 @@ public class GroundItemsStuff
 
 		int getGePrice()
 		{
-			return gePrice * quantity;
+			return (int) (gePrice * quantity);
 		}
 	}
 

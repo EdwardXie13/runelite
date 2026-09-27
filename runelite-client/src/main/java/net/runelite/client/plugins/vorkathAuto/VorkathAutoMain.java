@@ -1,5 +1,6 @@
 package net.runelite.client.plugins.vorkathAuto;
 
+import net.runelite.api.gameval.ItemID;
 import lombok.Getter;
 import lombok.Setter;
 import net.runelite.api.*;
@@ -87,15 +88,15 @@ public class VorkathAutoMain implements Runnable {
     // Nested to avoid a separate-file compile ordering issue in some IDE builds.
 
     /** Guaranteed Vorkath drop, unstackable — 2 per kill = 2 inventory slots. Mandatory. */
-    public static final int LOOT_SUPERIOR_DRAGON_BONES = ItemID.SUPERIOR_DRAGON_BONES;
+    public static final int LOOT_SUPERIOR_DRAGON_BONES = ItemID.DRAGON_BONES_SUPERIOR;
 
     /** Guaranteed Vorkath drop, unnoted here — 2 per kill = 2 slots. Ranks by GPS. */
-    public static final int LOOT_BLUE_DRAGONHIDE       = ItemID.BLUE_DRAGONHIDE;
+    public static final int LOOT_BLUE_DRAGONHIDE       = ItemID.DRAGONHIDE_BLUE;
 
     /** Inventory items that must NEVER be dropped. Setup: one rune pouch + one slayer staff. */
     public static final Set<Integer> LOOT_PROTECTED_ITEM_IDS = Set.of(
-        ItemID.RUNE_POUCH,      // regular rune pouch (12791)
-        ItemID.SLAYERS_STAFF    // slayer staff (4170)
+        ItemID.BH_RUNE_POUCH,      // regular rune pouch (12791)
+        ItemID.SLAYER_STAFF    // slayer staff (4170)
     );
 
     /**
@@ -111,6 +112,12 @@ public class VorkathAutoMain implements Runnable {
     // [NON_COMBAT] — travel / bank / POH
     // ============================================================================
     public static boolean needRechargeStamina = true;      // [NON_COMBAT]
+    /** Latches true on animation 7305 (drinking from the restoration pool)
+     *  and stays true for the rest of this POH visit — regardless of what
+     *  needRechargeStamina does. Reset to false when we leave the POH region
+     *  (return to Ungael), so the NEXT visit gets a fresh drink. Guarantees
+     *  at most one restoration-pool click per POH visit. */
+    public static volatile boolean stamRechargedThisPOHVisit = false;  // [NON_COMBAT]
     public static boolean isIdle = true;                   // [NON_COMBAT]
     public static int essenceRemaining = 0;                // [NON_COMBAT]
     private boolean awaitingMovement = false;              // [NON_COMBAT]
@@ -144,45 +151,45 @@ public class VorkathAutoMain implements Runnable {
 
     // [SHARED] potion item-id lists — combat sips, non-combat counts/withdraws
     private static final List<Integer> DIVINE_SUPER_COMBAT_IDS = List.of(
-        ItemID.DIVINE_SUPER_COMBAT_POTION1,
-        ItemID.DIVINE_SUPER_COMBAT_POTION2,
-        ItemID.DIVINE_SUPER_COMBAT_POTION3,
-        ItemID.DIVINE_SUPER_COMBAT_POTION4
+        ItemID._1DOSEDIVINECOMBAT,
+        ItemID._2DOSEDIVINECOMBAT,
+        ItemID._3DOSEDIVINECOMBAT,
+        ItemID._4DOSEDIVINECOMBAT
     );
 
     private static final List<Integer> SUPER_COMBAT_IDS = List.of(
-        ItemID.SUPER_COMBAT_POTION1,
-        ItemID.SUPER_COMBAT_POTION2,
-        ItemID.SUPER_COMBAT_POTION3,
-        ItemID.SUPER_COMBAT_POTION4
+        ItemID._1DOSE2COMBAT,
+        ItemID._2DOSE2COMBAT,
+        ItemID._3DOSE2COMBAT,
+        ItemID._4DOSE2COMBAT
     );
 
     private static final List<Integer> EXTENDED_SUPER_ANTIFIRE_IDS = List.of(
-        ItemID.EXTENDED_SUPER_ANTIFIRE1,
-        ItemID.EXTENDED_SUPER_ANTIFIRE2,
-        ItemID.EXTENDED_SUPER_ANTIFIRE3,
-        ItemID.EXTENDED_SUPER_ANTIFIRE4
+        ItemID._1DOSE4ANTIDRAGON,
+        ItemID._2DOSE4ANTIDRAGON,
+        ItemID._3DOSE4ANTIDRAGON,
+        ItemID._4DOSE4ANTIDRAGON
     );
 
     private static final List<Integer> EXTENDED_ANTIFIRE_IDS = List.of(
-        ItemID.EXTENDED_ANTIFIRE1,
-        ItemID.EXTENDED_ANTIFIRE2,
-        ItemID.EXTENDED_ANTIFIRE3,
-        ItemID.EXTENDED_ANTIFIRE4
+        ItemID._1DOSE2ANTIDRAGON,
+        ItemID._2DOSE2ANTIDRAGON,
+        ItemID._3DOSE2ANTIDRAGON,
+        ItemID._4DOSE2ANTIDRAGON
     );
 
     private static final List<Integer> EXTENDED_ANTIVENOM_IDS = List.of(
-        ItemID.EXTENDED_ANTIVENOM1,
-        ItemID.EXTENDED_ANTIVENOM2,
-        ItemID.EXTENDED_ANTIVENOM3,
-        ItemID.EXTENDED_ANTIVENOM4
+        ItemID.EXTENDED_ANTIVENOM_1,
+        ItemID.EXTENDED_ANTIVENOM_2,
+        ItemID.EXTENDED_ANTIVENOM_3,
+        ItemID.EXTENDED_ANTIVENOM_4
     );
 
     private static final List<Integer> PRAYER_POTION_IDS = List.of(
-        ItemID.PRAYER_POTION1,
-        ItemID.PRAYER_POTION2,
-        ItemID.PRAYER_POTION3,
-        ItemID.PRAYER_POTION4
+        ItemID._1DOSEPRAYERRESTORE,
+        ItemID._2DOSEPRAYERRESTORE,
+        ItemID._3DOSEPRAYERRESTORE,
+        ItemID._4DOSEPRAYERRESTORE
     );
 
     // [NON_COMBAT] Bank withdraw dose-preference lists. Order = smallest dose
@@ -194,27 +201,27 @@ public class VorkathAutoMain implements Runnable {
     // omitted — a single dose gives no in-fight sip headroom. buildVorkath-
     // Withdraw() resolves these against currentBank at withdraw time.
     private static final List<Integer> SUPER_COMBAT_WITHDRAW_PREF = List.of(
-        ItemID.SUPER_COMBAT_POTION2,
-        ItemID.SUPER_COMBAT_POTION3,
-        ItemID.SUPER_COMBAT_POTION4
+        ItemID._2DOSE2COMBAT,
+        ItemID._3DOSE2COMBAT,
+        ItemID._4DOSE2COMBAT
     );
 
     private static final List<Integer> DIVINE_SUPER_COMBAT_WITHDRAW_PREF = List.of(
-        ItemID.DIVINE_SUPER_COMBAT_POTION2,
-        ItemID.DIVINE_SUPER_COMBAT_POTION3,
-        ItemID.DIVINE_SUPER_COMBAT_POTION4
+        ItemID._2DOSEDIVINECOMBAT,
+        ItemID._3DOSEDIVINECOMBAT,
+        ItemID._4DOSEDIVINECOMBAT
     );
     // SUPER extended antifire — Vorkath's dragonbreath needs the super variant
     // to be fully nulled; regular extended antifire lets breath through and
     // breaks the fight setup. superAntifireExpiryTick / onSippedSuperAntifire
     // are the actual gates the fight uses, so the withdraw list must match.
     private static final List<Integer> EXTENDED_ANTIFIRE_WITHDRAW_PREF = List.of(
-        ItemID.EXTENDED_SUPER_ANTIFIRE3,
-        ItemID.EXTENDED_SUPER_ANTIFIRE4
+        ItemID._3DOSE4ANTIDRAGON,
+        ItemID._4DOSE4ANTIDRAGON
     );
     private static final List<Integer> EXTENDED_ANTIVENOM_WITHDRAW_PREF = List.of(
-        ItemID.EXTENDED_ANTIVENOM3,
-        ItemID.EXTENDED_ANTIVENOM4
+        ItemID.EXTENDED_ANTIVENOM_3,
+        ItemID.EXTENDED_ANTIVENOM_4
     );
 
     private Runnable pendingAction = null;          // [NON_COMBAT]
@@ -366,6 +373,20 @@ public class VorkathAutoMain implements Runnable {
     private volatile int lastAntifireSipTick  = -100;
     private volatile int lastAntivenomSipTick = -100;
     private volatile int lastPrayerSipTick    = -100;
+
+    /**
+     * Dynamic prayer sip target — recomputed after every successful prayer
+     * sip. Value lies in a random window just below the no-overrestore
+     * ceiling (maxPrayer - prayerRestorePerDose), so we sip late enough to
+     * never overheal AND vary the exact tick we sip to avoid the botlike
+     * always-sip-at-45 pattern. -1 means "regenerate on next read".
+     */
+    private volatile int prayerSipTarget      = -1;
+    /** Snapshot of prayer at the last sipTarget compute — used to detect a
+     *  prayer jump (i.e., a pot landed) and regenerate the target. */
+    private volatile int prayerAtLastTarget   = -1;
+    /** Random jitter width below the no-overrestore ceiling. */
+    private static final int PRAYER_SIP_JITTER_WINDOW = 15;
     // Attack click cooldown — same pattern as sip cooldowns. Blocks re-firing the
     // Vorkath attack while the mirrored getInteracting() is still stale from the last click.
     private volatile int lastAttackClickTick  = -100;
@@ -450,6 +471,9 @@ public class VorkathAutoMain implements Runnable {
     // one-kill runway. NOT checked mid-fight — a low-HP Vorkath finishes
     // before draining much prayer, so the mid-fight threshold is unreliable.
     public int MIN_PRAYER_POINTS_START  = 30;
+    /** Prayer floor to START a fresh fight — below this, canAffordTopOffAndFight()
+     *  returns false so we skip the poke and go straight to endgame loot + TP. */
+    public int MIN_PRAYER_POINTS_POKE   = 80;
     public int MIN_SHARKS               = 2;
     public int MIN_KARAMBWAN            = 0;
     public int BUFF_EXPIRING_SOON_TICKS  = 10;  // sip when < 60s remaining   // prayer at/below → P3 sip (lower priority)
@@ -533,7 +557,7 @@ public class VorkathAutoMain implements Runnable {
     public MainWeapon getMainWeapon() {
         for (Item it : currentEquipment) {
             if (it == null) continue;
-            if (it.getId() == ItemID.DRAGON_HUNTER_LANCE) return MainWeapon.LANCE;
+            if (it.getId() == ItemID.DRAGONHUNTER_LANCE) return MainWeapon.LANCE;
         }
         return MainWeapon.FANG;
     }
@@ -673,7 +697,7 @@ public class VorkathAutoMain implements Runnable {
                             }
                             if (currentGroundItems.isEmpty() && pendingLootSteps.isEmpty()) {
                                 overlay.setCurrentStep("actually TP out");
-                                clickOnTp();
+                                clickOnTp("branchB.tripEnd");
                             }
                         }
                     }
@@ -695,10 +719,38 @@ public class VorkathAutoMain implements Runnable {
                     clicker.delay(600);
                 }
                 // D) Vorkath alive but we can no longer safely fight (HP low OR no
-                //    antifire coverage) — bail out.
+                //    antifire/antivenom coverage) — bail out. Guarded by a
+                //    RECENT_SIP_WINDOW so a required sip that JUST got server-
+                //    rejected by the global 3-tick potion cooldown has a chance
+                //    to retry before we abandon the kill.
                 else if (vorkathAlive && !fullSupplies && !canContinue) {
-                    overlay.setCurrentStep("unsafe to continue — TP out");
-                    clickOnTp();
+                    final int RECENT_SIP_WINDOW = 4;
+                    int tickNow = client.getTickCount();
+                    int lastRequiredSipTick = Math.max(
+                        Math.max(lastAntifireSipTick, lastAntivenomSipTick),
+                        lastPrayerSipTick);
+                    int sinceLastSip = tickNow - lastRequiredSipTick;
+                    int antifireBuff = Math.max(superAntifireTicksLeft(), antifireTicksLeft());
+                    int antivenomBuff = antivenomTicksLeft();
+                    int afireDoses = countDoses(EXTENDED_SUPER_ANTIFIRE_IDS)
+                                   + countDoses(EXTENDED_ANTIFIRE_IDS);
+                    int avenDoses = countDoses(EXTENDED_ANTIVENOM_IDS);
+                    System.out.println("[branchD] considering TP — hp=" + getCurrentHP()
+                        + "/" + mirrorMaxHP + " hpThresh=" + HP_THRESHOLD
+                        + " antifireBuff=" + antifireBuff + " antifireDoses=" + afireDoses
+                        + " antivenomBuff=" + antivenomBuff + " antivenomDoses=" + avenDoses
+                        + " fullSupplies=" + fullSupplies + " canContinue=" + canContinue
+                        + " sinceLastRequiredSip=" + sinceLastSip);
+                    if (sinceLastSip < RECENT_SIP_WINDOW) {
+                        overlay.setCurrentStep("branchD hold: recent sip may still land");
+                        System.out.println("[branchD] HOLD — recent sip attempt within " + RECENT_SIP_WINDOW
+                            + " ticks (last=" + lastRequiredSipTick + " now=" + tickNow
+                            + "). Skipping TP this tick to let the sip resolve.");
+                        clicker.delay(600);
+                    } else {
+                        overlay.setCurrentStep("unsafe to continue — TP out");
+                        clickOnTp("branchD.midFightUnsafe");
+                    }
                 }
             } else if (!isMoving()) {
                 if (boardedBoat && !isInsideInstance()) {
@@ -742,7 +794,7 @@ public class VorkathAutoMain implements Runnable {
 //                                overlay.setCurrentStep("break not needed" + "(" + breakCounter + ")");
 //                            }
 
-                            if (hasItem(currentInventory, ItemID.SUPERIOR_DRAGON_BONES)) {
+                            if (hasItem(currentInventory, ItemID.DRAGON_BONES_SUPERIOR)) {
                                 System.out.println("click deposit");
                                 depositAll();
                             }
@@ -767,7 +819,7 @@ public class VorkathAutoMain implements Runnable {
                         } else if (!isBankOpen()) {
                             overlay.setCurrentStep("bank not open");
 
-//                            if (!isReadyForVorkath() && isIdle && !hasItem(currentInventory, ItemID.SUPERIOR_DRAGON_BONES)) {
+//                            if (!isReadyForVorkath() && isIdle && !hasItem(currentInventory, ItemID.DRAGON_BONES_SUPERIOR)) {
                             if (!isReadyForVorkath() && isIdle) {
                                 overlay.setCurrentStep("click bank");
                                 clickOnBankBooth();
@@ -830,6 +882,7 @@ public class VorkathAutoMain implements Runnable {
                     overlay.setCurrentStep("at Ungael");
                     isTalkingToBanker = false;
                     needRechargeStamina = true;
+                    stamRechargedThisPOHVisit = false;   // fresh visit next time we enter POH
 
                     if (VorkathAutoObjectIDs.vorkathIceChunksOutside != null) {
                         overlay.setCurrentStep("not inside Vorkath zone");
@@ -860,9 +913,9 @@ public class VorkathAutoMain implements Runnable {
                         overlay.setCurrentStep("in POH — waiting for scene load");
                     } else if (isAtWorldPoint(VorkathAutoWorldPoints.INFRONT_OF_POOL)) {
                         setZoomPitchYaw(484, 4160, 0);
-                        tryAction(this::clickOnPortalNexus);
-                    } else if (needRechargeStamina) {
-                        tryAction(this::clickOnRestorationPool);
+                        clickOnPortalNexus();
+                    } else if (needRechargeStamina && !stamRechargedThisPOHVisit) {
+                        clickOnRestorationPool();
                     }
                 }
             }
@@ -910,8 +963,8 @@ public class VorkathAutoMain implements Runnable {
         return (hasAnyDose(source, SUPER_COMBAT_WITHDRAW_PREF) || hasAnyDose(source, DIVINE_SUPER_COMBAT_WITHDRAW_PREF))
             && hasAnyDose(source, EXTENDED_ANTIFIRE_WITHDRAW_PREF)
             && hasAnyDose(source, EXTENDED_ANTIVENOM_WITHDRAW_PREF)
-            && getItemCount(source, ItemID.PRAYER_POTION4)   >= 3
-            && getItemCount(source, ItemID.COOKED_KARAMBWAN) >= 5
+            && getItemCount(source, ItemID._4DOSEPRAYERRESTORE)   >= 3
+            && getItemCount(source, ItemID.TBWT_COOKED_KARAMBWAN) >= 5
             && getItemCount(source, ItemID.SHARK)            >= 16;
     }
 
@@ -923,7 +976,7 @@ public class VorkathAutoMain implements Runnable {
         // Inventory needs the same supply set as the bank, plus a rune pouch
         // (contents not verified — the pouch is opaque; user maintains counts).
         return hasVorkathSupplies(currentInventory)
-            && hasItem(currentInventory, ItemID.RUNE_POUCH);
+            && hasItem(currentInventory, ItemID.BH_RUNE_POUCH);
     }
 
     private void setZoomPitchYaw(int zoom, int pitch, int yaw) {
@@ -1020,8 +1073,10 @@ public class VorkathAutoMain implements Runnable {
         if (anim == 2796 || anim == 3265 || anim == 3266 || anim == 4069 || anim == 4071 || anim == 7305 || anim == 4412 || anim == 4413 || anim == 791) {
             if (anim == 4069 || anim == 4071)
                 isTeleportingPOH = true;
-            else if (anim == 7305)
+            else if (anim == 7305) {
                 needRechargeStamina = false;
+                stamRechargedThisPOHVisit = true;
+            }
             return true;
         }
 
@@ -1150,7 +1205,7 @@ public class VorkathAutoMain implements Runnable {
     }
 
     // USED LATER FOR DROPPING STUFF
-//    getSlotOfItem(currentInventory, ItemID.BLOOD_RUNE)
+//    getSlotOfItem(currentInventory, ItemID.BLOODRUNE)
 //                .forEach(i -> {
 //        clicker.clickPoint(inventoryCoords.get(i));
 //        clicker.randomDelayStDev(250,350,25);
@@ -1492,11 +1547,15 @@ public class VorkathAutoMain implements Runnable {
                 Player p = client.getLocalPlayer();
                 if (p != null) {
                     WorldPoint pos = toTemplate(p.getWorldLocation());
-                    if (pos != null && pos.getY() != 4061) {
-                        // Walk straight north on the player's current column. Works whether
-                        // Vorkath is alive (we'll auto-attack from 4061) or dead (we're back
-                        // in position for the next kill without walking from the south row).
-                        clickTileWithRetry(new WorldPoint(pos.getX(), 4061, 0));
+                    if (pos != null
+                            && (pos.getX() != LOOT_STACK_TILE.getX()
+                                || pos.getY() != LOOT_STACK_TILE.getY())) {
+                        // Recenter to LOOT_STACK_TILE (2272, 4061) — the loot pile
+                        // is anchored there and the fight standing tile is the same
+                        // spot. Works whether Vorkath is alive (auto-attack re-
+                        // establishes from 4061) or dead (we're back in position
+                        // for the next kill).
+                        clickTileWithRetry(LOOT_STACK_TILE);
                     }
                 }
             }
@@ -1735,7 +1794,7 @@ public class VorkathAutoMain implements Runnable {
         return antifireDoses                                           >= MIN_SUPER_ANTIFIRE_DOSES
             && countDoses(EXTENDED_ANTIVENOM_IDS)                      >= MIN_ANTIVENOM_DOSES
             && getItemCount(currentInventory, ItemID.SHARK)            >= MIN_SHARKS
-            && getItemCount(currentInventory, ItemID.COOKED_KARAMBWAN) >= MIN_KARAMBWAN;
+            && getItemCount(currentInventory, ItemID.TBWT_COOKED_KARAMBWAN) >= MIN_KARAMBWAN;
     }
 
     /**
@@ -1784,7 +1843,7 @@ public class VorkathAutoMain implements Runnable {
 
     public void comboEatSharkAndKarambwan() {
         eatFood(ItemID.SHARK, "Eat");
-        eatFood(ItemID.COOKED_KARAMBWAN, "Eat");
+        eatFood(ItemID.TBWT_COOKED_KARAMBWAN, "Eat");
     }
 
     public void comboEatSharkAndSip(String key) {
@@ -1824,20 +1883,20 @@ public class VorkathAutoMain implements Runnable {
             case "antivenom":
                 eatFood(ItemID.SHARK, "Eat");
                 sipLowestDose(EXTENDED_ANTIVENOM_IDS, "Drink");
-                eatFood(ItemID.COOKED_KARAMBWAN, "Eat");
+                eatFood(ItemID.TBWT_COOKED_KARAMBWAN, "Eat");
                 lastAntivenomSipTick = tick;
                 break;
             case "superantifire":
             case "antifire":
                 eatFood(ItemID.SHARK, "Eat");
                 sipLowestDose(activeAntifireIds(), "Drink");
-                eatFood(ItemID.COOKED_KARAMBWAN, "Eat");
+                eatFood(ItemID.TBWT_COOKED_KARAMBWAN, "Eat");
                 lastAntifireSipTick = tick;
                 break;
             case "prayer":
                 eatFood(ItemID.SHARK, "Eat");
                 sipLowestDose(PRAYER_POTION_IDS, "Drink");
-                eatFood(ItemID.COOKED_KARAMBWAN, "Eat");
+                eatFood(ItemID.TBWT_COOKED_KARAMBWAN, "Eat");
                 lastPrayerSipTick = tick;
                 break;
         }
@@ -1868,59 +1927,85 @@ public class VorkathAutoMain implements Runnable {
         int tick   = client.getTickCount();
         boolean foodCd = onFoodCooldown();
 
-        // ---- Foods: pick REQUIRED first (unconditional), then OPPORTUNISTIC
-        //      subject to overheal + cooldown/inventory reality.
+        // ---- Foods: unified required-or-opportunistic gating. Both paths must
+        //      respect the overheal cap — a required shark at full HP would
+        //      still waste a fish. Ordering: SHARK first (its heal contributes
+        //      to KARA's overheal math), KARA second, KARA only if SHARK fired.
+        //
+        //      Valid combos are: shark + kara + potion, shark + potion, shark
+        //      alone, potion alone. Standalone kara or kara + potion is
+        //      unoptimal (kara is the food-cd bypass; belongs beside a shark).
         boolean fireShark = false, fireKara = false;
         int healSum = 0;
 
-        if (required.contains(ConsumeKind.SHARK)
+        boolean sharkAsked = required.contains(ConsumeKind.SHARK)
+                          || opportunistic.contains(ConsumeKind.SHARK);
+        if (sharkAsked
                 && getItemCount(currentInventory, ItemID.SHARK) > 0
-                && !foodCd) {
-            fireShark = true; healSum += SHARK_HEAL_HP;
-        }
-        // KARA in `required` fires even on food cooldown — karambwan bypasses
-        // the eat cooldown per OSRS mechanics.
-        if (required.contains(ConsumeKind.KARA)
-                && getItemCount(currentInventory, ItemID.COOKED_KARAMBWAN) > 0) {
-            fireKara = true; healSum += KARAMBWAN_HEAL_HP;
-        }
-
-        if (!fireShark && opportunistic.contains(ConsumeKind.SHARK)
                 && !foodCd
-                && getItemCount(currentInventory, ItemID.SHARK) > 0
                 && hp + healSum + SHARK_HEAL_HP <= maxHp) {
             fireShark = true; healSum += SHARK_HEAL_HP;
         }
-        if (!fireKara && opportunistic.contains(ConsumeKind.KARA)
-                && getItemCount(currentInventory, ItemID.COOKED_KARAMBWAN) > 0
+
+        // KARA requires SHARK (see combo rule above) — WITH ONE EXCEPTION:
+        // when there are no sharks left in inventory, kara is allowed to fire
+        // standalone. Rationale: kara is a food so it needs to be able to carry
+        // the heal when we're out of sharks; the "kara + potion unoptimal"
+        // concern doesn't apply if there's no shark to pair with anyway.
+        // Overheal cap still enforced.
+        boolean karaAsked = required.contains(ConsumeKind.KARA)
+                         || opportunistic.contains(ConsumeKind.KARA);
+        boolean sharksOut = getItemCount(currentInventory, ItemID.SHARK) == 0;
+        if (karaAsked
+                && (fireShark || sharksOut)
+                && getItemCount(currentInventory, ItemID.TBWT_COOKED_KARAMBWAN) > 0
                 && hp + healSum + KARAMBWAN_HEAL_HP <= maxHp) {
-            fireKara = true;
+            fireKara = true; healSum += KARAMBWAN_HEAL_HP;
         }
 
         // ---- Sips: required = fire if in inv; opportunistic = fire if in inv
         //      AND the "low" predicate says the sip is useful (timer at 0 or
         //      <= ~5 sec of runway left).
-        boolean firePrayer    = required.contains(ConsumeKind.PRAYER)
-                              && countDoses(PRAYER_POTION_IDS) > 0;
-        boolean fireAntifire  = required.contains(ConsumeKind.ANTIFIRE)
-                              && countDoses(activeAntifireIds()) > 0;
-        boolean fireAntivenom = required.contains(ConsumeKind.ANTIVENOM)
-                              && countDoses(EXTENDED_ANTIVENOM_IDS) > 0;
-        boolean fireSuperCombat = required.contains(ConsumeKind.SUPER_COMBAT)
-                                && (countDoses(DIVINE_SUPER_COMBAT_IDS) > 0
-                                    || countDoses(SUPER_COMBAT_IDS) > 0);
+        //      Track required-vs-opportunistic separately: only REQUIRED drinks
+        //      may combo with a food this tick (per the shark+kara+potion rule).
+        boolean prayerReq    = required.contains(ConsumeKind.PRAYER)
+                             && countDoses(PRAYER_POTION_IDS) > 0;
+        boolean antifireReq  = required.contains(ConsumeKind.ANTIFIRE)
+                             && countDoses(activeAntifireIds()) > 0;
+        boolean antivenomReq = required.contains(ConsumeKind.ANTIVENOM)
+                             && countDoses(EXTENDED_ANTIVENOM_IDS) > 0;
+        boolean superCombatReq = required.contains(ConsumeKind.SUPER_COMBAT)
+                              && (countDoses(DIVINE_SUPER_COMBAT_IDS) > 0
+                                  || countDoses(SUPER_COMBAT_IDS) > 0);
 
-        if (!firePrayer && opportunistic.contains(ConsumeKind.PRAYER)
-                && countDoses(PRAYER_POTION_IDS) > 0
-                && isPrayerSipOpportunistic()) firePrayer = true;
-        if (!fireAntifire && opportunistic.contains(ConsumeKind.ANTIFIRE)
-                && countDoses(activeAntifireIds()) > 0
-                && isAntifireSipOpportunistic()) fireAntifire = true;
-        if (!fireAntivenom && opportunistic.contains(ConsumeKind.ANTIVENOM)
-                && countDoses(EXTENDED_ANTIVENOM_IDS) > 0
-                && isAntivenomSipOpportunistic()) fireAntivenom = true;
-        if (!fireSuperCombat && opportunistic.contains(ConsumeKind.SUPER_COMBAT)
-                && needsSuperCombatRebuff()) fireSuperCombat = true;
+        boolean prayerOpp    = !prayerReq && opportunistic.contains(ConsumeKind.PRAYER)
+                             && countDoses(PRAYER_POTION_IDS) > 0
+                             && isPrayerSipOpportunistic();
+        boolean antifireOpp  = !antifireReq && opportunistic.contains(ConsumeKind.ANTIFIRE)
+                             && countDoses(activeAntifireIds()) > 0
+                             && isAntifireSipOpportunistic();
+        boolean antivenomOpp = !antivenomReq && opportunistic.contains(ConsumeKind.ANTIVENOM)
+                             && countDoses(EXTENDED_ANTIVENOM_IDS) > 0
+                             && isAntivenomSipOpportunistic();
+        boolean superCombatOpp = !superCombatReq && opportunistic.contains(ConsumeKind.SUPER_COMBAT)
+                              && needsSuperCombatRebuff();
+
+        // COMBO RULE: if a food fires this tick, the potion in the combo must
+        // generally be an actually-required one — opportunistic-only drinks are
+        // suppressed on food ticks so we don't burn pots in a shark+kara combo
+        // when nothing is actually due.
+        //
+        // CARVE-OUT: PRAYER opportunistic may still fire in a food combo. Its
+        // opp gate (isPrayerSipOpportunistic) already requires genuine room —
+        // (pray + restore <= maxPray) — so a free combo-tick prayer sip never
+        // overrestores. The randomizer still determines when prayer BECOMES
+        // required (prayerLow); this carve-out just means we won't pass up a
+        // zero-overheal prayer sip that would have fit alongside a shark+kara.
+        boolean foodFiring = fireShark || fireKara;
+        boolean firePrayer      = prayerReq      || prayerOpp;   // prayer always allowed in combos (overrestore-safe)
+        boolean fireAntifire    = antifireReq    || (!foodFiring && antifireOpp);
+        boolean fireAntivenom   = antivenomReq   || (!foodFiring && antivenomOpp);
+        boolean fireSuperCombat = superCombatReq || (!foodFiring && superCombatOpp);
 
         if (!fireShark && !fireKara && !firePrayer && !fireAntifire && !fireAntivenom && !fireSuperCombat) {
             return;   // nothing to do this tick
@@ -1937,11 +2022,13 @@ public class VorkathAutoMain implements Runnable {
         // Shark + 1 drink + kara in the same tick is still safe — Eat and Drink
         // use separate server-side action slots, and kara bypasses the eat cd.
         // Priority: PRAYER > ANTIFIRE > ANTIVENOM > SUPER_COMBAT.
+        // Antifire above antivenom keeps the critical anti-dragonbreath in
+        // hand pre-poke; the loser (usually antivenom) is queued via Path 3
+        // and fires from Branch A during the 8058 wake-up window (which
+        // triggers on composition swap now that onNpcChanged mirrors it).
         int drinkCount = (firePrayer ? 1 : 0) + (fireAntifire ? 1 : 0)
                        + (fireAntivenom ? 1 : 0) + (fireSuperCombat ? 1 : 0);
         if (drinkCount > 1) {
-            // Log the drops so we can see when priority-chain silently
-            // suppresses antivenom / super_combat in favor of antifire.
             String won;
             if (firePrayer)              won = "prayer";
             else if (fireAntifire)       won = "antifire";
@@ -1968,7 +2055,7 @@ public class VorkathAutoMain implements Runnable {
         if (fireAntifire)   { sipLowestDose(activeAntifireIds(), "Drink");  lastAntifireSipTick  = tick; }
         if (fireAntivenom)  { sipLowestDose(EXTENDED_ANTIVENOM_IDS, "Drink"); lastAntivenomSipTick = tick; }
         if (fireSuperCombat) sipSuperCombat();
-        if (fireKara)        eatFood(ItemID.COOKED_KARAMBWAN, "Eat");
+        if (fireKara)        eatFood(ItemID.TBWT_COOKED_KARAMBWAN, "Eat");
     }
 
     /** True when the prayer level has room for a full pot restore (no overrestore).
@@ -2212,7 +2299,29 @@ public class VorkathAutoMain implements Runnable {
         int pray = getCurrentPrayer();
 
         boolean hpLow     = hp   <= HP_THRESHOLD;
-        boolean prayerLow = pray <= NORMAL_PRAYER_THRESHOLD;
+        // Dynamic prayer sip target — recomputes after each landed pot. The
+        // target is randomly chosen in [ceiling - PRAYER_SIP_JITTER_WINDOW,
+        // ceiling] where ceiling = maxPrayer - prayerRestorePerDose, so:
+        //   * we never sip so early that the pot overrestores past max, and
+        //   * the exact sip tick jitters within a ~15-point window per cycle
+        //     to look less like a hard-coded threshold.
+        // Regeneration: whenever prayer jumps UP by more than 5 (a pot landed)
+        // or the target is unset. Static NORMAL_PRAYER_THRESHOLD is retained
+        // only as a floor for the jitter window when maxPrayer is very small.
+        int _maxPrayer = mirrorMaxPrayer;
+        int _prayerRestore = 7 + (_maxPrayer / 4);
+        int _ceiling = Math.max(1, _maxPrayer - _prayerRestore);
+        if (prayerSipTarget < 0
+                || (prayerAtLastTarget >= 0 && pray - prayerAtLastTarget > 5)) {
+            int _floor = Math.max(1, _ceiling - PRAYER_SIP_JITTER_WINDOW);
+            prayerSipTarget = _floor + java.util.concurrent.ThreadLocalRandom.current()
+                                        .nextInt(0, (_ceiling - _floor) + 1);
+            System.out.println("[prayerSipTarget] regen — maxPrayer=" + _maxPrayer
+                + " restore=" + _prayerRestore + " ceiling=" + _ceiling
+                + " window=[" + _floor + "," + _ceiling + "] chosen=" + prayerSipTarget);
+        }
+        prayerAtLastTarget = pray;
+        boolean prayerLow = pray <= prayerSipTarget;
 
         // --- P1: CRITICAL HP → shark + karambwan combo (top survival priority) ---
         // ~38 HP restored — from 39 HP puts us at ~77, above HP_THRESHOLD.
@@ -2610,8 +2719,8 @@ public class VorkathAutoMain implements Runnable {
         int av = pickAvailableDose(EXTENDED_ANTIVENOM_WITHDRAW_PREF);
         if (av >= 0) plan.put(av, new BankWithdrawItem(1, 2, "Withdraw-1", ""));
 
-        plan.put(ItemID.PRAYER_POTION4,    new BankWithdrawItem(3, 2, "Withdraw-1",  ""));
-        plan.put(ItemID.COOKED_KARAMBWAN,  new BankWithdrawItem(1, 3, "Withdraw-5",  ""));
+        plan.put(ItemID._4DOSEPRAYERRESTORE,    new BankWithdrawItem(3, 2, "Withdraw-1",  ""));
+        plan.put(ItemID.TBWT_COOKED_KARAMBWAN,  new BankWithdrawItem(1, 3, "Withdraw-5",  ""));
         plan.put(ItemID.SHARK,             new BankWithdrawItem(1, 5, "Withdraw-All",""));
 
         return plan;
@@ -2866,13 +2975,22 @@ public class VorkathAutoMain implements Runnable {
         int maxHp   = mirrorMaxHP;
         int sharksToTop = Math.max(0, (maxHp - curHp) / SHARK_HEAL_HP);
 
-        // Prayer no longer factors into affordability. patch62/63 removed
-        // prayer as a hard gate from canContinueFight and prayer conservation
-        // from reconcilePrayers, so it would be inconsistent to still require
-        // MIN_PRAYER_DOSES in inventory here. Left the variable declarations
-        // as zero so the FAIL diagnostic line below can still print without
-        // being rewritten.
-        int prayerSipsToTop = 0;
+        // Projected prayer after topping up: current + (doses * restore-per-dose,
+        // capped at max). If that projected value >= MIN_PRAYER_POINTS_POKE, we
+        // can afford — we still have to actually sip on subsequent ticks, but the
+        // feasibility gate must not fail us out while an unused prayer dose sits
+        // in inventory. Restore-per-dose matches preFightTopOff / opportunisticTopOff
+        // (7 + maxPray/4). Cap at maxPray so a huge dose count doesn't overshoot.
+        int curPrayer            = mirrorCurrentPrayer;
+        int maxPrayer            = mirrorMaxPrayer;
+        int prayerRestorePerDose = 7 + (maxPrayer / 4);
+        int availablePrayerDoses = countDoses(PRAYER_POTION_IDS);
+        int projectedPrayer      = Math.min(maxPrayer,
+                                       curPrayer + availablePrayerDoses * prayerRestorePerDose);
+        // prayerSipsToTop kept only for the FAIL diagnostic; not used by the gate.
+        int prayerSipsToTop      = Math.max(0,
+                                       (int) Math.ceil((MIN_PRAYER_POINTS_POKE - curPrayer)
+                                                       / (double) prayerRestorePerDose));
 
         // In practice the bank phase withdraws exactly one antifire type for the
         // active weapon, so it's safe (and simpler) to treat super and regular as
@@ -2904,7 +3022,15 @@ public class VorkathAutoMain implements Runnable {
         int minAntivenomDoses   = affordAntivenomBuffTicks >= MIN_BUFF_TIME_TICKS ? 0 : MIN_ANTIVENOM_DOSES;
 
         boolean sharkOK    = currentSharks         - sharksToTop         >= MIN_SHARKS;
-        boolean prayerOK   = true;   // prayer no longer gates affordability — see patch62/63
+        // Prayer floor to START a fresh fight. Uses the projection (current + available
+        // doses * restore) rather than raw current — otherwise we TP with unused prayer
+        // doses still in inventory. Also capped at maxPrayer so lower-prayer-level
+        // accounts can still afford whenever their max <= MIN_PRAYER_POINTS_POKE
+        // (else the gate is unsatisfiable). This gate applies ONLY to starting a new
+        // fight (canAffordTopOffAndFight is the poke gate); canContinueFight (mid-fight
+        // survivability) is unchanged and still has no prayer floor.
+        int effectivePrayerFloor = Math.min(MIN_PRAYER_POINTS_POKE, maxPrayer);
+        boolean prayerOK   = projectedPrayer >= effectivePrayerFloor;
         boolean antifireOK = currentAntifireDoses  - antifireSipsToTop   >= minAntifireDoses;
         boolean venomOK    = currentAntivenomDoses - antivenomSipsToTop  >= minAntivenomDoses;
 
@@ -2914,7 +3040,8 @@ public class VorkathAutoMain implements Runnable {
         if (!sharkOK || !prayerOK || !antifireOK || !venomOK) {
             System.out.println("[canAfford] FAIL — "
                 + "sharks=" + currentSharks + "-" + sharksToTop + ">=" + MIN_SHARKS + "?" + sharkOK
-                + " prayer=" + currentPrayerDoses + "-" + prayerSipsToTop + ">=" + MIN_PRAYER_DOSES + "?" + prayerOK
+                + " prayerPts=" + curPrayer + "+" + availablePrayerDoses + "doses(+" + prayerRestorePerDose
+                + "ea)=" + projectedPrayer + ">=" + effectivePrayerFloor + "?" + prayerOK
                 + " antifire=" + currentAntifireDoses + "-" + antifireSipsToTop + ">=" + minAntifireDoses + "?" + antifireOK
                 + " (superBuffLeft=" + superAntifireTicksLeft() + " regularBuffLeft=" + antifireTicksLeft() + " min=" + MIN_BUFF_TIME_TICKS + ")"
                 + " venom=" + currentAntivenomDoses + "-" + antivenomSipsToTop + ">=" + minAntivenomDoses + "?" + venomOK
@@ -3087,7 +3214,7 @@ public class VorkathAutoMain implements Runnable {
             }
             if (currentGroundItems.isEmpty() && pendingLootSteps.isEmpty()) {
                 overlay.setCurrentStep("site B: actually TP out");
-                clickOnTp();
+                clickOnTp("preFightTopOff.path2.siteB");
             } else {
                 overlay.setCurrentStep("site B: draining loot before TP");
             }
@@ -3209,7 +3336,7 @@ public class VorkathAutoMain implements Runnable {
         int maxHp = client.getRealSkillLevel(Skill.HITPOINTS);
         boolean canTriple = hp + SHARK_HEAL_HP + KARAMBWAN_HEAL_HP <= maxHp
                          && getItemCount(currentInventory, ItemID.SHARK) > 0
-                         && getItemCount(currentInventory, ItemID.COOKED_KARAMBWAN) > 0
+                         && getItemCount(currentInventory, ItemID.TBWT_COOKED_KARAMBWAN) > 0
                          && !onFoodCooldown();
         // TODO: consider whether to also fire the triple when the sip itself
         //       is not strictly needed (e.g., top-off tick with karambwan
@@ -3424,30 +3551,101 @@ public class VorkathAutoMain implements Runnable {
     }
 
     /**
+     * Mid-fight recenter to LOOT_STACK_TILE. Fires when Vorkath is alive, no
+     * dangerous phase (acid, 395, spawn, bomb) is active, we're displaced from
+     * (2272, 4061), and enough ticks have passed since the last recenter click
+     * that we're not spamming through the attack lock. Called from the plugin's
+     * onGameTick.
+     *
+     * A walk click briefly breaks the auto-attack lock — the server re-acquires
+     * Vorkath once we land, at the cost of one attack cycle. The throttle keeps
+     * that cost bounded: at most one recenter attempt per RECENTER_COOLDOWN_TICKS.
+     */
+    private int lastRecenterTick = -100;
+    private static final int RECENTER_COOLDOWN_TICKS = 4;
+    public void tickRecenterMidFight() {
+        if (!isRunning || !doVorkath) return;
+        if (!isInVorkathRegion()) return;
+        if (!vorkathAlive) return;
+        // Dangerous / owned-movement phases — never override.
+        if (vorkathAcidAnim) return;
+        if (mirror395InFlight) return;
+        if (zombifiedSpawnAlive) return;
+        if (inSpawnPhase) return;
+        if (has1481LastTick || dodged1481ThisWave) return;
+
+        Player p = client.getLocalPlayer();
+        if (p == null) return;
+        WorldPoint pos = toTemplate(p.getWorldLocation());
+        if (pos == null) return;
+        if (pos.getX() == LOOT_STACK_TILE.getX()
+                && pos.getY() == LOOT_STACK_TILE.getY()) return;
+
+        int tick = client.getTickCount();
+        if (tick - lastRecenterTick < RECENTER_COOLDOWN_TICKS) return;
+
+        // Skip if we already have a walk in progress toward LOOT_STACK_TILE —
+        // avoids re-clicking mid-transit and cancelling the current walk.
+        // LOOT_STACK_TILE is a template coord; the dest is instance-world, so
+        // compare via toTemplate.
+        try {
+            net.runelite.api.coords.LocalPoint destLp = client.getLocalDestinationLocation();
+            if (destLp != null) {
+                WorldPoint dt = WorldPoint.fromLocalInstance(client, destLp);
+                WorldPoint dtTpl = (dt != null) ? toTemplate(dt) : null;
+                if (dtTpl != null
+                        && dtTpl.getX() == LOOT_STACK_TILE.getX()
+                        && dtTpl.getY() == LOOT_STACK_TILE.getY()) {
+                    return;
+                }
+            }
+        } catch (Throwable ignore) { /* client-thread state raced — fall through and click */ }
+
+        lastRecenterTick = tick;
+        System.out.println("[recenterMidFight] displaced from LOOT_STACK — pos=" + pos
+                + " tick=" + tick);
+        clickTileWithRetry(LOOT_STACK_TILE);
+    }
+
+    /**
      * Break the Vorkath auto-attack lock during the 395 (spider-spec) window.
      * Clicks the player's own tile — the walk packet reaches the server, resolves
      * to zero movement, and clears the pending NPC interaction. Non-blocking
      * single dispatch; called across successive ticks by Plugin.onGameTick for
      * redundancy (pendingFloorClicksFor395).
      */
-    /** Break the Vorkath attack lock by walk-clicking the south end of the
-     *  player's current column. Called on the "You have been frozen!" chat
-     *  event — the spawn's binding projectile has landed so the player can't
-     *  actually move, but the walk packet still resolves at the server and
-     *  cancels the pending Vorkath interaction. y=4056 is well south of both
-     *  safe rows (fang 4058 / lance 4059) so if the player somehow isn't
-     *  frozen (edge case), pathing routes them safely south of the attack row
-     *  instead of into the acid pattern — pathing stops at the safe tile on
-     *  its own. */
+    /** Break the Vorkath attack lock on the "You have been frozen!" chat event
+     *  (395 spawn-spec window). Picks a random tile inside the 4x7 standing area
+     *  (x ∈ [2269,2275], y ∈ [4058,4061]) that is NOT the player's current tile.
+     *  Player is bound so no movement occurs; the walk packet just reaches the
+     *  server, cancels the pending Vorkath interaction, and we stay planted.
+     *  Keeping the target inside the 4x7 means that in the edge case where the
+     *  player somehow isn't frozen, pathing lands them on a safe standing tile
+     *  rather than south of the attack row. */
     void clickSouthAcidOnCurrentColumn() {
         Player p = client.getLocalPlayer();
         if (p == null) return;
         WorldPoint player = toTemplate(p.getWorldLocation());
         if (player == null) return;
-        WorldPoint south = new WorldPoint(player.getX(), 4056, 0);
-        System.out.println("[clickSouthAcidOnCurrentColumn] frozen — clicking " + south
+
+        // Enumerate the 4x7 standing-area tiles minus the player's current tile.
+        java.util.List<WorldPoint> candidates = new java.util.ArrayList<>(27);
+        for (int x = 2269; x <= 2275; x++) {
+            for (int y = 4058; y <= 4061; y++) {
+                if (x == player.getX() && y == player.getY()) continue;
+                candidates.add(new WorldPoint(x, y, 0));
+            }
+        }
+        if (candidates.isEmpty()) {
+            // Shouldn't happen (4x7=28 tiles minus 1), but belt-and-suspenders.
+            System.out.println("[clickSouthAcidOnCurrentColumn] no candidate tiles — skipping");
+            return;
+        }
+        WorldPoint target = candidates.get(
+            java.util.concurrent.ThreadLocalRandom.current().nextInt(candidates.size()));
+        System.out.println("[clickSouthAcidOnCurrentColumn] frozen — clicking " + target
             + " (from player " + player + ")");
-        clickTileWithRetry(south);
+        clickTileWithRetry(target);
     }
 
     void clickFloorForSpec() {
@@ -3543,7 +3741,7 @@ public class VorkathAutoMain implements Runnable {
             manualCast = false;
             return;
         }
-        int slot = findFirstSlot(ItemID.SLAYERS_STAFF);
+        int slot = findFirstSlot(ItemID.SLAYER_STAFF);
         if (slot < 0) {
             // No staff in inventory → set the manual-cast flag so
             // clickOnZombifiedSpawn routes to the manual-cast branch when the
@@ -3574,7 +3772,7 @@ public class VorkathAutoMain implements Runnable {
                 9764864,
                 MenuAction.CC_OP,
                 3,
-                ItemID.SLAYERS_STAFF,
+                ItemID.SLAYER_STAFF,
                 "Wield",
                 "<col=ff9040>Slayer's staff</col>"
         ));
@@ -3597,7 +3795,7 @@ public class VorkathAutoMain implements Runnable {
     void equipMainWeapon() {
         if (isMainWeaponEquipped()) return;   // already worn — skip redundant wield
         int weaponId = (getMainWeapon() == MainWeapon.LANCE)
-            ? ItemID.DRAGON_HUNTER_LANCE
+            ? ItemID.DRAGONHUNTER_LANCE
             : ItemID.OSMUMTENS_FANG;
 
         int slot = findFirstSlot(weaponId);
@@ -3610,9 +3808,9 @@ public class VorkathAutoMain implements Runnable {
                 9764864,
                 MenuAction.CC_OP,
                 3,
-                weaponId,   // was ItemID.SLAYERS_STAFF (copy-paste bug) — must match the item being wielded
+                weaponId,   // was ItemID.SLAYER_STAFF (copy-paste bug) — must match the item being wielded
                 "Wield",
-                weaponId == ItemID.DRAGON_HUNTER_LANCE
+                weaponId == ItemID.DRAGONHUNTER_LANCE
                     ? "<col=ff9040>Dragon hunter lance</col>"
                     : "<col=ff9040>Osmumten's fang</col>"
         ));
@@ -3628,7 +3826,7 @@ public class VorkathAutoMain implements Runnable {
     private boolean isSlayerStaffEquipped() {
         for (Item it : currentEquipment) {
             if (it == null) continue;
-            if (it.getId() == ItemID.SLAYERS_STAFF) return true;
+            if (it.getId() == ItemID.SLAYER_STAFF) return true;
         }
         return false;
     }
@@ -3637,7 +3835,7 @@ public class VorkathAutoMain implements Runnable {
      *  weapon swap). When false, the spawn phase attacks with the main weapon
      *  instead — slower kills on the spawn but no dependency on the staff. */
     public boolean hasSlayerStaff() {
-        return findFirstSlot(ItemID.SLAYERS_STAFF) >= 0;
+        return findFirstSlot(ItemID.SLAYER_STAFF) >= 0;
     }
 
     /**
@@ -3648,7 +3846,7 @@ public class VorkathAutoMain implements Runnable {
      */
     private boolean isMainWeaponEquipped() {
         int weaponId = (getMainWeapon() == MainWeapon.LANCE)
-            ? ItemID.DRAGON_HUNTER_LANCE
+            ? ItemID.DRAGONHUNTER_LANCE
             : ItemID.OSMUMTENS_FANG;
         for (Item it : currentEquipment) {
             if (it == null) continue;
@@ -3677,9 +3875,21 @@ public class VorkathAutoMain implements Runnable {
         clicker.randomDelayStDev(500, 650, 25);
     }
 
-    private void clickOnTp() {
-        overlay.setCurrentStep("click TP out");
+    private void clickOnTp() { clickOnTp("unknown"); }
+    private void clickOnTp(String tag) {
         int now = client.getTickCount();
+        System.out.println("[clickOnTp] source=" + tag + " tick=" + now
+            + " vorkathAlive=" + vorkathAlive + " hp=" + getCurrentHP() + "/" + mirrorMaxHP
+            + " prayer=" + mirrorCurrentPrayer + "/" + mirrorMaxPrayer
+            + " antifireBuff=" + Math.max(superAntifireTicksLeft(), antifireTicksLeft())
+            + " antivenomBuff=" + antivenomTicksLeft()
+            + " antifireDoses=" + (countDoses(EXTENDED_SUPER_ANTIFIRE_IDS) + countDoses(EXTENDED_ANTIFIRE_IDS))
+            + " antivenomDoses=" + countDoses(EXTENDED_ANTIVENOM_IDS)
+            + " prayerDoses=" + countDoses(PRAYER_POTION_IDS)
+            + " sharks=" + getItemCount(currentInventory, ItemID.SHARK)
+            + " fullSupplies=" + hasEnoughSupplies() + " canContinue=" + canContinueFight()
+            + " canAfford=" + canAffordTopOffAndFight());
+        overlay.setCurrentStep("click TP out (" + tag + ")");
 
         if (now - lastTpClickTick < TP_DEBOUNCE_TICKS) return;
 
@@ -3750,7 +3960,7 @@ public class VorkathAutoMain implements Runnable {
     /** GE price per slot for a specific inventory item slot. Uses ItemManager live price. */
     public long gpsForInventory(Item item) {
         if (item == null || item.getId() < 0) return 0;
-        int unit  = itemManager.getItemPrice(item.getId());
+        int unit  = (int) itemManager.getItemPrice(item.getId());
         int slots = isStackable(item.getId()) ? 1 : Math.max(item.getQuantity(), 1);
         return slots > 0 ? (long) unit * (long) item.getQuantity() / slots : 0;
     }
@@ -3951,26 +4161,33 @@ public class VorkathAutoMain implements Runnable {
         int simFree = 0;
         for (Item it : currentInventory) if (it == null || it.getId() < 0) simFree++;
 
-        // Pickup value floor. Blue dragonhide is our 'last-resort' loot — the
-        // lowest-value item we'd ever intentionally hold in inventory. So any
-        // other pickup that costs a slot must beat (or match) it per slot,
-        // otherwise we're worse off than just leaving the slot open for the
-        // hides / bones we'll grab on the next wake-up pass. Bones bypass this
-        // floor via the mandatory branch below; stackable free-merge groups
-        // score gps = Long.MAX_VALUE via slotCost=0 and always pass.
+        // Pickup value floor: unnoted blue dragonhide's live GE price. Only
+        // items STRICTLY MORE valuable than a hide are worth burning a slot on
+        // (the <= comparison below also excludes hide at gps==floor). Free-merge
+        // stackables have gps=Long.MAX_VALUE via slotCost=0 and always pass.
+        // Bones bypass this floor via the mandatory branch below.
         long pickupFloorGps = itemManager.getItemPrice(LOOT_BLUE_DRAGONHIDE);
         if (pickupFloorGps < 0) pickupFloorGps = 0;
 
+        // "Pushing for the kill": exactly matches the run-loop's C-branch
+        // overlay text "attack Vorkath (low supplies — pushing kill)", which
+        // fires when vorkathAlive AND !hasEnoughSupplies() (fullSupplies=false)
+        // AND canContinueFight(). Trip-end is coming, so we widen the pickup
+        // set to include unnoted blue dragonhide (previously always skipped
+        // mid-fight) — maximise loot before the imminent TP. Only if space is
+        // free; we still never drop supplies for it.
+        boolean pushingForKill = vorkathAlive && !hasEnoughSupplies();
+
         List<GroundGroup> groups = aggregateGroundItems();
 
-        // Blue dragonhide: last-resort filler, always skipped in mid-fight. The
-        // previous "skip unless AGGRESSIVE" rule caused a low-supplies kill to
-        // grab hides mid-fight → endgame then dropped them to make room for a
-        // higher-value drop from the same kill, an inhumane-looking pick/drop
-        // cycle. Endgame picks up hides on its own (via buildEndgameLootPlan,
-        // sorted gps-desc so hides fall to the end after all higher-value drops
-        // are placed).
-        groups.removeIf(g -> g.itemId == LOOT_BLUE_DRAGONHIDE);
+        // Blue dragonhide filter — normally always skipped in mid-fight (the
+        // "skip unless AGGRESSIVE" rule caused a low-supplies kill to grab hides
+        // mid-fight → endgame then dropped them to make room for a higher-value
+        // drop from the same kill, an inhumane-looking pick/drop cycle). Kept
+        // in the plan when pushingForKill so the final kill can top up on hides.
+        if (!pushingForKill) {
+            groups.removeIf(g -> g.itemId == LOOT_BLUE_DRAGONHIDE);
+        }
 
         // Split bones from rest, rank rest by gps desc.
         GroundGroup bones = null;
@@ -4004,12 +4221,10 @@ public class VorkathAutoMain implements Runnable {
         for (GroundGroup g : rest) {
             long gps = g.gps();
             if (gps <= 0) continue;
-            if (gps < pickupFloorGps) {
-                // Below the blue-dragonhide floor — not worth burning a slot on.
-                // Free-merge stackables have gps=Long.MAX_VALUE so they never
-                // trip this. Blue dragonhide itself passes at gps==floor.
-                continue;
-            }
+            // Push-for-kill: strictly less than floor is the skip condition (hide
+            // at gps==floor passes). Normal: strictly-greater-than-floor is
+            // required (hide excluded, matching the removeIf above).
+            if (pushingForKill ? gps < pickupFloorGps : gps <= pickupFloorGps) continue;
 
             if (g.stackable) {
                 if (g.slotCost() == 0 || simFree > 0) {
@@ -4071,9 +4286,9 @@ public class VorkathAutoMain implements Runnable {
             for (InvSlotView x : droppable) if (!x.released && x.itemId == ItemID.SHARK) remaining++;
             return (remaining - 1) < MIN_SHARKS;
         }
-        if (id == ItemID.COOKED_KARAMBWAN) {
+        if (id == ItemID.TBWT_COOKED_KARAMBWAN) {
             int remaining = 0;
-            for (InvSlotView x : droppable) if (!x.released && x.itemId == ItemID.COOKED_KARAMBWAN) remaining++;
+            for (InvSlotView x : droppable) if (!x.released && x.itemId == ItemID.TBWT_COOKED_KARAMBWAN) remaining++;
             return (remaining - 1) < MIN_KARAMBWAN;
         }
         if (PRAYER_POTION_IDS.contains(id)) {
@@ -4124,7 +4339,7 @@ public class VorkathAutoMain implements Runnable {
             int maxHp = client.getRealSkillLevel(Skill.HITPOINTS);
             return (hp + SHARK_HEAL_HP <= maxHp) ? "shark" : null;
         }
-        if (itemId == ItemID.COOKED_KARAMBWAN) {
+        if (itemId == ItemID.TBWT_COOKED_KARAMBWAN) {
             int hp = getCurrentHP();
             int maxHp = client.getRealSkillLevel(Skill.HITPOINTS);
             return (hp + 18 <= maxHp) ? "karambwan" : null;   // karambwan heals ~18
@@ -4203,22 +4418,28 @@ public class VorkathAutoMain implements Runnable {
      */
     public List<LootStep> buildEndgameLootPlan() {
         List<LootStep> plan = new ArrayList<>();
-        long pickupFloorGps = itemManager.getItemPrice(LOOT_BLUE_DRAGONHIDE);
-        if (pickupFloorGps < 0) pickupFloorGps = 0;
 
         int simFree = 0;
         for (Item it : currentInventory) if (it == null || it.getId() < 0) simFree++;
 
         List<InvSlotView> droppable = buildDroppableList();
 
+        // Pickup value floor: keep items at LEAST as valuable as a hide.
+        // Endgame picks up hides (they equal the floor) so free slots and
+        // droppable low-value slots (sharks/kara/etc.) get filled before TP.
+        long pickupFloorGps = itemManager.getItemPrice(LOOT_BLUE_DRAGONHIDE);
+        if (pickupFloorGps < 0) pickupFloorGps = 0;
+
         // Ground groups ranked desc — highest value first so swaps go toward the
-        // best trades.
+        // best trades. Hides included: releaseSlotForCandidate then drops
+        // tier-1 sharks / tier-2 karas (endgameDropTier) to pick them up.
         List<GroundGroup> groups = aggregateGroundItems();
         groups.sort(Comparator.comparingLong(GroundGroup::gps).reversed());
 
         for (GroundGroup g : groups) {
             long gps = g.gps();
-            if (gps < pickupFloorGps) break;   // sorted desc — no more valuable items
+            if (gps <= 0) continue;
+            if (gps < pickupFloorGps) break;   // sorted desc — remaining all below floor
 
             if (g.stackable) {
                 int cost = g.slotCost();
@@ -4255,7 +4476,7 @@ public class VorkathAutoMain implements Runnable {
      *  loot-for-loot swaps use this to explicitly NEVER drop a supply. */
     private boolean isSupplyItem(int id) {
         if (id == ItemID.SHARK)              return true;
-        if (id == ItemID.COOKED_KARAMBWAN)   return true;
+        if (id == ItemID.TBWT_COOKED_KARAMBWAN)   return true;
         if (EXTENDED_SUPER_ANTIFIRE_IDS.contains(id)) return true;
         if (EXTENDED_ANTIFIRE_IDS.contains(id))       return true;
         if (EXTENDED_ANTIVENOM_IDS.contains(id))      return true;
@@ -4351,7 +4572,7 @@ public class VorkathAutoMain implements Runnable {
      *    Tier 5: prayer pots + anything else non-protected — direct drop, last resort. */
     private int endgameDropTier(int itemId) {
         if (itemId == ItemID.SHARK)              return 1;
-        if (itemId == ItemID.COOKED_KARAMBWAN)   return 2;
+        if (itemId == ItemID.TBWT_COOKED_KARAMBWAN)   return 2;
         if (itemId == LOOT_BLUE_DRAGONHIDE)      return 3;
         if (EXTENDED_SUPER_ANTIFIRE_IDS.contains(itemId)
          || EXTENDED_ANTIFIRE_IDS.contains(itemId)
@@ -4617,7 +4838,7 @@ public class VorkathAutoMain implements Runnable {
         if (!canLootRightNow()) return;   // last-line safety — never fire outside the arena
         switch (key) {
             case "shark":     eatShark(); break;
-            case "karambwan": eatFood(ItemID.COOKED_KARAMBWAN, "Eat"); break;
+            case "karambwan": eatFood(ItemID.TBWT_COOKED_KARAMBWAN, "Eat"); break;
             case "prayer":    sipPrayerPotion(); break;
             case "antifire":  sipActiveAntifire(); break;
             case "antivenom": sipExtendedAntivenom(); break;

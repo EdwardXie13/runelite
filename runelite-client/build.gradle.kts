@@ -104,6 +104,7 @@ dependencies {
 }
 
 val shadowJar = tasks.register<Jar>("shadowJar") {
+    dependsOn(tasks.classes)
     dependsOn(configurations.runtimeClasspath)
     manifest {
         attributes["Main-Class"] = "net.runelite.client.RuneLite"
