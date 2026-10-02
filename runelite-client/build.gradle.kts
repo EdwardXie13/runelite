@@ -112,7 +112,8 @@ val shadowJar = tasks.register<Jar>("shadowJar") {
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-    from(sourceSets.main.get().output)
+    from(fileTree("$buildDir/classes/java/main"))
+    from(fileTree("$buildDir/resources/main"))
     from(configurations.runtimeClasspath.map { it.map { if (it.isDirectory) it else zipTree(it) } })
 
     exclude(
