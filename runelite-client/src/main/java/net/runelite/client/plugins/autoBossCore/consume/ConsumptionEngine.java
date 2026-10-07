@@ -54,13 +54,14 @@ import static net.runelite.client.plugins.autoBossCore.consume.SupplyProfile.Foo
 @Slf4j
 public class ConsumptionEngine
 {
+	// Generic tie-break ordering ONLY -- NOT a gate on what may be consumed. autoBossCore
+	// stays boss-agnostic: a boss consumes whatever DrinkKinds it requests (see pickDrink),
+	// and this list only orders the universal drinks when several are fireable on one tick.
+	// Any requested kind NOT listed here is still consumed (divine variants first).
 	public static final List<DrinkKind> DEFAULT_DRINK_PRIORITY = Collections.unmodifiableList(Arrays.asList(
 		DrinkKind.PRAYER,
 		DrinkKind.ANTIFIRE,
 		DrinkKind.ANTIVENOM,
-		DrinkKind.DIVINE_RANGE,
-		DrinkKind.DIVINE_MAGIC,
-		DrinkKind.SUPER_COMBAT,
 		DrinkKind.STAMINA
 	));
 
@@ -246,38 +247,53 @@ public class ConsumptionEngine
 
 	protected DrinkKind pickDrink(Request req, boolean eating)
 	{
-		// Build the candidate list honoring required > opportunistic.
-		List<DrinkKind> candidates = new ArrayList<>();
-
-		// Required pool first, in priority order.
 		List<DrinkKind> order = hooks.priorityOverride();
 		if (order == null) order = DEFAULT_DRINK_PRIORITY;
 
+		// Required pool wins over opportunistic, and a required drink fires even on a food
+		// tick ("required" means the boss NEEDS it now, e.g. an expiring antifire).
+		DrinkKind required = firstFireable(req.required, order, false, eating);
+		if (required != null) return required;
+
+		// Opportunistic pool next (non-prayer opp drinks suppressed on a food tick).
+		return firstFireable(req.opportunistic, order, true, eating);
+	}
+
+	/**
+	 * First fireable kind from {@code want}. Kinds that appear in {@code order} are tried
+	 * in that order; then ANY remaining requested kind (not in {@code order}) is tried,
+	 * divine variants first. This is what keeps autoBossCore generic: a boss requests
+	 * whatever potions it carries and they are consumed without having to appear in the
+	 * engine's default priority list -- the list only breaks ties among universal drinks.
+	 */
+	private DrinkKind firstFireable(Set<DrinkKind> want, List<DrinkKind> order,
+		boolean opportunistic, boolean eating)
+	{
 		for (DrinkKind k : order)
 		{
-			if (!req.required.contains(k)) continue;
+			if (!want.contains(k)) continue;
+			if (opportunistic && eating && k != DrinkKind.PRAYER) continue;
 			if (!canFire(k)) continue;
-			candidates.add(k);
+			return k;
 		}
-		if (!candidates.isEmpty())
+		// Requested-but-unlisted kinds. Prefer DIVINE_* (a divine potion is carried in place
+		// of its regular counterpart, never alongside it), then enum-declaration order.
+		List<DrinkKind> rest = new ArrayList<>();
+		for (DrinkKind k : want) if (!order.contains(k)) rest.add(k);
+		rest.sort((a, b) ->
 		{
-			// A required drink wins over everything. Firing one even on a food tick is fine --
-			// "required" means the boss NEEDS this now (expiring antifire, etc).
-			return candidates.get(0);
-		}
-
-		// Opportunistic pool next.
-		for (DrinkKind k : order)
+			boolean da = a.name().startsWith("DIVINE");
+			boolean db = b.name().startsWith("DIVINE");
+			if (da != db) return da ? -1 : 1;
+			return Integer.compare(a.ordinal(), b.ordinal());
+		});
+		for (DrinkKind k : rest)
 		{
-			if (!req.opportunistic.contains(k)) continue;
+			if (opportunistic && eating && k != DrinkKind.PRAYER) continue;
 			if (!canFire(k)) continue;
-
-			// Food-tick combo rule: non-prayer opp drinks suppressed when we are also eating.
-			if (eating && k != DrinkKind.PRAYER) continue;
-
-			candidates.add(k);
+			return k;
 		}
-		return candidates.isEmpty() ? null : candidates.get(0);
+		return null;
 	}
 
 	/** Can we fire this drink: profile has it, we have doses, hook allows. */

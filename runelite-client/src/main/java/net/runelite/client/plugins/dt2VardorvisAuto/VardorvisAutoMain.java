@@ -57,6 +57,10 @@ public class VardorvisAutoMain
 
 	// --- Boss state -------------------------------------------------
 	private final ConsumptionEngine engine;
+	// Melee combat-boost (divine super combat preferred, else super combat). Divine runs on
+	// a 5-min timer; regular re-doses below VardorvisAutoIDs.SUPER_COMBAT_REDRINK_MIN_BOOST.
+	private final net.runelite.client.plugins.autoBossCore.consume.CombatBoostTracker superCombatBoost =
+		new net.runelite.client.plugins.autoBossCore.consume.CombatBoostTracker();
 	private final TripState trip = new TripState();
 	private final PhaseTracker<VardPhase> phase;
 
@@ -455,7 +459,12 @@ public class VardorvisAutoMain
 
 			LocalPoint lp = g.getLocation();
 			if (lp == null) continue;
-			WorldPoint tile = WorldPoint.fromLocalInstance(client, lp);
+			// fromLocal (NOT fromLocalInstance) -- hazard tiles must be in INSTANCE
+			// coords to match mirror.getPlayerTile() (which comes from
+			// player.getWorldLocation, instance space). fromLocalInstance returns the
+			// TEMPLATE coord via chunk lookup, which would silently never match the
+			// player's instance tile and leave spike dodging broken.
+			WorldPoint tile = WorldPoint.fromLocal(client, lp);
 			if (tile == null) continue;
 
 			if (isIndicator)
@@ -529,6 +538,24 @@ public class VardorvisAutoMain
 			b.opportunisticSip(SupplyProfile.DrinkKind.STAMINA);
 		}
 
+		// Melee combat-boost top-off (divine super combat preferred, else super combat; only
+		// one is ever carried). Divine is refreshed on a 5-min timer; regular re-doses once
+		// the remaining Strength boost drops below the boss threshold. Out of fight, reset the
+		// timer so the next kill re-evaluates from scratch.
+		if (vardorvis == null)
+		{
+			superCombatBoost.reset();
+		}
+		else
+		{
+			superCombatBoost.requestSips(b, mirror.getTickCounter(),
+				client.getBoostedSkillLevel(net.runelite.api.Skill.STRENGTH),
+				client.getRealSkillLevel(net.runelite.api.Skill.STRENGTH),
+				SupplyProfile.DrinkKind.DIVINE_SUPER_COMBAT,
+				SupplyProfile.DrinkKind.SUPER_COMBAT,
+				VardorvisAutoIDs.SUPER_COMBAT_REDRINK_MIN_BOOST);
+		}
+
 		return b.build();
 	}
 
@@ -543,6 +570,9 @@ public class VardorvisAutoMain
 			if (pot == null) return;
 			int sipId = findLowestDoseItem(pot);
 			if (sipId > 0) router.useInventoryItem(sipId, "Drink");
+			// Restart the divine super-combat 5-min timer when a divine dose went down.
+			if (r.drink == SupplyProfile.DrinkKind.DIVINE_SUPER_COMBAT)
+				superCombatBoost.onDivineSipped(mirror.getTickCounter());
 		}
 	}
 

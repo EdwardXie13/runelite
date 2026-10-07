@@ -27,6 +27,7 @@ public final class VardorvisSupply
 		)
 		.comboFood(SupplyProfile.FoodEntry.karambwan(VardorvisAutoIDs.FOOD_COMBO))
 		.potion(SupplyProfile.DrinkKind.PRAYER,       new SupplyProfile.PotionEntry(VardorvisAutoIDs.PRAYER_POT_DOSES, "Prayer potion"))
+		.potion(SupplyProfile.DrinkKind.DIVINE_SUPER_COMBAT, new SupplyProfile.PotionEntry(VardorvisAutoIDs.DIVINE_SUPER_COMBAT_DOSES, "Divine super combat"))
 		.potion(SupplyProfile.DrinkKind.SUPER_COMBAT, new SupplyProfile.PotionEntry(VardorvisAutoIDs.SUPER_COMBAT_DOSES, "Super combat"))
 		.potion(SupplyProfile.DrinkKind.STAMINA,      new SupplyProfile.PotionEntry(VardorvisAutoIDs.STAMINA_DOSES, "Stamina"))
 		.hpEatThreshold(RANDOM_EAT_THRESHOLD)

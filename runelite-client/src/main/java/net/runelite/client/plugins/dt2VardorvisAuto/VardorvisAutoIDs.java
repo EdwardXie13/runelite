@@ -132,6 +132,21 @@ public final class VardorvisAutoIDs
 		ItemID._4DOSE2COMBAT
 	};
 
+	// Divine super combat (1..4). PREFERRED over regular super combat when present --
+	// the engine's DIVINE_SUPER_COMBAT kind outranks SUPER_COMBAT in the drink priority,
+	// and only one of the two is ever carried. Either (or neither) may be absent.
+	public static final int[] DIVINE_SUPER_COMBAT_DOSES = new int[] {
+		ItemID._1DOSEDIVINECOMBAT,
+		ItemID._2DOSEDIVINECOMBAT,
+		ItemID._3DOSEDIVINECOMBAT,
+		ItemID._4DOSEDIVINECOMBAT
+	};
+
+	// Regular super-combat re-dose threshold: re-drink once the REMAINING Strength boost
+	// (boosted - base) falls BELOW this. Divine super combat ignores this (it's on a
+	// 5-min timer). Tune: 1 = only when fully gone; higher = re-pot sooner.
+	public static final int SUPER_COMBAT_REDRINK_MIN_BOOST = 1;
+
 	public static final int[] STAMINA_DOSES = new int[] {
 		ItemID._1DOSESTAMINA,
 		ItemID._2DOSESTAMINA,

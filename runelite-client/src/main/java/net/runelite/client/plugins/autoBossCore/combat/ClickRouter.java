@@ -133,6 +133,49 @@ public class ClickRouter
 		));
 	}
 
+	/**
+	 * Cast a target-selection spell on an NPC. Reproduces the exact two-packet
+	 * sequence captured from manual play:
+	 * <pre>
+	 *   // arm the spell:
+	 *   action=WIDGET_TARGET id=0 itemId=-1 param0=-1 param1={spellWidgetId}
+	 *     option='Cast' target='&lt;col=00ff00&gt;{spellName}&lt;/col&gt;'
+	 *
+	 *   // fire on the NPC:
+	 *   action=WIDGET_TARGET_ON_NPC id={npc.getIndex()} itemId=-1 param0=0 param1=0
+	 *     option='Cast' target='&lt;col=00ff00&gt;{spellName}&lt;/col&gt;
+	 *                           &lt;col=ffffff&gt; -&gt; &lt;col=ffff00&gt;{npcName}
+	 *                           &lt;col=ff0000&gt;  (level-{lvl})'
+	 * </pre>
+	 * Both actions are dispatched in the same client-thread invoke so the spell-
+	 * cursor state created by step 1 is consumed by step 2 before any other input
+	 * can clear it.
+	 *
+	 * @param npc            the target NPC.
+	 * @param spellWidgetId  the spellbook widget's packed child id (e.g. Shadow Rush = 14286944).
+	 * @param spellName      display name used in the menu target string, e.g. "Shadow Rush".
+	 */
+	public void castSpellOnNpc(NPC npc, int spellWidgetId, String spellName)
+	{
+		if (npc == null) return;
+		clientThread.invoke(() -> {
+			client.menuAction(
+				-1, spellWidgetId,
+				MenuAction.WIDGET_TARGET,
+				0, -1,
+				"Cast",
+				"<col=00ff00>" + spellName + "</col>"
+			);
+			client.menuAction(
+				0, 0,
+				MenuAction.WIDGET_TARGET_ON_NPC,
+				npc.getIndex(), -1,
+				"Cast",
+				"<col=00ff00>" + spellName + "</col><col=ffffff> -> " + buildNpcTarget(npc)
+			);
+		});
+	}
+
 	public void interactNpc(NPC npc, MenuAction action, String option)
 	{
 		if (npc == null) return;
@@ -166,6 +209,27 @@ public class ClickRouter
 				name
 			);
 		});
+	}
+
+	/**
+	 * Fire a game-object {@code menuAction} with explicit instance-relative SCENE
+	 * coords. Generic replay of the exact entry a click on a scene object produces,
+	 * for callers that already know the object id, scene coords, option and target
+	 * (e.g. a value captured from a real click, or scene coords read live off the
+	 * object). {@code itemId} is fixed at -1 as for any non-item object action. When
+	 * you hold the live {@link GameObject}, prefer {@link #interactGameObject}, which
+	 * derives the scene coords and name for you.
+	 */
+	public void gameObjectAction(int sceneX, int sceneY, MenuAction action,
+		int objectId, String option, String target)
+	{
+		clientThread.invoke(() -> client.menuAction(
+			sceneX, sceneY,
+			action,
+			objectId, -1,
+			option == null ? "" : option,
+			target == null ? "" : target
+		));
 	}
 
 	// -----------------------------------------------------------------
