@@ -739,8 +739,51 @@ public class HotkeyableMenuSwapsPlugin extends Plugin implements KeyListener
 		groundItemsStuff.reloadGroundItemPluginLists(groundItemsPriceSortMode != DISABLED, highlightedItemValue != null, hiddenItemValue != null, false);
 	}
 
-	@Subscribe(priority = -1) // This will run after the normal menu entry swapper, so it won't interfere with this plugin.
+	// ---------------------------------------------------------------------------
+	// WORKAROUND: NPC submenu game update (2026-10-07).
+	// Today's game update introduced NPCs whose right-click submenu entries are
+	// typed as NPC_*_OPTION but have a null MenuEntry.getNpc() (the deob client
+	// only populates the npc field on top-level NPC entries). Vanilla
+	// MenuEntrySwapperPlugin's recursive submenu walk asserts non-null on these
+	// entries and freezes the client under -ea. We retype any orphan NPC-op entry
+	// we find to CC_OP so MES's NPC_MENU_TYPES.contains() guard skips it. The
+	// retype is generic: it fires on ANY orphan at ANY submenu depth, so new NPCs
+	// added by future updates are handled without code changes.
+	//
+	// Tradeoff: a retyped entry's click packet is now CC_OP, which the server
+	// does not route to the NPC's handler, so clicking affected submenu options
+	// silently no-ops. Acceptable for the handful of NPCs that have this.
+	//
+	// To revert when upstream fixes it: delete this block (fields + scanner), and
+	// remove the scanForOrphanNpcEntries call plus the priority=1 from the
+	// onPostMenuSort below.
+	// ---------------------------------------------------------------------------
+	private void scanForOrphanNpcEntries(MenuEntry[] entries)
+	{
+		for (MenuEntry entry : entries)
+		{
+			MenuAction t = entry.getType();
+			if ((t == MenuAction.NPC_FIRST_OPTION || t == MenuAction.NPC_SECOND_OPTION
+				|| t == MenuAction.NPC_THIRD_OPTION || t == MenuAction.NPC_FOURTH_OPTION
+				|| t == MenuAction.NPC_FIFTH_OPTION) && entry.getNpc() == null)
+			{
+				entry.setType(MenuAction.CC_OP);
+			}
+			if (entry.getSubMenu() != null)
+			{
+				scanForOrphanNpcEntries(entry.getSubMenu().getMenuEntries());
+			}
+		}
+	}
+
+	@Subscribe(priority = 1) // Runs BEFORE MES so the orphan-entry scanner neutralizes NPC-op submenu entries before MES's assert fires.
 	public void onPostMenuSort(PostMenuSort e)
+	{
+		scanForOrphanNpcEntries(client.getMenuEntries());
+		hmsPostMenuSort();
+	}
+
+	private void hmsPostMenuSort()
 	{
 		sortGroundItems();
 		customSwaps();
