@@ -303,6 +303,37 @@ public class ClickRouter
 		return true;
 	}
 
+	/**
+	 * "Use" one inventory item on another (e.g. pestle and mortar on a mushroom). Reproduces
+	 * the two-packet select-then-target sequence captured from manual play:
+	 * <pre>
+	 *   // arm the source item:
+	 *   action=WIDGET_TARGET         id=0 itemId={source} param0={srcSlot} param1={INVENTORY}
+	 *   // use it on the target item:
+	 *   action=WIDGET_TARGET_ON_WIDGET id=0 itemId={target} param0={tgtSlot} param1={INVENTORY}
+	 * </pre>
+	 * Both actions fire in the same client-thread invoke so the selection from step 1 is
+	 * consumed by step 2 before any other input clears it. Returns false if either item is
+	 * not in the inventory.
+	 */
+	public boolean useItemOnItem(int sourceItemId, int targetItemId)
+	{
+		int srcSlot = findInventorySlot(sourceItemId);
+		int tgtSlot = findInventorySlot(targetItemId);
+		if (srcSlot < 0 || tgtSlot < 0) return false;
+		clientThread.invoke(() -> {
+			ItemComposition sc = client.getItemDefinition(sourceItemId);
+			ItemComposition tc = client.getItemDefinition(targetItemId);
+			String src = ITEM_COLOR_PREFIX + (sc == null ? "" : sc.getName()) + ITEM_COLOR_SUFFIX;
+			String tgt = ITEM_COLOR_PREFIX + (tc == null ? "" : tc.getName()) + ITEM_COLOR_SUFFIX;
+			client.menuAction(srcSlot, INVENTORY_WIDGET, MenuAction.WIDGET_TARGET,
+				0, sourceItemId, "Use", src);
+			client.menuAction(tgtSlot, INVENTORY_WIDGET, MenuAction.WIDGET_TARGET_ON_WIDGET,
+				0, targetItemId, "Use", src + "<col=ffffff> -> " + tgt);
+		});
+		return true;
+	}
+
 	// -----------------------------------------------------------------
 	// Vardorvis QTE / "captcha" widgets.
 	// -----------------------------------------------------------------
