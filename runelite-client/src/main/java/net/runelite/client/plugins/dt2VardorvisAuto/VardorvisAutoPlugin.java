@@ -53,14 +53,6 @@ public class VardorvisAutoPlugin extends Plugin implements KeyListener
 
 	@Subscribe
 	public void onMenuOptionClicked(MenuOptionClicked e) {
-		System.out.println("[VARD MENU] "
-				+ " action=" + e.getMenuAction()
-				+ " id="     + e.getId()
-				+ " itemId=" + e.getItemId()
-				+ " param0=" + e.getParam0()
-				+ " param1=" + e.getParam1()
-				+ " option='" + e.getMenuOption() + "'"
-				+ " target='" + e.getMenuTarget() + "'");
 	}
 
 	@Override
@@ -72,7 +64,6 @@ public class VardorvisAutoPlugin extends Plugin implements KeyListener
 		overlayManager.add(overlay);
 		main.bindOverlay(overlay);
 		applyCaptureConfig();
-		log.info("[vardAuto] startUp");
 	}
 
 	@Override
@@ -84,7 +75,6 @@ public class VardorvisAutoPlugin extends Plugin implements KeyListener
 		keyManager.unregisterKeyListener(this);
 		eventBus.unregister(captureLogger);
 		eventBus.unregister(mirrorState);
-		log.info("[vardAuto] shutDown");
 	}
 
 	// -------------------------------------------------------------

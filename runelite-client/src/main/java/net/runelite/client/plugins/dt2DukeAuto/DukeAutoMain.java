@@ -365,10 +365,8 @@ public class DukeAutoMain
 		sawDeathAnim = false;
 		vatState.clear();
 		active = true;
-		log.info("[duke] start -- region={} playerTile={} camCentre={}",
-			mirror.getRegion(), mirror.getPlayerTile(), centre);
 	}
-	public void    stop()          { camera.reset(); active = false; log.info("[duke] stop"); }
+	public void    stop()          { camera.reset(); active = false;  }
 	public DukePhase currentPhase(){ return phase.current(); }
 	public TripState trip()        { return trip; }
 
@@ -388,7 +386,7 @@ public class DukeAutoMain
 		{
 			if (duke.getAnimation() == ANIM_DUKE_DEATH)
 			{
-				if (!sawDeathAnim) log.info("[duke] t={} death animation ({}) -> ending fight", tick, ANIM_DUKE_DEATH);
+				if (!sawDeathAnim) {}
 				sawDeathAnim = true;
 			}
 			else if (duke.getId() == DukeAutoIDs.NPC_DUKE_INACTIVE || duke.getId() == DukeAutoIDs.NPC_DUKE_ASLEEP)
@@ -430,10 +428,6 @@ public class DukeAutoMain
 		if (isInArenaTemplate() && tick - lastDiagTick >= 5)
 		{
 			lastDiagTick = tick;
-			log.info("[duke-diag] tick={} active={} phase={} duke={} region={} playerTile={}",
-				tick, active, phase.current(),
-				duke == null ? "null" : ("id=" + duke.getId() + " tile=" + duke.getWorldLocation()),
-				mirror.getRegion(), mirror.getPlayerTile());
 		}
 
 		if (!active) return;
@@ -583,8 +577,6 @@ public class DukeAutoMain
 		int dAnim = (duke == null) ? -999 : duke.getAnimation();
 		boolean attackedThisTick = (tick == lastAttackTick);
 		int skipTick = gazeTick + (dukeEnraged ? GAZE_HIT_OFFSET_ENRAGE : GAZE_HIT_OFFSET);
-		log.info("[gaze-dbg] t={} off={} skipTick@off={} attackedThisTick={} interactingDuke={} pAnim={} dukeAnim={} hp={} enrage={}",
-			tick, tick - gazeTick, skipTick - gazeTick, attackedThisTick, interactingDuke, pAnim, dAnim, mirror.getHp(), dukeEnraged);
 	}
 
 	// -----------------------------------------------------------------
@@ -762,8 +754,6 @@ public class DukeAutoMain
 			have = mirror.countItem(itemId) * yieldPerMushroom + mirror.countItem(powderItemId);
 		else
 			have = itemId > 0 ? mirror.countItem(itemId) : -1;
-		log.info("[duke-collect] t={} item={} have={}/{} preDone={} requested={}",
-			tick, itemId, have, need, preApproachDone, picksRequested);
 		if (itemId > 0 && have >= need)
 		{
 			// Enough retrieved. Before handing off to the next step, run OUT to the lane exit tile --
@@ -796,8 +786,6 @@ public class DukeAutoMain
 			pickInterrupted = false;
 			if (itemId > 0 && picksRequested > have)
 			{
-				log.info("[duke-collect] t={} pick interrupted by dodge -- reset requested {}->{}",
-					tick, picksRequested, have);
 				picksRequested = have;
 			}
 			collectIdleSinceTick = -1;
@@ -851,9 +839,6 @@ public class DukeAutoMain
 			if (collectIdleSinceTick < 0) collectIdleSinceTick = tick;
 			int wait = busyAnim > 0 ? ANIM_RECLICK_TICKS : PICK_RETRY_TICKS;
 			if (tick - collectIdleSinceTick < wait) return false;
-			log.info("[duke-collect] t={} not {} (anim={}) for {} ticks at object -- retrying {}",
-				tick, busyAnim > 0 ? ("anim-" + busyAnim) : "yielding", playerAnim(),
-				tick - collectIdleSinceTick, option);
 			picksRequested = have;               // drop the stale in-flight -> re-click below
 			collectIdleSinceTick = -1;
 		}
@@ -999,8 +984,6 @@ public class DukeAutoMain
 
 			if (confirmed)
 			{
-				log.info("[duke-vat] t={} {} done vat={} -> {}/{}", tick, label, pendingVat,
-					vatsDone.size() + 1, VATS_TO_FILL);
 				vatsDone.add(pendingVat);
 				if (confirmNpcId > 0 && !vatFillOrder.contains(pendingVat))
 					vatFillOrder.add(pendingVat);   // remember fill order so we collect first-filled first
@@ -1008,8 +991,6 @@ public class DukeAutoMain
 			}
 			else if (tick - lastPrepActionTick >= VAT_ACTION_TIMEOUT)   // never latched (not reached / no spawn) -> re-click
 			{
-				log.info("[duke-vat] t={} {} vat={} not confirmed in {} ticks (atVat={}) -- re-clicking",
-					tick, label, pendingVat, tick - lastPrepActionTick, atVat);
 				pendingVat = null;
 			}
 			else
@@ -1125,8 +1106,6 @@ public class DukeAutoMain
 		{
 			if (mirror.countItem(DukeAutoIDs.ITEM_ARDER_MUSCA_POTION) > pendingCollectBaseline)
 			{
-				log.info("[duke-vat] t={} collected potion from vat={} -> {}", tick, pendingVat,
-					mirror.countItem(DukeAutoIDs.ITEM_ARDER_MUSCA_POTION));
 				vatsDone.add(pendingVat);
 				pendingVat = null;
 			}
@@ -1257,7 +1236,6 @@ public class DukeAutoMain
 				&& Math.abs(t.getX() - instE.getX()) <= 2 && Math.abs(t.getY() - instE.getY()) <= 2)
 				e.append(go.getId()).append('@').append(t.getX()).append(',').append(t.getY()).append(' ');
 		});
-		log.info("[vat-obj] t={} WEST{} objs=[{}] | EAST{} objs=[{}]", tick, instW, w.toString().trim(), instE, e.toString().trim());
 	}
 
 	/** Ingredients for ONE more vat fill (one potion): 6 arder powder + 6 musca powder + 6 salax salt. */
@@ -1318,7 +1296,7 @@ public class DukeAutoMain
 			{
 				// Fill took when THIS vat is no longer fillable (brewing NPC replaced its 47536 object).
 				if (liveVatState(pendingVat) != VatState.EMPTY)
-				{ log.info("[duke-vat] t={} filled vat={}", tick, pendingVat); pendingVat = null; }
+				{  pendingVat = null; }
 				else if (tick - lastPrepActionTick >= VAT_ACTION_TIMEOUT) pendingVat = null;
 				else return false;
 			}
@@ -1327,7 +1305,6 @@ public class DukeAutoMain
 				if (mirror.countItem(DukeAutoIDs.ITEM_ARDER_MUSCA_POTION) > pendingCollectBaseline)
 				{
 					collected = mirror.countItem(DukeAutoIDs.ITEM_ARDER_MUSCA_POTION);
-					log.info("[duke-vat] t={} collected vat={} -> {}/{}", tick, pendingVat, collected, wanted);
 					pendingVat = null;
 					if (collected >= wanted) return true;
 				}
@@ -1339,8 +1316,6 @@ public class DukeAutoMain
 		// 2. Read each vat's live state straight from the scene (the vat swaps object id per state).
 		VatState wS = liveVatState(VAT_WEST);
 		VatState eS = liveVatState(VAT_EAST);
-		log.info("[vat-dbg] t={} here={} WEST={} EAST={} collected={}/{} ingred={} pending={}",
-			tick, vatIAmAt(me), wS, eS, collected, wanted, hasVatIngredients(), pendingVat);
 		dumpVatObjects(tick);   // DEBUG: raw object ids at each vat tile
 
 		if (tick - lastPrepActionTick < PREP_ACTION_COOLDOWN) return false;
@@ -1634,9 +1609,7 @@ public class DukeAutoMain
 			Integer meSide = arenaSide(mirror.getPlayerTile());
 			Integer hzSide = arenaSide(tile);
 			if (hzSide == null || (meSide != null && meSide.equals(hzSide)))
-				log.info("[duke-fall] t={} id={} tile={} start={} cycle={} impactTick={} lead={} marked={}",
-					tick, id, tile, g.getStartCycle(), client.getGameCycle(), impactTick,
-					FALLING_DODGE_LEAD_TICKS, (impactTick >= tick));
+				{}
 		}
 
 		// Extremities (12199/12200/12201): 5x5 NPCs whose cone (apex = center, spreading inward)
@@ -1680,9 +1653,6 @@ public class DukeAutoMain
 					WorldPoint ci = InstanceCoords.fromTemplate(client, t);
 					if (ci != null) cone.add(ci);
 				}
-				log.info("[duke-extremity] t={} npc={} area=({},{},{}x{}) tplCenter={} apex={} attackTick={} me={} coneInst={}",
-					tick, n.getId(), area.getX(), area.getY(), area.getWidth(), area.getHeight(),
-					tplCenter, apex, attackTick, mirror.getPlayerTile(), cone);
 
 				int dangerFrom = attackTick - FALLING_DODGE_LEAD_TICKS;   // telegraph is harmless; only guard the landing
 				for (int tt = Math.max(tick, dangerFrom); tt <= end; tt++)
@@ -1770,8 +1740,7 @@ public class DukeAutoMain
 			Integer prev = ventAnchorTick;
 			ventAnchorTick = seen - g * VENT_GROUP_INTERVAL;         // group g spawned at `seen`
 			if (prev == null)
-				log.info("[duke-vent] synced: group {} spawn t={} -> A-ref t={}",
-					VENT_GROUP_NAMES[g], seen, ventAnchorTick);
+				{}
 		}
 	}
 
@@ -1857,7 +1826,6 @@ public class DukeAutoMain
 				{
 					holdForHazard = false; holdGoal = null;
 					pickInterrupted = true;   // we're driving movement now -> re-click the object once clear
-					log.info("[duke-transit] reroute t={} -> {} (goal={})", tick, way, transitGoal);
 					return way;
 				}
 			}
@@ -1867,7 +1835,6 @@ public class DukeAutoMain
 			// hold (flag + persisted goal) keeps us here, and the movement block won't re-walk.
 			holdForHazard = true; holdGoal = transitGoal; pickInterrupted = true;
 			if (client.getLocalDestinationLocation() != null) router.walkTo(me);
-			log.info("[duke-transit] HOLD t={} (safe tile, path blocked, waiting) goal={}", tick, transitGoal);
 			if (overlay != null) overlay.setStep("hold: waiting for hazard window");
 			return me;
 		}
@@ -2047,7 +2014,6 @@ public class DukeAutoMain
 
 		List<WorldPoint> path = TilePathPredictor.path(
 			client.getTopLevelWorldView(), from, goal, null, this::inArena, ARENA_PATH_BUDGET);
-		log.info("[duke-transit] t={} {} from={} goal={} pathSize={}", tick, why, from, goal, path.size());
 		if (path.isEmpty()) return false;
 		debugPath = path;
 
@@ -2058,7 +2024,6 @@ public class DukeAutoMain
 			if (stand == null) break;
 			if (dodger.isTileDangerousAt(stand, tick + k))
 			{
-				log.info("[duke-transit] HIT t={} {} k={} stand={} atTick={}", tick, why, k, stand, tick + k);
 				debugHitTile = stand;
 				return true;
 			}
@@ -2188,8 +2153,6 @@ public class DukeAutoMain
 			: PrepStep.COLLECT_ARDER;
 		lastPrepWalkTarget = null;
 		lastWalkTarget = null;
-		log.info("[duke] death detected tick={} -- prayers off, trackers reset; potions={} -> prepStep={}",
-			tick, potions, prepStep);
 	}
 
 	// -----------------------------------------------------------------
@@ -2255,7 +2218,6 @@ public class DukeAutoMain
 			int t = mirror.getTickCounter();
 			int delay = EAT_DELAY_TICKS + (r.comboEat != null ? COMBO_EAT_EXTRA_TICKS : 0);
 			attackDelayUntil = Math.max(attackDelayUntil, t + delay);
-			log.info("[duke-eat] t={} ate food (combo={}) -> next attack >= t{}", t, r.comboEat != null, attackDelayUntil);
 		}
 		if (r.drink      != null)
 		{
@@ -2362,8 +2324,6 @@ public class DukeAutoMain
 		boolean dukeInvolved = (name != null && name.toLowerCase().contains("duke"))
 			|| isDukeId(newId) || isDukeId(oldId);
 		if (!dukeInvolved) return;
-		log.info("[duke-awaken] tick={} NpcChanged name='{}' oldId={} -> newId={} index={} tile={}",
-			mirror.getTickCounter(), name, oldId, newId, npc.getIndex(), npc.getWorldLocation());
 	}
 
 	/** ChatMessage forwarder: logs any Duke/awaken message, with the current tick. */
@@ -2376,7 +2336,6 @@ public class DukeAutoMain
 		// up alongside the gaze trace.
 		if (gazeActive)
 		{
-			log.info("[gaze-dbg] tick={} off={} chat='{}'", mirror.getTickCounter(), mirror.getTickCounter() - gazeTick, msg);
 		}
 		// Gaze resolved: "You manage to avoid Duke Sucellus' gaze." -> safe to resume attacking. This is
 		// the authoritative end of the gaze window (apostrophe encoding varies, so match loosely).
@@ -2385,16 +2344,10 @@ public class DukeAutoMain
 			if (gazeActive)
 			{
 				Player p = mirror.getLocalPlayer();
-				log.info("[gaze-dbg] tick={} AVOIDED (chat); off={} interactingDuke={} pAnim={} lastAttack={} (gap {})",
-					mirror.getTickCounter(), mirror.getTickCounter() - gazeTick,
-					(p != null && duke != null && p.getInteracting() == duke),
-					(p == null ? -999 : p.getAnimation()), lastAttackTick, mirror.getTickCounter() - lastAttackTick);
 			}
 			gazeActive = false;
 		}
 		if (!lower.contains("awaken") && !lower.contains("duke")) return;
-		log.info("[duke-awaken] tick={} ChatMessage type={} msg='{}'",
-			mirror.getTickCounter(), e.getType(), msg);
 	}
 
 	private static boolean isDukeId(int id)
@@ -2470,7 +2423,6 @@ public class DukeAutoMain
 			if (hp > 0 && hp <= ENRAGE_HP)
 			{
 				dukeEnraged = true;
-				log.info("[duke-attack] t={} enrage: boss hp {} <= {} -> 4-tick cycle", tick, hp, ENRAGE_HP);
 			}
 		}
 		int anim = (duke != null) ? duke.getAnimation() : -1;
@@ -2487,10 +2439,7 @@ public class DukeAutoMain
 				// Fallback only (HP is primary): observed swings stay on the 5t grid (5*n % 5 is constant),
 				// so a phase that no longer matches means the cadence changed -> enrage (4t).
 				dukeEnraged = true;
-				log.info("[duke-attack] t={} cadence shift (phase {} -> {}) -> enrage (fallback)", tick, dukeAttackPhase, phase);
 			}
-			log.info("[duke-attack] t={} Duke swing (anim {}); phase={} enraged={} lastOurAttack={} gap={}",
-				tick, ANIM_DUKE_ATTACK, dukeAttackPhase, dukeEnraged, lastAttackTick, tick - lastAttackTick);
 		}
 		// Gaze tell: suppress ALL attacking until it resolves (the "avoid ... gaze" chat, or the window
 		// timeout). We stay camped on the safe tile the whole time, so no movement is needed.
@@ -2498,13 +2447,11 @@ public class DukeAutoMain
 		{
 			gazeTick = tick;
 			gazeActive = true;
-			log.info("[duke-gaze] t={} Duke gaze (anim {}) -> suppress all attacks until it resolves", tick, ANIM_DUKE_GAZE);
 		}
 		// Fallback resume: clear if the full gaze window elapsed without a chat clearing it.
 		if (gazeActive && tick - gazeTick > GAZE_WINDOW_TICKS)
 		{
 			gazeActive = false;
-			log.info("[duke-gaze] t={} gaze window elapsed ({}t, no chat) -> resume", tick, tick - gazeTick);
 		}
 		dukePrevAnim = anim;
 	}

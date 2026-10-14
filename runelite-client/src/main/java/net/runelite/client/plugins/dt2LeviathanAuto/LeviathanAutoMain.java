@@ -530,7 +530,6 @@ public class LeviathanAutoMain
 		active = true;
 		leviathanWasPresent = false;
 		resetFightState();
-		log.info("[lev] start -- section1 anchor reset to {}", section1AnchorTemplate);
 	}
 
 	/**
@@ -547,7 +546,6 @@ public class LeviathanAutoMain
 		{
 			for (java.util.Map.Entry<Integer,Integer> e : observedImpactTicksById.entrySet())
 			{
-				log.info("[lev-hazard-times] gfxId={} observedTimeToImpactTicks={}", e.getKey(), e.getValue());
 			}
 		}
 		rangingBoost.reset();
@@ -591,7 +589,7 @@ public class LeviathanAutoMain
 		lastWalkTarget = null;
 		lastWalkTick = -100;
 	}
-	public void      stop()         { active = false; log.info("[lev] stop"); }
+	public void      stop()         { active = false;  }
 	public LevPhase  currentPhase() { return phase.current(); }
 	public TripState trip()         { return trip; }
 
@@ -610,8 +608,6 @@ public class LeviathanAutoMain
 		if (message.toLowerCase().contains("the leviathan charges up a lightning attack..."))
 		{
 			lightningChargeMsgTick = mirror.getTickCounter();
-			log.info("[lev-lightning] lightning-charge chat message seen at tick {} -- oscillation starts at tick {}",
-				lightningChargeMsgTick, lightningChargeMsgTick + LIGHTNING_CHARGE_TO_OSC_TICKS);
 		}
 	}
 
@@ -625,13 +621,10 @@ public class LeviathanAutoMain
 			// Death / despawn: full reset so the next kill starts clean from the home
 			// tile. Rocks disappear when Leviathan dies, so the whole per-fight state
 			// (clusters used, rock tracker, cycle index, phase flags) is stale.
-			log.info("[lev] leviathan died/despawned -- full reset, returning to home tile {}",
-				LeviathanAutoIDs.START_TILE_TEMPLATE);
 			resetFightState();
 			// Backstop prayers-off on despawn (the HP-0 check below is the primary, earlier
 			// trigger). resetFightState cleared deathPrayersOff, so this re-disables cleanly.
 			turnPrayersOff(tick);
-			log.info("[lev] prayers off on despawn");
 		}
 		leviathanWasPresent = (leviathan != null);
 
@@ -643,7 +636,6 @@ public class LeviathanAutoMain
 		{
 			deathPrayersOff = true;
 			turnPrayersOff(tick);
-			log.info("[lev] prayers off on HP-0 (boss dead, awaiting despawn)");
 		}
 		phase.update(tick);
 
@@ -689,8 +681,6 @@ public class LeviathanAutoMain
 			}
 			int pfAnim = (abyssalPathfinder != null) ? abyssalPathfinder.getAnimation() : -1;
 			int levAnim = (leviathan != null) ? leviathan.getAnimation() : -1;
-			log.info("[enrage-pray] t={} me={} pfAnim={} levAnim={} proj=[{}]",
-				tick, mirror.getPlayerTile(), pfAnim, levAnim, enrSb.toString().trim());
 		}
 
 		// Lightning back-and-forth: swap target each time the player CROSSES the
@@ -712,8 +702,6 @@ public class LeviathanAutoMain
 			boolean atEnd = activeEndInstance != null && me != null && me.equals(activeEndInstance);
 			// DIAG: every tick while lightning phase is active, dump the state so we
 			// can tell exactly what branch (swap vs fire vs hold vs skip) ran.
-			log.info("[lev-lightning-tick] t={} me={} activeTpl={} activeInst={} otherTpl={} otherInst={} atEnd={} lastEndAttkTick={} canAttack={}",
-				tick, me, activeLightningEnd, activeEndInstance, lightningOtherEnd, otherEndInstance, atEnd, lightningEndAttackedAtTick, canAttack(tick));
 
 			// Deferred swap -- runs REGARDLESS of atEnd. On the west lane the server
 			// walks us 2 tiles north off the clicked endpoint for the attack-NPC
@@ -726,7 +714,6 @@ public class LeviathanAutoMain
 				activeLightningEnd = lightningOtherEnd;
 				lightningOtherEnd = prev;
 				lightningEndAttackedAtTick = -100;
-				log.info("[lev-lightning] post-attack swap at {} -> {}", prev, activeLightningEnd);
 			}
 			else if (atEnd)
 			{
@@ -738,13 +725,11 @@ public class LeviathanAutoMain
 					router.attackNpc(leviathan);
 					lastAttackTick = tick;
 					lightningEndAttackedAtTick = tick;
-					log.info("[lev-lightning] end-arrival {}; attack fired (swap deferred to next tick)", activeLightningEnd);
 				}
 				else
 				{
 					// Cooldown not ready yet. Don't swap -- stay on this end so planNextTile
 					// keeps targeting it (same tile, no new walk click) and we re-check next tick.
-					log.info("[lev-lightning] end-arrival {} (on cooldown, holding for next tick)", activeLightningEnd);
 				}
 			}
 		}
@@ -759,8 +744,6 @@ public class LeviathanAutoMain
 		{
 			shadowRushCastConfirmed = true;
 			shadowRushUses++;
-			log.info("[lev-s2] shadow rush cast confirmed (player anim:{}, total uses:{}); routing to spine tile {}",
-				LeviathanAutoIDs.ANIM_CAST_SHADOW_RUSH, shadowRushUses, postCastTargetTemplate());
 		}
 
 		// Boulder-phase detection. Latch on ANIM 10288 (one-shot phase start), then
@@ -769,8 +752,6 @@ public class LeviathanAutoMain
 		    && leviathan.getAnimation() == LeviathanAutoIDs.ANIM_BOULDER_PHASE_START)
 		{
 			boulderPhaseActive = true;
-			log.info("[lev-boulder] phase start observed (ANIM:{}), expecting {} projectiles",
-				LeviathanAutoIDs.ANIM_BOULDER_PHASE_START, LeviathanAutoIDs.BOULDER_PROJECTILE_COUNT);
 		}
 		if (boulderPhaseActive)
 		{
@@ -798,8 +779,6 @@ public class LeviathanAutoMain
 				activeLightningEnd = lightningOtherEnd;
 				lightningOtherEnd = prev;
 			}
-			log.info("[lev-lightning] phase start ({} ticks after lightning-charge message at tick {}); oscillation target {}",
-				LIGHTNING_CHARGE_TO_OSC_TICKS, lightningChargeMsgTick, activeLightningEnd);
 		}
 
 		// Shared phase-2 end detection. ANIM_PHASE2_END (10287) is the "attack ending"
@@ -819,8 +798,6 @@ public class LeviathanAutoMain
 				// now holds, then routes to the next section once the end resolves.
 				lightningPhaseActive = false;
 				lightningChargeMsgTick = -100;
-				log.info("[lev-phase2] end signal observed (ANIM:{}, section2Phase={}); lightning oscillation stopped",
-					lanim, section2Phase);
 			}
 			else if (phase2EndSignalSeen && !phase2EndResolved && lanim != LeviathanAutoIDs.ANIM_PHASE2_END)
 			{
@@ -829,8 +806,6 @@ public class LeviathanAutoMain
 				// frozen (oscillation stopped) and HP is read a single time, so the target
 				// can't flicker during the walk to it.
 				resolvedNextConfig = nextSectionConfigFor(currentPhase2EndTile());
-				log.info("[lev-phase2] end resolved (anim now {}, section2Phase={}); next section latched to {}",
-					lanim, section2Phase, resolvedNextConfig);
 			}
 		}
 
@@ -847,7 +822,6 @@ public class LeviathanAutoMain
 			{
 				if (!loggedUnmappedEnd)
 				{
-					log.warn("[lev-plan] no mapping for phase-2 end tile {}; stalling, picker upstream was suboptimal", phase2End);
 					loggedUnmappedEnd = true;
 				}
 			}
@@ -887,7 +861,6 @@ public class LeviathanAutoMain
 			WorldPoint destInstance = destTpl == null ? null : InstanceCoords.fromTemplate(client, destTpl);
 			if (destInstance != null && me.equals(destInstance))
 			{
-				log.info("[lev] DEBUG pause -- arrived at spine tile {}, stopping script", destTpl);
 				if (overlay != null) overlay.setStep("DEBUG paused @ " + destTpl);
 				stop();
 				return;
@@ -918,7 +891,6 @@ public class LeviathanAutoMain
 				WorldPoint stepTpl = InstanceCoords.toTemplate(client, step);
 				if (stepTpl != null && LeviathanAutoIDs.isInaccessibleTemplate(stepTpl))
 				{
-					log.warn("[lev-walk] BLOCKED inaccessible walk target {} (template {})", step, stepTpl);
 					return;
 				}
 				// Distance-aware re-click dedupe. The old flat 3-tick window spammed
@@ -950,12 +922,9 @@ public class LeviathanAutoMain
 					lastWalkTarget = step;
 					lastWalkTick = tick;
 					if (overlay != null) overlay.setStep("walk -> " + step);
-					log.info("[lev-walk] t={} walkTo {} (from {})", tick, step, me);
 				}
 				else
 				{
-					log.info("[lev-walk-dedupe] t={} step={} me={} same as lastTarget={} tickSinceLast={} travelTicks={}",
-						tick, step, me, lastWalkTarget, tick - lastWalkTick, travelTicks);
 				}
 				return;
 			}
@@ -989,7 +958,6 @@ public class LeviathanAutoMain
 				// (watchPrayerProjectiles): if Leviathan still has projectiles in flight
 				// when we cast, we keep praying them; once the shadow stun halts his
 				// attacks and nothing is live, overheads drop off on their own.
-				log.info("[lev-s2] shadow rush dispatched at tick={}, section2Phase={}", tick, section2Phase);
 				if (overlay != null) overlay.setStep("cast Shadow Rush (next: " + section2Phase + ")");
 			}
 			else if (canAttack(tick) && !shouldSuppressAttack())
@@ -1008,8 +976,6 @@ public class LeviathanAutoMain
 				if (shadowRushCast && shadowRushCastConfirmed && !spineAttackDone)
 				{
 					spineAttackDone = true;
-					log.info("[lev-s2] spine attack fired at tick={}; routing to phase-2 tile ({})",
-						tick, postSpineTargetTemplate());
 				}
 			}
 		}
@@ -1168,9 +1134,6 @@ public class LeviathanAutoMain
 			int impactTick = net.runelite.client.plugins.autoBossCore.combat.TelegraphedHazards.addFalling(
 				dodger, tick, client.getGameCycle(), tileInstance, g.getStartCycle(),
 				tti, LeviathanAutoIDs.ROCK_IMPACT_ACTIVE_TICKS, true, label);
-			log.info("[lev-rockgfx] t={} id={} tile={} startCycle={} clientCycle={} tti={} impactTick={} marked={}",
-				tick, id, InstanceCoords.toTemplate(client, tileInstance), g.getStartCycle(),
-				client.getGameCycle(), tti, impactTick, (impactTick >= tick));
 			// Record this hazard's observed time-to-impact: max elapsed ticks from its spawn
 			// cycle while the spotanim is still visible. The max across a hazard's lifetime is
 			// the spawn->last-seen duration (impact lands ~1 tick later, when it despawns).
@@ -1210,8 +1173,6 @@ public class LeviathanAutoMain
 				if (seenUnknownGfxIds.add(id))
 				{
 					WorldPoint tplG = InstanceCoords.toTemplate(client, gTile);
-					log.info("[lev-gfx] UNKNOWN gfx id={} near player at instance={} template={}",
-						id, gTile, tplG);
 				}
 			}
 		}
@@ -1306,8 +1267,6 @@ public class LeviathanAutoMain
 			}
 		}
 
-		log.info("[lev-climb] climbing Handholds (id {}) from {} -- scene=({},{}) objFound={}",
-			LeviathanAutoIDs.GOBJ_HANDHOLDS, tpl, sceneX, sceneY, found);
 		router.gameObjectAction(sceneX, sceneY, MenuAction.GAME_OBJECT_FIRST_OPTION,
 			LeviathanAutoIDs.GOBJ_HANDHOLDS, "Climb", "<col=ffff>Handholds");
 		lastHandholdsClimbTick = tick;
@@ -1348,9 +1307,6 @@ public class LeviathanAutoMain
 			boolean turnOffWindow = shadowRushCast && !enragePhaseActive && !phase2EndResolved;
 			if (anyPrayable || shadowRushCast || turnOffWindow)
 			{
-				log.info("[pray-diag] t={} srCast={} spineDone={} p2EndResolved={} enrage={} lightning={} boulder={} turnOff={} proj=[{}]",
-					tick, shadowRushCast, spineAttackDone, phase2EndResolved, enragePhaseActive,
-					lightningPhaseActive, boulderPhaseActive, turnOffWindow, pdSb.toString().trim());
 			}
 		}
 		// Impact-1 scheduling: for each prayable projectile in flight, schedule its overhead
@@ -1542,8 +1498,6 @@ public class LeviathanAutoMain
 			WorldPoint destInstance = destTpl == null ? null : InstanceCoords.fromTemplate(client, destTpl);
 			if (destInstance == null)
 			{
-				log.info("[lev-s2] section-2 target NULL (template={} unresolved, spineAttackDone={}, section2Phase={}); staying",
-					destTpl, spineAttackDone, section2Phase);
 				return null;
 			}
 
@@ -1571,14 +1525,10 @@ public class LeviathanAutoMain
 					WorldPoint aside = findTransitDodge(current, destInstance, tick, this::transitPassable);
 					if (aside != null && !aside.equals(current))
 					{
-						log.info("[lev-s2] transit dodge: straight run to {} would be hit next tick; sidestep {} then re-click",
-							destTpl, InstanceCoords.toTemplate(client, aside));
 						return aside;
 					}
 					// No safe sidestep found -- keep heading to dest (best effort).
 				}
-				log.info("[lev-s2] routing to spine tile {}: current={} dest={}",
-					destTpl, current, destInstance);
 				return destInstance;
 			}
 			else
@@ -1595,7 +1545,6 @@ public class LeviathanAutoMain
 		}
 		else if (shadowRushCast && phase.current() != LevPhase.FIGHT)
 		{
-			log.info("[lev-s2] section-2 branch skipped: shadowRushCast=true but phase={}", phase.current());
 		}
 
 		WorldPoint anchorInstance = section1AnchorTemplate == null
@@ -1613,9 +1562,6 @@ public class LeviathanAutoMain
 			int anchorDangerTick = firstDangerTickWithin(anchorInstance, tick, 10);
 			if (curDangerTick >= 0 || anchorDangerTick >= 0)
 			{
-				log.info("[lev-roar-dodge] t={} me={} anchor={} curDangerTick={} anchorDangerTick={} commitWindow<=t+2={}",
-					tick, current, InstanceCoords.toTemplate(client, anchorInstance),
-					curDangerTick, anchorDangerTick, tick + 2);
 			}
 		}
 
@@ -2420,7 +2366,6 @@ public class LeviathanAutoMain
 		{
 			section2Phase = Section2Phase.UNKNOWN;  // prior unclassified -- fall back to classify
 		}
-		log.info("[lev-cycle] begin cycle {} ({}), anchor={}, section2Phase={}", cycle, config, section1AnchorTemplate, section2Phase);
 	}
 
 	/**
@@ -2493,8 +2438,6 @@ public class LeviathanAutoMain
 			if (!seenBoulderProjectileIdentities.add(identity)) continue;
 			boulderProjectileCount++;
 			WorldPoint next = currentBoulderDodgeTile();
-			log.info("[lev-boulder] projectile #{} observed (startTick={}); dodge target now {}",
-				boulderProjectileCount, pr.startTick, next);
 		}
 	}
 
@@ -2593,8 +2536,6 @@ public class LeviathanAutoMain
 		activeLightningEnd = null;
 		// Resolve quadrant and stash pathfinder.
 		resolveEnrageQuadrantAndPathfinder();
-		log.info("[lev-enrage] enrage phase triggered at tick={}, quadrant={}, pathfinder={}",
-			tick, enrageQuadrant, abyssalPathfinder);
 	}
 
 	private void resolveEnrageQuadrantAndPathfinder()
@@ -3007,8 +2948,6 @@ public class LeviathanAutoMain
 			WorldPoint aside = findTransitDodge(current, target, tick, this::enrageApproachPassable);
 			if (aside != null && !aside.equals(current))
 			{
-				log.info("[lev-enrage] transit dodge en route to {}: sidestep {} then re-click",
-					InstanceCoords.toTemplate(client, target), InstanceCoords.toTemplate(client, aside));
 				return aside;
 			}
 		}
@@ -3091,12 +3030,9 @@ public class LeviathanAutoMain
 			{
 				activeBoulderCluster = LeviathanAutoIDs.BOULDER_CLUSTERS[idx];
 				usedBoulderClusterIdxs.add(idx);
-				log.info("[lev-boulder] FORCE_BOULDER_CLUSTER_IDX picked {} (used-so-far={})",
-					LeviathanAutoIDs.BOULDER_CLUSTER_NAMES[idx], usedBoulderClusterIdxs);
 			}
 			else
 			{
-				log.warn("[lev-boulder] FORCE_BOULDER_CLUSTER_IDX={} already used; routing will stall", idx);
 			}
 			return;
 		}
@@ -3132,15 +3068,12 @@ public class LeviathanAutoMain
 		{
 			activeBoulderCluster = best;
 			usedBoulderClusterIdxs.add(bestIdx);
-			log.info("[lev-boulder] picked cluster {} (pos1={}, chebyshev={} from player {}, used-so-far={})",
-				bestName, best[0], bestDist, me, usedBoulderClusterIdxs);
 		}
 		else
 		{
 			// Edge case: all 4 clusters used. TODO: fallback behavior (reuse least-recent?
 			// pick by raw proximity ignoring used-set? abort boulder dodge?). For now,
 			// log once and leave activeBoulderCluster null -- routing will stall.
-			log.warn("[lev-boulder] no boulder clusters available (all used); routing will stall");
 		}
 	}
 
@@ -3176,8 +3109,6 @@ public class LeviathanAutoMain
 			router.attackNpc(leviathan);
 			lastAttackTick = tick;
 			boulderWalkbackAttackDone = true;
-			log.info("[lev-boulder] walkback attack fired at pos 5 (count={}, tile={}, tick={})",
-				boulderProjectileCount, activeBoulderCluster[4], tick);
 			return;
 		}
 
@@ -3198,8 +3129,6 @@ public class LeviathanAutoMain
 		lastAttackTick = tick;
 		firedBoulderAttackIdxs.add(currentIdx);
 		if (currentIdx == 5 && walkback) boulderBackfillAttackDone = true;  // trigger walkback routing only for walkback clusters
-		log.info("[lev-boulder] attack fired at idx {} (count={}, pos={}, tick={})",
-			currentIdx, boulderProjectileCount, activeBoulderCluster[currentIdx], tick);
 	}
 
 	/**
@@ -3238,8 +3167,6 @@ public class LeviathanAutoMain
 			: Math.max(Math.abs(sInstance.getX() - me.getX()), Math.abs(sInstance.getY() - me.getY()));
 		activeLightningEnd = (dN <= dS) ? northEnd : southEnd;
 		lightningOtherEnd = computeLightningFarTile(activeLightningEnd);
-		log.info("[lev-lightning] picked initial end {} (chebyshev N={}, S={} from player {}); far osc tile {} (dist={})",
-			activeLightningEnd, dN, dS, me, lightningOtherEnd, lightningOscillationTileDist());
 	}
 
 	/**

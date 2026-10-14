@@ -54,14 +54,6 @@ public class LeviathanAutoPlugin extends Plugin implements KeyListener
 
 	@Subscribe
 	public void onMenuOptionClicked(MenuOptionClicked e) {
-		System.out.println("[LEV MENU] "
-				+ " action=" + e.getMenuAction()
-				+ " id="     + e.getId()
-				+ " itemId=" + e.getItemId()
-				+ " param0=" + e.getParam0()
-				+ " param1=" + e.getParam1()
-				+ " option='" + e.getMenuOption() + "'"
-				+ " target='" + e.getMenuTarget() + "'");
 	}
 
 	@Override
@@ -73,7 +65,6 @@ public class LeviathanAutoPlugin extends Plugin implements KeyListener
 		overlayManager.add(overlay);
 		main.bindOverlay(overlay);
 		applyCaptureConfig();
-		log.info("[levAuto] startUp");
 	}
 
 	@Override
@@ -85,7 +76,6 @@ public class LeviathanAutoPlugin extends Plugin implements KeyListener
 		keyManager.unregisterKeyListener(this);
 		eventBus.unregister(captureLogger);
 		eventBus.unregister(mirrorState);
-		log.info("[levAuto] shutDown");
 	}
 
 	// -------------------------------------------------------------

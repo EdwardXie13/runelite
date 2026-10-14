@@ -152,9 +152,8 @@ public class VardorvisAutoMain
 	{
 		active = true;
 		loggedMissingNpcIds.clear();
-		log.info("[vard] start -- region={} playerTile={}", mirror.getRegion(), mirror.getPlayerTile());
 	}
-	public void    stop()          { active = false; log.info("[vard] stop"); }
+	public void    stop()          { active = false;  }
 	public VardPhase currentPhase(){ return phase.current(); }
 	public TripState trip()        { return trip; }
 
@@ -190,10 +189,6 @@ public class VardorvisAutoMain
 		if (isInArenaTemplate() && tick - lastDiagTick >= 5)
 		{
 			lastDiagTick = tick;
-			log.info("[vard-diag] tick={} active={} phase={} vard={} region={} playerTile={} homeTile={}",
-				tick, active, phase.current(),
-				vardorvis == null ? "null" : ("id=" + vardorvis.getId() + " tile=" + vardorvis.getWorldLocation()),
-				mirror.getRegion(), mirror.getPlayerTile(), homeTile);
 		}
 
 		if (!active) return;
@@ -239,7 +234,6 @@ public class VardorvisAutoMain
 					router.attackNpc(vardorvis);
 					lastAttackTick = tick;
 					if (overlay != null) overlay.setStep("weave attack (walk pending)");
-					log.info("[vard-weave] tick={} attack-weave during home-return (cur={})", tick, me);
 					return;
 				}
 
@@ -281,7 +275,6 @@ public class VardorvisAutoMain
 				if (phase.current() == VardPhase.IDLE)
 				{
 					lastIdlePokeTick = tick;
-					log.info("[vard] IDLE poke fired at tick {}, will auto-return to home next tick", tick);
 				}
 				if (overlay != null) overlay.setStep(
 					phase.current() == VardPhase.IDLE ? "poking vardorvis awake" : "attacking vardorvis"
@@ -385,8 +378,6 @@ public class VardorvisAutoMain
 						if (coversHome)
 						{
 							scriptedHomeReturnTick = tick + 2;
-							log.info("[vard-outgoing] tendril id={} covers HOME -- scripted home-return at tick {}",
-								n.getId(), scriptedHomeReturnTick);
 						}
 					}
 				}
@@ -434,8 +425,6 @@ public class VardorvisAutoMain
 
 				if (firstSight)
 				{
-					log.info("[vard-tendril] id={} spawnTick={} anchorSW={} dir=({},{}) axeAt={} projectedTicks={}",
-						n.getId(), tick, anchor, dxDir, dyDir, axeAt, VardorvisAutoIDs.AXE_FLIGHT_PROJECT_TICKS);
 				}
 			}
 		}
@@ -502,8 +491,6 @@ public class VardorvisAutoMain
 			prayers.scheduleSwap(Prayer.PROTECT_FROM_MISSILES, swapTick);
 			prayers.scheduleSwap(Prayer.PROTECT_FROM_MELEE,    impactTick + 1);
 			lastHeadSwapTick = swapTick;
-			log.debug("[vard] head proj impactTick={}; missiles@{} melee@{}",
-				impactTick, swapTick, impactTick + 1);
 		}
 	}
 
@@ -682,8 +669,6 @@ public class VardorvisAutoMain
 				if (n == null) continue;
 				if (!loggedMissingNpcIds.add(n.getId())) continue;
 				String name = n.getName();
-				log.info("[vard-diag] arena npc seen (looking for one of {}) -- id={} name='{}'",
-					java.util.Arrays.toString(ids), n.getId(), name == null ? "?" : name);
 			}
 		}
 		return null;
@@ -727,8 +712,6 @@ public class VardorvisAutoMain
 		homeTile = resolveFirst(VardorvisAutoIDs.HOME_TEMPLATE);
 		safeTile = resolveFirst(VardorvisAutoIDs.SAFE_TILE_TEMPLATE);
 		lastResolveTick = tick;
-		log.info("[vard-resolve] tick={} playerInstance={} playerTemplate={} home={} safe={}",
-			tick, pt, tpl, homeTile, safeTile);
 	}
 
 
@@ -774,11 +757,9 @@ public class VardorvisAutoMain
 			boolean alreadyHome = curTpl != null && curTpl.equals(VardorvisAutoIDs.HOME_TEMPLATE);
 			if (!alreadyHome)
 			{
-				log.info("[vard-plan] tick={} SCRIPTED outgoing-return -> HOME {}", tick, homeTile);
 				lastPlanWasScripted = true;
 				return homeTile;
 			}
-			log.info("[vard-plan] tick={} SCRIPTED outgoing-return skipped (already on HOME)", tick);
 		}
 
 		// Two-tile dance: HOME <-> SAFE. By standing on the west edge (HOME) with the dodge
@@ -824,9 +805,6 @@ public class VardorvisAutoMain
 		boolean proactive = curBadT2 && target != null && !targetBadT1;
 		boolean mustMove  = emergency || proactive;
 
-		log.info("[vard-plan] tick={} cur={} tpl={} onHome={} onSafe={} curBadT1={} curBadT2={} safeBadT1={} homeBadT1={} mustMove={}({}{}) homeImminent={}",
-			tick, current, curTemplate, onHome, onSafe, curBadT1, curBadT2, safeBadArrival, homeBadArrival,
-			mustMove, emergency ? "emergency" : "", (proactive && !emergency) ? "proactive" : "", homeImminent);
 
 		if (mustMove)
 		{
@@ -834,18 +812,14 @@ public class VardorvisAutoMain
 			java.util.Set<WorldPoint> hazTiles = dodger.dumpDangerSetAt(tick + 1);
 			java.util.List<WorldPoint> hazTemplate = new java.util.ArrayList<>();
 			for (WorldPoint w : hazTiles) hazTemplate.add(InstanceCoords.toTemplate(client, w));
-			log.info("[vard-hazard] tick={} -- {} tiles bad at tick+1, template coords: {}",
-				tick, hazTiles.size(), hazTemplate);
 
 			// Pick the OTHER tile between home and safe, provided it is clean at arrival.
 			if (!safeBadArrival && (onHome || !onSafe))
 			{
-				log.info("[vard-plan] tick={} DODGE -> SAFE {}", tick, safeTile);
 				return safeTile;
 			}
 			if (!homeBadArrival && (onSafe || !onHome))
 			{
-				log.info("[vard-plan] tick={} DODGE -> HOME {}", tick, homeTile);
 				return homeTile;
 			}
 
@@ -855,12 +829,10 @@ public class VardorvisAutoMain
 			WorldPoint scanned = findClosestSafeArenaTile(current, tick);
 			if (scanned != null)
 			{
-				log.info("[vard-plan] tick={} DODGE -> arena-scan {} (both home+safe bad at tick+1)", tick, scanned);
 				return scanned;
 			}
 
 			WorldPoint ff = dodger.computeDodge(current, null, 1).orElse(null);
-			log.warn("[vard-plan] tick={} nothing safe nextTick -> free-form {}", tick, ff);
 			return ff;
 		}
 
@@ -871,17 +843,13 @@ public class VardorvisAutoMain
 		// would cancel it.
 		if (!onHome && !homeImminent && phase.current() == VardPhase.FIGHT)
 		{
-			log.info("[vard-plan] tick={} RETURN HOME: {} -> {}", tick, current, homeTile);
 			return homeTile;
 		}
 		if (!onHome && !homeImminent && phase.current() != VardPhase.FIGHT)
 		{
-			log.debug("[vard-plan] tick={} HOLD at {} (phase={}, deferring home return)",
-				tick, current, phase.current());
 		}
 		if (!onHome && homeImminent)
 		{
-			log.info("[vard-plan] tick={} HOLD at {} (home {} bad soon)", tick, current, homeTile);
 		}
 		return null;
 	}
@@ -1010,8 +978,6 @@ public class VardorvisAutoMain
 			if (trace.length() > 0) trace.append(" -> ");
 			trace.append("w").append(id - 54591488).append("@(").append(cx).append(",").append(cy).append(")");
 		}
-		log.info("[vard-captcha] tick={} fired={} order={}  (remaining={} totalDone={})",
-			tick, cap, trace, order.size() - cap, qteClicked.size());
 		if (overlay != null) overlay.setStep("captcha -- fired " + cap + ", total done " + qteClicked.size());
 	}
 }
