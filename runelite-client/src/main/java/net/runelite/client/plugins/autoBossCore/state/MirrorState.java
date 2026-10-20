@@ -83,6 +83,16 @@ public class MirrorState
 	public int getMaxHp()       { return client.getRealSkillLevel(Skill.HITPOINTS); }
 	public int getPrayer()      { return client.getBoostedSkillLevel(Skill.PRAYER); }
 	public int getMaxPrayer()   { return client.getRealSkillLevel(Skill.PRAYER); }
+	public int getMagicLevel()  { return client.getBoostedSkillLevel(Skill.MAGIC); }   // thrall lifespan scales with this
+
+	/** Current sprite id of an interface widget (packed component id), or -1 if the widget isn't loaded. Used to
+	 *  read the spellbook's castable/greyed state -- a thrall spell shows its 'castable' sprite only when we have
+	 *  the runes, the magic level and no thrall already active. */
+	public int getWidgetSpriteId(int packedId)
+	{
+		net.runelite.api.widgets.Widget w = client.getWidget(packedId >>> 16, packedId & 0xFFFF);
+		return w == null ? -1 : w.getSpriteId();
+	}
 	public int getRunEnergy()   { return client.getEnergy() / 100; }
 
 	public Player getLocalPlayer() { return client.getLocalPlayer(); }

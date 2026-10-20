@@ -203,8 +203,6 @@ public class LeviathanAutoMain
 	 * Pruned once the impact tick passes.
 	 */
 	private final java.util.Set<Integer> scheduledPrayIdentities = new java.util.HashSet<>();
-	/** Dedupe for unknown-GFX diagnostic -- log each new id once per session. */
-	private final java.util.Set<Integer> seenUnknownGfxIds = new java.util.HashSet<>();
 	// Measurement: per falling-hazard GFX id, the MAX observed ticks-from-spawn (spawn ->
 	// last tick the spotanim was visible), i.e. roughly each hazard's time-to-impact. Updated
 	// as hazards are seen and dumped when Leviathan dies ([lev-hazard-times]). Kept across
@@ -468,7 +466,6 @@ public class LeviathanAutoMain
 	/** Dedupe for the unmapped-phase-2-end warn log so it fires at most once per stall. */
 	private boolean loggedUnmappedEnd = false;
 
-
 	/**
 	 * Running set of every TEMPLATE tile where we've observed a 2479 rock-drop
 	 * graphics object. Each such tile becomes a permanent {@link
@@ -584,7 +581,6 @@ public class LeviathanAutoMain
 		shadowRushUses = 0;
 		scriptedRoarPath = null;
 		scriptedRoarIdx = 0;
-		seenUnknownGfxIds.clear();
 		scheduledPrayIdentities.clear();
 		lastWalkTarget = null;
 		lastWalkTick = -100;
@@ -662,27 +658,6 @@ public class LeviathanAutoMain
 		// Resolves the pathfinder's quadrant and stashes the pathfinder NPC ref.
 		detectEnragePhaseIfNeeded(tick);
 
-		// DIAG [enrage-pray]: while enrage is active, dump every projectile in flight
-		// (id/start/end/prayable) plus the pathfinder + Leviathan animations and the
-		// player tile, so we can see exactly what the pathfinder throws and whether
-		// watchPrayerProjectiles can catch it with the impact-1 model. The symptom
-		// 'movement prioritised over prayer' means no prayable projectile is being
-		// scheduled here -- this log reveals why. Remove once the source is known.
-		if (enragePhaseActive)
-		{
-			StringBuilder enrSb = new StringBuilder();
-			for (MirrorState.ProjectileRecord pr : mirror.getProjectileRecords())
-			{
-				boolean pray = pr.id == LeviathanAutoIDs.PROJ_MELEE
-					|| pr.id == LeviathanAutoIDs.PROJ_RANGE
-					|| pr.id == LeviathanAutoIDs.PROJ_MAGIC;
-				enrSb.append(" {id=").append(pr.id).append(" s=").append(pr.startTick)
-					.append(" e=").append(pr.endTick).append(" pray=").append(pray).append('}');
-			}
-			int pfAnim = (abyssalPathfinder != null) ? abyssalPathfinder.getAnimation() : -1;
-			int levAnim = (leviathan != null) ? leviathan.getAnimation() : -1;
-		}
-
 		// Lightning back-and-forth: swap target each time the player CROSSES the
 		// lane center (position 3 of the 5-position lane). The player never actually
 		// reaches the oscillation ends -- they U-turn at center. Attack maintenance
@@ -698,7 +673,6 @@ public class LeviathanAutoMain
 			wasOnLightningCenterLastTick = onCenter;
 
 			WorldPoint activeEndInstance = InstanceCoords.fromTemplate(client, activeLightningEnd);
-			WorldPoint otherEndInstance = InstanceCoords.fromTemplate(client, lightningOtherEnd);
 			boolean atEnd = activeEndInstance != null && me != null && me.equals(activeEndInstance);
 			// DIAG: every tick while lightning phase is active, dump the state so we
 			// can tell exactly what branch (swap vs fire vs hold vs skip) ran.
@@ -1040,7 +1014,6 @@ public class LeviathanAutoMain
 			&& point.getPlane() == center.getPlane();
 	}
 
-
 	// -----------------------------------------------------------------
 	// Boss discovery / phase helpers.
 	// -----------------------------------------------------------------
@@ -1131,7 +1104,7 @@ public class LeviathanAutoMain
 			// markWholeFall=true: flag the tile dangerous for the WHOLE fall (from when we see the
 			// GFX through impact), so we ALWAYS dodge a rock in the air toward it even if the GFX
 			// rendered late. ROCK_IMPACT_ACTIVE_TICKS adds a small post-impact margin for landing slop.
-			int impactTick = net.runelite.client.plugins.autoBossCore.combat.TelegraphedHazards.addFalling(
+			net.runelite.client.plugins.autoBossCore.combat.TelegraphedHazards.addFalling(
 				dodger, tick, client.getGameCycle(), tileInstance, g.getStartCycle(),
 				tti, LeviathanAutoIDs.ROCK_IMPACT_ACTIVE_TICKS, true, label);
 			// Record this hazard's observed time-to-impact: max elapsed ticks from its spawn
@@ -1149,31 +1122,6 @@ public class LeviathanAutoMain
 			{
 				WorldPoint tpl = InstanceCoords.toTemplate(client, tileInstance);
 				if (tpl != null) trackedRockDropTemplates.add(tpl);
-			}
-		}
-
-		// Diagnostic: log any unknown GFX id visible near the player so we can
-		// expand the isBreakable/isUnbreakable recognizer when a new section-2 hazard
-		// drops. Each new id is logged exactly once per session.
-		WorldPoint me = mirror.getPlayerTile();
-		if (me != null)
-		{
-			for (GraphicsObject g : gfx)
-			{
-				if (g == null) continue;
-				int id = g.getId();
-				if (LeviathanAutoIDs.isBreakableRockGfx(id) || LeviathanAutoIDs.isUnbreakableRockGfx(id)) continue;
-				LocalPoint lp = g.getLocation();
-				if (lp == null) continue;
-				WorldPoint gTile = WorldPoint.fromLocal(client, lp);
-				if (gTile == null) continue;
-				int dx = Math.abs(gTile.getX() - me.getX());
-				int dy = Math.abs(gTile.getY() - me.getY());
-				if (Math.max(dx, dy) > 10) continue;
-				if (seenUnknownGfxIds.add(id))
-				{
-					WorldPoint tplG = InstanceCoords.toTemplate(client, gTile);
-				}
 			}
 		}
 	}
@@ -1963,21 +1911,16 @@ public class LeviathanAutoMain
 		// and the enrage APPROACH run to the pathfinder. Everywhere else (roars, lightning,
 		// boulder, in-footprint enrage, transit back) eating is OFF -- the fight is mostly chip
 		// damage. No critical-HP override.
-		boolean eatAllowed = eatPhaseAllowed();
-		b.wantEat(eatAllowed);
-		b.allowComboEat(eatAllowed);
+		// Eat only in a safe (non-attacking) phase AND once HP has fallen to the threshold -- topping
+		// off wastes food and each eat delays our next attack (DPS loss).
+		boolean needFood = eatPhaseAllowed()
+			&& mirror.getHp() <= LeviathanSupply.PROFILE.hpEatThreshold;
+		b.wantEat(needFood);
+		b.allowComboEat(needFood);
 
-		int pray = mirror.getPrayer();
-		int maxPray = mirror.getMaxPrayer();
-		int ceiling = Math.max(1, maxPray - (7 + maxPray / 4));
-		if (pray <= ceiling - LeviathanSupply.PROFILE.prayerSipJitterWindow)
-		{
-			b.requireSip(net.runelite.client.plugins.autoBossCore.consume.SupplyProfile.DrinkKind.PRAYER);
-		}
-		else if (pray <= ceiling)
-		{
-			b.opportunisticSip(net.runelite.client.plugins.autoBossCore.consume.SupplyProfile.DrinkKind.PRAYER);
-		}
+		// Prayer: standalone sip below HALF of max (jittered); when eating, piggyback a free top-up.
+		ConsumptionEngine.requestPrayerSip(b, mirror, Math.max(1, mirror.getMaxPrayer() / 2),
+			LeviathanSupply.PROFILE.prayerSipJitterWindow, needFood);
 
 		if (mirror.getRunEnergy() <= LeviathanSupply.PROFILE.runEnergySipStam
 			&& LeviathanSupply.PROFILE.hasPotion(net.runelite.client.plugins.autoBossCore.consume.SupplyProfile.DrinkKind.STAMINA))
@@ -2023,13 +1966,15 @@ public class LeviathanAutoMain
 			rangingBoost.onDivineSipped(mirror.getTickCounter());
 	}
 
-	/** Pick the highest available dose id for a potion kind. */
+	/** Pick the LOWEST available dose id for a potion kind, so partial (1/2/3-dose) vials drain first and
+	 *  empty out of the inventory before we touch full 4-dose ones -- consolidating supplies and freeing
+	 *  slots over a long trip instead of leaving a spread of part-used vials. */
 	private int bestDoseId(net.runelite.client.plugins.autoBossCore.consume.SupplyProfile.DrinkKind k)
 	{
 		net.runelite.client.plugins.autoBossCore.consume.SupplyProfile.PotionEntry pot =
 			LeviathanSupply.PROFILE.potion(k);
 		if (pot == null) return -1;
-		for (int i = pot.doseIds.length - 1; i >= 0; i--)
+		for (int i = 0; i < pot.doseIds.length; i++)   // index 0 = 1-dose .. 3 = 4-dose: lowest first
 		{
 			int id = pot.doseIds[i];
 			if (id > 0 && mirror.countItem(id) > 0) return id;
@@ -2580,31 +2525,6 @@ public class LeviathanAutoMain
 		else if (north)         enrageQuadrant = EnrageQuadrant.NE;
 		else if (west)          enrageQuadrant = EnrageQuadrant.SW;
 		else                    enrageQuadrant = EnrageQuadrant.SE;
-	}
-
-	/**
-	 * Returns the tile the player should walk to during enrage phase. The
-	 * pathfinder travels clockwise, so we stand two cardinal sides clockwise from
-	 * its spawn quadrant:
-	 * <ul>
-	 *   <li>NW -> east of center</li>
-	 *   <li>NE -> south of center</li>
-	 *   <li>SE -> west of center</li>
-	 *   <li>SW -> north of center</li>
-	 * </ul>
-	 * All constants are template-space; the movement planner converts via
-	 * {@link InstanceCoords#fromTemplate(net.runelite.api.Client, net.runelite.api.coords.WorldPoint)}.
-	 */
-	private net.runelite.api.coords.WorldPoint enrageDestinationTile()
-	{
-		switch (enrageQuadrant)
-		{
-			case NW: return LeviathanAutoIDs.ENRAGE_DEST_EAST;
-			case NE: return LeviathanAutoIDs.ENRAGE_DEST_SOUTH;
-			case SE: return LeviathanAutoIDs.ENRAGE_DEST_WEST;
-			case SW: return LeviathanAutoIDs.ENRAGE_DEST_NORTH;
-			default: return null;
-		}
 	}
 
 	/**
@@ -3239,19 +3159,12 @@ public class LeviathanAutoMain
 
 	/**
 	 * Leviathan's current HP from the HP readout widget, or -1 if the widget isn't
-	 * present/parseable this tick. {@link #bossMaxHp()} gives the denominator.
+	 * present/parseable this tick.
 	 */
 	private int bossCurrentHp()
 	{
-		int[] hp = WidgetReader.fraction(client, LeviathanAutoIDs.WIDGET_BOSS_HP);
+		int[] hp = WidgetReader.fraction(client, WidgetReader.BOSS_HP_COMPONENT);
 		return hp == null ? -1 : hp[0];
-	}
-
-	/** Leviathan's max HP from the HP readout widget, or -1 if unavailable. */
-	private int bossMaxHp()
-	{
-		int[] hp = WidgetReader.fraction(client, LeviathanAutoIDs.WIDGET_BOSS_HP);
-		return hp == null ? -1 : hp[1];
 	}
 
 	/** Drop any scheduled overhead swap and deactivate all three protect prayers. */

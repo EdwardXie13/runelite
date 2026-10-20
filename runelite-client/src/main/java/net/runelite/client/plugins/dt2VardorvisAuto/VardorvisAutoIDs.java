@@ -14,6 +14,10 @@ public final class VardorvisAutoIDs
 	// --- Boss NPCs ---------------------------------------------------
 	/** Regular Vardorvis -- same id whether idle or actively fighting. */
 	public static final int NPC_VARDORVIS          = 12223;
+
+	// DPS thrall: which Greater thrall to summon. 14287043 = magic (ghost), 14287044 = ranged (skeleton),
+	// 14287045 = melee (zombie). Change this one value to switch the thrall's style for Vardorvis.
+	public static final int THRALL_CAST_WIDGET = 14287045;   // melee zombie
 	/** Quest-encounter Vardorvis. Not what the auto fights. */
 	public static final int NPC_VARDORVIS_QUEST    = 12224;
 	/** Awakened (hard mode) Vardorvis. TODO: capture ID. */
@@ -38,8 +42,7 @@ public final class VardorvisAutoIDs
 	public static final int[] QTE_CHILD_WIDGET_IDS = {
 		54591494, 54591495, 54591496, 54591497, 54591498, 54591499
 	};
-	/** Max QTE destroys to fire per tick. 3 clears a full 6-widget captcha in 2 ticks. */
-	public static final int QTE_MAX_CLICKS_PER_TICK = 3;
+
 
 	// --- Vardorvis active-state markers (GameObjects) ---------------
 	/**

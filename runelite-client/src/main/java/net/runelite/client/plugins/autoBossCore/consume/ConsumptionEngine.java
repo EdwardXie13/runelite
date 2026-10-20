@@ -7,7 +7,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static net.runelite.client.plugins.autoBossCore.consume.SupplyProfile.DrinkKind;
@@ -181,7 +183,7 @@ public class ConsumptionEngine
 			primary = pickPrimary();
 			if (primary != null && req.allowComboEat)
 			{
-				int projected = Math.min(mirror.getMaxHp(), mirror.getHp() + primary.healAmount);
+				int projected = Math.min(primary.ceiling(mirror.getMaxHp()), mirror.getHp() + primary.healAmount(mirror.getMaxHp()));
 				combo = pickCombo(projected);
 			}
 		}
@@ -201,44 +203,98 @@ public class ConsumptionEngine
 	// -----------------------------------------------------------------
 
 	/** Pick the first food in the primary/backup chain that fits HP room. */
+	/**
+	 * Request a JITTERED prayer-potion sip on {@code b}. {@code base} is the standalone sip point --
+	 * the prayer level below which we sip when NOT otherwise busy (a lone sip interrupts the attack,
+	 * so it is rationed). {@code jitterWindow} randomizes the exact point for human-like variation.
+	 * When {@code freeWindow} is true we are eating / in downtime, so a sip costs no extra attack
+	 * delay -- we then top prayer up for free up to the no-waste ceiling instead. Shared by every boss
+	 * so prayer sipping is consistent and jittery everywhere.
+	 */
+	public static void requestPrayerSip(Request.Builder b, MirrorState mirror, int base, int jitterWindow, boolean freeWindow)
+	{
+		int pray = mirror.getPrayer();
+		int maxPray = mirror.getMaxPrayer();
+		int jw = Math.max(0, jitterWindow);
+		if (freeWindow)
+		{
+			// Free top-up: sip whenever there is room for a full dose (no-waste ceiling), jittered.
+			int topUp = Math.max(1, maxPray - (7 + maxPray / 4)
+				- java.util.concurrent.ThreadLocalRandom.current().nextInt(0, jw + 1));
+			if (pray <= topUp) b.requireSip(DrinkKind.PRAYER);
+		}
+		else
+		{
+			// Standalone: jittered point around base, with a hard floor so we never run dry.
+			int floor = Math.max(1, base - jw);
+			int sipAt = Math.max(1, base - java.util.concurrent.ThreadLocalRandom.current().nextInt(0, jw + 1));
+			if (pray <= floor) b.requireSip(DrinkKind.PRAYER);
+			else if (pray <= sipAt) b.opportunisticSip(DrinkKind.PRAYER);
+		}
+	}
+
+	/**
+	 * Candidate foods for this fight: brought supplies, the combo food, and every recognised
+	 * (scavengeable) food, deduped by item id. Brought and scavenged food are treated identically --
+	 * anything in the inventory that the engine recognises is fair game.
+	 */
+	private List<FoodEntry> candidateFoods()
+	{
+		Map<Integer, FoodEntry> m = new LinkedHashMap<>();
+		for (FoodEntry f : profile.foods()) m.putIfAbsent(f.itemId, f);
+		if (profile.comboFood() != null) m.putIfAbsent(profile.comboFood().itemId, profile.comboFood());
+		for (FoodEntry f : FoodEntry.knownFoods()) m.putIfAbsent(f.itemId, f);
+		return new ArrayList<>(m.values());
+	}
+
+	/** Pick the best non-karambwan food in the inventory that fits HP room (highest fitting heal). */
 	protected FoodEntry pickPrimary()
 	{
 		int hp = mirror.getHp();
 		int maxHp = mirror.getMaxHp();
 		int headroom = profile.overhealHeadroom;
 
-		FoodEntry primary = profile.primaryFood();
-		if (primary != null && mirror.countItem(primary.itemId) > 0
-			&& hp + primary.healAmount <= maxHp - headroom)
+		// Any recognised non-combo food available (brought or scavenged, no distinction) that fits room.
+		FoodEntry best = null;
+		int bestHeal = -1;
+		for (FoodEntry f : candidateFoods())
 		{
-			return primary;
+			if (f.combo || mirror.countItem(f.itemId) <= 0) continue;
+			int heal = f.healAmount(maxHp);
+			if (hp + heal > f.ceiling(maxHp) - headroom) continue;   // would overheal
+			if (heal > bestHeal) { best = f; bestHeal = heal; }
 		}
+		if (best != null) return best;
 
-		FoodEntry backup = profile.backupFood();
-		if (backup != null && mirror.countItem(backup.itemId) > 0
-			&& hp + backup.healAmount <= maxHp - headroom)
-		{
-			return backup;
-		}
-
-		// If both overheal, allow the smaller one when HP is critical -- better to overheal
-		// a few than die on a 1hp miss.
+		// Everything overheals -- at critical HP eat the SMALLEST available anyway (waste the least),
+		// better to overheal a few than die on a 1hp miss.
 		if (hp <= profile.hpEatCriticalThreshold)
 		{
-			if (backup != null && mirror.countItem(backup.itemId) > 0) return backup;
-			if (primary != null && mirror.countItem(primary.itemId) > 0) return primary;
+			FoodEntry smallest = null;
+			int smallestHeal = Integer.MAX_VALUE;
+			for (FoodEntry f : candidateFoods())
+			{
+				if (f.combo || mirror.countItem(f.itemId) <= 0) continue;
+				int heal = f.healAmount(maxHp);
+				if (heal < smallestHeal) { smallest = f; smallestHeal = heal; }
+			}
+			if (smallest != null) return smallest;
 		}
 		return null;
 	}
 
-	/** Combo food stacks on top of primary; only fires if there's still HP room. */
+	/** Combo food (karambwan) stacks on the same tick as the primary; fires only if there's still room. */
 	protected FoodEntry pickCombo(int projectedHp)
 	{
-		FoodEntry combo = profile.comboFood();
-		if (combo == null || mirror.countItem(combo.itemId) <= 0) return null;
+		int maxHp = mirror.getMaxHp();
 		int headroom = profile.overhealHeadroom;
-		if (projectedHp + combo.healAmount > mirror.getMaxHp() - headroom) return null;
-		return combo;
+		for (FoodEntry f : candidateFoods())
+		{
+			if (!f.combo || mirror.countItem(f.itemId) <= 0) continue;
+			if (projectedHp + f.healAmount(maxHp) > f.ceiling(maxHp) - headroom) continue;
+			return f;
+		}
+		return null;
 	}
 
 	// -----------------------------------------------------------------

@@ -7,6 +7,7 @@ import net.runelite.api.GraphicsObject;
 import net.runelite.api.InventoryID;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
+import net.runelite.api.MenuEntry;
 import net.runelite.api.NPC;
 import net.runelite.api.NpcOverrides;
 import net.runelite.api.Player;
@@ -15,8 +16,10 @@ import net.runelite.api.Scene;
 import net.runelite.api.Tile;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.autoBossCore.combat.ClickRouter;
+import net.runelite.client.plugins.autoBossCore.combat.ThrallManager;
 import net.runelite.client.plugins.autoBossCore.combat.Hazard;
 import net.runelite.client.plugins.autoBossCore.combat.PrayerSwapper;
 import net.runelite.client.plugins.autoBossCore.combat.SchedulingTileDodger;
@@ -24,6 +27,7 @@ import net.runelite.client.plugins.autoBossCore.consume.ConsumptionEngine;
 import net.runelite.client.plugins.autoBossCore.consume.SupplyProfile;
 import net.runelite.client.plugins.autoBossCore.phase.PhaseTracker;
 import net.runelite.client.plugins.autoBossCore.state.InstanceCoords;
+import net.runelite.client.plugins.autoBossCore.state.WidgetReader;
 import net.runelite.client.plugins.autoBossCore.state.MirrorState;
 import net.runelite.client.plugins.autoBossCore.trip.TripState;
 import net.runelite.client.plugins.autoBossCore.ui.BaseOverlay;
@@ -104,6 +108,7 @@ public class WhispererAutoMain
 
 	// --- Boss state -------------------------------------------------
 	private final ConsumptionEngine engine;
+	private final ThrallManager thrall;
 	// TODO: add a magic combat-boost tracker (imbued/saturated heart or magic potion) once
 	// an offensive boost is carried -- see Leviathan/Vardorvis for the CombatBoostTracker wiring.
 	private final TripState trip = new TripState();
@@ -115,7 +120,6 @@ public class WhispererAutoMain
 	private int lastAttackTick = -100;
 
 	/** Instance tile resolution bookkeeping. */
-	private WorldPoint startTile;
 	private int lastResolveTick = -100;
 
 	/**
@@ -243,6 +247,10 @@ public class WhispererAutoMain
 	/** Siphon clear bookkeeping: the quadrants (NE/NW/SE/SW around her centre) we've already fired a
 	 *  Venator shot into, so a group whose souls are mid-death isn't targeted twice. Cleared at phase end. */
 	private final java.util.Set<String> siphonClearedQuadrants = new java.util.HashSet<>();
+	/** Centre used to split souls into the 4 corner quadrants, taken from the SOULS' own centroid (same
+	 *  coordinate space as the souls) and latched before the first shot. The Whisperer's tile can't be used
+	 *  here -- during the shadow clear it reads in a different space, scrambling the quadrants. Reset per siphon. */
+	private WorldPoint siphonCenter = null;
 	/** Last tile we issued a siphon walk-click to (camp under the boss), so we don't re-click it every tick. */
 	private WorldPoint lastSiphonClick = null;
 	/** Whether we were in the siphon phase last tick, to detect the active->inactive EDGE (true end, not a
@@ -274,9 +282,6 @@ public class WhispererAutoMain
 	/** Centre-to-edge of the Whisperer's 3x3 footprint (she's always 3x3). Used to place flee tiles from her CENTRE
 	 *  instead of getWorldArea's edge, which under-reports her size during screech / the bind form. */
 	private static final int WHISPERER_HALF_FOOTPRINT = 1;
-	/** How long (ticks) to keep enforcing the {@link #BIND_SAFE_GAP} after a phase ends -- long enough to
-	 *  cover the bind + her walk-in (~12t observed, unmeasured). Tunable; move to config if needed. */
-	private static final int BIND_FLEE_TICKS = 12;
 	/** While tick <= this, the post-phase bind flee is active (hold/extend the 10-gap). Set at each phase end:
 	 *  seeds = last seed stepped (10252), screech = 3rd/last pillar consumed, siphon = siphon phase ends. */
 	private int bindFleeUntil = -100;
@@ -315,10 +320,24 @@ public class WhispererAutoMain
 	private boolean resumeOscillation = false;
 	/** Previous-tick awake state, to catch the dormant->awake transition (the knockback moment). */
 	private boolean wasWhispererAwake = false;
+	/** Latched once the Odd Figure (12203) starts its wake animation (10227). While set and she is not yet
+	 *  awake (12204), we HOLD -- the knockback to the start tile and the 12204 spawn happen on their own, so
+	 *  re-poking/re-walking would just oscillate. Reset when the fight ends. */
+	private boolean oddFigureWaking = false;
+	/** Latched the moment we issue the 'Disturb': the menu action auto-walks us up off the start tile toward
+	 *  her, which is EXPECTED -- so we hold for the wake anim instead of walking back to the start tile (the
+	 *  oscillation). Reset when the fight ends. */
+	private boolean oddFigureDisturbed = false;
+	private int lastDisturbTick = -100;
+	/** Ticks to wait after a Disturb for the wake anim before assuming the click didn't land and re-poking. */
+	private static final int DISTURB_WAIT_TICKS = 8;
 	/** ENRAGE phase, triggered authoritatively by the chat line "The Whisperer pulls you into the Shadow
 	 *  Realm..." (see {@link #onChatMessage}). Latched true on that message; reset when the fight ends (boss
 	 *  gone). The enrage behavior itself keys off this flag. */
 	private boolean enragePhaseActive = false;
+	/** Latched true once the ENRAGE chat fires this fight; cleared on the next wake. Qualifies the
+	 *  'fight over -> prayers off' backstop so it can't trip on a transient whisperer==null before a fight. */
+	private boolean enrageSeen = false;
 	/** The tile we were standing on when the ENRAGE phase began -- the anchor for the 4-tile dodge formation
 	 *  (there are no static tiles; the whole formation is relative to this). Null until enrage starts; cleared at
 	 *  fight end. The 4 safe tiles are this + {@link #ENRAGE_OFFSETS}. */
@@ -344,6 +363,9 @@ public class WhispererAutoMain
 	/** Armed when the (seed-first) seed phase ends: after the bind flee we reposition to the north of her.
 	 *  Cleared on arrival or when the next special begins. This is the MANEUVER stage of the seed-first swing. */
 	private boolean repositionNorthActive = false;
+	/** Swing-back cardinal (toward centre = opposite the flee), captured at resolveSwing. Exactly one nonzero;
+	 *  default north. The reposition drives along this instead of a hardcoded north. */
+	private int reposDx = 0, reposDy = 1;
 	/** Last tile we clicked while repositioning north, for dedupe. */
 	private WorldPoint lastReposClick = null;
 	/**
@@ -362,6 +384,13 @@ public class WhispererAutoMain
 	private int swingTick = -100;                // the tick the special ended (startSwing)
 	private int swingArrivedTick = -100;         // first tick at the flee tile; the 12205 bind-watch counts from here
 	private WorldPoint lastSwingClick = null;
+	/** Flee tile LATCHED once at swing start, so re-clicks don't recompute off her LIVE centre -- during a
+	 *  bind she's pulled (and 12205 walks) south, and a live recompute marched the target 13 further south each
+	 *  tick, eventually clicking off the map. Fixed for the whole swing; nulled on start/resolve/reset. */
+	private WorldPoint swingFleeAnchor = null;
+	/** Her 3x3 CENTRE captured at wake -- the fixed arena centreline reference for flee tiles. She doesn't move
+	 *  (only the 12205 bind form drifts), so flees stay on the centreline through this X/Y. Recaptured each wake. */
+	private WorldPoint whispererStartCentre = null;
 	/** Latched by the "The Whisperer binds you in place" chat line: confirms we are ROOTED by the bind. While a
 	 *  swing is BOUND and this is set, we DPS the bind form (12205) whenever she's in range (we can't move, but we
 	 *  can still attack). Cleared when a swing starts / resolves and at fight end. */
@@ -386,11 +415,6 @@ public class WhispererAutoMain
 	private static final int BIND_APPEAR_TICKS_SEEDS   = 5;
 	private static final int BIND_APPEAR_TICKS_SCREECH = 9;
 	private static final int BIND_APPEAR_TICKS_SIPHON  = 8;
-	/** Flee gaps, measured as tiles CLEAR of her 3x3 FOOTPRINT EDGE (not her centre) on the centre lane, so
-	 *  the number is the real Chebyshev gap. Seeds/Siphon flee SOUTH, Screech flees NORTH (she ends up south
-	 *  of us = safe). Tunable. */
-	private static final int FLEE_SOUTH_GAP = BIND_SAFE_GAP;   // 10 clear of her south edge -- seeds / siphon
-	private static final int FLEE_NORTH_GAP = BIND_SAFE_GAP;   // 10 clear of her north edge -- screech
 	/** How far north of her centre to settle, and how far east of her footprint the go-around corridor sits. */
 	private static final int REPOS_NORTH_OFFSET = 5;
 	private static final int REPOS_CORRIDOR_DX = 3;
@@ -463,6 +487,7 @@ public class WhispererAutoMain
 		this.prayers = prayers;
 
 		this.engine = new ConsumptionEngine(WhispererSupply.PROFILE, mirror);
+		this.thrall = new ThrallManager(WhispererAutoIDs.THRALL_CAST_WIDGET, "Whisperer thrall");
 
 		this.phase = new PhaseTracker<>(WhisPhase.OUT_OF_FIGHT)
 			.on(WhisPhase.FIGHT, () -> whisperer != null && isWhispererAwake(),
@@ -475,6 +500,30 @@ public class WhispererAutoMain
 
 	public void bindOverlay(BaseOverlay o) { this.overlay = o; }
 	public void bindConfig(WhispererAutoConfig c) { this.config = c; }
+
+	/** Normalized, low-churn overlay step (coarse phase/action name only). */
+	private void step(String coarse)
+	{
+		if (overlay != null) overlay.setStep(coarse);
+	}
+
+	/** Coarse step on the overlay; the full specific detail is kept out of the HUD and logged in capture mode. */
+	private void step(String coarse, String detail)
+	{
+		if (overlay != null) overlay.setStep(coarse);
+		if (config != null && config.captureMode()) log.info("[step] {} -- {}", coarse, detail);
+	}
+
+	/** Flee direction label derived from the LATCHED flee anchor (dynamic for seeds/siphon), for the overlay. */
+	private String fleeLabel()
+	{
+		WorldPoint a = swingFleeAnchor;
+		WorldPoint c = whispererStartCentre != null ? whispererStartCentre : whispererCenterTile();
+		if (a == null || c == null) return "Flee";
+		int dx = a.getX() - c.getX(), dy = a.getY() - c.getY();
+		if (Math.abs(dy) >= Math.abs(dx)) return dy >= 0 ? "Flee North" : "Flee South";
+		return dx >= 0 ? "Flee East" : "Flee West";
+	}
 
 	/** Effective attack cooldown in ticks: config override if > 0, else the selected weapon's,
 	 *  else the {@link WhispererAutoIDs} fallback (before the config is bound). */
@@ -510,6 +559,28 @@ public class WhispererAutoMain
 	}
 
 	public boolean   isActive()     { return active; }
+
+	/**
+	 * During the SIPHON clear we approach souls by clicking tiles that sit ON the Whisperer's 3x3 footprint,
+	 * where the default left-click is "Attack" -- so the walk click would attack her with the Venator bow
+	 * instead of moving (the 'approaching soul -> freeze'). We never click her during the siphon, so
+	 * deprioritize her menu entries then, making those clicks resolve to "Walk here". Everywhere else she
+	 * stays clickable so the fight can attack her normally.
+	 */
+	public void onMenuEntryAdded(MenuEntryAdded event)
+	{
+		if (!active || !inSiphonPhase()) return;
+		MenuEntry e = event.getMenuEntry();
+		NPC npc = e.getNpc();
+		if (npc == null) return;
+		int id = npc.getId();
+		if (id == WhispererAutoIDs.NPC_WHISPERER_AWAKE
+			|| id == WhispererAutoIDs.NPC_WHISPERER_DORMANT
+			|| id == WhispererAutoIDs.NPC_WHISPERER_BINDING)
+		{
+			e.setDeprioritized(true);
+		}
+	}
 	public void      start()        { active = true; }
 	public void      stop()
 	{
@@ -582,10 +653,11 @@ public class WhispererAutoMain
 				if (mirror.countItem(ITEM_VENATOR_BOW) > 0) equipVenatorBow();
 				clickBlackstone(tick);
 				siphonActionDone = true;
+				siphonCenter = null;            // fresh siphon -> re-latch the quadrant centre from the new ring
 				lastSiphonEndAnimTick = -100;   // fresh siphon -> re-arm the end-anim anchor
 				siphonSwingArmed = false;       // fresh siphon -> allow the post-phase flee to re-arm on landing
 				resumeOscillation = false;      // a new siphon ends any post-siphon oscillation
-				if (overlay != null) overlay.setStep("siphon: venator bow + blackstone");
+				step("Siphon", "siphon: venator bow + blackstone");
 			}
 			// SIPHON END (10259): BACKSTOP for when we didn't finish the clear ourselves (a shot whiffed, so
 			// "all 4 groups fired" never latched). Her end animation ends the phase -> swap the weapon back
@@ -602,7 +674,7 @@ public class WhispererAutoMain
 					mainWeaponSwapPending = true;
 					siphonFleeArmed = true;
 					if (!siphonSwingArmed) { startSwing(Special.SIPHON, tick); siphonSwingArmed = true; }
-					if (overlay != null) overlay.setStep("siphon: 10259 end (backstop) -> flee");
+					step("Siphon", "siphon: 10259 end (backstop) -> flee");
 				}
 			}
 			// Arm the seed phase here, UNCONDITIONALLY each tick -- 10248 is a brief telegraph and the
@@ -625,6 +697,7 @@ public class WhispererAutoMain
 		{
 			siphonActionDone = false;
 			siphonClearedQuadrants.clear();
+			siphonCenter = null;
 			lastSiphonClick = null;
 			siphonFleeArmed = false;
 			venatorShotTicks.clear();
@@ -653,6 +726,12 @@ public class WhispererAutoMain
 				openingDanceA = k;
 				openingDanceB = new WorldPoint(k.getX(), k.getY() - 2, k.getPlane());
 			}
+			deathPrayersOff = false;   // fresh fight -> re-arm prayer management
+			enrageSeen = false;        // fresh fight -> the enrage/death backstop re-arms
+			whispererStartCentre = whispererCenterTile();   // fix the arena centreline off her 3x3 starting X/Y
+			// NOTE: do NOT reset the thrall here. The opening thrall is cast pre-wake in handleFightStart; resetting
+			// on the wake edge would discard it, trigger a wasted recast (one is already up), and the cast's
+			// lastAttackTick bump would delay the first attack. The timer runs continuously through the fight.
 		}
 		wasWhispererAwake = awakeNow;
 		// Latch which special opened the fight. Use the AUTHORITATIVE screech signal (pillars captured), NOT
@@ -685,6 +764,9 @@ public class WhispererAutoMain
 		{
 			firstSpecialStarted = false;
 			firstSpecialWasSeeds = false;
+			oddFigureWaking = false;
+			oddFigureDisturbed = false;
+			lastDisturbTick = -100;
 			enragePhaseActive = false;
 			enrageAnchor = null;
 			lastEnrageStepTick = -100;
@@ -694,6 +776,7 @@ public class WhispererAutoMain
 			recenterActive = false;
 			resumeOscillation = false;
 			swingSpecial = Special.NONE;
+			swingFleeAnchor = null;
 			maneuverSpecial = Special.NONE;
 			openingDanceA = null;
 			openingDanceB = null;
@@ -753,15 +836,35 @@ public class WhispererAutoMain
 
 		if (!active) return;
 
-		// SUPPLIES: eat a shark when HP is low and sip a prayer potion when prayer runs down. Runs EVERY tick, up
-		// here BEFORE the movement/attack handlers (which return early on dodge/swing ticks), because eating and
-		// drinking are inventory actions that coexist with a move/attack on the same tick -- so gating them behind
-		// those handlers would skip them through most of the fight. The engine's thresholds (HP eat, prayer ceiling,
-		// overheal cap) decide when it actually fires.
+		// DEATH -> prayers off: on her death animation (10260), OR SOONER when her HP bar reads 0 while we are in
+		// the shadow-realm ENRAGE phase (the real final death). Turn ALL prayers off once; deathPrayersOff then
+		// gates the prayer watcher so nothing flicks one back on. Re-armed on the next fight's wake.
+		boolean deathAnim = anyNpcHasAnim(WhispererAutoIDs.ANIM_WHISPERER_DEATH);   // id-agnostic: she may not be the tracked 12204
+		boolean enrageHpZero = enragePhaseActive && inShadowRealm() && WidgetReader.bossHp(client) == 0;
+		// BACKSTOP: after the enrage this fight, once she's gone and we're back in the overworld (not binding,
+		// not in the shadow realm) the fight is over -- she's dead. Reliable when the anim/hp-0 triggers miss
+		// (she's not a scene NPC in the shadow realm, and the HP bar can vanish before it reads 0).
+		boolean fightOverAfterEnrage = enrageSeen && whisperer == null
+			&& findNpcAny(WhispererAutoIDs.NPC_WHISPERER_BINDING) == null && inOverworld();
+		if ((deathAnim || enrageHpZero || fightOverAfterEnrage) && !deathPrayersOff)
+		{
+			deathPrayersOff = true;
+			turnPrayersOff(tick);
+			step("Dead", "death -> prayers off");
+		}
+
+		// SUPPLIES: runs EVERY tick. Prayer must sip whenever it's low (below ~45), so it can't be gated to the
+		// idle windows -- that starved it (and the fall-through consumption below is behind ENABLE_FULL_AUTO). The
+		// idle-window restriction instead lives on FOOD alone (see buildConsumptionRequest), so a heal never
+		// delays a cast while prayer stays topped.
 		handleConsumption(tick);
 
 		// Realm crossings for the scout phases are driven by the phase handlers via
 		// serviceRealmCrossing(desiredRealm) -- not a chat one-shot -- so nothing to do here.
+
+		// CLEANUP (post-death): loot -> decide -> wait for the Odd Figure to respawn. Stub for now; claims the
+		// tick so the fight handlers stay idle until she is back in the scene.
+		if (handleCleanup(tick)) return;
 
 		// FIGHT START: while she's DORMANT, walk to the start tile, then wake her (attack the dormant form).
 		// The wake knockback + opening oscillation take over once she's awake.
@@ -794,14 +897,24 @@ public class WhispererAutoMain
 			net.runelite.api.coords.WorldArea bArea = whisperer == null ? null : whisperer.getWorldArea();
 			if (bArea != null && tentacleStep != null && bArea.distanceTo(tentacleStep) <= 1)
 			{
-				if (overlay != null) overlay.setStep("tentacle dodge: step beside boss -> hold");
-				return;
+				// The opening-oscillation override / clampInside picked a tile ON or BESIDE her (both run AFTER
+				// bestStep, bypassing its 5x5 guard). Stepping in is a guaranteed hit -- but DON'T freeze in the
+				// tentacle field: there's almost always another safe tile. Recompute a dodge-safe neighbour and use
+				// it; only hold if literally every surrounding tile is a hit (which shouldn't happen here).
+				WorldPoint recalc = safeNeighbourStep(mirror.getPlayerTile(), tentacleStep, npcsNow(), effectiveTentacleGap());
+				if (recalc == null)
+				{
+					step("Dodge tentacle", "tentacle dodge: beside boss, no safe tile -> hold");
+					return;
+				}
+				tentacleStep = recalc;
+				step("Dodge tentacle", "tentacle dodge: beside boss -> recalc " + recalc);
 			}
 			if (config != null && config.captureMode())
 				log.info("[gate] tentacle dodge -> {} (plane={}) -- skipping seed handling", tentacleStep, currentPlane());
 			router.walkTo(tentacleStep);
 			tentacleRelockPending = true;   // the walk drops our attack lock; re-lock next tick
-			if (overlay != null) overlay.setStep("tentacle dodge -> " + tentacleStep);
+			step("Dodge tentacle", "tentacle dodge -> " + tentacleStep);
 			return;
 		}
 		// Dodge step has landed -> re-click the Whisperer to re-lock. ONLY in normal fighting (swingSpecial NONE):
@@ -857,7 +970,7 @@ public class WhispererAutoMain
 		{
 			equipMainWeapon();
 			mainWeaponSwapPending = false;
-			if (overlay != null) overlay.setStep("swap-back backstop: wield main weapon");
+			step("Equip weapon", "swap-back backstop: wield main weapon");
 		}
 
 		// LIVE: attack the awake Whisperer (12204). The dodge / relock / seed handling above take
@@ -877,7 +990,7 @@ public class WhispererAutoMain
 			if (step != null && !step.equals(me))
 			{
 				router.walkTo(step);
-				if (overlay != null) overlay.setStep("dodge -> " + step);
+				step("Dodge tentacle", "dodge -> " + step);
 				return;
 			}
 		}
@@ -989,65 +1102,6 @@ public class WhispererAutoMain
 	}
 
 	/**
-	 * Plan the next tile to click during the seed crossing.
-	 * <p>
-	 * Model (per user): the good seeds form a ring. We start on the good seed nearest us, then
-	 * walk around the ring in one rotational direction -- from the correct tile there is always
-	 * another good seed exactly ~2 tiles away (one run-tick landing). So each tick we step to
-	 * the next good seed around the ring, never reversing.
-	 * <ol>
-	 *   <li>If we're not on a good seed yet, walk to the nearest one (the entry).</li>
-	 *   <li>Otherwise pick the good-seed neighbour within one run-step (Chebyshev 1..2) that
-	 *       continues the rotation ({@code config.seedClockwise()}), excluding the seed we came
-	 *       from so we keep going around rather than bouncing back.</li>
-	 * </ol>
-	 *
-	 * @return the next good-seed tile to click, or null if nothing sensible to step to.
-	 */
-	/**
-	 * Ring-walk a set of good-seed tiles: if not on one, head to the nearest; otherwise step to
-	 * the good neighbour (1-2 tiles) that continues the rotation, not reversing. Works for any
-	 * tile list -- live shadow seeds, or the cached overworld route.
-	 */
-	private WorldPoint planSeedStepOver(WorldPoint from, java.util.List<WorldPoint> good)
-	{
-		if (from == null || good.isEmpty()) return null;
-
-		if (!good.contains(from))
-		{
-			// Not on the ring yet -> head to the nearest good seed (entry point).
-			lastSeedTile = null;
-			return nearestGoodSeed(from, good);
-		}
-
-		// On a good seed. Candidate next-seeds: within one run-tick (1..2 tiles), not ourselves,
-		// not the seed we just came from (so we don't reverse).
-		java.util.List<WorldPoint> candidates = new java.util.ArrayList<>();
-		for (WorldPoint g : good)
-		{
-			if (g.equals(from) || g.getPlane() != from.getPlane()) continue;
-			int d = cheby(from, g);
-			if (d >= 1 && d <= 2 && !g.equals(lastSeedTile)) candidates.add(g);
-		}
-		// Dead-end guard: if excluding the previous seed left nothing, allow it.
-		if (candidates.isEmpty())
-		{
-			for (WorldPoint g : good)
-			{
-				if (g.equals(from) || g.getPlane() != from.getPlane()) continue;
-				int d = cheby(from, g);
-				if (d >= 1 && d <= 2) candidates.add(g);
-			}
-		}
-		if (candidates.isEmpty()) return null;
-
-		boolean clockwise = config == null || config.seedClockwise();
-		WorldPoint next = pickRotationNeighbour(from, candidates, clockwise, good);
-		lastSeedTile = from;   // we're leaving `from`, so it's the one to not reverse into
-		return next;
-	}
-
-	/**
 	 * Drive the corrupted-seeds phase. Returns true while the phase owns the tick.
 	 * <p>
 	 * Good/bad seeds are only distinguishable in the SHADOW realm (good = GameObject 47573). In the
@@ -1143,18 +1197,18 @@ public class WhispererAutoMain
 				// DPS through the ~3-tick gap until the fragment charges (28356); then cross in.
 				if (mirror.countItem(WhispererAutoIDs.ITEM_BLACKSTONE_FRAGMENT) <= 0)
 				{
-					if (overlay != null) overlay.setStep("seed: armed (10248), DPS until fragment charges");
+					step("Seeds", "seed: armed (10248), DPS until fragment charges");
 					return false;
 				}
 				serviceRealmCrossing(tick);
-				if (overlay != null) overlay.setStep("seed: crossing to shadow");
+				step("Seeds", "seed: crossing to shadow");
 				return true;
 			}
 			// In shadow but still mid-transition / not loaded -> no good seeds yet. WAIT (hold position)
 			// until we actually see them; the transition screen is ~1 tick, so just keep scanning.
 			if (goodSeedTiles.isEmpty())
 			{
-				if (overlay != null) overlay.setStep("seed: in shadow, waiting for seeds");
+				step("Seeds", "seed: in shadow, waiting for seeds");
 				return true;
 			}
 			// First good-seed sighting -> start the dwell from here (not from entering the plane).
@@ -1185,7 +1239,7 @@ public class WhispererAutoMain
 				seedScoutDone = true;
 			}
 			if (overlay != null)
-				overlay.setStep("seed: mapping (shadow) good=" + goodSeedTiles.size() + " route=" + seedRouteOw.size());
+				step("Seeds", "seed: mapping (shadow) good=" + goodSeedTiles.size() + " route=" + seedRouteOw.size());
 			return true;
 		}
 
@@ -1194,14 +1248,14 @@ public class WhispererAutoMain
 		if (!inOverworld())
 		{
 			serviceRealmCrossing(tick);
-			if (overlay != null) overlay.setStep("seed: crossing to overworld (" + seedRouteOw.size() + ")");
+			step("Seeds", "seed: crossing to overworld (" + seedRouteOw.size() + ")");
 			return true;
 		}
 
 		// --- WALK the translated good-seed route in the overworld, in PATH order. ---
 		if (seedRouteOw.isEmpty())
 		{
-			if (overlay != null) overlay.setStep("seed: waiting for route");
+			step("Seeds", "seed: waiting for route");
 			return true;
 		}
 		// Order the route into a walkable path ONCE, starting from the seed nearest where we re-entered.
@@ -1219,7 +1273,7 @@ public class WhispererAutoMain
 
 		if (seedWalkIdx >= seedPath.size())
 		{
-			if (overlay != null) overlay.setStep("seed: route complete (" + seedPath.size() + ")");
+			step("Seeds", "seed: route complete (" + seedPath.size() + ")");
 			return true;
 		}
 		if (seedTargetSetTick < 0) seedTargetSetTick = tick;
@@ -1231,7 +1285,7 @@ public class WhispererAutoMain
 		{
 			seedWalkIdx++;
 			seedTargetSetTick = tick;
-			if (overlay != null) overlay.setStep("seed: skip stuck -> " + seedWalkIdx + "/" + seedPath.size());
+			step("Seeds", "seed: skip stuck -> " + seedWalkIdx + "/" + seedPath.size());
 			return true;
 		}
 
@@ -1254,16 +1308,23 @@ public class WhispererAutoMain
 			lastAttackTick = tick;
 			seedTargetSetTick = tick;
 			lastSeedClick = null;   // attack interrupts the walk -> re-click the run end next tick
-			if (overlay != null) overlay.setStep("seed: weave attack (" + (seedWalkIdx + 1) + "/" + seedPath.size() + ")");
+			step("Seeds", "seed: weave attack (" + (seedWalkIdx + 1) + "/" + seedPath.size() + ")");
 			return true;
 		}
 
-		if (me != null && clickTarget != null && !clickTarget.equals(lastSeedClick))
+		// Issue (or RE-issue) the walk. Re-click when it's a new target OR we've gone idle short of it: a
+		// misclick resolves against the pre-move hover tile (often our own), so the walk never takes and we
+		// stand frozen in the field. Re-firing the same destination recovers us -- the stuck-skip above
+		// (seedTargetSetTick, deliberately NOT reset here) still owns the genuine-unreachable fallback.
+		boolean seedNewTarget    = !clickTarget.equals(lastSeedClick);
+		boolean seedStalledShort = me != null && clickTarget != null
+			&& client.getLocalDestinationLocation() == null && cheby(me, clickTarget) > 0;
+		if (me != null && clickTarget != null && (seedNewTarget || seedStalledShort))
 		{
 			router.walkTo(clickTarget);
 			lastSeedClick = clickTarget;
 			if (overlay != null)
-				overlay.setStep("seed: -> " + (seedWalkIdx + 1)
+				step("Seeds", "seed: " + (seedStalledShort && !seedNewTarget ? "re-click " : "-> ") + (seedWalkIdx + 1)
 					+ (clickIdx > seedWalkIdx ? ".." + (clickIdx + 1) : "")
 					+ "/" + seedPath.size() + " " + clickTarget);
 		}
@@ -1301,7 +1362,7 @@ public class WhispererAutoMain
 			// Pillars captured -> cross straight back to the overworld (minimal time in shadow).
 			desiredRealm = WhispererAutoIDs.OVERWORLD_PLANE;
 			serviceRealmCrossing(tick);
-			if (overlay != null) overlay.setStep("screech: pillars captured -> crossing back to overworld");
+			step("Screech", "screech: pillars captured -> crossing back to overworld");
 		}
 		else
 		{
@@ -1427,12 +1488,12 @@ public class WhispererAutoMain
 						attackWhisperer();
 						lastAttackTick = tick;
 						lastHideClick = null;   // next tick we re-click the cover tile and run
-						if (overlay != null) overlay.setStep("screech: pillar clear -> weave, then run to spot " + (screechHideIdx + 1));
+						step("Screech", "screech: pillar clear -> weave, then run to spot " + (screechHideIdx + 1));
 					}
 					else if (nextCover != null)
 					{
 						hideWalk(nextCover);
-						if (overlay != null) overlay.setStep("screech: pillar hit -> run to spot " + (screechHideIdx + 1));
+						step("Screech", "screech: pillar hit -> run to spot " + (screechHideIdx + 1));
 					}
 			}
 			else
@@ -1456,7 +1517,7 @@ public class WhispererAutoMain
 				recenterBindSeen = false;
 				boundInPlaceChatSeen = false;   // fresh recentre -> only a real post-screech bind (chat) counts
 				lastRecenterClick = null;
-				if (overlay != null) overlay.setStep("screech: last pillar hit -> attack, then recentre (no swing)");
+				step("Screech", "screech: last pillar hit -> attack, then recentre (no swing)");
 			}
 			return;
 		}
@@ -1499,12 +1560,12 @@ public class WhispererAutoMain
 						lastAttackTick = tick;
 						screechApproachWeaved = true;   // one weave per approach -> stop interrupting the run
 						lastHideClick = null;   // attack interrupts the run -> re-click the cover tile next tick
-						if (overlay != null) overlay.setStep("screech: approach weave -> spot 1");
+						step("Screech", "screech: approach weave -> spot 1");
 						return;
 					}
 				}
 				hideWalk(run);
-				if (overlay != null) overlay.setStep("screech: -> cover spot " + (screechHideIdx + 1) + " " + run);
+				step("Screech", "screech: -> cover spot " + (screechHideIdx + 1) + " " + run);
 				return;
 			}
 		}
@@ -1530,9 +1591,9 @@ public class WhispererAutoMain
 				{
 					attackWhisperer();
 					lastAttackTick = tick;
-					if (overlay != null) overlay.setStep("screech: safe-tile weave spot " + (screechHideIdx + 1));
+					step("Screech", "screech: safe-tile weave spot " + (screechHideIdx + 1));
 				}
-				else if (overlay != null) overlay.setStep("screech: on safe tile (cd) spot " + (screechHideIdx + 1));
+				else step("Screech", "screech: on safe tile (cd) spot " + (screechHideIdx + 1));
 				return;
 			}
 		}
@@ -1541,7 +1602,7 @@ public class WhispererAutoMain
 			if (s != null && me.distanceTo(s) <= 1)
 			{
 				hideWalk(s);
-				if (overlay != null) overlay.setStep("screech: -> safe tile " + s);
+				step("Screech", "screech: -> safe tile " + s);
 				return;
 			}
 
@@ -1551,10 +1612,10 @@ public class WhispererAutoMain
 		if (rest != null && !me.equals(rest))
 		{
 			hideWalk(rest);
-			if (overlay != null) overlay.setStep("screech: readjust spot " + (screechHideIdx + 1) + " " + rest);
+			step("Screech", "screech: readjust spot " + (screechHideIdx + 1) + " " + rest);
 			return;
 		}
-		if (overlay != null) overlay.setStep("screech: hiding spot " + (screechHideIdx + 1));
+		step("Screech", "screech: hiding spot " + (screechHideIdx + 1));
 	}
 
 	/** Walk toward {@code target}, but only CLICK when the destination changed from our last hide-walk
@@ -1565,14 +1626,6 @@ public class WhispererAutoMain
 		if (target == null || target.equals(lastHideClick)) return;
 		router.walkTo(target);
 		lastHideClick = target;
-	}
-
-	/** The Whisperer's tile in the same space as {@link MirrorState#getPlayerTile()} (fromLocal), or null. */
-	private WorldPoint whispererTile()
-	{
-		if (whisperer == null) return null;
-		LocalPoint lp = whisperer.getLocalLocation();
-		return lp == null ? null : WorldPoint.fromLocal(client, lp);
 	}
 
 	/**
@@ -1625,7 +1678,7 @@ public class WhispererAutoMain
 		{
 			equipMainWeapon();
 			mainWeaponSwapPending = false;
-			if (overlay != null) overlay.setStep("phase-end: equip main weapon");
+			step("Phase-end bind", "phase-end: equip main weapon");
 			return true;
 		}
 
@@ -1644,7 +1697,7 @@ public class WhispererAutoMain
 			bindFleeUntil = tick;             // no bind this time -> end the window now
 			bindFleeTarget = null;
 			lastBindFleeClick = null;
-			if (overlay != null) overlay.setStep("phase-end: no bind -> resume DPS");
+			step("Phase-end bind", "phase-end: no bind -> resume DPS");
 			return false;
 		}
 
@@ -1658,7 +1711,7 @@ public class WhispererAutoMain
 			bindFleeTarget = null;
 			lastBindFleeClick = null;
 			bindFleeUntil = tick;
-			if (overlay != null) overlay.setStep("phase-end: safe -> attack + relock, resume DPS");
+			step("Phase-end bind", "phase-end: safe -> attack + relock, resume DPS");
 			return true;
 		}
 
@@ -1670,7 +1723,7 @@ public class WhispererAutoMain
 			attackWhisperer();
 			lastAttackTick = tick;
 			lastBindFleeClick = null;
-			if (overlay != null) overlay.setStep("phase-end: run out + weave attack (gap " + gap + ")");
+			step("Phase-end bind", "phase-end: run out + weave attack (gap " + gap + ")");
 			return true;
 		}
 		if (bindFleeTarget == null || me.equals(bindFleeTarget)) bindFleeTarget = fleeTileFrom(me);
@@ -1681,7 +1734,7 @@ public class WhispererAutoMain
 		}
 		if (config != null && config.captureMode())
 			log.info("[bindDbg] tick={} gap={} run(cardinal)->{}", tick, gap, bindFleeTarget);
-		if (overlay != null) overlay.setStep("phase-end: run out cardinal (gap " + gap + ")");
+		step("Phase-end bind", "phase-end: run out cardinal (gap " + gap + ")");
 		return true;
 	}
 
@@ -1806,7 +1859,7 @@ public class WhispererAutoMain
 				equipMainWeapon();
 				mainWeaponSwapPending = false;
 				clickBlackstone(tick);
-				if (overlay != null) overlay.setStep("siphon: cleared -> equip main weapon + blackstone");
+				step("Siphon", "siphon: cleared -> equip main weapon + blackstone");
 				return true;
 			}
 			// BACK IN THE OVERWORLD: begin the flee THE MOMENT WE LAND (armed here, once -- the swing can't be
@@ -1837,7 +1890,7 @@ public class WhispererAutoMain
 				{
 					router.walkTo(camp);
 					lastSiphonClick = camp;
-					if (overlay != null) overlay.setStep("siphon: pre-walk to camp -> " + camp);
+					step("Siphon", "siphon: pre-walk to camp -> " + camp);
 				}
 			}
 			return true;
@@ -1860,10 +1913,18 @@ public class WhispererAutoMain
 			if (config != null && config.captureMode())
 				log.info("[siphonDbg] all 4 groups fired -> end clear: blackstone back + swap + flee (tick={} quads={} shotTicks={} projShots={})",
 					tick, siphonClearedQuadrants, venatorShotTicks, venatorShotCount());
-			if (overlay != null) overlay.setStep("siphon: 4 groups fired -> blackstone back + swap weapon");
+			step("Siphon", "siphon: 4 groups fired -> blackstone back + swap weapon");
 			return true;   // next tick the siphonFleeArmed block crosses us back to the overworld
 		}
 
+		// Latch the quadrant centre from the souls' own centroid (full ring = true centre) BEFORE the first
+		// shot, then freeze it while we clear. Classifying against the Whisperer's tile scrambled the quadrants
+		// in the shadow realm and ended the clear after a single group.
+		if (siphonClearedQuadrants.isEmpty())
+		{
+			WorldPoint ctr = siphonSoulsCentroid();
+			if (ctr != null) siphonCenter = ctr;
+		}
 		NPC target = pickSiphonTarget(me);
 		// Fewer than 4 groups fired but no valid target this tick (a group's souls are mid-death / not yet targetable)
 		// -> HOLD and keep trying. We do NOT end here -- that was ending with souls still alive. The 10259 end-anim
@@ -1884,7 +1945,7 @@ public class WhispererAutoMain
 			{
 				router.walkTo(off);
 				lastSiphonClick = off;
-				if (overlay != null) overlay.setStep("siphon: last cluster -> step off boss first " + off);
+				step("Siphon", "siphon: last cluster -> step off boss first " + off);
 			}
 			return true;
 		}
@@ -1911,10 +1972,10 @@ public class WhispererAutoMain
 					mainWeaponSwapPending = true;
 					startSwing(Special.SIPHON, tick);
 					siphonFleeArmed = true;
-					if (overlay != null) overlay.setStep("siphon: 4th shot away -> blackstone back + swap weapon");
+					step("Siphon", "siphon: 4th shot away -> blackstone back + swap weapon");
 					return true;
 				}
-				if (overlay != null) overlay.setStep("siphon: shoot soul " + tt);
+				step("Siphon", "siphon: shoot soul " + tt);
 			}
 			return true;
 		}
@@ -1927,7 +1988,7 @@ public class WhispererAutoMain
 		{
 			router.walkTo(approach);
 			lastSiphonClick = approach;
-			if (overlay != null) overlay.setStep("siphon: approach soul " + tt + " (gap " + me.distanceTo(tt) + ")");
+			step("Siphon", "siphon: approach soul " + tt + " (gap " + me.distanceTo(tt) + ")");
 		}
 		return true;
 	}
@@ -1972,8 +2033,10 @@ public class WhispererAutoMain
 	 *  {@link MirrorState#getPlayerTile()} and the soul tiles. Null if she's absent. */
 	private WorldPoint whispererCenterTile()
 	{
-		if (whisperer == null) return null;
-		net.runelite.api.coords.WorldArea a = whisperer.getWorldArea();
+		NPC w = whisperer;
+		if (w == null) w = findNpcAny(WhispererAutoIDs.NPC_WHISPERER_BINDING);   // 12205 during a bind: same spot/footprint
+		if (w == null) return null;
+		net.runelite.api.coords.WorldArea a = w.getWorldArea();
 		if (a == null) return null;
 		return new WorldPoint(a.getX() + a.getWidth() / 2, a.getY() + a.getHeight() / 2, a.getPlane());
 	}
@@ -1988,9 +2051,26 @@ public class WhispererAutoMain
 	}
 
 	/** Quadrant label (NE/NW/SE/SW) of a soul tile relative to the Whisperer's centre -- the 4 corner groups. */
+	/** Centroid (average tile) of all lost souls (12212) present this tick, in the souls' own space, or null. */
+	private WorldPoint siphonSoulsCentroid()
+	{
+		List<NPC> npcs = client.getNpcs();
+		if (npcs == null) return null;
+		long sx = 0, sy = 0; int n = 0;
+		for (NPC npc : npcs)
+		{
+			if (npc == null || npc.getId() != WhispererAutoIDs.NPC_LOST_SOUL_SHADOW) continue;
+			WorldPoint t = npcTile(npc);
+			if (t == null) continue;
+			sx += t.getX(); sy += t.getY(); n++;
+		}
+		if (n == 0) return null;
+		return new WorldPoint((int) (sx / n), (int) (sy / n), currentPlane());
+	}
+
 	private String soulQuadrant(WorldPoint t)
 	{
-		WorldPoint c = whispererCenterTile();
+		WorldPoint c = siphonCenter != null ? siphonCenter : whispererCenterTile();
 		if (c == null || t == null) return "?";
 		return (t.getY() >= c.getY() ? "N" : "S") + (t.getX() >= c.getX() ? "E" : "W");
 	}
@@ -2002,7 +2082,7 @@ public class WhispererAutoMain
 	 */
 	private NPC pickSiphonTarget(WorldPoint me)
 	{
-		WorldPoint c = whispererCenterTile();
+		WorldPoint c = siphonCenter != null ? siphonCenter : whispererCenterTile();
 		if (c == null) return null;
 		List<NPC> npcs = client.getNpcs();
 		if (npcs == null) return null;
@@ -2152,8 +2232,9 @@ public class WhispererAutoMain
 		// the authoritative signal (cleared at fight end). The enrage behavior keys off enragePhaseActive.
 		if (lower.contains("pulls you into the shadow realm"))
 		{
-			if (!enragePhaseActive && overlay != null) overlay.setStep("ENRAGE phase triggered");
+			if (!enragePhaseActive && overlay != null) step("Enrage", "ENRAGE phase triggered");
 			enragePhaseActive = true;
+			enrageSeen = true;
 			// Enrage shares anim 10248 with seeds -> drop any seed phase it may have latched, and clear any pending
 			// realm crossing so a scout doesn't ping-pong us out of the shadow realm we were just pulled into.
 			seedPhaseActive = false;
@@ -2192,12 +2273,6 @@ public class WhispererAutoMain
 	private WorldPoint shadowToOverworld(WorldPoint shadowInstanceTile)
 	{
 		return shiftRealm(shadowInstanceTile, WhispererAutoIDs.REALM_X_OFFSET, WhispererAutoIDs.OVERWORLD_PLANE);
-	}
-
-	/** An overworld instance tile -> its shadow-realm-instance twin, or null. */
-	private WorldPoint overworldToShadow(WorldPoint overworldInstanceTile)
-	{
-		return shiftRealm(overworldInstanceTile, -WhispererAutoIDs.REALM_X_OFFSET, WhispererAutoIDs.SHADOW_REALM_PLANE);
 	}
 
 	/**
@@ -2709,51 +2784,6 @@ public class WhispererAutoMain
 		return best;
 	}
 
-	/** Nearest good-seed tile to {@code from} (Chebyshev). */
-	private WorldPoint nearestGoodSeed(WorldPoint from, java.util.List<WorldPoint> good)
-	{
-		WorldPoint best = null;
-		int bestD = Integer.MAX_VALUE;
-		for (WorldPoint g : good)
-		{
-			int d = cheby(from, g);
-			if (d < bestD) { bestD = d; best = g; }
-		}
-		return best;
-	}
-
-	/**
-	 * Of the candidate neighbour seeds, pick the one that continues the rotation around the
-	 * ring centroid in the requested direction (the nearest forward neighbour by angle).
-	 * Falls back to the nearest candidate if none are "forward" (e.g. degenerate geometry).
-	 */
-	private WorldPoint pickRotationNeighbour(WorldPoint cur, java.util.List<WorldPoint> candidates, boolean clockwise, java.util.List<WorldPoint> good)
-	{
-		// Ring centroid.
-		double cx = 0, cy = 0;
-		for (WorldPoint g : good) { cx += g.getX(); cy += g.getY(); }
-		cx /= good.size();
-		cy /= good.size();
-
-		double vcx = cur.getX() - cx, vcy = cur.getY() - cy;
-
-		WorldPoint bestFwd = null;  double bestFwdAng = Double.MAX_VALUE;
-		WorldPoint bestAny = null;  int bestAnyD = Integer.MAX_VALUE;
-		for (WorldPoint n : candidates)
-		{
-			double vnx = n.getX() - cx, vny = n.getY() - cy;
-			double cross = vcx * vny - vcy * vnx;   // >0 = CCW turn, <0 = CW turn
-			double dot   = vcx * vnx + vcy * vny;
-			double ang   = Math.atan2(Math.abs(cross), dot);   // unsigned 0..pi between the two
-			boolean forward = clockwise ? (cross < 0) : (cross > 0);
-			if (forward && ang < bestFwdAng) { bestFwdAng = ang; bestFwd = n; }
-
-			int d = cheby(cur, n);
-			if (d < bestAnyD) { bestAnyD = d; bestAny = n; }
-		}
-		return bestFwd != null ? bestFwd : bestAny;
-	}
-
 	private static int cheby(WorldPoint a, WorldPoint b)
 	{
 		return Math.max(Math.abs(a.getX() - b.getX()), Math.abs(a.getY() - b.getY()));
@@ -3012,6 +3042,65 @@ public class WhispererAutoMain
 		return true;
 	}
 
+	/** dodgeTileSafe MINUS the ranged min-gap clause: a non-hit tile (never on/beside her 3x3, never on/beside a
+	 *  tentacle, never on a hazard line) even if it sits inside our preferred ranged gap. The relaxed pass of
+	 *  {@link #safeNeighbourStep} -- being 1-2 tiles off her is a non-hit and beats standing in the tentacle. */
+	private boolean dodgeTileMinimallySafe(WorldPoint tile, java.util.List<NPC> npcs)
+	{
+		if (tile == null) return false;
+		if (dodgeHazards.contains(tile)) return false;
+		net.runelite.api.coords.WorldArea bossArea = whisperer == null ? null : whisperer.getWorldArea();
+		if (bossArea != null && bossArea.distanceTo(tile) <= 1) return false;   // on/beside her 3x3 -> a hit
+		if (npcs != null)
+			for (NPC n : npcs)
+			{
+				if (n == null || n.getId() != WhispererAutoIDs.NPC_TENTACLE) continue;
+				net.runelite.api.coords.WorldArea ta = n.getWorldArea();
+				if (ta != null && ta.distanceTo(tile) <= 1) return false;
+			}
+		return true;
+	}
+
+	/** Convenience: the live NPC list or an empty list (so callers needn't null-check). */
+	private java.util.List<NPC> npcsNow()
+	{
+		java.util.List<NPC> n = client.getNpcs();
+		return n != null ? n : java.util.Collections.emptyList();
+	}
+
+	/**
+	 * Fallback dodge pick for when the planned tile lands on / beside her (the opening-oscillation override and
+	 * clampInside bypass bestStep's 5x5 guard). Scans all 8 directions at 1 and 2 tiles for a tile that is INSIDE
+	 * the arena and safe, preferring the one nearest the dodge we originally wanted ({@code want}). Two passes:
+	 * first requiring our full ranged min-gap, then relaxed to any non-hit tile. Null only if every surrounding
+	 * tile is a hit -- which shouldn't occur, so the caller holds just in case rather than clicking into her.
+	 */
+	private WorldPoint safeNeighbourStep(WorldPoint me, WorldPoint want, java.util.List<NPC> npcs, int gap)
+	{
+		if (me == null) return null;
+		boolean arenaKnown = WhispererArena.isInside(me);   // false -> coord-space mismatch; skip the wall filter (as clampInside does)
+		for (int pass = 0; pass < 2; pass++)   // 0 = outside the ranged gap; 1 = relaxed to any non-hit tile
+		{
+			WorldPoint best = null;
+			double bestCost = Double.MAX_VALUE;
+			for (int i = 0; i < NEIGHBORS8.length; i++)
+			{
+				for (int mul = 1; mul <= 2; mul++)
+				{
+					WorldPoint cand = new WorldPoint(me.getX() + NEIGHBORS8[i][0] * mul,
+						me.getY() + NEIGHBORS8[i][1] * mul, me.getPlane());
+					if (arenaKnown && !WhispererArena.isInside(cand)) continue;   // outside the walls
+					boolean ok = pass == 0 ? dodgeTileSafe(cand, npcs, gap) : dodgeTileMinimallySafe(cand, npcs);
+					if (!ok) continue;
+					double cost = want != null ? dist2(cand, want) : i;   // nearest the tile we wanted
+					if (cost < bestCost) { bestCost = cost; best = cand; }
+				}
+			}
+			if (best != null) return best;
+		}
+		return null;
+	}
+
 	/**
 	 * Choose the safe dodge tile from the neighbours in NEIGHBORS8[start..end) that have no tentacle
 	 * in their direction. Spacing policy versus the boss: never step INSIDE {@code minGap} tiles (we
@@ -3020,6 +3109,16 @@ public class WhispererAutoMain
 	 * so we oscillate toward/away along the boss line rather than sliding sideways or drifting off.
 	 * Falls back to a stable order when the boss reference is missing. Null if the group is all blocked.
 	 */
+	/** Chebyshev-ish distance from {@code t} to the NEAREST of her two centreline axes (her fixed starting
+	 *  X or Y). Minimising it keeps us ON a centreline, which gives the full flee distance along the other
+	 *  axis. 0 when her start centre isn't known yet (no bias). */
+	private double centrelineDist(WorldPoint t)
+	{
+		WorldPoint c = whispererStartCentre != null ? whispererStartCentre : whispererCenterTile();
+		if (c == null || t == null) return 0.0;
+		return Math.min(Math.abs(t.getX() - c.getX()), Math.abs(t.getY() - c.getY()));
+	}
+
 	private WorldPoint bestStep(WorldPoint me, boolean[] blocked, int start, int end, NPC boss, int minGap,
 		WorldPoint drift)
 	{
@@ -3061,6 +3160,7 @@ public class WhispererAutoMain
 				{
 					cost = Math.abs(dist - minGap);        // hug the gap
 					if (curDist >= 0 && dist == curDist) cost += 2.0;   // lateral step -> discourage
+					cost += 0.5 * centrelineDist(cand);    // drift back toward her centre axes -> best flee clearance
 				}
 			}
 			cost += hazardPenalty;
@@ -3092,15 +3192,15 @@ public class WhispererAutoMain
 		if (player != null && player.getInteracting() == whisperer) return;   // still locked on
 		attackWhisperer();
 		lastAttackTick = tick;
-		if (overlay != null) overlay.setStep("tentacle dodge: relock whisperer");
+		step("Dodge tentacle", "tentacle dodge: relock whisperer");
 	}
 
 	/**
 	 * SEED-FIRST reposition: after the seed bind, dance around to the NORTH of her. She's planted (pulled
 	 * south by the bind), the open floor is north, so we settle {@link #REPOS_NORTH_OFFSET} tiles north of her
 	 * live centre on her lane. We must NOT cut straight through her 3x3 (stepping onto it is gap 0 = a hit),
-	 * so while we're south of her we go AROUND via a corridor {@link #REPOS_CORRIDOR_DX} tiles east of her
-	 * footprint, run north past her, then cut back to the lane. We weave attacks when in range and off
+	 * so we go AROUND via a corridor {@link #REPOS_CORRIDOR_DX} tiles to the side we're already on (west if we
+	 * fled west, else east), run north past her, then cut back to the lane. We weave attacks when in range and off
 	 * cooldown. Cleared on arrival or when the next special begins. Returns true (claims the tick) while active.
 	 */
 	/** Begin the post-special swing for {@code s}: flee to its tile, then (if she binds) hold, then apply its
@@ -3112,6 +3212,7 @@ public class WhispererAutoMain
 		swingTick = tick;
 		swingArrivedTick = -100;         // not at the flee tile yet; the bind-watch starts when we arrive
 		lastSwingClick = null;
+		swingFleeAnchor = null;          // fresh swing -> recompute (and re-latch) the flee tile once
 		boundInPlaceChatSeen = false;    // fresh swing -> wait for this bind's "binds you in place" chat
 		repositionNorthActive = false;   // the maneuver is armed only on resolve, if the rule says so
 	}
@@ -3126,7 +3227,10 @@ public class WhispererAutoMain
 	 */
 	private WorldPoint swingFleeTile(Special s)
 	{
-		WorldPoint c = whispererCenterTile();   // her centre (lane + centre y); reliable even when getWorldArea lies
+		if (swingFleeAnchor != null) return swingFleeAnchor;   // latched at swing start -- do NOT chase her live centre
+		// Reference the FIXED arena centreline (her 3x3 starting X/Y, captured at wake), not her live/bind-form
+		// position -- so flees stay on the centreline. Fall back to the live centre only before the first wake.
+		WorldPoint c = whispererStartCentre != null ? whispererStartCentre : whispererCenterTile();
 		if (c == null) return null;
 		// Offset from her CENTRE assuming the FULL 3x3 footprint (centre->edge = WHISPERER_HALF_FOOTPRINT). We do
 		// NOT measure off getWorldArea's edge: during screech / the bind form it under-reports her size (reports
@@ -3135,13 +3239,37 @@ public class WhispererAutoMain
 		// (10) tiles in on a bind, so 12 clear leaves ONE empty tile between us after the walk-in (a "gap of 1");
 		// no bind, we're just parked 12 out. e.g. screech centre 6357 -> 6370; seeds centre 6369 -> 6356.
 		int off = WHISPERER_HALF_FOOTPRINT + BIND_SAFE_GAP + 2;   // = 13
+		WorldPoint flee;
 		switch (s)
 		{
-			case SCREECH: return new WorldPoint(c.getX(), c.getY() + off, c.getPlane());   // north (she's parked south)
+			case SCREECH: flee = new WorldPoint(c.getX(), c.getY() + off, c.getPlane()); break;   // north -> recentre handles it
 			case SEEDS:
-			case SIPHON:  return new WorldPoint(c.getX(), c.getY() - off, c.getPlane());   // south
-			default:      return c;
+			case SIPHON:  flee = fleeTileNearestSide(c, off); break;   // DYNAMIC: flee to the side we ended up on
+			default:      return c;   // NONE: no flee -- don't latch
 		}
+		flee = WhispererArena.clampInside(flee, mirror.getPlayerTile());   // never flee into a wall (E/W is a 13-tile exact fit)
+		swingFleeAnchor = flee;   // latch: this swing re-uses the same tile no matter where she drifts
+		return flee;
+	}
+
+	/**
+	 * Flee tile {@code off} tiles from her centre along the cardinal our CURRENT position is most aligned with,
+	 * so we flee to whichever side we already ended the phase on (shortest hop) instead of always crossing to
+	 * the south. The post-special swing recentres us afterwards, so any side is equally fine. N/S wins ties and
+	 * near-diagonals (the arena is tall), and a dead-centre / unknown position defaults to south.
+	 */
+	private WorldPoint fleeTileNearestSide(WorldPoint c, int off)
+	{
+		WorldPoint me = mirror.getPlayerTile();
+		int dx = me == null ? 0 : me.getX() - c.getX();
+		int dy = me == null ? 0 : me.getY() - c.getY();
+		// Flee to whichever of the 4 cardinals we ended up closest to (there's room on every side); the swing
+		// then brings us back toward centre (opposite the flee). N/S wins ties and near-diagonals (the centreline
+		// row is the widest); a dead-centre / unknown position defaults south.
+		if (dx == 0 && dy == 0) return new WorldPoint(c.getX(), c.getY() - off, c.getPlane());   // dead centre -> south
+		if (Math.abs(dy) >= Math.abs(dx))
+			return new WorldPoint(c.getX(), c.getY() + (dy >= 0 ? off : -off), c.getPlane());   // north / south
+		return new WorldPoint(c.getX() + (dx >= 0 ? off : -off), c.getY(), c.getPlane());        // east / west
 	}
 
 	/** Ticks after this special's end to watch for the bind form (12205) before concluding "no bind". */
@@ -3223,12 +3351,29 @@ public class WhispererAutoMain
 						router.interactNpc(bindNpc, net.runelite.api.MenuAction.NPC_SECOND_OPTION,
 							WhispererAutoIDs.WHISPERER_ATTACK_OPTION);
 						lastAttackTick = tick;
-						if (overlay != null) overlay.setStep("swing(" + swingSpecial + "): bound (12205) -> attack");
+						step("Bound", "swing(" + swingSpecial + "): bound (12205) -> attack");
 						return true;
 					}
 				}
 			}
-			if (overlay != null) overlay.setStep("swing(" + swingSpecial + "): bound (12205), holding");
+			// NOT rooted yet (12205 is still casting / walking in): KEEP FLEEING to open the bind gap. The FLEE-stage
+			// weave above cleared lastSwingClick, so this re-clicks the flee tile the tick right after a weave --
+			// which is what stops us standing still the moment she flips 12204 -> 12205. swingFleeTile resolves off
+			// the 12205 form now (whispererCenterTile falls back to it). Once ACTUALLY rooted the chat gate above
+			// owns the tick and we weave 12205 in place instead.
+			if (!boundInPlaceChatSeen)
+			{
+				WorldPoint meB = mirror.getPlayerTile();
+				WorldPoint fleeB = swingFleeTile(swingSpecial);
+				if (meB != null && fleeB != null && !meB.equals(fleeB) && !fleeB.equals(lastSwingClick))
+				{
+					router.walkTo(fleeB);
+					lastSwingClick = fleeB;
+				}
+				step(fleeLabel(), "swing(" + swingSpecial + "): 12205 (not rooted) -> flee " + fleeB);
+				return true;
+			}
+			step("Bound", "swing(" + swingSpecial + "): bound (12205), holding");
 			return true;
 		}
 
@@ -3249,7 +3394,7 @@ public class WhispererAutoMain
 			if (swingSpecial == Special.SEEDS
 				&& (mirror.hasProjectile(WhispererAutoIDs.PROJ_NORMAL_ALT) || mirror.hasProjectile(WhispererAutoIDs.PROJ_RANGE)))
 			{
-				if (overlay != null) overlay.setStep("swing(" + swingSpecial + "): normal attack (2443/2444) -> no bind");
+				step(fleeLabel(), "swing(" + swingSpecial + "): normal attack (2443/2444) -> no bind");
 				resolveSwing(false);
 				return false;
 			}
@@ -3273,7 +3418,7 @@ public class WhispererAutoMain
 			// flip above catches the 12205 and we stay here until it clears and 12204 returns.
 			if (swingArrivedTick < 0) swingArrivedTick = tick;
 			lastSwingClick = null;
-			if (overlay != null) overlay.setStep("swing(" + swingSpecial + "): at flee tile, watching for 12205");
+			step(fleeLabel(), "swing(" + swingSpecial + "): at flee tile, watching for 12205");
 			return true;
 		}
 		// DPS WHILE RUNNING OUT: after siphon (and seeds) we land next to her and flee south, so she is still in range
@@ -3286,11 +3431,11 @@ public class WhispererAutoMain
 			attackWhisperer();
 			lastAttackTick = tick;
 			lastSwingClick = null;
-			if (overlay != null) overlay.setStep("swing(" + swingSpecial + "): flee weave DPS -> " + flee);
+			step(fleeLabel(), "swing(" + swingSpecial + "): flee weave DPS -> " + flee);
 			return true;
 		}
 		if (!flee.equals(lastSwingClick)) { router.walkTo(flee); lastSwingClick = flee; }
-		if (overlay != null) overlay.setStep("swing(" + swingSpecial + "): flee -> " + flee);
+		step(fleeLabel(), "swing(" + swingSpecial + "): flee -> " + flee);
 		return true;
 	}
 
@@ -3300,15 +3445,27 @@ public class WhispererAutoMain
 	{
 		Special resolved = swingSpecial;
 		boolean maneuver = swingManeuvers(resolved, wasBound);
+		// Swing back OPPOSITE the flee, toward centre -- captured from the flee anchor before we drop it.
+		reposDx = 0; reposDy = 1;   // default north (legacy / no anchor)
+		{
+			WorldPoint fc = whispererStartCentre != null ? whispererStartCentre : whispererCenterTile();
+			if (swingFleeAnchor != null && fc != null)
+			{
+				int fdx = Integer.signum(swingFleeAnchor.getX() - fc.getX());
+				int fdy = Integer.signum(swingFleeAnchor.getY() - fc.getY());
+				if (fdx != 0 || fdy != 0) { reposDx = -fdx; reposDy = -fdy; }
+			}
+		}
 		swingSpecial = Special.NONE;
 		lastSwingClick = null;
+		swingFleeAnchor = null;
 		boundInPlaceChatSeen = false;   // swing over -> this bind's root is done
 		if (maneuver)
 		{
 			maneuverSpecial = resolved;
 			repositionNorthActive = true;
 			recenterActive = false;
-			if (overlay != null) overlay.setStep("swing: bind resolved -> maneuver north");
+			step("Reposition", "swing: bind resolved -> maneuver north");
 		}
 		else if (resolved == Special.SCREECH)
 		{
@@ -3316,7 +3473,7 @@ public class WhispererAutoMain
 			maneuverSpecial = Special.SCREECH;
 			repositionNorthActive = false;
 			recenterActive = true;
-			if (overlay != null) overlay.setStep("swing: screech done -> recentre");
+			step("Recentre", "swing: screech done -> recentre");
 		}
 		else
 		{
@@ -3325,7 +3482,7 @@ public class WhispererAutoMain
 			recenterActive = false;
 			// Siphon that did NOT bind -> resume the TENTACLE phase on the opening oscillation tiles (phase 1).
 			if (resolved == Special.SIPHON) resumeOscillation = true;
-			if (overlay != null) overlay.setStep(resolved == Special.SIPHON
+			step("Attacking", resolved == Special.SIPHON
 				? "swing: siphon done (no bind) -> resume oscillation" : "swing: resolved -> resume");
 		}
 	}
@@ -3357,18 +3514,18 @@ public class WhispererAutoMain
 					attackWhisperer();
 					lastAttackTick = tick;
 					lastReposClick = null;
-					if (overlay != null) overlay.setStep("repos: tentacle up -> stationary weave (dodge owns moves)");
+					step("Reposition", "repos: tentacle up -> stationary weave (dodge owns moves)");
 					return true;
 				}
 			}
 			lastReposClick = null;
-			if (overlay != null) overlay.setStep("repos: tentacle up -> hold (dodge owns moves)");
+			step("Reposition", "repos: tentacle up -> hold (dodge owns moves)");
 			return true;
 		}
 		WorldPoint step = repositionWaypoint(me);   // corridor-aware; clears the flag on arrival
 		if (step == null)
 		{
-			if (overlay != null) overlay.setStep("repos: north of boss -- resume");
+			step("Reposition", "repos: north of boss -- resume");
 			return false;
 		}
 
@@ -3378,14 +3535,14 @@ public class WhispererAutoMain
 			attackWhisperer();
 			lastAttackTick = tick;
 			lastReposClick = null;   // attack interrupts the walk -> re-click next tick
-			if (overlay != null) overlay.setStep("repos north: weave attack");
+			step("Reposition", "repos north: weave attack");
 			return true;
 		}
 		if (!step.equals(lastReposClick))
 		{
 			router.walkTo(step);
 			lastReposClick = step;
-			if (overlay != null) overlay.setStep("repos north -> " + step);
+			step("Reposition", "repos north -> " + step);
 		}
 		return true;
 	}
@@ -3418,18 +3575,18 @@ public class WhispererAutoMain
 						router.interactNpc(bindNpc, net.runelite.api.MenuAction.NPC_SECOND_OPTION,
 							WhispererAutoIDs.WHISPERER_ATTACK_OPTION);
 						lastAttackTick = tick;
-						if (overlay != null) overlay.setStep("recentre: bound (12205) -> attack");
+						step("Recentre", "recentre: bound (12205) -> attack");
 						return true;
 					}
 				}
-				if (overlay != null) overlay.setStep("recentre: bound (12205), holding");
+				step("Recentre", "recentre: bound (12205), holding");
 				return true;
 			}
 			// 12205 gone -> bind resolved, we're safe. Stop recentering and resume normal DPS in place.
 			recenterActive = false;
 			recenterBindSeen = false;
 			lastRecenterClick = null;
-			if (overlay != null) overlay.setStep("recentre: bind resolved -> resume");
+			step("Recentre", "recentre: bind resolved -> resume");
 			return false;
 		}
 		if (whisperer == null || !isWhispererAwake() || !inOverworld()) return false;
@@ -3439,7 +3596,7 @@ public class WhispererAutoMain
 		if (tentacleInScene())
 		{
 			lastRecenterClick = null;
-			if (overlay != null) overlay.setStep("recentre: tentacle up -> hold (dodge owns moves)");
+			step("Recentre", "recentre: tentacle up -> hold (dodge owns moves)");
 			return true;
 		}
 		WorldPoint me = mirror.getPlayerTile();
@@ -3449,7 +3606,7 @@ public class WhispererAutoMain
 		{
 			recenterActive = false;
 			lastRecenterClick = null;
-			if (overlay != null) overlay.setStep("recentre: arrived");
+			step("Recentre", "recentre: arrived");
 			return false;
 		}
 		// Walk STRAIGHT to the camp. No attack-weave here: the camp (+1 N of her start centre) is gap 11 = OUT of
@@ -3459,7 +3616,7 @@ public class WhispererAutoMain
 		{
 			router.walkTo(camp);
 			lastRecenterClick = camp;
-			if (overlay != null) overlay.setStep("recentre -> " + camp);
+			step("Recentre", "recentre -> " + camp);
 		}
 		return true;
 	}
@@ -3484,19 +3641,33 @@ public class WhispererAutoMain
 	private WorldPoint repositionWaypoint(WorldPoint me)
 	{
 		if (!repositionNorthActive || me == null) return null;
-		WorldPoint c = whispererCenterTile();
+		WorldPoint c = whispererStartCentre != null ? whispererStartCentre : whispererCenterTile();
 		if (c == null) return null;
 		int cx = c.getX(), cy = c.getY(), plane = c.getPlane();
-		if (me.getY() >= cy + REPOS_NORTH_OFFSET && Math.abs(me.getX() - cx) <= 1)
+		int sx = reposDx, sy = reposDy, off = REPOS_NORTH_OFFSET, corr = REPOS_CORRIDOR_DX;
+		// Swing back toward centre (opposite the flee). Never cut through her 3x3, so round her via a corridor
+		// PERPENDICULAR to the swing axis: N/S swings round east/west, the west swing (from an east flee) rounds
+		// north/south. Her centre is the arena centre, so the perpendicular corridor is interior either way.
+		if (sy != 0)
 		{
-			repositionNorthActive = false;   // on the lane, north of her -> done
-			return null;
+			int proj = (me.getY() - cy) * sy;   // progress along the swing (Y) axis toward the goal side
+			if (proj >= off && Math.abs(me.getX() - cx) <= 1) { repositionNorthActive = false; return null; }
+			if (proj > 1) return new WorldPoint(cx, cy + sy * off, plane);   // past her -> up the lane to goal
+			int cxSide = (me.getX() < cx - 1) ? -1 : 1;   // round on the side we're on (default east)
+			int corridorX = cx + cxSide * corr;
+			boolean at = cxSide > 0 ? me.getX() >= corridorX : me.getX() <= corridorX;
+			return at ? new WorldPoint(corridorX, cy + sy * 2, plane)      // run along the corridor past her
+			          : new WorldPoint(corridorX, me.getY(), plane);       // sidestep onto the corridor
 		}
-		if (me.getY() > cy + 1) return new WorldPoint(cx, cy + REPOS_NORTH_OFFSET, plane);   // past her -> up the lane
-		int corridorX = cx + REPOS_CORRIDOR_DX;
-		return (me.getX() < corridorX)
-			? new WorldPoint(corridorX, me.getY(), plane)   // sidestep east off the lane
-			: new WorldPoint(corridorX, cy + 2, plane);     // run north in the corridor past her
+		// swing along X (west, from an east flee) -> round via a N/S corridor
+		int proj = (me.getX() - cx) * sx;
+		if (proj >= off && Math.abs(me.getY() - cy) <= 1) { repositionNorthActive = false; return null; }
+		if (proj > 1) return new WorldPoint(cx + sx * off, cy, plane);   // past her -> along the lane to goal
+		int cySide = (me.getY() < cy - 1) ? -1 : 1;   // round via N/S corridor (default north)
+		int corridorY = cy + cySide * corr;
+		boolean at = cySide > 0 ? me.getY() >= corridorY : me.getY() <= corridorY;
+		return at ? new WorldPoint(cx + sx * 2, corridorY, plane)      // run along the corridor past her
+		          : new WorldPoint(me.getX(), corridorY, plane);       // sidestep onto the corridor
 	}
 
 	/** The MAIN GOAL of the north maneuver: the FINAL destination tile on her centre lane
@@ -3506,9 +3677,9 @@ public class WhispererAutoMain
 	 *  she's absent. Does NOT clear the maneuver flag (read-only; repositionWaypoint owns the arrival check). */
 	private WorldPoint repositionMainGoal()
 	{
-		WorldPoint c = whispererCenterTile();
+		WorldPoint c = whispererStartCentre != null ? whispererStartCentre : whispererCenterTile();
 		if (c == null) return null;
-		return new WorldPoint(c.getX(), c.getY() + REPOS_NORTH_OFFSET, c.getPlane());
+		return new WorldPoint(c.getX() + reposDx * REPOS_NORTH_OFFSET, c.getY() + reposDy * REPOS_NORTH_OFFSET, c.getPlane());
 	}
 
 	/**
@@ -3518,31 +3689,102 @@ public class WhispererAutoMain
 	 * space mismatch disables it safely (the user positions and wakes manually instead of us walking wrong).
 	 * Returns true (claims the tick) while it's driving the start.
 	 */
+	/**
+	 * Post-death CLEANUP phase: after the Whisperer's FINAL death and before the Odd Figure (12203) respawns
+	 * (~10s). Runs only once we've died this trip (deathPrayersOff latched) and the boss NPC is not in the
+	 * scene yet. STUB for now -- claims the tick so the fight handlers stay idle while we build it out.
+	 * Returns true while in the cleanup window.
+	 */
+	private boolean handleCleanup(int tick)
+	{
+		if (!deathPrayersOff || whisperer != null || !inOverworld()) return false;
+
+		// TODO 1: pick up loot (walk to / collect the drop).
+		// TODO 2: decide whether to keep going (start another kill) or stop / bank.
+		// TODO 3: wait for the Odd Figure (12203) to respawn (~10s) and top off supplies (eat / drink) if needed
+		//         while waiting -- this is a safe idle window, so a heal/sip here costs no DPS.
+
+		step("Cleanup", "cleanup: (TODO) loot / decide / wait for respawn");
+		return true;
+	}
+
 	private boolean handleFightStart(int tick)
 	{
 		if (whisperer == null || isWhispererAwake()) return false;   // only while she's dormant
 		if (!inOverworld()) return false;
 		WorldPoint me = mirror.getPlayerTile();
-		if (me == null || !WhispererArena.isInside(me)) return false;   // space-safe: only in the mapped arena
+		if (me == null) return false;
+		// The fight is INSTANCED: our tile is instance-space, but the arena map / start tile are static
+		// template coords. Convert our tile to template for the in-arena check, and the start tile to THIS
+		// instance so we can walk to it and compare Y with our instance tile.
+		WorldPoint meTpl = InstanceCoords.toTemplate(client, me);
+		if (meTpl == null || !WhispererArena.isInside(meTpl)) return false;   // space-safe: only in the mapped arena
+		WorldPoint start = InstanceCoords.fromTemplate(client, WhispererArena.START_TILE);
+		if (start == null) return false;
 
-		WorldPoint start = WhispererArena.START_TILE;
-		if (!me.equals(start))
+		// Once the Odd Figure begins its wake animation (10227), STOP acting: the knockback to the start tile
+		// and the 12204 spawn follow on their own. Re-poking / re-walking now would just oscillate (Vardorvis bug).
+		if (whisperer.getAnimation() == WhispererAutoIDs.ANIM_ODD_FIGURE_WAKE) oddFigureWaking = true;
+		if (oddFigureWaking)
+		{
+			lastStartClick = null;
+			step("Start", "start: waking -- hold for whisperer (12204)");
+			return true;
+		}
+		// Already disturbed her: the 'Disturb' auto-walks us up off the start tile toward her, which is EXPECTED.
+		// HOLD and wait for the wake anim (10227) -- do NOT walk back to the start tile (that was the oscillation).
+		// Only re-poke if the wake hasn't begun after a while (the Disturb click never landed).
+		if (oddFigureDisturbed)
+		{
+			if (tick - lastDisturbTick <= DISTURB_WAIT_TICKS)
+			{
+				step("Start", "start: disturbed -- waiting for wake");
+				return true;
+			}
+			oddFigureDisturbed = false;   // timed out with no wake anim -> try again below
+		}
+
+		// Not yet disturbed. HUMAN shortcut: if we're between the start tile and HER (or south of the start
+		// tile), just poke from here -- no point walking down to the start tile only to walk back up to reach
+		// her. We reposition down to the start tile ONLY if we're actually north of her (unusual). Her centre Y
+		// is the line: at/south of it -> poke now; north of it -> drop to the start tile first.
+		WorldPoint wc = whispererCenterTile();
+		int pokeLineY = wc != null ? wc.getY() : start.getY();
+		if (me.getY() > pokeLineY && !me.equals(start))
 		{
 			if (!start.equals(lastStartClick))
 			{
 				router.walkTo(start);
 				lastStartClick = start;
 			}
-			if (overlay != null) overlay.setStep("start: walk to start tile " + start);
+			step("Start", "start: walk to start tile " + start);
 			return true;
 		}
 
-		// On the start tile -> wake her. attackWhisperer targets the dormant NPC; the fight begins on wake.
 		lastStartClick = null;
-		attackWhisperer();
+		disturbOddFigure();
+		oddFigureDisturbed = true;
+		lastDisturbTick = tick;
 		lastAttackTick = tick;
-		if (overlay != null) overlay.setStep("start: wake whisperer");
+		step("Start", "start: disturb odd figure");
 		return true;
+	}
+
+	/** Wake the dormant Whisperer by 'Disturb'-ing the Odd Figure (NPC 12203, NPC_FIRST_OPTION). */
+	private void disturbOddFigure()
+	{
+		NPC fig = findNpcAny(WhispererAutoIDs.NPC_WHISPERER_DORMANT);
+		if (fig == null) return;
+		router.interactNpc(fig, net.runelite.api.MenuAction.NPC_FIRST_OPTION, WhispererAutoIDs.ODD_FIGURE_OPTION);
+	}
+
+	/** True only in the genuinely idle windows where topping off can't cost an attack: running the post-phase
+	 *  bind flee, or settled behind a screech pillar waiting it out. */
+	private boolean consumeIdleWindow(int tick)
+	{
+		if (tick <= bindFleeUntil) return true;                       // fleeing to open the bind gap
+		if (inScreechPhase() && screechHideArrived) return true;      // hiding behind a pillar, not attacking
+		return false;
 	}
 
 	/**
@@ -3623,7 +3865,7 @@ public class WhispererAutoMain
 		// screech handleScreechPhase owns the tick upstream, so this is just a backstop.
 		if (!hidePillarChainOwTiles.isEmpty())
 		{
-			if (overlay != null) overlay.setStep("screech: DPS paused");
+			step("Screech", "screech: DPS paused");
 			return;
 		}
 		Player player = mirror.getLocalPlayer();
@@ -3632,7 +3874,7 @@ public class WhispererAutoMain
 		{
 			attackWhisperer();
 			lastAttackTick = tick;
-			if (overlay != null) overlay.setStep("attacking whisperer (cd " + effectiveCooldown() + "t)");
+			step("Attacking", "attacking whisperer (cd " + effectiveCooldown() + "t)");
 		}
 	}
 
@@ -3763,27 +4005,47 @@ public class WhispererAutoMain
 				res.drink, res.primaryEat == null ? null : res.primaryEat.itemId,
 				res.comboEat == null ? null : res.comboEat.itemId);
 		applyConsumption(res);
+		// DPS thrall upkeep (6 prayer/cast, ~magic-level ticks): recast ASAP once expired, but ONLY in the
+		// overworld normal-fight window (thrallConditionsOk) -- she spends parts of the fight in the shadow
+		// realm / another region or in specials where a cast is wasted or steals a mechanic tick. Skip if we
+		// just drank/ate (one CC_OP per tick); bump lastAttackTick so the cast suppresses this tick's swing.
+		boolean acted = res != null && res.hasAction();
+		if (!acted && thrall.maintain(tick, mirror, router, thrallConditionsOk()))
+			lastAttackTick = tick;
+	}
+
+	/**
+	 * Whisperer thrall gate: simply being in the OVERWORLD arena. That covers all the cases we want -- before
+	 * poking the Odd Figure (she's still dormant), a timer expiry in the overworld, and having no thrall up --
+	 * and excludes the shadow realm / another region, where a cast is wasted. We do NOT exclude specials: the
+	 * ideal moments are the downtime they create (hiding behind pillars, sitting on a flee tile), and otherwise
+	 * we cast on the first possible overworld tick. ThrallManager.ready() still gates expiry, 'spell lit'
+	 * (greyed while a thrall is already active), Arceuus and the 6 prayer. Style via THRALL_CAST_WIDGET.
+	 */
+	private boolean thrallConditionsOk()
+	{
+		// Only once she's AWAKE (12204 spawned) -- NOT before the wake: a thrall summoned while she's dormant
+		// or mid-knockback would burn its ~magic-level-tick lifespan with nothing to hit. So the first cast
+		// lands on the first awake overworld tick, and the full duration is spent on the live boss.
+		return inOverworld() && isInArenaTemplate() && isWhispererAwake();
 	}
 
 	private ConsumptionEngine.Request buildConsumptionRequest()
 	{
 		ConsumptionEngine.Request.Builder b = ConsumptionEngine.Request.builder();
 
-		// Opportunistic eat + combo are the engine's default (overheal cap is the real gate).
-		// TODO: if the fight is mostly chip damage, gate eating to non-attacking phases like
-		// Leviathan/Duke do (b.wantEat(...) / b.allowComboEat(...)).
+		// Magic kill -- mostly we just need PRAYER, which sips every tick it's low (below ~45, jittered). EATING
+		// is the only thing that would delay a cast, so gate it: eat at/below the critical floor (safety) OR
+		// at/below the HP threshold (~40) AND in an idle window (flee / behind a pillar) -- never mid-cast otherwise.
+		int hp = mirror.getHp();
+		boolean needFood = hp <= WhispererSupply.PROFILE.hpEatCriticalThreshold
+			|| (hp <= WhispererSupply.PROFILE.hpEatThreshold && consumeIdleWindow(mirror.getTickCounter()));
+		b.wantEat(needFood);
+		b.allowComboEat(needFood);
 
-		int pray = mirror.getPrayer();
-		int maxPray = mirror.getMaxPrayer();
-		int ceiling = Math.max(1, maxPray - (7 + maxPray / 4));
-		if (pray <= ceiling - WhispererSupply.PROFILE.prayerSipJitterWindow)
-		{
-			b.requireSip(SupplyProfile.DrinkKind.PRAYER);
-		}
-		else if (pray <= ceiling)
-		{
-			b.opportunisticSip(SupplyProfile.DrinkKind.PRAYER);
-		}
+		// Prayer: sip around 45 (jittered) whenever low; when we're also eating, piggyback a free top-up.
+		ConsumptionEngine.requestPrayerSip(b, mirror, 45,
+			WhispererSupply.PROFILE.prayerSipJitterWindow, needFood);
 
 		// TODO: offensive magic boost top-off + any utility potions (stamina, etc.) go here.
 
@@ -3798,12 +4060,14 @@ public class WhispererAutoMain
 		if (r.comboEat   != null) router.useInventoryItem(r.comboEat.itemId, "Eat");
 	}
 
-	/** Pick the highest available dose id for a potion kind. */
+	/** Pick the LOWEST available dose id for a potion kind, so partial (1/2/3-dose) vials drain first and
+	 *  empty out of the inventory before we touch full 4-dose ones -- consolidating supplies and freeing
+	 *  slots over a long trip instead of leaving a spread of part-used vials. */
 	private int bestDoseId(SupplyProfile.DrinkKind k)
 	{
 		SupplyProfile.PotionEntry pot = WhispererSupply.PROFILE.potion(k);
 		if (pot == null) return -1;
-		for (int i = pot.doseIds.length - 1; i >= 0; i--)
+		for (int i = 0; i < pot.doseIds.length; i++)   // index 0 = 1-dose .. 3 = 4-dose: lowest first
 		{
 			int id = pot.doseIds[i];
 			if (id > 0 && mirror.countItem(id) > 0) return id;
@@ -3829,7 +4093,7 @@ public class WhispererAutoMain
 		{
 			attackWhisperer();
 			lastAttackTick = tick;
-			if (overlay != null) overlay.setStep(
+			step("Attacking", 
 				(phase.current() == WhisPhase.FIGHT ? "attacking" : "poking")
 					+ " whisperer (cd " + effectiveCooldown() + "t"
 					+ (isInAttackRange(whisperer) ? "" : ", oor") + ")");
@@ -3853,58 +4117,25 @@ public class WhispererAutoMain
 	// -----------------------------------------------------------------
 
 	/** The Whisperer in either state (dormant 12203 or awake 12204), whichever is present. */
+	/** True if ANY npc in the scene is playing {@code animId} -- id-agnostic, for her death animation (10260),
+	 *  which may play on a form we don't track as the whisperer. */
+	private boolean anyNpcHasAnim(int animId)
+	{
+		List<NPC> npcs = client.getNpcs();
+		if (npcs == null) return false;
+		for (NPC n : npcs) if (n != null && n.getAnimation() == animId) return true;
+		return false;
+	}
+
 	private NPC findWhisperer()
 	{
 		return findNpcAny(WhispererAutoIDs.NPC_WHISPERER_AWAKE, WhispererAutoIDs.NPC_WHISPERER_DORMANT);
-	}
-
-	/** First NPC whose (tag-stripped) name matches {@code name}, case-insensitive. Null if none. */
-	private NPC findNpcByName(String name)
-	{
-		List<NPC> npcs = client.getNpcs();
-		if (npcs == null) return null;
-		for (NPC n : npcs)
-		{
-			if (n == null) continue;
-			String nm = n.getName();
-			if (nm != null && nm.replaceAll("<[^>]*>", "").equalsIgnoreCase(name)) return n;
-		}
-		return null;
-	}
-
-	/**
-	 * Wake up the Whisperer: "Disturb" the "Odd Figure" NPC to start the encounter. Captured
-	 * menu action was NPC_FIRST_OPTION option='Disturb' target='Odd Figure'. No-op if the Odd
-	 * Figure isn't in the scene.
-	 */
-	public void wakeupWhisperer()
-	{
-		NPC fig = findNpcByName(WhispererAutoIDs.NPC_ODD_FIGURE_NAME);
-		if (fig == null)
-		{
-			if (overlay != null) overlay.setStep("wakeup: Odd Figure not found");
-			return;
-		}
-		router.interactNpc(fig, net.runelite.api.MenuAction.NPC_FIRST_OPTION, WhispererAutoIDs.ODD_FIGURE_OPTION);
-		if (overlay != null) overlay.setStep("wakeup: disturbing Odd Figure");
 	}
 
 	/** True once the Whisperer has flipped to her awake/fighting id. */
 	private boolean isWhispererAwake()
 	{
 		return whisperer != null && whisperer.getId() == WhispererAutoIDs.NPC_WHISPERER_AWAKE;
-	}
-
-	/**
-	 * Classify a shadow-realm lost soul (12212) by its model recolor; overworld souls (12211)
-	 * carry no recolor and read as YELLOW. Ready for the soul mechanic -- not wired to any
-	 * behavior yet (TODO: user will elaborate on what each color means).
-	 */
-	private LostSoulColor lostSoulColorOf(NPC npc)
-	{
-		if (npc == null) return LostSoulColor.UNKNOWN;
-		NpcOverrides mo = npc.getModelOverrides();
-		return LostSoulColor.fromColorOverride(mo == null ? null : mo.getColorToReplaceWith());
 	}
 
 	/**

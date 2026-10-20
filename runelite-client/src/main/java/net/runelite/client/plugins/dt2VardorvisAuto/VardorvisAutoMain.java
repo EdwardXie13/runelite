@@ -15,8 +15,11 @@ import net.runelite.api.Prayer;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.autoBossCore.combat.ClickRouter;
+import net.runelite.client.plugins.autoBossCore.combat.ThrallManager;
 import net.runelite.client.plugins.autoBossCore.combat.Hazard;
 import net.runelite.client.plugins.autoBossCore.combat.PrayerSwapper;
+import net.runelite.client.plugins.autoBossCore.consume.EatDelay;
+import net.runelite.client.plugins.autoBossCore.state.WidgetReader;
 import net.runelite.client.plugins.autoBossCore.combat.SchedulingTileDodger;
 import net.runelite.client.plugins.autoBossCore.consume.ConsumptionEngine;
 import net.runelite.client.plugins.autoBossCore.consume.SupplyProfile;
@@ -57,6 +60,7 @@ public class VardorvisAutoMain
 
 	// --- Boss state -------------------------------------------------
 	private final ConsumptionEngine engine;
+	private final ThrallManager thrall;
 	// Melee combat-boost (divine super combat preferred, else super combat). Divine runs on
 	// a 5-min timer; regular re-doses below VardorvisAutoIDs.SUPER_COMBAT_REDRINK_MIN_BOOST.
 	private final net.runelite.client.plugins.autoBossCore.consume.CombatBoostTracker superCombatBoost =
@@ -75,8 +79,17 @@ public class VardorvisAutoMain
 	/** Weapon attack cooldown in ticks. */
 	private static final int WEAPON_COOLDOWN = 5;
 
+	/** Shared eat/combo-eat attack-delay tracker (see autoBossCore EatDelay). */
+	private final EatDelay eatDelay = new EatDelay();
+
 	/** Tick an IDLE-phase poke was fired. Used to drive explicit home-return afterward. */
 	private int lastIdlePokeTick = -100;
+
+	/** Latched once the boss HP bar reads 0 (the kill) so every prayer is dropped at death and
+	 *  prayer camping does not flick them back on through the death animation. Reset between kills. */
+	private boolean deathPrayersOff = false;
+	/** Was Vardorvis present last tick? Drives the despawn backstop for prayers-off. */
+	private boolean vardorvisWasPresent = false;
 
 	/** Tendril NPC -> tick first observed. Used to pre-mark the axe-spawn tile. */
 	private final Map<NPC, Integer> tendrilSpawnTick = new IdentityHashMap<>();
@@ -133,6 +146,7 @@ public class VardorvisAutoMain
 		this.prayers = prayers;
 
 		this.engine = new ConsumptionEngine(VardorvisSupply.PROFILE, mirror);
+		this.thrall = new ThrallManager(VardorvisAutoIDs.THRALL_CAST_WIDGET, "Vardorvis thrall");
 
 		this.phase = new PhaseTracker<>(VardPhase.OUT_OF_FIGHT)
 			.on(VardPhase.CAPTCHA, this::isCaptchaAnim,
@@ -166,7 +180,33 @@ public class VardorvisAutoMain
 		int tick = mirror.getTickCounter();
 
 		vardorvis = findVardorvis();
+
+		// Death / despawn backstop: when the boss vanishes, force every prayer off (the HP-0 trigger
+		// below is the primary, earlier cue -- this catches the case where we miss the 0 read).
+		if (vardorvisWasPresent && vardorvis == null) turnPrayersOff(tick);
+		vardorvisWasPresent = (vardorvis != null);
+
 		phase.update(tick);
+
+		// Reset per-kill latches whenever there is no fight in progress, so the next kill starts
+		// clean: the IDLE-poke marker (so the wake poke is not pre-empted by a stale home-return)
+		// and the death-prayers latch (so camping re-arms for the new fight).
+		if (phase.current() == VardPhase.OUT_OF_FIGHT)
+		{
+			lastIdlePokeTick = -100;
+			deathPrayersOff = false;
+			eatDelay.reset();
+			thrall.reset();
+		}
+
+		// Primary death trigger: the boss HP bar reads 0 at the kill, a few ticks before the NPC
+		// despawns. Turn ALL prayers off once (overheads + Piety) so we stop draining through the
+		// death animation; deathPrayersOff then gates camping so nothing flicks them back on.
+		if (!deathPrayersOff && vardorvis != null && bossCurrentHp() == 0)
+		{
+			deathPrayersOff = true;
+			turnPrayersOff(tick);
+		}
 
 		// 1. Always track hazards -- even when inactive, so capture + overlay stay useful.
 		// IMPORTANT: clear EVERY tick before re-projecting. Each of the push* methods below
@@ -252,33 +292,48 @@ public class VardorvisAutoMain
 			if (step == null && me.equals(homeTile)) { lastWalkTarget = null; }
 		}
 
-		// 4. Prayer camping (fight only).
-		if (phase.current() == VardPhase.FIGHT)
+		// 4. Prayer camping. In FIGHT: Protect from Melee + offensive Piety. In IDLE (dormant boss,
+		// about to poke): bring Protect from Melee up EARLY so the overhead is already active when we
+		// wake him. Suppressed once dead (deathPrayersOff) so we don't flick prayers back on.
+		if (!deathPrayersOff)
 		{
-			prayers.ensureOn(tick, Prayer.PROTECT_FROM_MELEE, Prayer.PIETY);
+			if (phase.current() == VardPhase.FIGHT)
+			{
+				prayers.ensureOn(tick, Prayer.PROTECT_FROM_MELEE, Prayer.PIETY);
+			}
+			else if (phase.current() == VardPhase.IDLE)
+			{
+				prayers.ensureOn(tick, Prayer.PROTECT_FROM_MELEE);
+			}
 		}
 
 		// 5. Supply consumption.
 		ConsumptionEngine.Request req = buildConsumptionRequest();
 		ConsumptionEngine.Result res = engine.evaluate(req);
 		applyConsumption(res);
+		// DPS thrall upkeep (6 prayer/cast, ~magic-level ticks): recast ASAP once expired, only in FIGHT,
+		// only when consumption didn't use the tick and we're idle between swings -- so it can't cancel one.
+		if (!res.hasAction() && tick - lastAttackTick > 2
+			&& thrall.maintain(tick, mirror, router, thrallConditionsOk()))
+		{
+			lastAttackTick = tick;   // the cast consumes the action tick -> step 6 won't also attack
+		}
 
-		// 6. Attack if not already fighting -- works for both IDLE (initial poke to wake) and FIGHT.
+		// 6. Attack. Works for both IDLE (poke to wake) and FIGHT. In IDLE the attack menuAction
+		// auto-walks us to Vardorvis and pokes him; we keep poking until the active GameObjects show
+		// he is awake (isVardorvisActive -> FIGHT), at which point the planner runs us back to camp.
 		if (phase.current() == VardPhase.FIGHT || phase.current() == VardPhase.IDLE)
 		{
+			boolean idle = phase.current() == VardPhase.IDLE;
 			Player player = mirror.getLocalPlayer();
 			if (player != null && player.getInteracting() != vardorvis
+				&& !eatDelay.attackBlocked(tick)
 				&& tick - lastAttackTick > 2)
 			{
 				router.attackNpc(vardorvis);
 				lastAttackTick = tick;
-				if (phase.current() == VardPhase.IDLE)
-				{
-					lastIdlePokeTick = tick;
-				}
-				if (overlay != null) overlay.setStep(
-					phase.current() == VardPhase.IDLE ? "poking vardorvis awake" : "attacking vardorvis"
-				);
+				if (idle) lastIdlePokeTick = tick;
+				if (overlay != null) overlay.setStep(idle ? "poking vardorvis awake" : "attacking vardorvis");
 			}
 		}
 	}
@@ -498,26 +553,28 @@ public class VardorvisAutoMain
 	// Consumption.
 	// -----------------------------------------------------------------
 
+	/** Vardorvis thrall gate: only while actively fighting (awake, not a captcha/QTE window). Style via
+	 *  VardorvisAutoIDs.THRALL_CAST_WIDGET. */
+	private boolean thrallConditionsOk()
+	{
+		return phase.current() == VardPhase.FIGHT;
+	}
+
 	private ConsumptionEngine.Request buildConsumptionRequest()
 	{
 		ConsumptionEngine.Request.Builder b = ConsumptionEngine.Request.builder();
 
-		// Opportunistic eat + combo are the ENGINE'S DEFAULT (see ConsumptionEngine
-		// classdoc "Core top-off philosophy"). The engine's overheal cap decides whether
-		// shark and karambwan actually fire this tick -- no per-boss gating needed here.
-		// If a mechanic ever requires suppressing food (e.g. prepping a specific attack),
-		// call b.suppressEat() for that tick.
-		int pray = mirror.getPrayer();
-		int maxPray = mirror.getMaxPrayer();
-		int ceiling = Math.max(1, maxPray - (7 + maxPray / 4));
-		if (pray <= ceiling - VardorvisSupply.PROFILE.prayerSipJitterWindow)
-		{
-			b.requireSip(SupplyProfile.DrinkKind.PRAYER);
-		}
-		else if (pray <= ceiling)
-		{
-			b.opportunisticSip(SupplyProfile.DrinkKind.PRAYER);
-		}
+		// Eat only AFTER HP falls to the threshold -- topping off from near-full wastes food and each
+		// eat delays our next attack (DPS loss). The engine's overheal cap still prevents overeating,
+		// and its critical-HP floor (hpEatCriticalThreshold) still force-eats when we are about to die.
+		boolean needFood = mirror.getHp() <= VardorvisSupply.PROFILE.hpEatThreshold;
+		b.wantEat(needFood);
+		b.allowComboEat(needFood);
+
+		// Prayer: standalone sip below HALF of max (jittered); when eating (needFood) the swing is
+		// already delayed, so piggyback a free top-up instead.
+		ConsumptionEngine.requestPrayerSip(b, mirror, Math.max(1, mirror.getMaxPrayer() / 2),
+			VardorvisSupply.PROFILE.prayerSipJitterWindow, needFood);
 
 		if (mirror.getRunEnergy() <= VardorvisSupply.PROFILE.runEnergySipStam
 			&& VardorvisSupply.PROFILE.hasPotion(SupplyProfile.DrinkKind.STAMINA))
@@ -551,6 +608,9 @@ public class VardorvisAutoMain
 		if (r == null || !r.hasAction()) return;
 		if (r.primaryEat != null) router.useInventoryItem(r.primaryEat.itemId, "Eat");
 		if (r.comboEat   != null) router.useInventoryItem(r.comboEat.itemId, "Eat");
+		// Eating delays our next attack (food 3t, + combo food 2t). Record it so step 6 / the weave
+		// don't fire a wasted click mid-delay.
+		eatDelay.onConsumed(mirror.getTickCounter(), r);
 		if (r.drink      != null)
 		{
 			SupplyProfile.PotionEntry pot = VardorvisSupply.PROFILE.potion(r.drink);
@@ -638,6 +698,7 @@ public class VardorvisAutoMain
 		Player player = mirror.getLocalPlayer();
 		if (player == null || vardorvis == null) return false;
 		if (player.getInteracting() == vardorvis) return false;  // already attacking, no re-click needed
+		if (eatDelay.attackBlocked(tick)) return false;           // inside an eat / combo-eat delay
 		if (tick - lastAttackTick < WEAPON_COOLDOWN) return false;
 		return isInWeaponRange(vardorvis);
 	}
@@ -674,12 +735,6 @@ public class VardorvisAutoMain
 		return null;
 	}
 
-	/** Convenience single-id variant used elsewhere. */
-	private NPC findNpc(int id)
-	{
-		return findNpcAny(id);
-	}
-
 	private void updateOverlay()
 	{
 		if (overlay == null) return;
@@ -714,7 +769,6 @@ public class VardorvisAutoMain
 		lastResolveTick = tick;
 	}
 
-
 	/** Template-space check: are we in the Vardorvis arena? */
 	private boolean isInArenaTemplate()
 	{
@@ -725,6 +779,21 @@ public class VardorvisAutoMain
 	private WorldPoint resolveFirst(WorldPoint template)
 	{
 		return InstanceCoords.fromTemplate(client, template);
+	}
+
+	/** Current boss HP from the in-fight health bar widget; -1 when the bar is not showing. */
+	private int bossCurrentHp()
+	{
+		return WidgetReader.bossHp(client);
+	}
+
+	/** Turn ALL our prayers off (the three overheads AND offensive Piety) and drop any pending swaps. */
+	private void turnPrayersOff(int tick)
+	{
+		prayers.clearScheduled();
+		java.util.Set<Prayer> manageOff = new java.util.HashSet<>(PrayerSwapper.OVERHEAD_SET());
+		manageOff.add(Prayer.PIETY);
+		prayers.ensureOnlyOn(tick, java.util.Collections.emptySet(), manageOff);
 	}
 
 	/**
@@ -805,7 +874,6 @@ public class VardorvisAutoMain
 		boolean proactive = curBadT2 && target != null && !targetBadT1;
 		boolean mustMove  = emergency || proactive;
 
-
 		if (mustMove)
 		{
 			// Dump the hazard tiles for diagnostics.
@@ -836,24 +904,18 @@ public class VardorvisAutoMain
 			return ff;
 		}
 
-		// Current is safe for the next tick. Return to home if we're off it and home is
-		// safe for the next few ticks (wider lookahead here because home-return is
-		// optional) -- but only once Vardorvis is alive (FIGHT phase). During IDLE the
-		// attack menuAction auto-walks us toward the boss for the poke; a home walk-click
-		// would cancel it.
-		if (!onHome && !homeImminent && phase.current() == VardPhase.FIGHT)
+		// Current is safe for the next tick. Return to the camp tile when it's safe -- but ONLY once
+		// Vardorvis is actually AWAKE (active GameObjects present). While he is still dormant we are
+		// poking him to wake him; running back to camp then cancels the poke's walk and leaves us
+		// circling between the boss and camp. isVardorvisActive() is the awake check -- the same
+		// markers that drive the FIGHT phase.
+		boolean mayReturnHome = isVardorvisActive();
+		if (!onHome && !homeImminent && mayReturnHome)
 		{
 			return homeTile;
 		}
-		if (!onHome && !homeImminent && phase.current() != VardPhase.FIGHT)
-		{
-		}
-		if (!onHome && homeImminent)
-		{
-		}
 		return null;
 	}
-
 
 	/**
 	 * Direction vector the axe will travel in, given its spawn (= tendril) SW anchor.
@@ -919,10 +981,10 @@ public class VardorvisAutoMain
 	// -----------------------------------------------------------------
 
 	/**
-	 * Click up to {@link VardorvisAutoIDs#QTE_MAX_CLICKS_PER_TICK} QTE_MODEL widgets this
-	 * tick, picked in a cluster-aware order: start at the top-left-most unclicked widget,
-	 * then chain to its nearest unclicked neighbour. Approximates how a human bursts the
-	 * mechanic by sweeping through adjacent icons together.
+	 * Click ALL visible QTE_MODEL widgets, picked in a cluster-aware order: start at the top-left-most
+	 * unclicked widget, then chain to its nearest unclicked neighbour. The destroys are STAGGERED on the
+	 * click scheduler (~150-260ms jittered gaps), so one pass sweeps the whole captcha like a human instead
+	 * of bursting a fixed group per tick.
 	 */
 	private void handleCaptcha(int tick)
 	{
@@ -966,18 +1028,22 @@ public class VardorvisAutoMain
 		}
 
 		// Fire up to the per-tick cap, logging the clicked order with positions for audit.
-		int cap = Math.min(order.size(), VardorvisAutoIDs.QTE_MAX_CLICKS_PER_TICK);
 		StringBuilder trace = new StringBuilder();
-		for (int i = 0; i < cap; i++)
+		// STAGGER ALL visible destroys this pass -- no per-tick cap or grouping. The 150-260ms jittered gaps
+		// already space the clicks like a human sweep (mouse travel + click each), and the client sends each
+		// packet as it fires (not batched to end-of-tick). qteClicked is marked synchronously so the next tick
+		// won't re-queue a destroy still pending on the scheduler.
+		long offset = java.util.concurrent.ThreadLocalRandom.current().nextInt(20, 70);   // small reaction before the first
+		for (int[] entry : order)
 		{
-			int[] entry = order.get(i);
 			int id = entry[0];
 			int cx = entry[1], cy = entry[2];
-			router.destroyQte(id);
+			router.destroyQteDelayed(id, offset);
 			qteClicked.add(id);
+			offset += java.util.concurrent.ThreadLocalRandom.current().nextInt(150, 260);   // mouse travel + click to the next
 			if (trace.length() > 0) trace.append(" -> ");
 			trace.append("w").append(id - 54591488).append("@(").append(cx).append(",").append(cy).append(")");
 		}
-		if (overlay != null) overlay.setStep("captcha -- fired " + cap + ", total done " + qteClicked.size());
+		if (overlay != null) overlay.setStep("captcha -- fired " + order.size() + ", total done " + qteClicked.size());
 	}
 }

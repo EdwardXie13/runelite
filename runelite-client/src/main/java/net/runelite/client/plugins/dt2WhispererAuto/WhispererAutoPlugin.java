@@ -2,6 +2,7 @@ package net.runelite.client.plugins.dt2WhispererAuto;
 
 import com.google.inject.Provides;
 import net.runelite.api.events.ChatMessage;
+import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
@@ -32,7 +33,6 @@ import java.awt.event.KeyEvent;
 )
 public class WhispererAutoPlugin extends Plugin implements KeyListener
 {
-	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WhispererAutoPlugin.class);
 	@Inject private EventBus eventBus;
 	@Inject private OverlayManager overlayManager;
 	@Inject private KeyManager keyManager;
@@ -55,6 +55,12 @@ public class WhispererAutoPlugin extends Plugin implements KeyListener
 
 	@Subscribe
 	public void onMenuOptionClicked(MenuOptionClicked e) {
+	}
+
+	@Subscribe
+	public void onMenuEntryAdded(MenuEntryAdded e)
+	{
+		main.onMenuEntryAdded(e);
 	}
 
 	@Subscribe

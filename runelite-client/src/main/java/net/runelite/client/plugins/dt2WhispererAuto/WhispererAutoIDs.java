@@ -16,6 +16,10 @@ public final class WhispererAutoIDs
 	public static final int NPC_WHISPERER_DORMANT = 12203;
 	/** Whisperer, awake and fighting. */
 	public static final int NPC_WHISPERER_AWAKE   = 12204;
+
+	// DPS thrall: which Greater thrall to summon. 14287043 = magic (ghost), 14287044 = ranged (skeleton),
+	// 14287045 = melee (zombie). Change this one value to switch the thrall's style for the Whisperer.
+	public static final int THRALL_CAST_WIDGET = 14287043;   // magic ghost (Whisperer is a mage kill)
 	/** Whisperer in her BIND form: she flips to this id to cast the post-phase bind, then shoots it. Its
 	 *  presence is the reliable "she is binding" signal -- no 12205 after a phase end means no bind (so no
 	 *  north reposition); a 12205 means she bound (hold through it, then reposition). */
@@ -90,8 +94,7 @@ public final class WhispererAutoIDs
 
 	// Shadow-realm souls are told apart by their model recolor -- the devtools "C:" field,
 	// NPC.getModelOverrides().getColorToReplaceWith() (a short[]). Yellow has NO recolor
-	// (null/empty). See LostSoulColor for the classifier. TODO: wire soul handling once the
-	// mechanic is defined.
+	// (null/empty). TODO: wire soul handling (and a colour classifier) once the mechanic is defined.
 	public static final short[] SOUL_COLOR_BLUE  = { -25790, -25801, -24787, -24816 };
 	public static final short[] SOUL_COLOR_CYAN  = { -31934, -31945, -31955, -31984 };
 	public static final short[] SOUL_COLOR_GREEN = {  26434,  26423,  26413,  26386 };
@@ -180,6 +183,9 @@ public final class WhispererAutoIDs
 	// TODO: capture. Placeholders so references compile; -1 never matches a real anim.
 	/** Phase-change animation. TENTATIVE (user to confirm). */
 	public static final int ANIM_PHASE_CHANGE = 10247;
+	/** The dormant Odd Figure (12203) plays this when disturbed/waking; we get knocked back to the start
+	 *  tile and NPC 12204 (awake) spawns shortly after. */
+	public static final int ANIM_ODD_FIGURE_WAKE = 10227;
 	/** Corrupted-seeds phase ARMING (telegraph only). The shadow-realm commune still waits for
 	 *  the blackstone "pulses with dark energy" chat line (CHAT_BLACKSTONE_READY) -- do NOT act
 	 *  on this anim alone. */
@@ -201,6 +207,8 @@ public final class WhispererAutoIDs
 	/** Soul-siphon END: she finishes the siphon phase. Used as a backstop to end the phase + arm the
 	 *  post-phase bind flee if we didn't already finish the clear (all 4 groups fired). */
 	public static final int ANIM_SOUL_SIPHON_END = 10259;
+	/** Whisperer death animation (the FINAL death, after the enrage phase). */
+	public static final int ANIM_WHISPERER_DEATH = 10260;
 	/** Active siphon lasts this many ticks, counted from the first detection of
 	 *  ANIM_SOUL_SIPHON_ACTIVE (10257). */
 	public static final int SOUL_SIPHON_DURATION_TICKS = 20;

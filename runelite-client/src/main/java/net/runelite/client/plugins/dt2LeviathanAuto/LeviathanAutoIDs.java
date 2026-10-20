@@ -281,7 +281,6 @@ public final class LeviathanAutoIDs
 	 * {@code getText()} reads like "700/700" -- parse with
 	 * {@link net.runelite.client.plugins.autoBossCore.state.WidgetReader#fraction}.
 	 */
-	public static final int WIDGET_BOSS_HP = 19857428;
 
 	/**
 	 * Below this boss HP, section-1 roars are done from the north-row finisher spot

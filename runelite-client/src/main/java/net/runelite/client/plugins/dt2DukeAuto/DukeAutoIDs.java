@@ -34,6 +34,10 @@ public final class DukeAutoIDs
 	public static final int NPC_DUKE_AWAKE    = 12191;
 	public static final int NPC_DUKE_DEAD     = 12192;
 
+	// DPS thrall: which Greater thrall to summon. 14287043 = magic (ghost), 14287044 = ranged (skeleton),
+	// 14287045 = melee (zombie). Change this one value to switch the thrall's style for Duke.
+	public static final int THRALL_CAST_WIDGET = 14287045;   // melee zombie
+
 	/**
 	 * USER-CONFIRMED: the in-encounter Duke NPC id observed in play is 12167
 	 * (== NPC_DUKE_ASLEEP). Whether Duke flips to NPC_DUKE_AWAKE (12191) for the attackable
@@ -427,12 +431,11 @@ public final class DukeAutoIDs
 	 * Death / low-HP detection. Two options, both used by the sibling scripts:
 	 *   1. NPC id transition: NPC_DUKE_AWAKE (12191) -> NPC_DUKE_DEAD (12192) / despawn.
 	 *      Robust and needs no widget -- preferred default for Duke.
-	 *   2. Boss-HP overlay widget (Leviathan used WIDGET_BOSS_HP = 19857428, the "250
-	 *      checker"). If Duke exposes an equivalent in-fight HP widget, capture it here.
+	 *   2. Boss-HP overlay widget (WidgetReader.BOSS_HP_COMPONENT, the shared DT2 health bar).
+	 *      Duke reads it for the enrage-HP threshold; NPC transition remains the death cue.
 	 * NOTE: InterfaceID.DUKE_SUCELLUS_SCOREBOARD (group 828 / 0x033c) is the POST-KILL
 	 * scoreboard, NOT the in-fight HP bar -- do not use it for live HP.
 	 */
-	public static final int WIDGET_BOSS_HP = -1;   // TODO capture (optional; NPC transition works)
 
 	// --- Supplies (item ids) -----------------------------------------
 	// NOTE: supply set below assumes a MELEE kill (super combat). If this rig ranges Duke

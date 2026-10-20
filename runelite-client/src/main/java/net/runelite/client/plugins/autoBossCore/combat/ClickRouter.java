@@ -80,35 +80,58 @@ public class ClickRouter
 		});
 	}
 
+	/** The client builds the click menu from the PREVIOUS hover position, so a move+click fired in the same
+	 *  instant resolves against where the cursor WAS -- clicking our own tile, or a ground item we were over
+	 *  (the mithril-arrow pickup, and the siphon approach that clicked our own tile and froze). So we HOVER
+	 *  first, let the client's menu catch up for ~a frame, then press/click. ~{@value} ms is well under one
+	 *  600ms game tick, so the walk still registers this tick. */
+	private static final long MOVE_TO_CLICK_DELAY_MS = 100;
+	private static final java.util.concurrent.ScheduledExecutorService CLICK_SCHEDULER =
+		java.util.concurrent.Executors.newSingleThreadScheduledExecutor(r -> {
+			Thread th = new Thread(r, "autobosscore-click");
+			th.setDaemon(true);
+			return th;
+		});
+
 	private void dispatchCanvasClick(int canvasX, int canvasY)
 	{
 		Canvas c = client.getCanvas();
 		if (c == null) return;
-		long t = System.currentTimeMillis();
-		MouseMotionListener[] motion = c.getMouseMotionListeners();
-		MouseListener[] mouse = c.getMouseListeners();
+		dispatchMouseMoved(c, canvasX, canvasY);   // hover now so the client rebuilds the menu at THIS point
+		// ...then click a frame later, once the hover/menu has caught up to the new cursor position.
+		CLICK_SCHEDULER.schedule(() -> clientThread.invoke(() -> {
+			Canvas cc = client.getCanvas();
+			if (cc != null) dispatchMousePressClick(cc, canvasX, canvasY);
+		}), MOVE_TO_CLICK_DELAY_MS, java.util.concurrent.TimeUnit.MILLISECONDS);
+	}
 
+	private void dispatchMouseMoved(Canvas c, int canvasX, int canvasY)
+	{
+		long t = System.currentTimeMillis();
 		MouseEvent moved = new MouseEvent(c, MouseEvent.MOUSE_MOVED, t, 0, canvasX, canvasY, 0, false);
-		for (MouseMotionListener l : motion)
+		for (MouseMotionListener l : c.getMouseMotionListeners())
 		{
 			try { l.mouseMoved(moved); } catch (Throwable ex) { log.debug("[router] mouseMoved threw", ex); }
 		}
+	}
 
-		MouseEvent pressed = new MouseEvent(c, MouseEvent.MOUSE_PRESSED, t + 1,
+	private void dispatchMousePressClick(Canvas c, int canvasX, int canvasY)
+	{
+		long t = System.currentTimeMillis();
+		MouseListener[] mouse = c.getMouseListeners();
+		MouseEvent pressed = new MouseEvent(c, MouseEvent.MOUSE_PRESSED, t,
 			InputEvent.BUTTON1_DOWN_MASK, canvasX, canvasY, 1, false, MouseEvent.BUTTON1);
 		for (MouseListener l : mouse)
 		{
 			try { l.mousePressed(pressed); } catch (Throwable ex) { log.debug("[router] mousePressed threw", ex); }
 		}
-
-		MouseEvent released = new MouseEvent(c, MouseEvent.MOUSE_RELEASED, t + 2, 0,
+		MouseEvent released = new MouseEvent(c, MouseEvent.MOUSE_RELEASED, t + 1, 0,
 			canvasX, canvasY, 1, false, MouseEvent.BUTTON1);
 		for (MouseListener l : mouse)
 		{
 			try { l.mouseReleased(released); } catch (Throwable ex) { log.debug("[router] mouseReleased threw", ex); }
 		}
-
-		MouseEvent clicked = new MouseEvent(c, MouseEvent.MOUSE_CLICKED, t + 3, 0,
+		MouseEvent clicked = new MouseEvent(c, MouseEvent.MOUSE_CLICKED, t + 2, 0,
 			canvasX, canvasY, 1, false, MouseEvent.BUTTON1);
 		for (MouseListener l : mouse)
 		{
@@ -350,6 +373,42 @@ public class ClickRouter
 			MenuAction.CC_OP,
 			1, -1,
 			"Destroy", ""
+		));
+	}
+
+	/**
+	 * Same 'Destroy' QTE op, but fired after {@code delayMs} on the shared click scheduler so a burst of
+	 * destroys is STAGGERED across real time (like a human sweeping the icons) instead of several ops landing
+	 * on the same millisecond. <=0 fires immediately. Each click's interface packet leaves when it fires --
+	 * the client does not batch to end-of-tick -- so the server sees a spread-out burst, not a simultaneous one.
+	 */
+	public void destroyQteDelayed(int widgetId, long delayMs)
+	{
+		if (delayMs <= 0) { destroyQte(widgetId); return; }
+		CLICK_SCHEDULER.schedule(() -> clientThread.invoke(() -> client.menuAction(
+				-1, widgetId, MenuAction.CC_OP, 1, -1, "Destroy", "")),
+			delayMs, java.util.concurrent.TimeUnit.MILLISECONDS);
+	}
+
+	// -----------------------------------------------------------------
+	// Click-to-cast spellbook widgets (no target).
+	// -----------------------------------------------------------------
+
+	/**
+	 * Cast a spellbook spell that takes NO target by clicking its spell widget. Replays the exact menuAction a
+	 * human click produces: {@code CC_OP id=1 itemId=-1 param0=-1 param1=widgetId option=<option> target=<name>}.
+	 * Same menu shape as {@link #destroyQte}. Used for the DT2 DPS thralls -- Resurrect Greater Ghost (magic,
+	 * param1=14287043), Greater Skeleton (ranged, 14287044), Greater Zombie (melee, 14287045) -- all with
+	 * option {@code "Cast"}; general enough for any other click-to-cast widget.
+	 */
+	public void castWidget(int widgetId, String option, String name)
+	{
+		clientThread.invoke(() -> client.menuAction(
+			-1, widgetId,
+			MenuAction.CC_OP,
+			1, -1,
+			option == null ? "Cast" : option,
+			name == null ? "" : name
 		));
 	}
 

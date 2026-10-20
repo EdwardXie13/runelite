@@ -12,14 +12,12 @@ public final class VardorvisSupply
 	private VardorvisSupply() {}
 
 	/**
-	 * Randomized HP eat threshold in [45, 50]. Note: with the current VardorvisAutoMain
-	 * opportunistic-eat model (always request shark + kara each tick, engine's overheal
-	 * cap is the real gate), this field is informational only. The actual eat behavior
-	 * is: shark whenever hp + 20 <= maxHp, kara on top whenever hp + 20 + 18 <= maxHp.
-	 * At maxHp 99 that means shark at hp <= 79 and combo at hp <= 61, so any eat in the
-	 * 45..50 range is already comfortably in combo territory.
+	 * HP eat threshold centred on 40 with a small +/-2 jitter ([38, 42]) for human-like variation.
+	 * Note: with the opportunistic-eat model (request shark + kara each tick, the engine's overheal
+	 * cap is the real gate) this field is informational only; actual eating tops off whenever a food
+	 * still fits under the cap. Stays above the critical floor (35).
 	 */
-	private static final int RANDOM_EAT_THRESHOLD = ThreadLocalRandom.current().nextInt(45, 51);
+	private static final int RANDOM_EAT_THRESHOLD = ThreadLocalRandom.current().nextInt(38, 43);
 
 	public static final SupplyProfile PROFILE = SupplyProfile.builder()
 		.food(

@@ -19,8 +19,10 @@ import net.runelite.client.plugins.autoBossCore.combat.PrayerSwapper;
 import net.runelite.client.plugins.autoBossCore.combat.SchedulingTileDodger;
 import net.runelite.client.plugins.autoBossCore.combat.TelegraphedHazards;
 import net.runelite.client.plugins.autoBossCore.combat.TilePathPredictor;
+import net.runelite.client.plugins.autoBossCore.combat.ThrallManager;
 import net.runelite.client.plugins.autoBossCore.consume.CombatBoostTracker;
 import net.runelite.client.plugins.autoBossCore.consume.ConsumptionEngine;
+import net.runelite.client.plugins.autoBossCore.consume.EatDelay;
 import net.runelite.client.plugins.autoBossCore.consume.SupplyProfile;
 import net.runelite.client.plugins.autoBossCore.phase.PhaseTracker;
 import net.runelite.client.plugins.autoBossCore.state.InstanceCoords;
@@ -83,6 +85,7 @@ public class DukeAutoMain
 
 	// --- Boss state -------------------------------------------------
 	private final ConsumptionEngine engine;
+	private final ThrallManager thrall;
 	// Melee combat-boost (divine super combat preferred, else super combat). Divine runs on
 	// a 5-min timer; regular re-doses below DukeAutoIDs.SUPER_COMBAT_REDRINK_MIN_BOOST.
 	// NOTE: if Duke is ranged instead of meleed, replace this with a RANGING/DIVINE_RANGE
@@ -95,8 +98,8 @@ public class DukeAutoMain
 
 	private NPC duke;
 	private int lastAttackTick = -100;
-	/** Next attack is blocked until this tick, from an eat / combo-eat delay (see EAT_DELAY_TICKS). */
-	private int attackDelayUntil = -100;
+	/** Shared eat/combo-eat attack-delay tracker (see autoBossCore EatDelay). */
+	private final EatDelay eatDelay = new EatDelay();
 	/** Tick Duke last STARTED his melee attack animation, and his previous-tick anim (to detect the start). */
 	private int dukeAttackTick = -100;
 	private int dukePrevAnim = -1;
@@ -126,17 +129,9 @@ public class DukeAutoMain
 	/** Set once per kill when we've seen Duke die, so prayers/trackers reset exactly once. */
 	private boolean deathHandled = false;
 
-	/** Melee weapon reach. DWH/most melee = 1; Dragon hunter lance = 2. TODO: set per gear. */
-	private static final int WEAPON_REACH = 1;
 	/** Weapon attack cooldown in ticks. Duke (and our weapon) run a 5-tick attack cycle. */
 	private static final int WEAPON_COOLDOWN = 5;
-	/**
-	 * Eating delays your next attack. A single food (shark) = {@value #EAT_DELAY_TICKS}t; a combo food
-	 * (karambwan eaten the same tick) adds {@value #COMBO_EAT_EXTRA_TICKS}t more (shark+kara = 5t). A
-	 * potion sip adds NO attack delay (it only interrupts the current attack, so we re-click the target).
-	 */
-	private static final int EAT_DELAY_TICKS = 3;
-	private static final int COMBO_EAT_EXTRA_TICKS = 2;
+	// Eat/combo-eat attack delay now lives in autoBossCore EatDelay (eatDelay field).
 	/**
 	 * Duke's gas-bottle projectile id. While airborne it targets a top-row vent (1/2/3); its gas 3x3
 	 * forms there on landing. We read the projectile's target tile and, if its 3x3 would cover our
@@ -159,7 +154,6 @@ public class DukeAutoMain
 	 * WidgetReader.fraction parses its "cur/max" text. At/below {@link #ENRAGE_HP} Duke enrages
 	 * (attacks every 4 ticks instead of 5).
 	 */
-	private static final int WIDGET_BOSS_HP = 19857428;
 	private static final int ENRAGE_HP = 122;
 
 	// Walk-click dedupe: suppress re-sending the same destination tick-after-tick.
@@ -180,7 +174,7 @@ public class DukeAutoMain
 	/** Extremity (12199/12200/12201) -> tick first seen; its cone attacks at spawn+3. */
 	private final Map<NPC, Integer> extremitySpawnTick = new IdentityHashMap<>();
 
-	/** Vent cycle: tick group A spawns (mod-{@value #VENT_CYCLE_PERIOD} phase ref); null until synced. */
+	/** Vent cycle: tick group A spawns (mod-30 phase ref); null until synced. */
 	private Integer ventAnchorTick = null;
 	/** Tick we began watching 12198 spawns this run/kill; vents alive before this can't anchor the cycle. */
 	private int ventWatchStart = -1;
@@ -215,25 +209,15 @@ public class DukeAutoMain
 	private boolean pickInterrupted = false;
 	/** When true, feed Duke the potion at the camp to wake him and start the fight (prep complete). */
 	private static final boolean FEED_DUKE_ENABLED = true;
-	/** TODO (loot): Duke's loot spawns here (template; centre of the camp row) -- walk + pick up post-kill. */
-	private static final WorldPoint LOOT_SPAWN_TILE = new WorldPoint(3039, 6451, 0);
-	/** Number of fermentation vats to handle per phase (two vats -> two potions). */
-	private static final int VATS_TO_FILL = 2;
 	/** The two fermentation-vat tiles (template coords; converted to instance at runtime). */
 	private static final WorldPoint VAT_EAST = new WorldPoint(3043, 6438, 0);
 	private static final WorldPoint VAT_WEST = new WorldPoint(3033, 6438, 0);
-	/** Player animation played when filling / collecting a fermentation vat (collect confirm only). */
-	private static final int ANIM_VAT_INTERACT = 2572;
 	/** NPC that SPAWNS when a vat is successfully filled -- the reliable fill-confirm signal. */
 	private static final int NPC_VAT_FILL = 12197;
-	/** Count of the confirm-NPC captured just before the pending vat click (fill confirm). */
-	private int pendingVatNpcBaseline = 0;
 	/** Order the vats were filled (template tiles), so we collect the first-filled first. */
 	private final java.util.List<WorldPoint> vatFillOrder = new java.util.ArrayList<>();
 	/** Potion count captured just before a Collect-from click (collect confirm). */
 	private int pendingCollectBaseline = 0;
-	/** Ticks parked AT a vat (no animation seen) before we settle and count it done anyway. */
-	private static final int VAT_ARRIVE_SETTLE = 3;
 	/** Ticks after a vat click without reaching it before we give up and re-click. */
 	private static final int VAT_ACTION_TIMEOUT = 6;
 	/** Vat TEMPLATE tiles already handled in the current phase (fill, then collect). */
@@ -304,12 +288,9 @@ public class DukeAutoMain
 	private static final WorldPoint[] VENT_GROUP_C = {   // 3, 4, 8
 		new WorldPoint(3042, 6450, 0), new WorldPoint(3036, 6446, 0), new WorldPoint(3039, 6442, 0) };
 	private static final WorldPoint[][] VENT_GROUPS = { VENT_GROUP_A, VENT_GROUP_B, VENT_GROUP_C };
-	private static final String[] VENT_GROUP_NAMES = { "A", "B", "C" };
 	private static final int VENT_GROUP_INTERVAL  = 10;   // ticks between consecutive group spawns
-	private static final int VENT_CYCLE_PERIOD    = 30;   // VENT_GROUP_INTERVAL * 3 groups
 	private static final int VENT_DANGER_FROM     = 3;    // padded gas-window start (real gas = +4)
 	private static final int VENT_DANGER_TO       = 12;   // padded gas-window end   (real gas = +11)
-	private static final int VENT_PREDICT_HORIZON = 24;   // how many ticks ahead to schedule spawns
 	/** Last predicted walk path + the first tile on it that would be hit (for the overlay). */
 	private java.util.List<WorldPoint> debugPath = java.util.Collections.emptyList();
 	private WorldPoint debugHitTile = null;
@@ -334,6 +315,7 @@ public class DukeAutoMain
 		this.camera  = camera;
 
 		this.engine = new ConsumptionEngine(DukeSupply.PROFILE, mirror);
+		this.thrall = new ThrallManager(DukeAutoIDs.THRALL_CAST_WIDGET, "Duke thrall");
 
 		this.phase = new PhaseTracker<>(DukePhase.OUT_OF_FIGHT)
 			.on(DukePhase.SHIELD, () -> duke != null && isDukeAwake() && isShieldWindow(),
@@ -361,7 +343,7 @@ public class DukeAutoMain
 		ventWatchStart = -1;
 		holdForHazard = false; holdGoal = null;
 		dukeAttackTick = -100; dukePrevAnim = -1;
-		dukeAttackPhase = -1; dukeEnraged = false; gazeTick = -100; gazeActive = false; feedingStarted = false; attackDelayUntil = -100;
+		dukeAttackPhase = -1; dukeEnraged = false; gazeTick = -100; gazeActive = false; feedingStarted = false; eatDelay.reset(); thrall.reset();
 		sawDeathAnim = false;
 		vatState.clear();
 		active = true;
@@ -544,9 +526,11 @@ public class DukeAutoMain
 		// camp run; we only sip potions, and only on the tick right after an attack (a sip on an attack
 		// tick cancels the swing). Outside FIGHT there's no swing to protect, so we eat/drink every tick.
 		boolean inFight = phase.current() == DukePhase.FIGHT;
-		boolean consumeOk = !inFight
-			|| tick == lastAttackTick + 1
-			|| tick - lastAttackTick > WEAPON_COOLDOWN;
+		// In FIGHT only sip on a CLEAN tick: at least 2 ticks past the last attack. Tick +0 is the
+		// attack itself (a sip there cancels the swing) and tick +1 is the hold-camp walk issued in
+		// step 3 -- sharing that tick made the walk-to-camp click and the drink collide and cancel the
+		// resumed swing. +2 onward we are idle on camp, so the drink stands alone.
+		boolean consumeOk = !inFight || tick - lastAttackTick >= 2;
 		if (consumeOk)
 		{
 			// Eat to top off everywhere EXCEPT while camped in FIGHT (chip damage -> eat on the camp run)
@@ -556,6 +540,11 @@ public class DukeAutoMain
 			ConsumptionEngine.Request req = buildConsumptionRequest();
 			ConsumptionEngine.Result res = engine.evaluate(req);
 			applyConsumption(res, allowEat);
+			// DPS thrall upkeep: recast ASAP once expired (6 prayer/cast, ~magic-level ticks), but only on this
+			// clean tick AND only when consumption didn't already use the tick -- so the cast never collides with
+			// a drink/eat or cancels a swing.
+			if (!res.hasAction())
+				thrall.maintain(tick, mirror, router, thrallConditionsOk());
 		}
 
 		// DEBUG: per-tick gaze trace (end of tick, so lastAttackTick reflects this tick's attack).
@@ -571,12 +560,7 @@ public class DukeAutoMain
 	private void logGazeTick(int tick)
 	{
 		if (!gazeActive) return;
-		Player p = mirror.getLocalPlayer();
-		int pAnim = (p == null) ? -999 : p.getAnimation();
-		boolean interactingDuke = (p != null && duke != null && p.getInteracting() == duke);
-		int dAnim = (duke == null) ? -999 : duke.getAnimation();
-		boolean attackedThisTick = (tick == lastAttackTick);
-		int skipTick = gazeTick + (dukeEnraged ? GAZE_HIT_OFFSET_ENRAGE : GAZE_HIT_OFFSET);
+		// TODO (capture): trace player/duke anim, interacting + HP here for gaze-hit timing.
 	}
 
 	// -----------------------------------------------------------------
@@ -844,7 +828,7 @@ public class DukeAutoMain
 		}
 		if (picksRequested >= need) return false;       // all needed picks already requested -- wait for them
 
-		GameObject go = firstReachableById(objId);   // reachable one if several share the id (two salt deposits)
+		GameObject go = firstReachableById(objId, tick);   // prefer a hazard-free approach when several share the id (two salt deposits)
 		if (go == null) return false;   // depleted / regrowing / not in scene / all blocked -- wait
 
 		// Don't click the object if the walk to it would cross a hazard -- wait where we are.
@@ -871,27 +855,39 @@ public class DukeAutoMain
 	 * non-empty BFS path to any orthogonal neighbour of the object; among reachable candidates the
 	 * nearest (shortest path) wins. Falls back to the first found if none path (don't deadlock).
 	 */
-	private GameObject firstReachableById(int objId)
+	private GameObject firstReachableById(int objId, int tick)
 	{
 		java.util.List<GameObject> gos = SceneScanner.findByIds(client, objId);
 		if (gos == null || gos.isEmpty()) return null;
 		WorldPoint me = mirror.getPlayerTile();
 		if (me == null) return gos.get(0);
 
+		// Rank reachable candidates: a HAZARD-FREE approach beats a shorter but gassed one, so when
+		// the near salt deposit is blocked by a toxic vent we walk to the far one instead of waiting.
+		// Shortest path breaks ties within the same safety class -- which keeps us on the deposit we
+		// are already standing at (len ~0) rather than ping-ponging as vents cycle.
 		GameObject best = null;
 		int bestLen = Integer.MAX_VALUE;
+		boolean bestSafe = false;
+		int[][] nbrs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 		for (GameObject go : gos)
 		{
 			WorldPoint t = go.getWorldLocation();
 			if (t == null) continue;
-			int[][] nbrs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+			int len = Integer.MAX_VALUE;
 			for (int[] d : nbrs)
 			{
 				WorldPoint nb = new WorldPoint(t.getX() + d[0], t.getY() + d[1], t.getPlane());
 				java.util.List<WorldPoint> path = TilePathPredictor.path(
 					client.getTopLevelWorldView(), me, nb, null, this::inArena, ARENA_PATH_BUDGET);
-				if (!path.isEmpty() && path.size() < bestLen) { best = go; bestLen = path.size(); }
+				if (!path.isEmpty() && path.size() < len) len = path.size();
 			}
+			if (len == Integer.MAX_VALUE) continue;   // unreachable (walled off) -- skip
+			boolean safe = !pathWillBeHit(me, t, tick, "obj-pick");
+			boolean better = (best == null)
+				|| (safe && !bestSafe)                       // a safe approach always beats a gassed one
+				|| (safe == bestSafe && len < bestLen);      // else the shorter path wins
+			if (better) { best = go; bestLen = len; bestSafe = safe; }
 		}
 		return best != null ? best : gos.get(0);
 	}
@@ -933,136 +929,6 @@ public class DukeAutoMain
 		lastGrindTick = tick;
 	}
 
-	/**
-	 * Interact with BOTH fermentation vats in turn -- used for Fill (object {@code 47536}) and for
-	 * Collect-from (object {@code 47539}). There are exactly two vats at fixed arena tiles, east
-	 * {@link #VAT_EAST} and west {@link #VAT_WEST} (template), so we do them deterministically,
-	 * nearest first: click a vat, then WAIT for the player's vat-interaction animation
-	 * ({@value #ANIM_VAT_INTERACT}) to confirm the action actually happened before moving to the
-	 * other. That is the reliable signal (a bare arrival could miss / mis-fire). A dodge that
-	 * cancels the walk drops the pending click so it re-issues; if we arrive and never see the
-	 * animation within {@link #VAT_ACTION_TIMEOUT} ticks, we re-click. Done vats are tracked by
-	 * their stable TEMPLATE tile. Returns true once both have been interacted.
-	 *
-	 * @param objId  the vat object id to target ({@code 47536} fillable, {@code 47539} ready).
-	 * @param option the menu option ("Fill" or "Collect-from").
-	 * @param label  overlay/log label.
-	 */
-	private boolean interactBothVats(int tick, int objId, String option, String label, int confirmNpcId)
-	{
-		WorldPoint me = mirror.getPlayerTile();
-
-		// A dodge cancelled the walk to the vat -> drop the pending click so we re-issue it.
-		if (pickInterrupted)
-		{
-			pickInterrupted = false;
-			pendingVat = null;
-		}
-
-		// Confirm the pending vat once we've stopped walking.
-		if (pendingVat != null)
-		{
-			if (client.getLocalDestinationLocation() != null) return false;        // still walking to it
-			WorldPoint pv = toInstance(pendingVat);
-			boolean atVat = pv != null && me != null && me.getPlane() == pv.getPlane()
-				&& Math.abs(me.getX() - pv.getX()) <= 3 && Math.abs(me.getY() - pv.getY()) <= 3;
-
-			boolean confirmed;
-			if (confirmNpcId > 0)
-			{
-				// Fill: a successful interaction SPAWNS an NPC (12197). We counted them just before
-				// clicking, so a rise in that count means this vat took. Reliable -- no animation guess.
-				confirmed = countNpcs(confirmNpcId) > pendingVatNpcBaseline;
-			}
-			else
-			{
-				// Collect (no spawn signal captured): the vat interaction animation, or a short settle
-				// parked at the vat so a missed animation tick can't trap us on one vat.
-				confirmed = playerAnim() == ANIM_VAT_INTERACT
-					|| (atVat && tick - lastPrepActionTick >= VAT_ARRIVE_SETTLE);
-			}
-
-			if (confirmed)
-			{
-				vatsDone.add(pendingVat);
-				if (confirmNpcId > 0 && !vatFillOrder.contains(pendingVat))
-					vatFillOrder.add(pendingVat);   // remember fill order so we collect first-filled first
-				pendingVat = null;
-			}
-			else if (tick - lastPrepActionTick >= VAT_ACTION_TIMEOUT)   // never latched (not reached / no spawn) -> re-click
-			{
-				pendingVat = null;
-			}
-			else
-			{
-				return false;   // waiting for the confirmation signal
-			}
-		}
-
-		WorldPoint target = nextVatNotDone(me);   // nearer vat TEMPLATE tile not done yet, or null
-		if (target == null) return true;
-		if (tick - lastPrepActionTick < PREP_ACTION_COOLDOWN) return false;
-
-		WorldPoint inst = toInstance(target);
-		GameObject vat = vatObjectAt(inst, objId);
-		if (vat == null) return false;   // that vat not in this state/scene yet -- wait (e.g. not fermented)
-		if (inst != null && me != null && pathWillBeHit(me, inst, tick, "vat")) return false;   // unsafe path -- wait
-		pendingVatNpcBaseline = confirmNpcId > 0 ? countNpcs(confirmNpcId) : 0;   // baseline BEFORE the click spawns one
-		router.interactGameObject(vat, MenuAction.GAME_OBJECT_FIRST_OPTION, option);
-		pendingVat = target;
-		lastPrepActionTick = tick;
-		if (overlay != null) overlay.setStep("prep: " + label + " (" + vatsDone.size() + "/" + VATS_TO_FILL + ")");
-		return false;
-	}
-
-	/** Count live NPCs of the given id. */
-	private int countNpcs(int id)
-	{
-		List<NPC> npcs = client.getNpcs();
-		if (npcs == null) return 0;
-		int n = 0;
-		for (NPC npc : npcs)
-		{
-			if (npc != null && npc.getId() == id) n++;
-		}
-		return n;
-	}
-
-	/** The nearer of the two vat TEMPLATE tiles not yet done this phase (by player distance), or null. */
-	private WorldPoint nextVatNotDone(WorldPoint meInstance)
-	{
-		WorldPoint meT = meInstance == null ? null : InstanceCoords.toTemplate(client, meInstance);
-		WorldPoint best = null;
-		int bestD = Integer.MAX_VALUE;
-		for (WorldPoint v : new WorldPoint[]{ VAT_EAST, VAT_WEST })
-		{
-			if (vatsDone.contains(v)) continue;
-			// Manhattan distance: picks the vat on OUR side first (mining west salt -> west vat is
-			// 1 tile across vs 9, even though both are ~9 tiles south -- Chebyshev would tie them).
-			int d = meT == null ? 0 : (Math.abs(meT.getX() - v.getX()) + Math.abs(meT.getY() - v.getY()));
-			if (d < bestD) { bestD = d; best = v; }
-		}
-		return best;
-	}
-
-	/** Live vat GameObject of {@code objId} whose SW tile is at (or within 2 of) {@code instTile}. */
-	private GameObject vatObjectAt(WorldPoint instTile, int objId)
-	{
-		if (instTile == null) return null;
-		java.util.List<GameObject> vats = SceneScanner.findByIds(client, objId);
-		if (vats == null) return null;
-		GameObject best = null;
-		int bestD = Integer.MAX_VALUE;
-		for (GameObject go : vats)
-		{
-			WorldPoint t = go.getWorldLocation();
-			if (t == null || t.getPlane() != instTile.getPlane()) continue;
-			int d = Math.max(Math.abs(t.getX() - instTile.getX()), Math.abs(t.getY() - instTile.getY()));
-			if (d <= 2 && d < bestD) { bestD = d; best = go; }
-		}
-		return best;
-	}
-
 	/** Current player animation id, or -1 if unavailable. */
 	private int playerAnim()
 	{
@@ -1087,93 +953,6 @@ public class DukeAutoMain
 			if (d < bestD) { bestD = d; best = a; }
 		}
 		return (best != null && bestD <= 4) ? best : null;   // only snap when plausibly one of them
-	}
-
-	/**
-	 * Collect both potions, vat by vat IN FILL ORDER. The first-filled vat ferments first, so we
-	 * walk back to it and wait THERE for its object to change to READY (47539), collect it, then
-	 * move to the second (waiting again if it hasn't fermented). Pre-walking while it ferments means
-	 * the collect is instant once it's ready. Each collect is confirmed by the potion count rising
-	 * (the only trustworthy signal here). Returns true once both potions are collected.
-	 */
-	private boolean collectVats(int tick)
-	{
-		WorldPoint me = mirror.getPlayerTile();
-		if (pickInterrupted) { pickInterrupted = false; pendingVat = null; }
-
-		// Confirm a pending collect: the potion count rose.
-		if (pendingVat != null)
-		{
-			if (mirror.countItem(DukeAutoIDs.ITEM_ARDER_MUSCA_POTION) > pendingCollectBaseline)
-			{
-				vatsDone.add(pendingVat);
-				pendingVat = null;
-			}
-			else if (tick - lastPrepActionTick >= VAT_ACTION_TIMEOUT)   // collect didn't land -> retry
-			{
-				pendingVat = null;
-			}
-			else
-			{
-				return false;   // waiting for the potion to land
-			}
-		}
-
-		WorldPoint target = nextVatToCollect(me);
-		if (target == null) return true;   // both collected
-
-		WorldPoint inst = toInstance(target);
-		if (inst == null) return false;
-		GameObject ready = vatObjectAt(inst, DukeAutoIDs.GOBJ_FERMENTATION_VAT_READY);
-
-		if (ready != null)
-		{
-			// Fermented. Collect-from (auto-walks the last step if we're not adjacent yet).
-			if (me != null && pathWillBeHit(me, inst, tick, "vat")) return false;       // unsafe path -- wait
-			if (tick - lastPrepActionTick < PREP_ACTION_COOLDOWN) return false;
-			pendingCollectBaseline = mirror.countItem(DukeAutoIDs.ITEM_ARDER_MUSCA_POTION);
-			router.interactGameObject(ready, MenuAction.GAME_OBJECT_FIRST_OPTION, DukeAutoIDs.COLLECT_FROM_OPTION);
-			pendingVat = target;
-			lastPrepActionTick = tick;
-			if (overlay != null) overlay.setStep("prep: collect potion ("
-				+ mirror.countItem(DukeAutoIDs.ITEM_ARDER_MUSCA_POTION) + "/" + batchPotions() + ")");
-			return false;
-		}
-
-		// Not fermented yet -> pre-walk to this vat so we're parked on it when it changes.
-		boolean atVat = me != null && me.getPlane() == inst.getPlane()
-			&& Math.abs(me.getX() - inst.getX()) <= 2 && Math.abs(me.getY() - inst.getY()) <= 2;
-		if (!atVat && client.getLocalDestinationLocation() == null
-			&& !pathWillBeHit(me, inst, tick, "vat-prewalk"))
-		{
-			walkArena(target, tick, "collect: wait at vat");
-		}
-		if (overlay != null) overlay.setStep("prep: wait for vat to ferment");
-		return false;
-	}
-
-	/** Next vat TEMPLATE tile to collect, in FILL ORDER, skipping ones already collected. */
-	private WorldPoint nextVatToCollect(WorldPoint meInstance)
-	{
-		for (WorldPoint v : vatFillOrder)
-		{
-			if (!vatsDone.contains(v)) return v;
-		}
-		return nextVatNotDone(meInstance);   // fallback (fill order unknown) -> nearest not done
-	}
-
-	/** Nearer (Manhattan) of the two vats currently in {@code want} state, or null if neither is. */
-	private WorldPoint nearestVatInState(WorldPoint meInstance, VatState want)
-	{
-		WorldPoint meT = meInstance == null ? null : InstanceCoords.toTemplate(client, meInstance);
-		WorldPoint best = null; int bestD = Integer.MAX_VALUE;
-		for (WorldPoint v : new WorldPoint[]{ VAT_EAST, VAT_WEST })
-		{
-			if (vatState.get(v) != want) continue;
-			int d = meT == null ? 0 : (Math.abs(meT.getX() - v.getX()) + Math.abs(meT.getY() - v.getY()));
-			if (d < bestD) { bestD = d; best = v; }
-		}
-		return best;
 	}
 
 	/**
@@ -1258,15 +1037,6 @@ public class DukeAutoMain
 				return v;
 		}
 		return null;
-	}
-
-	/** Vats that are NOT empty (filling/brewing/ready/collecting) -- i.e. potions already in flight. */
-	private int vatsNotEmpty()
-	{
-		int n = 0;
-		for (WorldPoint v : new WorldPoint[]{ VAT_EAST, VAT_WEST })
-			if (vatState.get(v) != null && vatState.get(v) != VatState.EMPTY) n++;
-		return n;
 	}
 
 	/**
@@ -2133,7 +1903,7 @@ public class DukeAutoMain
 		ventWatchStart = tick;
 		holdForHazard = false; holdGoal = null;
 		dukeAttackTick = -100; dukePrevAnim = -1;
-		dukeAttackPhase = -1; dukeEnraged = false; gazeTick = -100; gazeActive = false; feedingStarted = false; attackDelayUntil = -100;
+		dukeAttackPhase = -1; dukeEnraged = false; gazeTick = -100; gazeActive = false; feedingStarted = false; eatDelay.reset(); thrall.reset();
 		fightCamp = null;
 		fightClickCampNext = false;
 		lastPickItemId = Integer.MIN_VALUE;
@@ -2159,22 +1929,25 @@ public class DukeAutoMain
 	// Consumption (copied pattern from Vardorvis).
 	// -----------------------------------------------------------------
 
+	/** Duke thrall gate: only during the live FIGHT (he's awake, not in a shield window). Pick the thrall
+	 *  style via DukeAutoIDs.THRALL_CAST_WIDGET. */
+	private boolean thrallConditionsOk()
+	{
+		return phase.current() == DukePhase.FIGHT;
+	}
+
 	private ConsumptionEngine.Request buildConsumptionRequest()
 	{
 		ConsumptionEngine.Request.Builder b = ConsumptionEngine.Request.builder();
 
 		// Opportunistic eat + combo are the engine default; its overheal cap is the real gate.
-		int pray = mirror.getPrayer();
-		int maxPray = mirror.getMaxPrayer();
-		int ceiling = Math.max(1, maxPray - (7 + maxPray / 4));
-		if (pray <= ceiling - DukeSupply.PROFILE.prayerSipJitterWindow)
-		{
-			b.requireSip(SupplyProfile.DrinkKind.PRAYER);
-		}
-		else if (pray <= ceiling)
-		{
-			b.opportunisticSip(SupplyProfile.DrinkKind.PRAYER);
-		}
+		// Duke eats only on the camp-switch run / prep (downtime, no swing to delay); while camped it
+		// just drinks, which interrupts the swing. During downtime top prayer up for free; while camped
+		// only sip below HALF of max (jittered via the shared helper).
+		boolean downtime = phase.current() != DukePhase.FIGHT
+			|| client.getLocalDestinationLocation() != null;
+		ConsumptionEngine.requestPrayerSip(b, mirror, Math.max(1, mirror.getMaxPrayer() / 2),
+			DukeSupply.PROFILE.prayerSipJitterWindow, downtime);
 
 		if (mirror.getRunEnergy() <= DukeSupply.PROFILE.runEnergySipStam
 			&& DukeSupply.PROFILE.hasPotion(SupplyProfile.DrinkKind.STAMINA))
@@ -2213,12 +1986,7 @@ public class DukeAutoMain
 		// Eating delays our next attack (food 3t; + combo food 2t more = 5t). A potion sip adds none,
 		// so the delay is computed from the food only -- shark+potion+kara is still 5t, shark+potion 3t.
 		// Gate canAttack on this so we don't burn a wasted click (and desync lastAttackTick) mid-delay.
-		if (allowEat && r.primaryEat != null)
-		{
-			int t = mirror.getTickCounter();
-			int delay = EAT_DELAY_TICKS + (r.comboEat != null ? COMBO_EAT_EXTRA_TICKS : 0);
-			attackDelayUntil = Math.max(attackDelayUntil, t + delay);
-		}
+		if (allowEat) eatDelay.onConsumed(mirror.getTickCounter(), r);
 		if (r.drink      != null)
 		{
 			SupplyProfile.PotionEntry pot = DukeSupply.PROFILE.potion(r.drink);
@@ -2300,10 +2068,9 @@ public class DukeAutoMain
 	/** Duke's current HP from the shared DT2 boss HP widget, or -1 if it isn't readable this tick. */
 	private int dukeHp()
 	{
-		int[] hp = WidgetReader.fraction(client, WIDGET_BOSS_HP);
+		int[] hp = WidgetReader.fraction(client, WidgetReader.BOSS_HP_COMPONENT);
 		return hp == null ? -1 : hp[0];
 	}
-
 
 	// -----------------------------------------------------------------
 	// Awaken-ordering diagnostic (TEMPORARY). Logs the exact tick of the Duke NPC id
@@ -2357,24 +2124,12 @@ public class DukeAutoMain
 			|| id == DukeAutoIDs.NPC_DUKE_AWAKE;
 	}
 
-	private NPC findNpcAny(int... ids)
-	{
-		List<NPC> npcs = client.getNpcs();
-		if (npcs == null) return null;
-		for (NPC n : npcs)
-		{
-			if (n == null) continue;
-			for (int id : ids) if (n.getId() == id) return n;
-		}
-		return null;
-	}
-
 	private boolean canAttack(int tick)
 	{
 		Player player = mirror.getLocalPlayer();
 		if (player == null || duke == null) return false;
 		if (tick - lastAttackTick < WEAPON_COOLDOWN) return false;
-		if (tick < attackDelayUntil) return false;   // still inside an eat / combo-eat attack delay
+		if (eatDelay.attackBlocked(tick)) return false;   // still inside an eat / combo-eat attack delay
 		if (player.getInteracting() == duke) return false;   // already attacking
 		// Gaze: the gaze resolves at gazeTick + offset (one tick earlier in enrage). An attack's Duke
 		// interaction + animation linger one tick, and the camp-click that breaks the lock only lands the
