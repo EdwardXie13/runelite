@@ -18,6 +18,7 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.widgets.Widget;
+import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.autoBossCore.combat.ClickRouter;
 import net.runelite.client.plugins.autoBossCore.combat.ThrallManager;
 import net.runelite.client.plugins.autoBossCore.combat.Hazard;
@@ -27,6 +28,7 @@ import net.runelite.client.plugins.autoBossCore.consume.ConsumptionEngine;
 import net.runelite.client.plugins.autoBossCore.consume.SupplyProfile;
 import net.runelite.client.plugins.autoBossCore.phase.PhaseTracker;
 import net.runelite.client.plugins.autoBossCore.state.InstanceCoords;
+import net.runelite.client.plugins.autoBossCore.loot.GroundItemTracker;
 import net.runelite.client.plugins.autoBossCore.state.WidgetReader;
 import net.runelite.client.plugins.autoBossCore.state.MirrorState;
 import net.runelite.client.plugins.autoBossCore.trip.TripState;
@@ -103,6 +105,8 @@ public class WhispererAutoMain
 	private final Client client;
 	private final MirrorState mirror;
 	private final ClickRouter router;
+	private final GroundItemTracker groundItems;
+	private final ItemManager itemManager;
 	private final SchedulingTileDodger dodger;
 	private final PrayerSwapper prayers;
 
@@ -133,6 +137,10 @@ public class WhispererAutoMain
 	 * death trigger (death animation / boss despawn). Currently never set.
 	 */
 	private boolean deathPrayersOff = false;
+	/** Client tick (getTickCount, same clock as GroundItemTracker) the FINAL death was first detected (-1 =
+	 *  alive). Anchors the loot pass: only drops
+	 *  spawned on/after this are this-kill loot, and the pickup grace/timeout count from it. */
+	private int lastDeathTick = -1;
 
 	// --- Seed phase (crossing) --------------------------------------
 	// Populated each tick from the scene scan: the tiles of the good (47573) and bad (47574)
@@ -229,9 +237,9 @@ public class WhispererAutoMain
 	 *  next cover is reachable in this many move-ticks or fewer it's a SHORT trip -- we have a spare tick to
 	 *  squeeze one attack before running on. A longer run is a LONG trip -- we run straight so we never arrive
 	 *  late (the original 2->3 hit). Measured in move-ticks ({@link #tilesPerTick()}), so with run on a 1-tick
-	 *  trip is up to 2 tiles. We gate on the trip itself (not a combined drag-in + return budget, which a drag
-	 *  from the attack could blow): short trips attack, long trips don't. Tunable. */
-	private static final int SCREECH_SHORT_TRIP_TICKS = 1;
+	 *  trip is up to 2 tiles (2 ticks -> up to 4). We gate on the trip itself (not a combined drag-in + return
+	 *  budget, which a drag from the attack could blow): short trips attack, long trips don't. Tunable. */
+	private static final int SCREECH_SHORT_TRIP_TICKS = 2;
 	/** Ticks of slack on the FIRST approach to pillar 1 (straight off the scout cross-back). This window is
 	 *  far larger than the inter-pillar move window -- the screech hasn't started locking us yet -- so we can
 	 *  usually slip an attack in before settling behind pillar 1. Tunable. */
@@ -360,12 +368,20 @@ public class WhispererAutoMain
 	 *  to the NORTH of her after the seed bind (she's pulled south, and north is the open side). Reset at
 	 *  fight end. Other first-specials use their own rotations. */
 	private boolean firstSpecialWasSeeds = false;
+	/** Most-recent special detected THIS fight (null until the fight's first special is identified). Drives
+	 *  seed-danger anticipation via {@link WhisSpecialPhase#next()}; reset to null on each fresh wake. */
+	private WhisSpecialPhase lastSpecial = null;
+	/** Latched true once THIS seed phase's seeds have physically spawned (47575 on the ground). Releases the
+	 *  pre-seed guard and keeps it released until the phase ends -- robust against a transient empty scan. */
+	private boolean seedsSpawnedThisPhase = false;
 	/** Armed when the (seed-first) seed phase ends: after the bind flee we reposition to the north of her.
 	 *  Cleared on arrival or when the next special begins. This is the MANEUVER stage of the seed-first swing. */
 	private boolean repositionNorthActive = false;
-	/** Swing-back cardinal (toward centre = opposite the flee), captured at resolveSwing. Exactly one nonzero;
-	 *  default north. The reposition drives along this instead of a hardcoded north. */
-	private int reposDx = 0, reposDy = 1;
+	/** Hysteresis for the eclipse settle: once we have settled to within 1 tile of the eclipse midpoint we HOLD
+	 *  (keep DPSing) and stop chasing her tick-to-tick drift; we only resume settling once we are clearly out of
+	 *  position again (more than {@link #ECLIPSE_RESUME_DIST} tiles off, e.g. a dodge knocked us away). */
+	private boolean eclipseHold = false;
+	private static final int ECLIPSE_RESUME_DIST = 3;
 	/** Last tile we clicked while repositioning north, for dedupe. */
 	private WorldPoint lastReposClick = null;
 	/**
@@ -388,9 +404,11 @@ public class WhispererAutoMain
 	 *  bind she's pulled (and 12205 walks) south, and a live recompute marched the target 13 further south each
 	 *  tick, eventually clicking off the map. Fixed for the whole swing; nulled on start/resolve/reset. */
 	private WorldPoint swingFleeAnchor = null;
-	/** Her 3x3 CENTRE captured at wake -- the fixed arena centreline reference for flee tiles. She doesn't move
-	 *  (only the 12205 bind form drifts), so flees stay on the centreline through this X/Y. Recaptured each wake. */
-	private WorldPoint whispererStartCentre = null;
+	/** Her 3x3 CENTRE captured AT FLEE TIME (right before we run), latched in {@link #swingFleeTile} off her LIVE
+	 *  position then -- she won't necessarily be where she woke, so the flee centreline is read from where she
+	 *  actually is as the swing begins. Nulled at {@link #startSwing}; re-latched each swing. The maneuver /
+	 *  reposition reuse it so the swing-back is symmetric to the flee. */
+	private WorldPoint swingCentre = null;
 	/** Latched by the "The Whisperer binds you in place" chat line: confirms we are ROOTED by the bind. While a
 	 *  swing is BOUND and this is set, we DPS the bind form (12205) whenever she's in range (we can't move, but we
 	 *  can still attack). Cleared when a swing starts / resolves and at fight end. */
@@ -415,9 +433,67 @@ public class WhispererAutoMain
 	private static final int BIND_APPEAR_TICKS_SEEDS   = 5;
 	private static final int BIND_APPEAR_TICKS_SCREECH = 9;
 	private static final int BIND_APPEAR_TICKS_SIPHON  = 8;
-	/** How far north of her centre to settle, and how far east of her footprint the go-around corridor sits. */
+	/** How far past her centre (opposite the flee) the reposition settles -- the swing-back goal offset. */
 	private static final int REPOS_NORTH_OFFSET = 5;
-	private static final int REPOS_CORRIDOR_DX = 3;
+	/** Loot: wait this many ticks after death for the drop pile to spawn before grabbing. */
+	private static final int LOOT_SPAWN_GRACE_TICKS = 2;
+	/** Loot: minimum ticks between pickup clicks (one action every couple ticks, like Vorkath). */
+	private static final int LOOT_ACTION_INTERVAL = 2;
+	/** Loot: give up the pickup pass this many ticks after death (safety so cleanup can't hang). */
+	private static final int LOOT_TIMEOUT_TICKS = 60;
+	private int lastLootClickTick = -100;
+	private WorldPoint lastLootTile = null;
+	/** Seed-danger tiles to forbid while seeds is imminent, in TEMPLATE / traced-overworld coords (converted
+	 *  to the live instance each tick). EMPTY placeholder -- fill with the provided world points. */
+	private static final WorldPoint[] SEED_BLACKLIST_TEMPLATE = {
+		new WorldPoint(2650, 6369, 0),
+		new WorldPoint(2651, 6367, 0),
+		new WorldPoint(2651, 6369, 0),
+		new WorldPoint(2651, 6371, 0),
+		new WorldPoint(2652, 6367, 0),
+		new WorldPoint(2652, 6369, 0),
+		new WorldPoint(2652, 6371, 0),
+		new WorldPoint(2653, 6366, 0),
+		new WorldPoint(2653, 6367, 0),
+		new WorldPoint(2653, 6368, 0),
+		new WorldPoint(2653, 6369, 0),
+		new WorldPoint(2653, 6371, 0),
+		new WorldPoint(2654, 6365, 0),
+		new WorldPoint(2654, 6367, 0),
+		new WorldPoint(2654, 6369, 0),
+		new WorldPoint(2654, 6373, 0),
+		new WorldPoint(2655, 6363, 0),
+		new WorldPoint(2655, 6365, 0),
+		new WorldPoint(2655, 6366, 0),
+		new WorldPoint(2655, 6373, 0),
+		new WorldPoint(2655, 6375, 0),
+		new WorldPoint(2656, 6363, 0),
+		new WorldPoint(2656, 6365, 0),
+		new WorldPoint(2656, 6367, 0),
+		new WorldPoint(2656, 6373, 0),
+		new WorldPoint(2656, 6375, 0),
+		new WorldPoint(2657, 6363, 0),
+		new WorldPoint(2657, 6365, 0),
+		new WorldPoint(2657, 6372, 0),
+		new WorldPoint(2657, 6373, 0),
+		new WorldPoint(2657, 6375, 0),
+		new WorldPoint(2658, 6365, 0),
+		new WorldPoint(2658, 6369, 0),
+		new WorldPoint(2658, 6371, 0),
+		new WorldPoint(2658, 6373, 0),
+		new WorldPoint(2659, 6367, 0),
+		new WorldPoint(2659, 6369, 0),
+		new WorldPoint(2659, 6370, 0),
+		new WorldPoint(2659, 6371, 0),
+		new WorldPoint(2659, 6372, 0),
+		new WorldPoint(2660, 6367, 0),
+		new WorldPoint(2660, 6369, 0),
+		new WorldPoint(2660, 6371, 0),
+		new WorldPoint(2661, 6367, 0),
+		new WorldPoint(2661, 6369, 0),
+		new WorldPoint(2661, 6371, 0),
+		new WorldPoint(2662, 6369, 0),
+	};
 	/** Latched true for the whole corrupted-seeds phase. Seeds are shadow-only, so this spans
 	 *  both realms; set on ANIM_SEED_PHASE_START / seeds visible, cleared on timeout or screech. */
 	private boolean seedPhaseActive = false;
@@ -446,6 +522,23 @@ public class WhispererAutoMain
 	 *  recomputed at the start of each dodge plan. The dodge AVOIDS these: the tentacle direction classification
 	 *  alone misses the line tiles, so without this the dodge can step onto one. */
 	private java.util.Set<WorldPoint> dodgeHazards = java.util.Collections.emptySet();
+	/** Per-tentacle hazard rays keyed by NPC index. Each latches at the tentacle's spawn (4 tiles from its
+	 *  centre toward where we stood THEN) and is live only on spawn+1..spawn+3. {@link #updateTentacleHazards}
+	 *  rebuilds {@link #dodgeHazards} from these every tick, so the hazard is fixed at spawn and does not re-aim
+	 *  when we move. */
+	private final java.util.Map<Integer, TentacleRay> tentacleRays = new java.util.HashMap<>();
+	private static final int TENT_RAY_TILES    = 5;   // hazard ray length in tiles, INCLUDING the tentacle's centre
+	private static final int TENT_HAZARD_START = 1;   // ray goes live spawn+START ...
+	private static final int TENT_HAZARD_END   = 3;   // ... through spawn+END (inclusive)
+	/** Rays that are LIVE now OR imminent (spawned this tick, live next tick) -- the set a dodge DESTINATION must
+	 *  avoid, so we never hop onto a line that is about to activate. {@link #dodgeHazards} (live only) still gates
+	 *  WHETHER we move, to preserve the attack weave. */
+	private java.util.Set<WorldPoint> hazardAvoid = java.util.Collections.emptySet();
+	/** HARD tile blacklist -- live tiles we must NEVER stand on (e.g. seed-danger tiles while seeds is
+	 *  imminent). Unlike {@link #dodgeHazards} (a soft per-tick penalty on tentacle lines), these are a HARD
+	 *  exclusion in every movement pick: the dodge, the eclipse pathfind, and the neighbour fallbacks route
+	 *  AROUND them and never select one. Rebuilt each tick by {@link #refreshSeedBlacklist()}; empty = none. */
+	private java.util.Set<WorldPoint> tileBlacklist = java.util.Collections.emptySet();
 	/** Tick we FIRST saw good seeds (47573) this scout -- the scout dwell counts from here, not from
 	 *  entering the plane, so the ~1-tick realm-transition screen can't advance us early. -100 = unseen. */
 	private int seedSeenTick = -100;
@@ -478,13 +571,17 @@ public class WhispererAutoMain
 		MirrorState mirror,
 		ClickRouter router,
 		SchedulingTileDodger dodger,
-		PrayerSwapper prayers)
+		PrayerSwapper prayers,
+		GroundItemTracker groundItems,
+		ItemManager itemManager)
 	{
 		this.client  = client;
 		this.mirror  = mirror;
 		this.router  = router;
 		this.dodger  = dodger;
 		this.prayers = prayers;
+		this.groundItems = groundItems;
+		this.itemManager = itemManager;
 
 		this.engine = new ConsumptionEngine(WhispererSupply.PROFILE, mirror);
 		this.thrall = new ThrallManager(WhispererAutoIDs.THRALL_CAST_WIDGET, "Whisperer thrall");
@@ -518,7 +615,7 @@ public class WhispererAutoMain
 	private String fleeLabel()
 	{
 		WorldPoint a = swingFleeAnchor;
-		WorldPoint c = whispererStartCentre != null ? whispererStartCentre : whispererCenterTile();
+		WorldPoint c = swingCentre != null ? swingCentre : whispererCenterTile();
 		if (a == null || c == null) return "Flee";
 		int dx = a.getX() - c.getX(), dy = a.getY() - c.getY();
 		if (Math.abs(dy) >= Math.abs(dx)) return dy >= 0 ? "Flee North" : "Flee South";
@@ -727,8 +824,11 @@ public class WhispererAutoMain
 				openingDanceB = new WorldPoint(k.getX(), k.getY() - 2, k.getPlane());
 			}
 			deathPrayersOff = false;   // fresh fight -> re-arm prayer management
+			lastDeathTick = -1;        // fresh fight -> re-arm the loot pass
+			lastSpecial = null;        // fresh fight -> entry unknown again (seed-danger anticipation re-arms)
+			seedsSpawnedThisPhase = false;
+			tentacleRays.clear();      // fresh fight -> drop any stale tentacle hazard rays
 			enrageSeen = false;        // fresh fight -> the enrage/death backstop re-arms
-			whispererStartCentre = whispererCenterTile();   // fix the arena centreline off her 3x3 starting X/Y
 			// NOTE: do NOT reset the thrall here. The opening thrall is cast pre-wake in handleFightStart; resetting
 			// on the wake edge would discard it, trigger a wasted recast (one is already up), and the cast's
 			// lastAttackTick bump would delay the first attack. The timer runs continuously through the fight.
@@ -743,6 +843,15 @@ public class WhispererAutoMain
 			firstSpecialStarted = true;
 			firstSpecialWasSeeds = seedPhaseActive;   // remember the rotation's opener
 		}
+		// ROTATION: latch the most-recent special so WhisSpecialPhase.next() can anticipate what comes next.
+		if (seedPhaseActive) lastSpecial = WhisSpecialPhase.CORRUPTED_SEEDS;
+		else if (!hidePillarChainOwTiles.isEmpty() || inScreechPhase()) lastSpecial = WhisSpecialPhase.SCREECH;
+		else if (inSiphonPhase()) lastSpecial = WhisSpecialPhase.SOUL_SIPHON;
+		// PRE-SEED guard release: once this phase's seeds are physically on the ground, drop the guard (and keep
+		// it dropped until the phase ends) -- the seed handler navigates the real seeds from here.
+		if (seedPhaseActive && !overworldSeedTiles.isEmpty()) seedsSpawnedThisPhase = true;
+		else if (!seedPhaseActive) seedsSpawnedThisPhase = false;
+		refreshSeedBlacklist();   // forbid the seed-spawn tiles ONLY in the pre-seed window (released once seeds land)
 		// The NEXT special (seeds/screech after the post-siphon tentacles) ends the resumed oscillation. Not gated
 		// on inSiphonPhase (its ~20-tick timer lingers into this very oscillation and would clear it immediately).
 		if (seedPhaseActive || !hidePillarChainOwTiles.isEmpty()) resumeOscillation = false;
@@ -794,6 +903,7 @@ public class WhispererAutoMain
 		// atTick passes, so stale future projections would otherwise linger).
 		dodger.clearAll();
 		pushHazards(tick);
+		updateTentacleHazards(tick);   // latch new tentacle rays, expire old, rebuild dodgeHazards for this tick
 
 		// Seed phase: collect good/bad seed tiles and mark bad ones as hazards (safety). The
 		// actual "only LAND on good seeds" path planner is pending -- see planSeedStep().
@@ -849,6 +959,7 @@ public class WhispererAutoMain
 		if ((deathAnim || enrageHpZero || fightOverAfterEnrage) && !deathPrayersOff)
 		{
 			deathPrayersOff = true;
+			lastDeathTick = client.getTickCount();   // anchor the loot pass on the tracker's clock (getTickCount)
 			turnPrayersOff(tick);
 			step("Dead", "death -> prayers off");
 		}
@@ -873,20 +984,16 @@ public class WhispererAutoMain
 		// TENTACLE (PHASE 1): HIGHEST priority after fight-start. Tentacles don't pause for a swing, so we dodge
 		// even while fleeing/maneuvering (like praying a projectile the instant it's seen). (BOUND never coincides
 		// with tentacles, so no root guard is needed.) The swing/relock/attack logic all runs AFTER this.
-		// ENRAGE uses a different dodge: hop among the 4-tile formation anchored to our entry tile (tentacles come
-		// fast and there are no specials). Otherwise the normal 8-neighbour tentacle dodge.
+		// Enrage tentacles are MUCH faster, so enrage keeps a PROACTIVE 2-tick cadence (planEnrageDodge) -- it hops
+		// every couple ticks so we're never a stationary target -- but the hop tile now comes from the SHARED ray-aware
+		// flood (pickDodgeTile: correct R1..R4 rays, passable bodies, L-tiles), not the old fixed formation, and it still
+		// dodges immediately if a ray catches us between hops. Every other phase reacts on-hazard via planTentacleDodge.
 		WorldPoint tentacleStep = enragePhaseActive ? planEnrageDodge(tick) : planTentacleDodge(tick);
 		if (tentacleStep != null)
 		{
-			// OPENING OSCILLATION: keep the dodge CADENCE (we only step when planTentacleDodge says to -- not
-			// every tick), but during the opening (wake knockback -> first special) constrain the destination
-			// to the two latched tiles: step to whichever of them we're NOT currently on. Between dodges we
-			// stand and attack as normal. After the first special, the computed dodge tile is used again.
-			if (!enragePhaseActive && (!firstSpecialStarted || resumeOscillation) && openingDanceA != null && openingDanceB != null && inOverworld())
-			{
-				WorldPoint me = mirror.getPlayerTile();
-				tentacleStep = (me != null && me.equals(openingDanceA)) ? openingDanceB : openingDanceA;
-			}
+			// The ray dodge (planTentacleDodge/pickDodgeTile) now handles EVERY tentacle phase, the opening included --
+			// it steps OFF the live hazard rays. The old opening N/S oscillation override was REMOVED: it forced a fixed
+			// vertical dance that sat ON the plus and overrode the correct diagonal dodge (so we never escaped the line).
 			// Keep the dodge INSIDE the traced arena -- never click a tile outside the walls. No-op unless our
 			// own tile is recognised as interior, so a coordinate-space mismatch disables it safely.
 			tentacleStep = WhispererArena.clampInside(tentacleStep, mirror.getPlayerTile());
@@ -959,6 +1066,10 @@ public class WhispererAutoMain
 
 		// SCREECH RECENTRE: after the screech flee (north), walk back down to the centre camp before resuming DPS.
 		if (handleRecenter(tick)) return;
+
+		// ECLIPSE SETTLE: during plain non-enrage tentacle phases (no post-special maneuver running), hold the eclipse
+		// midpoint (halfway between the arena centre and her) so DPS resumes from a central spot, not hugging her.
+		if (handleEclipseSettle(tick)) return;
 
 		// GUARANTEED main-weapon swap-back (backstop). If we're fighting in the overworld, NOT siphoning, with no
 		// swing/pending-swap in flight, yet the main weapon is still sitting in the INVENTORY (so we're still on the
@@ -1455,24 +1566,18 @@ public class WhispererAutoMain
 		{
 			if (screechHideIdx + 1 < spots.size())
 			{
-				// SHORT TRIP vs LONG TRIP decides whether we squeeze a DPS weave on the way to the next cover: the
-				// onward move-ticks alone (peek the NEXT spot -- idx hasn't advanced yet). reachable/!willMove guard
-				// against clicking attack with no clear in-range tile (which would pull us off cover).
+				// On the HIT: short trips weave ONE shot immediately then move next tick; long trips leave straight away.
 					WorldPoint nextSw = spots.get(screechHideIdx + 1);
 					WorldPoint nextCover = nextSw == null ? null : closestSubTile(nextSw, me);
 					int ftpt = tilesPerTick();
 					int trip = nextCover == null ? Integer.MAX_VALUE / 4 : walkTicksAround(me, nextCover, ftpt);
 					boolean shortTrip = trip <= SCREECH_SHORT_TRIP_TICKS;
 
-					// SHORT TRIP has slack to squeeze one DPS shot; LONG TRIP does not. We now act on the HIT (2471), so at the
-					// hit tick the pillar is STILL UP and blocks LoS -- a clean stationary shot only exists once it DESPAWNS. So
-					// on a short trip we HOLD at cover (even after the hit) until the pillar clears, then weave the shot and move;
-					// on a long trip we leave on the hit (no weave) to cut exposure.
-					if (shortTrip && !gone && whisperer != null && tick - lastAttackTick >= effectiveCooldown()) return;
-
-					net.runelite.client.plugins.autoBossCore.combat.AttackPredictor.Result fpr = predictBossAttack(me);
-					boolean fallWeave = shortTrip && gone && fpr != null && fpr.reachable && fpr.attackFrom != null
-						&& !fpr.willMove && whisperer != null && tick - lastAttackTick >= effectiveCooldown();
+					// NO hold for despawn -- the faster we hit the faster we move. On a SHORT trip, weave the instant the
+					// pillar is hit, then move next tick, ACCEPTING a pull-in (the pillar may still block LoS, so the shot
+					// can walk us off cover for that one tick). A LONG trip still leaves on the hit with no weave, to cut
+					// exposure on the long run to the next cover.
+					boolean weave = shortTrip && whisperer != null && tick - lastAttackTick >= effectiveCooldown();
 
 					screechHideIdx++;
 					screechHideArrived = false;
@@ -1481,19 +1586,19 @@ public class WhispererAutoMain
 					lastHideClick = null;
 
 					if (config != null && config.captureMode())
-						log.info("[fallWeave] spot={} me={} nextCover={} trip={} short={} gone={} pred={} weave={}",
-							screechHideIdx + 1, me, nextCover, trip, shortTrip, gone, fpr, fallWeave);
-					if (fallWeave)
+						log.info("[weaveHit] spot={} me={} nextCover={} trip={} short={} weave={}",
+							screechHideIdx + 1, me, nextCover, trip, shortTrip, weave);
+					if (weave)
 					{
 						attackWhisperer();
 						lastAttackTick = tick;
 						lastHideClick = null;   // next tick we re-click the cover tile and run
-						step("Screech", "screech: pillar clear -> weave, then run to spot " + (screechHideIdx + 1));
+						step("Screech", "pillar hit -> weave, then run to spot " + (screechHideIdx + 1));
 					}
 					else if (nextCover != null)
 					{
 						hideWalk(nextCover);
-						step("Screech", "screech: pillar hit -> run to spot " + (screechHideIdx + 1));
+						step("Screech", "pillar hit -> run to spot " + (screechHideIdx + 1));
 					}
 			}
 			else
@@ -2039,6 +2144,57 @@ public class WhispererAutoMain
 		net.runelite.api.coords.WorldArea a = w.getWorldArea();
 		if (a == null) return null;
 		return new WorldPoint(a.getX() + a.getWidth() / 2, a.getY() + a.getHeight() / 2, a.getPlane());
+	}
+
+	/** The "eclipse" rest tile: the midpoint between her HOME centre ({@link WhispererArena#WHISPERER_CENTRE},
+	 *  mapped into the instance) and her LIVE 3x3 centre, projected onto the dominant cardinal axis through home
+	 *  (she moves cardinally off home, so the midpoint sits on that axis -- "typically along the cardinal planes").
+	 *  Keeps us central, halfway between the arena centre and wherever she currently is, during non-enrage tentacle
+	 *  phases. Odd gaps round TOWARD home (safer, further from her). Null if she's absent or home can't be mapped. */
+	private WorldPoint eclipseTile()
+	{
+		WorldPoint w = whispererCenterTile();
+		WorldPoint home = InstanceCoords.fromTemplate(client, WhispererArena.WHISPERER_CENTRE);
+		if (w == null || home == null) return null;
+		int dx = w.getX() - home.getX(), dy = w.getY() - home.getY();
+		if (dx == 0 && dy == 0) return home;                 // she's home -> midpoint is home
+		if (Math.abs(dx) >= Math.abs(dy))                    // dominant E/W -> ride the home Y axis
+			return new WorldPoint(home.getX() + dx / 2, home.getY(), home.getPlane());
+		return new WorldPoint(home.getX(), home.getY() + dy / 2, home.getPlane());   // dominant N/S -> ride the home X axis
+	}
+
+	/** Clamp a reposition/settle goal to the nearest PATHABLE tile, stepping from {@code goal} toward {@code me}.
+	 *  The raw eclipse midpoint can land on a tile the pathfind rejects -- her 5x5, a blacklisted seed tile, a
+	 *  live/imminent hazard ray, or outside the walls -- and then the swing silently aborts (passable=false,
+	 *  pathLen=0). This returns the first tile toward us that satisfies the same predicate the pathfind uses, so
+	 *  there is always a reachable target. Returns {@code goal} unchanged when it is already pathable. */
+	private WorldPoint clampOutsideBoss(WorldPoint goal, WorldPoint me)
+	{
+		if (goal == null || me == null) return goal;
+		net.runelite.api.coords.WorldArea b = whisperer == null ? null : whisperer.getWorldArea();
+		int dx = Integer.signum(me.getX() - goal.getX());
+		int dy = Integer.signum(me.getY() - goal.getY());
+		int x = goal.getX(), y = goal.getY();
+		for (int k = 0; k <= 20; k++)
+		{
+			WorldPoint t = new WorldPoint(x, y, goal.getPlane());
+			WorldPoint tpl = InstanceCoords.toTemplate(client, t);
+			boolean inB = tpl != null && WhispererArena.isInside(tpl);
+			boolean pathable = inB && (b == null || b.distanceTo(t) > 1) && !blacklisted(t) && !hazardAvoid.contains(t);
+			if (pathable) return t;
+			if (x == me.getX() && y == me.getY()) break;   // reached us without a pathable tile
+			x += dx; y += dy;
+		}
+		return goal;
+	}
+
+	/** True during the non-enrage tentacle phases where we hold the eclipse midpoint: awake, in the overworld, not
+	 *  enraged, past the bind-flee window, and NOT mid-special (a special owns its flee/bind first). Covers the
+	 *  opening / between-special tentacle phases and the post-bind settle; enrage keeps its own dodge. */
+	private boolean eclipseActive(int tick)
+	{
+		return inOverworld() && isWhispererAwake() && !enragePhaseActive
+			&& tick > bindFleeUntil && swingSpecial == Special.NONE;
 	}
 
 	/** An NPC's tile via fromLocal(localLocation) -- the space that matches {@link MirrorState#getPlayerTile()}
@@ -2825,6 +2981,7 @@ public class WhispererAutoMain
 	 *  tentacle->player hazard line. */
 	private boolean enrageTileSafe(WorldPoint tile, List<NPC> npcs)
 	{
+		if (blacklisted(tile)) return false;   // hard-excluded (e.g. seed-danger) -- never stand here
 		if (dodgeHazards.contains(tile)) return false;   // on a tentacle->player hazard line
 		if (npcs == null) return true;
 		for (NPC n : npcs)
@@ -2846,55 +3003,30 @@ public class WhispererAutoMain
 	 */
 	private WorldPoint planEnrageDodge(int tick)
 	{
-		// Enrage lives in the SHADOW realm (plane 3). Don't anchor or dodge until we're actually there: anchoring on
-		// the pre-pull OVERWORLD tile would put the whole formation in the wrong region, and the plane would be wrong.
+		// Enrage lives in the SHADOW realm. Don't dodge until we're actually there (the pre-pull overworld tile / plane
+		// would be wrong).
 		if (!inShadowRealm()) { enrageAnchor = null; lastEnrageStepTick = -100; return null; }
 		WorldPoint raw = mirror.getPlayerTile();
 		if (raw == null) return null;
-		// getPlayerTile()'s plane is unreliable (reads 0 in the shadow realm); use the real render plane so me and the
-		// formation tiles are on the SAME plane -- otherwise WorldPoint.distanceTo/equals treat them as unreachable.
+		// getPlayerTile()'s plane reads 0 in the shadow realm; use the real render plane so me matches the hazard tiles.
 		WorldPoint me = new WorldPoint(raw.getX(), raw.getY(), currentPlane());
-		if (enrageAnchor == null) enrageAnchor = me;   // anchor the formation to our entry tile, once
-
+		if (enrageAnchor == null) enrageAnchor = me;   // anchor near our entry tile, once
 		List<NPC> npcs = client.getNpcs();
-		dodgeHazards = hazardTiles(me, npcs);          // avoid the tentacle->player line tiles
 		int tentCount = 0;
 		if (npcs != null)
 			for (NPC n : npcs) if (n != null && n.getId() == WhispererAutoIDs.NPC_TENTACLE) tentCount++;
-		if (tentCount == 0) { lastEnrageStepTick = -100; return null; }           // no threat -> DPS, reset cadence
-		if (lastEnrageStepTick >= 0 && tick - lastEnrageStepTick < ENRAGE_STEP_PERIOD) return null;   // between hops -> DPS
-
-		// COOLDOWN-AWARE pick among the safe formation tiles. The tiles sit at knight-move distance (2 = ~1 tick
-		// with run) or the long skip 1<->3 / 2<->4 (3 = ~2 ticks). ticksUntilReady = ticks until the weapon can fire
-		// again. When it's ready now / next tick, take the SHORTEST hop so we settle and attack ASAP; while it's
-		// still on cooldown (an attack this slot is wasted anyway), prefer the move whose travel best FILLS the
-		// remaining cooldown -- i.e. the 2-tick skip move -- so we arrive right as the weapon comes up instead of
-		// idling. Dodge still happens every cadence regardless; this only chooses WHICH safe tile.
-		WorldPoint[] formation = enrageFormationTiles(enrageAnchor);
-		int tpt = Math.max(1, tilesPerTick());
-		int ticksUntilReady = whisperer == null ? 0 : Math.max(0, effectiveCooldown() - (tick - lastAttackTick));
-		WorldPoint best = null; double bestCost = Double.MAX_VALUE; int bestDist = Integer.MAX_VALUE;
-		for (WorldPoint t : formation)
-		{
-			if (t.equals(me) || !enrageTileSafe(t, npcs)) continue;
-			int d = me.distanceTo(t);
-			int travel = Math.max(1, (d + tpt - 1) / tpt);
-			double cost = (ticksUntilReady <= 1) ? travel : Math.abs(travel - ticksUntilReady);
-			if (cost < bestCost || (cost == bestCost && d < bestDist)) { bestCost = cost; bestDist = d; best = t; }
-		}
-		// All safe tiles blocked -> still vacate our current tile (the guaranteed incoming hit): nearest other tile.
-		if (best == null)
-			for (WorldPoint t : formation)
-			{
-				if (t.equals(me)) continue;
-				int d = me.distanceTo(t);
-				if (d < bestDist) { bestDist = d; best = t; }
-			}
+		if (tentCount == 0) { lastEnrageStepTick = -100; return null; }   // no threat -> DPS, reset the cadence
+		boolean onHazard = hazardAvoid.contains(me);
+		// Enrage tentacles are MUCH faster, so we don't wait to be hit: we HOP every ENRAGE_STEP_PERIOD ticks so we are
+		// never a stationary target (the tentacle aims where we stood, and we've already moved). EXCEPTION: if a ray
+		// actually catches us between hops, dodge NOW regardless of the cadence. The hop tile comes from the SHARED
+		// ray-aware flood (pickDodgeTile), biased toward our entry anchor so we hop around it instead of wandering off.
+		if (!onHazard && lastEnrageStepTick >= 0 && tick - lastEnrageStepTick < ENRAGE_STEP_PERIOD) return null;   // between hops -> DPS
+		WorldPoint step = pickDodgeTile(me, enrageAnchor, effectiveTentacleGap());
 		if (config != null && config.captureMode())
-			log.info("[enrageDbg] me={} anchor={} tents={} cdLeft={} -> {} (d={})",
-				me, enrageAnchor, tentCount, ticksUntilReady, best, best == null ? -1 : me.distanceTo(best));
-		if (best != null) lastEnrageStepTick = tick;
-		return best;
+			log.info("[enrageDbg] me={} anchor={} tents={} onHazard={} -> {}", me, enrageAnchor, tentCount, onHazard, step);
+		if (step != null) lastEnrageStepTick = tick;
+		return step;
 	}
 
 	/** Any tentacle NPC (12208) currently in the scene. While one is up the tentacle DODGE owns movement: the
@@ -2910,118 +3042,299 @@ public class WhispererAutoMain
 		return false;
 	}
 
+	/** One tentacle's latched hazard ray (tiles + the tick it spawned). */
+	private static final class TentacleRay
+	{
+		final int spawnTick;
+		final java.util.Set<WorldPoint> tiles;
+		TentacleRay(int spawnTick, java.util.Set<WorldPoint> tiles) { this.spawnTick = spawnTick; this.tiles = tiles; }
+	}
+
+	/**
+	 * Rebuild {@link #dodgeHazards} for this tick from the per-tentacle rays. A tentacle we have not seen latches
+	 * its ray at spawn (a fixed {@link #TENT_RAY_TILES}-tile line from its centre toward us); despawned ones drop
+	 * out; the live
+	 * set is the union of rays whose spawn+{@link #TENT_HAZARD_START}..spawn+{@link #TENT_HAZARD_END} window
+	 * contains this tick. Runs every tick so spawns are caught even on ticks we do not dodge. Plane-robust (uses
+	 * {@link #currentPlane()} so it matches the dodge tiles in both the overworld and the shadow realm).
+	 */
+	private void updateTentacleHazards(int tick)
+	{
+		WorldPoint raw = mirror.getPlayerTile();
+		int plane = currentPlane();
+		WorldPoint me = raw == null ? null : new WorldPoint(raw.getX(), raw.getY(), plane);
+		java.util.List<NPC> npcs = client.getNpcs();
+		java.util.Set<Integer> present = new java.util.HashSet<>();
+		if (npcs != null && me != null)
+		{
+			for (NPC n : npcs)
+			{
+				if (n == null || n.getId() != WhispererAutoIDs.NPC_TENTACLE) continue;
+				int idx = n.getIndex();
+				present.add(idx);
+				if (tentacleRays.containsKey(idx)) continue;   // already latched at its spawn
+				net.runelite.api.coords.WorldArea a = n.getWorldArea();
+				if (a == null) continue;
+				WorldPoint c = new WorldPoint(a.getX() + a.getWidth() / 2, a.getY() + a.getHeight() / 2, plane);
+				tentacleRays.put(idx, new TentacleRay(tick, tentacleRayTiles(c, me)));
+			}
+		}
+		tentacleRays.keySet().retainAll(present);   // drop despawned tentacles
+		java.util.Set<WorldPoint> live = new java.util.HashSet<>();
+		java.util.Set<WorldPoint> avoid = new java.util.HashSet<>();
+		for (TentacleRay r : tentacleRays.values())
+		{
+			int age = tick - r.spawnTick;
+			if (age < 0 || age > TENT_HAZARD_END) continue;        // expired -> no longer a hazard
+			if (age >= TENT_HAZARD_START) live.addAll(r.tiles);    // LIVE now -> triggers a move
+			avoid.addAll(r.tiles);                                 // live OR imminent -> never dodge onto it
+		}
+		dodgeHazards = live;
+		hazardAvoid = avoid;
+		// GROUND TRUTH calibration: the ACTUAL hazard-graphic tiles this tick (where the slam really lands), so a
+		// captured fight shows the true per-tentacle origin + direction to lock the model against. 1 tick late to
+		// react, but exact. Only while tentacles are present and capturing.
+		if (config != null && config.captureMode() && !present.isEmpty())
+		{
+			java.util.List<String> gl = new java.util.ArrayList<>();
+			Iterable<GraphicsObject> gfx = client.getGraphicsObjects();
+			if (gfx != null) for (GraphicsObject g : gfx)
+			{
+				if (g == null) continue;
+				boolean hz = false;
+				for (int id : WhispererAutoIDs.GFX_HAZARD_IDS) if (g.getId() == id) { hz = true; break; }
+				if (!hz) continue;
+				net.runelite.api.coords.LocalPoint lp = g.getLocation();
+				if (lp == null) continue;
+				WorldPoint t = WorldPoint.fromLocal(client, lp);
+				if (t != null) gl.add("(" + g.getId() + "@" + t.getX() + "," + t.getY() + ")");
+			}
+			if (!gl.isEmpty())
+				log.info("[tentGfx] tick={} me={} tents={} gfx={}", tick, me, present.size(), gl);
+		}
+	}
+
+	/** Snap a vector to the nearest of the 8 compass directions by ANGLE (not raw signum, which forces a 45-degree
+	 *  diagonal for ANY off-axis vector -- wrong for a nearly-cardinal tentacle). Returns a unit step {dx,dy}; {0,0}
+	 *  only for the zero vector. OSRS y increases NORTH, so +dy is north, +dx east. */
+	private static int[] snap8(int vx, int vy)
+	{
+		if (vx == 0 && vy == 0) return new int[]{ 0, 0 };
+		int oct = (int) Math.round(Math.atan2(vy, vx) / (Math.PI / 4));   // eighths of a turn, CCW from +x (east)
+		if (oct < 0) oct += 8;
+		switch (oct)
+		{
+			case 1:  return new int[]{  1,  1 };   // NE
+			case 2:  return new int[]{  0,  1 };   // N
+			case 3:  return new int[]{ -1,  1 };   // NW
+			case 4:  return new int[]{ -1,  0 };   // W
+			case 5:  return new int[]{ -1, -1 };   // SW
+			case 6:  return new int[]{  0, -1 };   // S
+			case 7:  return new int[]{  1, -1 };   // SE
+			default: return new int[]{  1,  0 };   // E (oct 0)
+		}
+	}
+	
+	/** The strike tiles of a tentacle: R1..R4, the FIXED straight line of {@link #TENT_RAY_TILES}-1 (4) tiles IN
+	 *  FRONT of {@code centre}, in ONE direction -- the nearest 8-way toward the player, chosen ONCE. It does NOT
+	 *  bend to follow us (tentacles do not bend), so an off-axis tentacle's line genuinely misses our tile ("not all
+	 *  hit"). The centre and the rest of the 3x3 body are NOT included -- a tentacle tile is deadly only when a ray
+	 *  passes through it. Live on spawn+{@link #TENT_HAZARD_START}..+{@link #TENT_HAZARD_END}. */
+	private java.util.Set<WorldPoint> tentacleRayTiles(WorldPoint centre, WorldPoint player)
+	{
+		java.util.Set<WorldPoint> out = new java.util.HashSet<>();
+		if (centre == null || player == null) return out;
+		int[] d = snap8(player.getX() - centre.getX(), player.getY() - centre.getY());
+		// Strike tiles are R1..R4 -- the 4 tiles IN FRONT. The centre and the rest of the 3x3 body are safe to stand
+		// on; a tentacle tile is deadly only when a ray passes through it, and the tentacle's own ray begins at R1,
+		// one tile out. So start at R1 (skip the centre) and emit TENT_RAY_TILES-1 (4) tiles outward.
+		int x = centre.getX() + d[0], y = centre.getY() + d[1];
+		for (int k = 1; k < TENT_RAY_TILES; k++)
+		{
+			out.add(new WorldPoint(x, y, centre.getPlane()));
+			x += d[0];
+			y += d[1];
+		}
+		return out;
+	}
+
+	/**
+	 * Tentacle escape (PHASE 1). Hazards are the LATCHED per-tentacle rays ({@link #updateTentacleHazards}). DODGING
+	 * TAKES PRIORITY over attacking: we move the moment a line covers our tile -- LIVE or IMMINENT (the spawn tick of
+	 * a line aimed through us) -- so we are never caught attacking on the tick a tentacle spawns onto us. We attack
+	 * (weave) only when no line covers our tile. Returns the tile to step to, or null (hold / keep attacking).
+	 */
 	private WorldPoint planTentacleDodge(int tick)
 	{
-		WorldPoint me = mirror.getPlayerTile();
-		if (me == null) return null;
-
+		WorldPoint raw = mirror.getPlayerTile();
+		if (raw == null) return null;
+		WorldPoint me = new WorldPoint(raw.getX(), raw.getY(), currentPlane());   // plane-robust, matches dodgeHazards
 		java.util.List<NPC> npcs = client.getNpcs();
 		if (npcs == null) return null;
-		dodgeHazards = hazardTiles(me, npcs);   // avoid the tentacle->player line tiles, not just their directions
 
-		// Classify each tentacle by the compass direction of its footprint relative to us. The
-		// tentacles spawn a few tiles out (not adjacent) and attack INWARD, so what matters is which
-		// direction each sits in, not its own tiles. Clamp test (robust to footprint size): the
-		// tentacle is east if our X is left of its whole footprint, west if right of it, else
-		// axis-aligned (0); same for Y. Both axes non-zero = a DIAGONAL spawn; exactly one non-zero
-		// = a CARDINAL spawn. We record the 8-neighbour direction each tentacle occupies ("blocked").
-		boolean[] blocked = new boolean[8];   // indexes into NEIGHBORS8
-		boolean anyCardinal = false, anyDiagonal = false;
 		int tentCount = 0, nearest = Integer.MAX_VALUE;
-		java.util.List<String> diag = new java.util.ArrayList<>();
 		for (NPC n : npcs)
 		{
 			if (n == null || n.getId() != WhispererAutoIDs.NPC_TENTACLE) continue;
+			tentCount++;
 			net.runelite.api.coords.WorldArea area = n.getWorldArea();
 			if (area == null) continue;
-			tentCount++;
-			int x0 = area.getX(), x1 = area.getX() + area.getWidth()  - 1;
-			int y0 = area.getY(), y1 = area.getY() + area.getHeight() - 1;
-			int sx = me.getX() < x0 ? 1 : (me.getX() > x1 ? -1 : 0);
-			int sy = me.getY() < y0 ? 1 : (me.getY() > y1 ? -1 : 0);
-			int ddx = Math.max(0, Math.max(x0 - me.getX(), me.getX() - x1));
-			int ddy = Math.max(0, Math.max(y0 - me.getY(), me.getY() - y1));
-			int d = Math.max(ddx, ddy);
-			if (d < nearest) nearest = d;
-			boolean card = (sx == 0) ^ (sy == 0);     // exactly one axis zero
-			boolean diagDir = (sx != 0) && (sy != 0);
-			if (card) anyCardinal = true;
-			if (diagDir) anyDiagonal = true;
-			for (int i = 0; i < NEIGHBORS8.length; i++)
-				if (NEIGHBORS8[i][0] == sx && NEIGHBORS8[i][1] == sy) blocked[i] = true;
-			diag.add("(off=" + (x0 - me.getX()) + "," + (y0 - me.getY())
-				+ " " + area.getWidth() + "x" + area.getHeight()
-				+ " dir=" + sx + "," + sy + (card ? " C" : diagDir ? " D" : " ?") + ")");
+			int ddx = Math.max(0, Math.max(area.getX() - me.getX(), me.getX() - (area.getX() + area.getWidth()  - 1)));
+			int ddy = Math.max(0, Math.max(area.getY() - me.getY(), me.getY() - (area.getY() + area.getHeight() - 1)));
+			nearest = Math.min(nearest, Math.max(ddx, ddy));
 		}
 
-		// --- Diagnostics (capture mode only): live overlay readout + per-tentacle log. ---
-		int threatAge = tentacleThreatTick < 0 ? -1 : tick - tentacleThreatTick;
+		boolean onHazard = hazardAvoid.contains(me);   // live OR imminent -> dodge NOW (priority over attacking), incl. the spawn tick
 		if (overlay != null)
-		{
 			overlay.setStat("tent", "n=" + tentCount + " near=" + (tentCount == 0 ? "-" : nearest)
-				+ (anyCardinal ? " C" : "") + (anyDiagonal ? " D" : "")
-				+ " age=" + threatAge + " dg=" + tentacleDodged);
-		}
+				+ " hz=" + dodgeHazards.size() + (onHazard ? " ON!" : ""));
 		if (config != null && config.captureMode() && tentCount > 0)
 		{
-			log.info("[tentDbg] me={} tentacles={} nearest={} cardinal={} diagonal={} age={} dodged={} dirs={}",
-				me, tentCount, nearest, anyCardinal, anyDiagonal, threatAge, tentacleDodged, diag);
+			java.util.List<String> td = new java.util.ArrayList<>();
+			for (NPC n : npcs)
+			{
+				if (n == null || n.getId() != WhispererAutoIDs.NPC_TENTACLE) continue;
+				net.runelite.api.coords.WorldArea a = n.getWorldArea();
+				if (a == null) continue;
+				int cx = a.getX() + a.getWidth() / 2, cy = a.getY() + a.getHeight() / 2;
+				WorldPoint c = new WorldPoint(cx, cy, me.getPlane());
+				boolean hitsMe = tentacleRayTiles(c, me).contains(me);   // fresh ray toward us -> are we on it?
+				WorldPoint wl = n.getWorldLocation();
+				int[] dir = snap8(me.getX() - cx, me.getY() - cy);   // the 8-way our fixed ray takes from this tentacle
+				td.add("(wl=" + (wl == null ? "?" : (wl.getX() + "," + wl.getY())) + " a=" + a.getX() + "," + a.getY()
+					+ " " + a.getWidth() + "x" + a.getHeight() + " c=" + cx + "," + cy
+					+ " off=" + (cx - me.getX()) + "," + (cy - me.getY()) + " ori=" + n.getOrientation()
+					+ " dir=" + dir[0] + "," + dir[1] + " hit=" + hitsMe + ")");
+			}
+			log.info("[tentDbg] me={} n={} nearest={} onHazard={} liveHz={} avoidHz={} tents={}",
+				me, tentCount, nearest, onHazard, dodgeHazards.size(), hazardAvoid.size(), td);
 		}
 
-		if (tentCount == 0)
-		{
-			// No tentacle in the scene -> re-arm for the next spawn.
-			tentacleThreatTick = -100;
-			tentacleDodged = false;
-			return null;
-		}
+		if (tentCount == 0) return null;         // no tentacles -> nothing to dodge
+		if (!onHazard) return null;              // standing clear of every live ray -> keep DPSing
 
-		// DPS WEAVE: latch the spawn tick, keep attacking through the telegraph, and step only at the
-		// last safe tick -- exactly once per spawn.
-		if (tentacleThreatTick < 0) tentacleThreatTick = tick;
-		if (tentacleDodged) return null;
-		if (tick - tentacleThreatTick < effectiveTentacleDelay()) return null;
-
-		// Pick the safe step: tentacles on the cardinals -> step to a diagonal; tentacles on the
-		// diagonals -> step to a cardinal. NEIGHBORS8 is [0..3] cardinals then [4..7] diagonals. Within
-		// that allowed group, bestStep() chooses the tile that best keeps our boss spacing (so we
-		// oscillate near the boss instead of always drifting north); if the group is somehow fully
-		// blocked, fall back to any clear neighbour.
-		int start = 0, end = 8;
-		if (anyCardinal && !anyDiagonal) { start = 4; end = 8; }       // step diagonal
-		else if (anyDiagonal && !anyCardinal) { start = 0; end = 4; }  // step cardinal
-		int gap = effectiveTentacleGap();
-		// SWING EFFICIENCY: bias the dodge TOWARD the swing's MAIN GOAL, so a tentacle we must dodge carries us toward
-		// the destination instead of sideways. CURRENT GOAL vs MAIN GOAL: handleRepositionNorth walks the CURRENT goal
-		// (repositionWaypoint -- the east corridor that routes AROUND her 3x3 so a straight walk can't clip her), but
-		// the DODGE aims at the MAIN goal: the final north tile for the reposition maneuver, or the flee tile while
-		// still running out. bestStep's 5x5 no-step buffer stops us dodging INTO her, so aiming at the north goal just
-		// makes the dodge arc around her toward it (NE/NW) instead of stepping due east off the destination line.
+		// On a live ray: step to the nearest SAFE resting tile, biased toward whatever goal we are heading to.
 		WorldPoint drift = null;
-		if (repositionNorthActive && tick > bindFleeUntil)
-			drift = repositionMainGoal();
-		else if (swingSpecial != Special.NONE && swingStage == SwingStage.FLEE)
-			drift = swingFleeTile(swingSpecial);
-		WorldPoint step = bestStep(me, blocked, start, end, whisperer, gap, drift);
-		if (step == null) step = bestStep(me, blocked, 0, 8, whisperer, gap, drift);
-		if (step != null)
-		{
-			tentacleDodged = true;
-			// HUMAN-LIKE 2-TILE DODGE: a real player repositioning hops more than one tile. Extend the chosen step
-			// one more tile in the SAME direction when that tile is still safe -- outside the boss min-gap and not
-			// adjacent to / on any tentacle. BUT during a swing (drift != null) only keep the 2-tile tile if it is
-			// actually CLOSER to the destination than the 1-tile tile -- a blind extension overshoots PAST/AWAY from
-			// the goal (e.g. 2 tiles north when the destination is north-WEST and a single west step is nearer).
-			int ex = Integer.signum(step.getX() - me.getX());
-			int ey = Integer.signum(step.getY() - me.getY());
-			WorldPoint two = new WorldPoint(step.getX() + ex, step.getY() + ey, me.getPlane());
-			if (dodgeTileSafe(two, npcs, gap) && (drift == null || dist2(two, drift) < dist2(step, drift)))
-				step = two;
-		}
+		if (repositionNorthActive && tick > bindFleeUntil)                       drift = repositionMainGoal();   // post-seed -> eclipse
+		else if (recenterActive && tick > bindFleeUntil)                         drift = centerCampTile();        // post-screech -> N flee
+		else if (swingSpecial != Special.NONE && swingStage == SwingStage.FLEE)  drift = swingFleeTile(swingSpecial);
+		else if (eclipseActive(tick))                                            drift = eclipseTile();           // plain phase -> eclipse
+		WorldPoint step = pickDodgeTile(me, drift, effectiveTentacleGap());
 		if (config != null && config.captureMode())
-			log.info("[dodgePick] me={} drift={} step={} (reposN={} fleeStage={})",
-				me, drift, step, repositionNorthActive, swingSpecial != Special.NONE && swingStage == SwingStage.FLEE);
+			log.info("[dodgePick] me={} drift={} step={}", me, drift, step);
 		return step;
+	}
+
+	/** True if {@code tile} is ON a tentacle (12208) footprint -- we can neither stand on nor run through one. */
+	private boolean onTentacle(WorldPoint tile, java.util.List<NPC> npcs)
+	{
+		if (tile == null || npcs == null) return false;
+		for (NPC n : npcs)
+		{
+			if (n == null || n.getId() != WhispererAutoIDs.NPC_TENTACLE) continue;
+			net.runelite.api.coords.WorldArea a = n.getWorldArea();
+			if (a != null && a.distanceTo(tile) == 0) return true;
+		}
+		return false;
+	}
+
+	/** True if a SOLID npc occupies (x,y) -- her 3x3 footprint or a tentacle body -- which blocks corner-cutting. */
+	private boolean solidAt(int x, int y, net.runelite.api.coords.WorldArea bossArea, java.util.List<NPC> npcs)
+	{
+		WorldPoint t = new WorldPoint(x, y, currentPlane());
+		if (bossArea != null && bossArea.distanceTo(t) == 0) return true;
+		return onTentacle(t, npcs);
+	}
+
+	/**
+	 * Nearest SAFE resting tile to dodge onto, found by a reachability FLOOD (depth <= 2) rather than eight straight
+	 * spokes -- so it includes the "L" tiles reached by a TURNING 2-tile path (diagonal-then-cardinal), not only the
+	 * 16 tiles on a straight ray from us. A resting tile is rejected if on a live/imminent ray, blacklisted, outside
+	 * the arena, or on/beside her 5x5. A 2-tile move's INTERMEDIATE must be physically walkable (in
+	 * the arena, off her footprint) and, if it is a live hazard, crossed only with run up (else
+	 * the move takes two ticks and we would rest on it); a seed-blacklisted tile is never transited. The Whisperer
+	 * arena interior is open ground; the only blockers are the walls and her footprint -- tentacle bodies are
+	 * passable (only their R1..R4 strike tiles are hazards, applied via the ray set above).
+	 * Prefers the shortest dodge (1 tile over 2); ties break toward the drift goal.
+	 */
+	private WorldPoint pickDodgeTile(WorldPoint me, WorldPoint drift, int gap)
+	{
+		net.runelite.api.coords.WorldArea bossArea = whisperer == null ? null : whisperer.getWorldArea();
+		boolean arenaMapped = !inShadowRealm() && InstanceCoords.toTemplate(client, me) != null;   // overworld arena only -- the traced walls don't exist in the shadow realm (enrage)
+		boolean runOn = mirror.getRunEnergy() > 0;
+		int plane = me.getPlane();
+
+		// Reachability flood out to 2 movement tiles. depth 0 = us; 1 = a single step; 2 = a run / turning path.
+		java.util.Map<WorldPoint, Integer> depth = new java.util.HashMap<>();
+		depth.put(me, 0);
+		java.util.List<WorldPoint> frontier = new java.util.ArrayList<>();
+		frontier.add(me);
+		for (int d = 1; d <= 2; d++)
+		{
+			java.util.List<WorldPoint> next = new java.util.ArrayList<>();
+			for (WorldPoint from : frontier)
+			{
+				// At depth 2 `from` is the INTERMEDIATE we pass through: it must be transit-legal (never a seed tile,
+				// a live-hazard intermediate only with run up). `me` (depth 0) is exempt -- it is where we start.
+				if (d == 2)
+				{
+					if (blacklisted(from)) continue;
+					if (dodgeHazards.contains(from) && !runOn) continue;
+				}
+				for (int[] dir : NEIGHBORS8)
+				{
+					WorldPoint to = new WorldPoint(from.getX() + dir[0], from.getY() + dir[1], plane);
+					if (depth.containsKey(to)) continue;                       // already reached at an equal/shorter depth
+					if (!dodgeStepOk(from.getX(), from.getY(), to.getX(), to.getY(), bossArea, arenaMapped)) continue;
+					depth.put(to, d);
+					next.add(to);
+				}
+			}
+			frontier = next;
+		}
+
+		WorldPoint best = null;
+		double bestCost = Double.MAX_VALUE;
+		for (java.util.Map.Entry<WorldPoint, Integer> e : depth.entrySet())
+		{
+			WorldPoint cand = e.getKey();
+			int d = e.getValue();
+			if (d == 0) continue;                                              // staying put is not a dodge
+			if (hazardAvoid.contains(cand)) continue;                          // never REST on any live/imminent ray
+			if (blacklisted(cand)) continue;
+			if (arenaMapped && !insideArenaWalls(cand)) continue;
+			if (bossArea != null && bossArea.distanceTo(cand) <= 1) continue;  // not on/beside her 5x5
+			// Toward the centreline/goal FIRST (dist2 to the drift dominates), fewest tiles only breaks ties -- so we
+			// never escape 5 tiles the wrong way when a closer centreline-ward tile exists. Without a reposition goal,
+			// hold our ranged gap and take the shortest step.
+			double cost;
+			if (drift != null)         cost = dist2(cand, drift) + d;
+			else if (bossArea != null) cost = Math.abs(bossArea.distanceTo(cand) - gap) + d * 1000.0;
+			else                       cost = d * 1000.0;
+			if (cost < bestCost) { bestCost = cost; best = cand; }
+		}
+		return best;
+	}
+
+	/** One physical tile step from (fx,fy) to (tx,ty) for the dodge flood: the destination must be in the arena and
+	 *  off HER footprint, and a diagonal step obeys the OSRS corner rule (neither orthogonal corner may be her
+	 *  footprint or outside the wall). Tentacle bodies are passable, so they never block a step; their R1..R4 strike
+	 *  tiles are hazards handled by the caller. This is only "can a foot physically move here". */
+	private boolean dodgeStepOk(int fx, int fy, int tx, int ty, net.runelite.api.coords.WorldArea bossArea,
+		boolean arenaMapped)
+	{
+		int plane = currentPlane();
+		WorldPoint to = new WorldPoint(tx, ty, plane);
+		if (arenaMapped && !insideArenaWalls(to)) return false;             // can't leave the arena
+		if (bossArea != null && bossArea.distanceTo(to) == 0) return false; // can't stand on HER footprint
+		int dx = tx - fx, dy = ty - fy;
+		if (dx != 0 && dy != 0)   // diagonal: OSRS corner rule -- only HER footprint or the wall blocks a corner
+		{
+			WorldPoint ca = new WorldPoint(fx + dx, fy, plane), cb = new WorldPoint(fx, fy + dy, plane);
+			if (bossArea != null && (bossArea.distanceTo(ca) == 0 || bossArea.distanceTo(cb) == 0)) return false;
+			if (arenaMapped && (!insideArenaWalls(ca) || !insideArenaWalls(cb))) return false;
+		}
+		return true;
 	}
 
 	/** True if {@code tile} is a safe dodge destination: outside the boss min-gap (and not adjacent to her 3x3),
@@ -3029,6 +3342,7 @@ public class WhispererAutoMain
 	private boolean dodgeTileSafe(WorldPoint tile, java.util.List<NPC> npcs, int minGap)
 	{
 		if (tile == null) return false;
+		if (blacklisted(tile)) return false;   // hard-excluded (e.g. seed-danger) -- never stand here
 		if (dodgeHazards.contains(tile)) return false;   // on a tentacle->player hazard line
 		net.runelite.api.coords.WorldArea bossArea = whisperer == null ? null : whisperer.getWorldArea();
 		if (bossArea != null && (bossArea.distanceTo(tile) <= 1 || bossArea.distanceTo(tile) < minGap)) return false;
@@ -3048,6 +3362,7 @@ public class WhispererAutoMain
 	private boolean dodgeTileMinimallySafe(WorldPoint tile, java.util.List<NPC> npcs)
 	{
 		if (tile == null) return false;
+		if (blacklisted(tile)) return false;   // hard-excluded (e.g. seed-danger)
 		if (dodgeHazards.contains(tile)) return false;
 		net.runelite.api.coords.WorldArea bossArea = whisperer == null ? null : whisperer.getWorldArea();
 		if (bossArea != null && bossArea.distanceTo(tile) <= 1) return false;   // on/beside her 3x3 -> a hit
@@ -3078,7 +3393,7 @@ public class WhispererAutoMain
 	private WorldPoint safeNeighbourStep(WorldPoint me, WorldPoint want, java.util.List<NPC> npcs, int gap)
 	{
 		if (me == null) return null;
-		boolean arenaKnown = WhispererArena.isInside(me);   // false -> coord-space mismatch; skip the wall filter (as clampInside does)
+		boolean arenaMapped = !inShadowRealm() && InstanceCoords.toTemplate(client, me) != null;   // overworld arena only (walls absent in the shadow realm)
 		for (int pass = 0; pass < 2; pass++)   // 0 = outside the ranged gap; 1 = relaxed to any non-hit tile
 		{
 			WorldPoint best = null;
@@ -3089,7 +3404,8 @@ public class WhispererAutoMain
 				{
 					WorldPoint cand = new WorldPoint(me.getX() + NEIGHBORS8[i][0] * mul,
 						me.getY() + NEIGHBORS8[i][1] * mul, me.getPlane());
-					if (arenaKnown && !WhispererArena.isInside(cand)) continue;   // outside the walls
+					if (arenaMapped && !insideArenaWalls(cand)) continue;   // outside the traced walls (template space)
+					if (blacklisted(cand)) continue;   // hard-excluded tile (e.g. seed-danger)
 					boolean ok = pass == 0 ? dodgeTileSafe(cand, npcs, gap) : dodgeTileMinimallySafe(cand, npcs);
 					if (!ok) continue;
 					double cost = want != null ? dist2(cand, want) : i;   // nearest the tile we wanted
@@ -3114,9 +3430,21 @@ public class WhispererAutoMain
 	 *  axis. 0 when her start centre isn't known yet (no bias). */
 	private double centrelineDist(WorldPoint t)
 	{
-		WorldPoint c = whispererStartCentre != null ? whispererStartCentre : whispererCenterTile();
+		WorldPoint c = swingCentre != null ? swingCentre : whispererCenterTile();
 		if (c == null || t == null) return 0.0;
 		return Math.min(Math.abs(t.getX() - c.getX()), Math.abs(t.getY() - c.getY()));
+	}
+
+	/** Live->template arena-wall test: is {@code live} inside the Whisperer's traced walls? The walls are traced
+	 *  in TEMPLATE space, so {@link WhispererArena#isInside} on a LIVE instanced tile is always false -- which is
+	 *  why the old {@code clampInside} / {@code isInside(me)} wall guard was inert in the fight and let dodges click
+	 *  straight through the wall (off-map -> the click is ignored -> we stand still). Converts first; false when the
+	 *  tile can't be mapped. */
+	private boolean insideArenaWalls(WorldPoint live)
+	{
+		if (live == null) return false;
+		WorldPoint t = InstanceCoords.toTemplate(client, live);
+		return t != null && WhispererArena.isInside(t);
 	}
 
 	private WorldPoint bestStep(WorldPoint me, boolean[] blocked, int start, int end, NPC boss, int minGap,
@@ -3124,6 +3452,7 @@ public class WhispererAutoMain
 	{
 		net.runelite.api.coords.WorldArea bossArea = boss == null ? null : boss.getWorldArea();
 		int curDist = bossArea == null ? -1 : bossArea.distanceTo(me);
+		boolean arenaMapped = !inShadowRealm() && InstanceCoords.toTemplate(client, me) != null;   // overworld arena only (walls absent in the shadow realm)
 		WorldPoint best = null;
 		double bestCost = Double.MAX_VALUE;
 		for (int i = start; i < end; i++)
@@ -3134,6 +3463,11 @@ public class WhispererAutoMain
 			// corners included). distanceTo is Chebyshev, so <= 1 covers her footprint (0) and every adjacent
 			// tile incl. diagonals (1). Hard skip, not a high cost, so even the all-directions fallback can't pick it.
 			if (bossArea != null && bossArea.distanceTo(cand) <= 1) continue;
+			// ARENA WALL: never dodge through the traced walls. They live in template space, so clampInside (template-
+			// only) is a no-op in the live instance -- without this the dodge picks an out-of-wall tile (esp. at the
+			// west edge when a tentacle blocks the inward neighbours), clicks off-map, and we freeze in the hazard field.
+			if (arenaMapped && !insideArenaWalls(cand)) continue;
+			if (blacklisted(cand)) continue;   // hard-excluded tile (e.g. seed-danger) -- never step here
 			// HAZARD LINE: a tile on the line from a tentacle to us is a hit tile -- huge penalty so a hazard-free
 			// tile always wins, but it stays PICKABLE (not a hard skip) so if literally every option is on a line we
 			// still move somewhere rather than freeze.
@@ -3196,11 +3530,10 @@ public class WhispererAutoMain
 	}
 
 	/**
-	 * SEED-FIRST reposition: after the seed bind, dance around to the NORTH of her. She's planted (pulled
-	 * south by the bind), the open floor is north, so we settle {@link #REPOS_NORTH_OFFSET} tiles north of her
-	 * live centre on her lane. We must NOT cut straight through her 3x3 (stepping onto it is gap 0 = a hit),
-	 * so we go AROUND via a corridor {@link #REPOS_CORRIDOR_DX} tiles to the side we're already on (west if we
-	 * fled west, else east), run north past her, then cut back to the lane. We weave attacks when in range and off
+	 * Post-special reposition: swing back toward centre, to {@link #REPOS_NORTH_OFFSET} tiles past her start
+	 * centre on the side OPPOSITE the flee ({@link #repositionMainGoal}). The path there is a stateless per-tick
+	 * pathfind ({@link #repositionWaypoint}) that rounds her 5x5 and stays in the arena, so it picks the open side
+	 * automatically and self-heals if a tentacle dodge knocks us off course. We weave attacks when in range and off
 	 * cooldown. Cleared on arrival or when the next special begins. Returns true (claims the tick) while active.
 	 */
 	/** Begin the post-special swing for {@code s}: flee to its tile, then (if she binds) hold, then apply its
@@ -3213,6 +3546,7 @@ public class WhispererAutoMain
 		swingArrivedTick = -100;         // not at the flee tile yet; the bind-watch starts when we arrive
 		lastSwingClick = null;
 		swingFleeAnchor = null;          // fresh swing -> recompute (and re-latch) the flee tile once
+		swingCentre = null;              // fresh swing -> recapture her LIVE centre at flee time, not at wake
 		boundInPlaceChatSeen = false;    // fresh swing -> wait for this bind's "binds you in place" chat
 		repositionNorthActive = false;   // the maneuver is armed only on resolve, if the rule says so
 	}
@@ -3228,9 +3562,11 @@ public class WhispererAutoMain
 	private WorldPoint swingFleeTile(Special s)
 	{
 		if (swingFleeAnchor != null) return swingFleeAnchor;   // latched at swing start -- do NOT chase her live centre
-		// Reference the FIXED arena centreline (her 3x3 starting X/Y, captured at wake), not her live/bind-form
-		// position -- so flees stay on the centreline. Fall back to the live centre only before the first wake.
-		WorldPoint c = whispererStartCentre != null ? whispererStartCentre : whispererCenterTile();
+		// Capture her LIVE 3x3 centre RIGHT NOW -- this is "right before we run", so the flee centreline comes
+		// from where she actually is as the swing begins (not where she woke; she won't necessarily be there).
+		// swingCentre is null here (reset at startSwing); we latch it below so re-clicks and the swing-back
+		// reuse this same centre instead of chasing her drift.
+		WorldPoint c = whispererCenterTile();
 		if (c == null) return null;
 		// Offset from her CENTRE assuming the FULL 3x3 footprint (centre->edge = WHISPERER_HALF_FOOTPRINT). We do
 		// NOT measure off getWorldArea's edge: during screech / the bind form it under-reports her size (reports
@@ -3248,6 +3584,7 @@ public class WhispererAutoMain
 			default:      return c;   // NONE: no flee -- don't latch
 		}
 		flee = WhispererArena.clampInside(flee, mirror.getPlayerTile());   // never flee into a wall (E/W is a 13-tile exact fit)
+		swingCentre = c;          // latch the flee-time centre: the swing-back / reposition reuse it (symmetric)
 		swingFleeAnchor = flee;   // latch: this swing re-uses the same tile no matter where she drifts
 		return flee;
 	}
@@ -3377,8 +3714,24 @@ public class WhispererAutoMain
 			return true;
 		}
 
-		// FLEE to the special's flee tile. If she flips to 12205 at any point -> BOUND.
-		if (binding) { swingStage = SwingStage.BOUND; return true; }
+		// FLEE to the special's flee tile. If she flips to 12205 at any point -> BOUND. If 12205 is ALREADY up we are
+		// TOO LATE to weave: commit to the flee tile and keep running (no attack) until we reach it. Once the root
+		// lands (boundInPlaceChatSeen) the BOUND stage DPSes 12205 in place (we cannot move then anyway).
+		if (binding)
+		{
+			swingStage = SwingStage.BOUND;
+			if (!boundInPlaceChatSeen)
+			{
+				WorldPoint fleeNow = swingFleeTile(swingSpecial);
+				if (fleeNow != null && !me.equals(fleeNow) && !fleeNow.equals(lastSwingClick))
+				{
+					router.walkTo(fleeNow);
+					lastSwingClick = fleeNow;
+				}
+				step(fleeLabel(), "swing(" + swingSpecial + "): 12205 up -> keep fleeing (no weave)");
+			}
+			return true;
+		}
 		// NO-BIND decision, anchored to the special END (not flee-tile arrival), so it fires on time even while
 		// we're still running (a no-bind just resumes/maneuvers, so deciding mid-flee is safe):
 		//   * Seeds/screech count from swingTick (e.g. the 10252 seed anim).
@@ -3426,7 +3779,8 @@ public class WhispererAutoMain
 		// shot fires without moving, and once we run past her range (gap > weapon range) this stops firing, so it is
 		// naturally just the once-or-twice on the way out. The attack interrupts the walk, so re-click the flee tile
 		// next tick.
-		if (whisperer != null && inAttackRange(me) && tick - lastAttackTick >= effectiveCooldown())
+		// Weave DPS only while she is NOT binding -- if 12205 is up we are too late (handled by the flip above), run.
+		if (whisperer != null && !binding && lastSwingClick != null && inAttackRange(me) && tick - lastAttackTick >= effectiveCooldown())
 		{
 			attackWhisperer();
 			lastAttackTick = tick;
@@ -3445,17 +3799,6 @@ public class WhispererAutoMain
 	{
 		Special resolved = swingSpecial;
 		boolean maneuver = swingManeuvers(resolved, wasBound);
-		// Swing back OPPOSITE the flee, toward centre -- captured from the flee anchor before we drop it.
-		reposDx = 0; reposDy = 1;   // default north (legacy / no anchor)
-		{
-			WorldPoint fc = whispererStartCentre != null ? whispererStartCentre : whispererCenterTile();
-			if (swingFleeAnchor != null && fc != null)
-			{
-				int fdx = Integer.signum(swingFleeAnchor.getX() - fc.getX());
-				int fdy = Integer.signum(swingFleeAnchor.getY() - fc.getY());
-				if (fdx != 0 || fdy != 0) { reposDx = -fdx; reposDy = -fdy; }
-			}
-		}
 		swingSpecial = Special.NONE;
 		lastSwingClick = null;
 		swingFleeAnchor = null;
@@ -3500,37 +3843,24 @@ public class WhispererAutoMain
 		}
 		if (whisperer == null || !isWhispererAwake() || !inOverworld()) return false;
 		WorldPoint me = mirror.getPlayerTile();
-		// TENTACLE SAFETY: while a tentacle is up, the DODGE owns movement (planTentacleDodge ran first this tick
-		// and, on its step tick, drifts toward this waypoint). Do NOT issue our own straight walk here -- it ignores
-		// tentacle directions and is exactly how we stepped into an attack line mid-swing. Weave only a STATIONARY
-		// in-range shot (no movement); otherwise hold. Claim the tick so maintainBossAttack can't path us in either.
-		if (tentacleInScene())
-		{
-			if (me != null)
-			{
-				net.runelite.client.plugins.autoBossCore.combat.AttackPredictor.Result pr = predictBossAttack(me);
-				if (pr != null && !pr.willMove && pr.reachable && tick - lastAttackTick >= effectiveCooldown())
-				{
-					attackWhisperer();
-					lastAttackTick = tick;
-					lastReposClick = null;
-					step("Reposition", "repos: tentacle up -> stationary weave (dodge owns moves)");
-					return true;
-				}
-			}
-			lastReposClick = null;
-			step("Reposition", "repos: tentacle up -> hold (dodge owns moves)");
-			return true;
-		}
-		WorldPoint step = repositionWaypoint(me);   // corridor-aware; clears the flag on arrival
+		if (me == null) return false;
+		// HOLD while a tentacle volley is live/imminent. Threading the reposition THROUGH the rays makes the pathfind
+		// arc around the current cross and step us onto a tile that goes deadly the NEXT tick (a fresh spawn), forcing
+		// a dodge -- the reposition<->dodge thrash, and the "walk at a tentacle then dodge" you saw. The dodge runs
+		// first and is drift-biased toward THIS goal, so we still close on it WHILE dodging; we resume the straight
+		// walk once the field clears. (repositionNorthActive stays set -- we are not abandoning the maneuver, just
+		// waiting out this volley.)
+		if (!hazardAvoid.isEmpty()) return false;
+		WorldPoint step = repositionWaypoint(me);   // rounds her 5x5 and the rays; clears the flag on arrival
 		if (step == null)
 		{
 			step("Reposition", "repos: north of boss -- resume");
 			return false;
 		}
 
-		// DANCE: weave an attack when in range and off cooldown; otherwise take the step.
-		if (inAttackRange(me) && tick - lastAttackTick >= effectiveCooldown())
+		// DANCE: weave an attack ONLY right after a walk (lastReposClick set), so a walk follows every attack and
+		// we keep moving toward the goal; otherwise take the step.
+		if (lastReposClick != null && inAttackRange(me) && tick - lastAttackTick >= effectiveCooldown())
 		{
 			attackWhisperer();
 			lastAttackTick = tick;
@@ -3606,7 +3936,7 @@ public class WhispererAutoMain
 		{
 			recenterActive = false;
 			lastRecenterClick = null;
-			step("Recentre", "recentre: arrived");
+			step("Flee North", "screech flee: at north tile");
 			return false;
 		}
 		// Walk STRAIGHT to the camp. No attack-weave here: the camp (+1 N of her start centre) is gap 11 = OUT of
@@ -3616,8 +3946,44 @@ public class WhispererAutoMain
 		{
 			router.walkTo(camp);
 			lastRecenterClick = camp;
-			step("Recentre", "recentre -> " + camp);
+			step("Flee North", "screech flee north -> " + camp);
 		}
+		return true;
+	}
+
+	/**
+	 * Hold the ECLIPSE midpoint during plain non-enrage tentacle phases (the opening and between specials), when no
+	 * post-special maneuver is already doing it. Walks there via the restricted-tile pathfind (rounds her 5x5, stays
+	 * in the arena); weaves only a STATIONARY in-range shot so settling never drags us into her. Yields once we are
+	 * on the eclipse tile so normal DPS resumes from there. The tentacle dodge owns movement while a tentacle is up.
+	 */
+	private boolean handleEclipseSettle(int tick)
+	{
+		if (!eclipseActive(tick) || repositionNorthActive || recenterActive) { eclipseHold = false; return false; }
+		if (!hazardAvoid.isEmpty()) return false;   // a volley is live/imminent -> the dodge owns movement; don't settle (no reposition<->dodge flip-flop)
+		WorldPoint me = mirror.getPlayerTile();
+		WorldPoint goal = eclipseTile();
+		if (me == null || goal == null) return false;
+		goal = clampOutsideBoss(goal, me);   // never settle onto her 5x5 (unreachable)
+		int d = me.distanceTo(goal);
+		// HYSTERESIS: settle to within 1 tile, then HOLD and DPS -- do NOT chase her small drifts (the eclipse midpoint
+		// jitters a tile each way as she shifts). Only resume once we are clearly out of position (> ECLIPSE_RESUME_DIST),
+		// e.g. a dodge knocked us off. This is why reposition no longer fires every tick when we don't need it.
+		if (eclipseHold)
+		{
+			if (d <= ECLIPSE_RESUME_DIST) return false;   // close enough -> keep DPSing, no reposition
+			eclipseHold = false;                          // drifted far -> resume settling
+		}
+		if (d <= 1) { eclipseHold = true; return false; }   // arrived -> hold and let normal DPS run
+		// A STATIONARY in-range shot is always safe (never pulls us in); take it whenever it is ready.
+		net.runelite.client.plugins.autoBossCore.combat.AttackPredictor.Result pr = predictBossAttack(me);
+		boolean stationaryShot = pr != null && !pr.willMove && pr.reachable && tick - lastAttackTick >= effectiveCooldown();
+		// The eclipse pathfind routes around the rays, so we settle even while tentacles are up (the dodge runs
+		// first and owns any ON-ray tick), instead of holding in place through the whole tentacle phase.
+		WorldPoint stepTile = eclipsePathStep(me, goal);
+		if (stepTile == null) return false;   // no route (shouldn't happen) -> let normal DPS run
+		if (stationaryShot && lastReposClick != null) { attackWhisperer(); lastAttackTick = tick; lastReposClick = null; step("Reposition", "eclipse: weave (stationary) en route"); return true; }
+		if (!stepTile.equals(lastReposClick)) { router.walkTo(stepTile); lastReposClick = stepTile; step("Reposition", "eclipse -> " + stepTile); }
 		return true;
 	}
 
@@ -3627,7 +3993,7 @@ public class WhispererAutoMain
 	 *  with whispererGap so the gap is exact; null if she's absent (caller resumes in place). */
 	private WorldPoint centerCampTile()
 	{
-		return swingFleeTile(Special.SCREECH);
+		return swingFleeTile(Special.SCREECH);   // the screech flee tile (11 clear NORTH) -- opens the bind gap
 	}
 
 	/**
@@ -3641,33 +4007,65 @@ public class WhispererAutoMain
 	private WorldPoint repositionWaypoint(WorldPoint me)
 	{
 		if (!repositionNorthActive || me == null) return null;
-		WorldPoint c = whispererStartCentre != null ? whispererStartCentre : whispererCenterTile();
-		if (c == null) return null;
-		int cx = c.getX(), cy = c.getY(), plane = c.getPlane();
-		int sx = reposDx, sy = reposDy, off = REPOS_NORTH_OFFSET, corr = REPOS_CORRIDOR_DX;
-		// Swing back toward centre (opposite the flee). Never cut through her 3x3, so round her via a corridor
-		// PERPENDICULAR to the swing axis: N/S swings round east/west, the west swing (from an east flee) rounds
-		// north/south. Her centre is the arena centre, so the perpendicular corridor is interior either way.
-		if (sy != 0)
+		WorldPoint goal = repositionMainGoal();   // the eclipse midpoint (centre <-> her)
+		if (goal == null) return null;
+		goal = clampOutsideBoss(goal, me);   // never target her 5x5 (unreachable) -> pull out toward us so the swing runs
+		if (me.equals(goal) || me.distanceTo(goal) <= 1) { repositionNorthActive = false; return null; }   // arrived
+		WorldPoint stepTile = eclipsePathStep(me, goal);
+		if (stepTile == null) { repositionNorthActive = false; return null; }   // no safe route (shouldn't happen)
+		return stepTile;
+	}
+
+	/**
+	 * STATELESS per-tick pathfind to {@code goal} from our LIVE tile -- re-run every tick, so a tentacle dodge that
+	 * knocks us off course just re-plans next tick (no stale route). The predicate is the dynamic restricted-tile
+	 * check: stay INSIDE the arena, keep OUT of her 5x5 (distanceTo <= 1), off tentacle hazard lines -- so the path
+	 * rounds her on whichever side is open, no hardcoded corridor. Returns the END of the first straight leg, so one
+	 * walk click runs that whole leg and we only re-click to turn at a corner; re-planned every tick. Null if no route.
+	 */
+	private WorldPoint eclipsePathStep(WorldPoint me, WorldPoint goal)
+	{
+		if (me == null || goal == null) return null;
+		net.runelite.api.coords.WorldArea bossArea = whisperer == null ? null : whisperer.getWorldArea();
+		java.util.function.Predicate<WorldPoint> passable = pt ->
+			(bossArea == null || bossArea.distanceTo(pt) > 1) && !hazardAvoid.contains(pt) && !blacklisted(pt);
+		java.util.function.Predicate<WorldPoint> inBounds = pt ->
 		{
-			int proj = (me.getY() - cy) * sy;   // progress along the swing (Y) axis toward the goal side
-			if (proj >= off && Math.abs(me.getX() - cx) <= 1) { repositionNorthActive = false; return null; }
-			if (proj > 1) return new WorldPoint(cx, cy + sy * off, plane);   // past her -> up the lane to goal
-			int cxSide = (me.getX() < cx - 1) ? -1 : 1;   // round on the side we're on (default east)
-			int corridorX = cx + cxSide * corr;
-			boolean at = cxSide > 0 ? me.getX() >= corridorX : me.getX() <= corridorX;
-			return at ? new WorldPoint(corridorX, cy + sy * 2, plane)      // run along the corridor past her
-			          : new WorldPoint(corridorX, me.getY(), plane);       // sidestep onto the corridor
+			WorldPoint t = InstanceCoords.toTemplate(client, pt);
+			return t != null && WhispererArena.isInside(t);
+		};
+		java.util.List<WorldPoint> path = net.runelite.client.plugins.autoBossCore.combat.TilePathPredictor.path(
+			client.getTopLevelWorldView(), me, goal, passable, inBounds, 256);
+		if (config != null && config.captureMode())
+		{
+			WorldPoint gt = InstanceCoords.toTemplate(client, goal);
+			log.info("[pathDbg] me={} goal={} goalTpl={} inBounds={} passable={} pathLen={} first={}",
+				me, goal, gt, (gt != null && WhispererArena.isInside(gt)),
+				(bossArea == null || bossArea.distanceTo(goal) > 1) && !hazardAvoid.contains(goal) && !blacklisted(goal),
+				path == null ? -1 : path.size(), (path != null && path.size() >= 2) ? firstRunEnd(path) : null);
 		}
-		// swing along X (west, from an east flee) -> round via a N/S corridor
-		int proj = (me.getX() - cx) * sx;
-		if (proj >= off && Math.abs(me.getY() - cy) <= 1) { repositionNorthActive = false; return null; }
-		if (proj > 1) return new WorldPoint(cx + sx * off, cy, plane);   // past her -> along the lane to goal
-		int cySide = (me.getY() < cy - 1) ? -1 : 1;   // round via N/S corridor (default north)
-		int corridorY = cy + cySide * corr;
-		boolean at = cySide > 0 ? me.getY() >= corridorY : me.getY() <= corridorY;
-		return at ? new WorldPoint(cx + sx * 2, corridorY, plane)      // run along the corridor past her
-		          : new WorldPoint(me.getX(), corridorY, plane);       // sidestep onto the corridor
+		if (path == null || path.size() < 2) return null;
+		WorldPoint leg = firstRunEnd(path);   // END of the first straight leg: one click runs it, re-click to turn
+		// ...but only commit that whole leg when it actually gets us CLOSER to the goal. If the first leg arcs
+		// sideways/away (around her 5x5 or a ray wall), step ONE tile and re-plan next tick instead of running the
+		// wrong way -- this is what stops the "run 5 tiles out to a tentacle tile" overshoot.
+		if (leg == null || leg.distanceTo(goal) >= me.distanceTo(goal)) return path.get(1);
+		return leg;
+	}
+
+	/** End of the first colinear straight run of {@code path} (path[0] == me), so one walk click covers that leg. */
+	private WorldPoint firstRunEnd(java.util.List<WorldPoint> path)
+	{
+		WorldPoint a = path.get(0), b = path.get(1);
+		int dx = Integer.signum(b.getX() - a.getX()), dy = Integer.signum(b.getY() - a.getY());
+		int i = 1;
+		while (i + 1 < path.size())
+		{
+			WorldPoint cur = path.get(i), nxt = path.get(i + 1);
+			if (Integer.signum(nxt.getX() - cur.getX()) != dx || Integer.signum(nxt.getY() - cur.getY()) != dy) break;
+			i++;
+		}
+		return path.get(i);
 	}
 
 	/** The MAIN GOAL of the north maneuver: the FINAL destination tile on her centre lane
@@ -3677,9 +4075,7 @@ public class WhispererAutoMain
 	 *  she's absent. Does NOT clear the maneuver flag (read-only; repositionWaypoint owns the arrival check). */
 	private WorldPoint repositionMainGoal()
 	{
-		WorldPoint c = whispererStartCentre != null ? whispererStartCentre : whispererCenterTile();
-		if (c == null) return null;
-		return new WorldPoint(c.getX() + reposDx * REPOS_NORTH_OFFSET, c.getY() + reposDy * REPOS_NORTH_OFFSET, c.getPlane());
+		return eclipseTile();   // the post-special settle target is the eclipse midpoint, same as every tentacle phase
 	}
 
 	/**
@@ -3699,13 +4095,133 @@ public class WhispererAutoMain
 	{
 		if (!deathPrayersOff || whisperer != null || !inOverworld()) return false;
 
-		// TODO 1: pick up loot (walk to / collect the drop).
+		// TODO 1 -> DONE: pick up the drop pile (event-driven tracker, richest first, take what fits).
+		if (pickUpLoot()) return true;       // still collecting -> hold the window
+
 		// TODO 2: decide whether to keep going (start another kill) or stop / bank.
 		// TODO 3: wait for the Odd Figure (12203) to respawn (~10s) and top off supplies (eat / drink) if needed
 		//         while waiting -- this is a safe idle window, so a heal/sip here costs no DPS.
 
-		step("Cleanup", "cleanup: (TODO) loot / decide / wait for respawn");
+		step("Cleanup", "cleanup: loot done -- (TODO) decide / wait for respawn");
 		return true;
+	}
+
+	/**
+	 * Post-death loot pass (Whisperer v1): drain the drop pile via the shared {@link GroundItemTracker} -- the
+	 * same event-driven detection Vorkath uses -- taking the RICHEST item first, one click every
+	 * {@link #LOOT_ACTION_INTERVAL} ticks (the ground-item "Take" auto-walks us onto the tile). We take only what
+	 * FITS: no inventory sacrifice yet -- a free slot, or a stackable we already hold. Returns true while there is
+	 * still loot worth (and room) to grab, false once the pile is clear / nothing fits / the timeout fires.
+	 */
+	private boolean pickUpLoot()
+	{
+		if (groundItems == null || lastDeathTick < 0) return false;
+		int now = client.getTickCount();   // tracker's clock, so it lines up with lastDeathTick / Entry.tickSpawned
+		if (now - lastDeathTick < LOOT_SPAWN_GRACE_TICKS)   // let the drops land first
+		{
+			step("Cleanup", "loot: waiting for drop pile");
+			return true;
+		}
+		if (now - lastDeathTick > LOOT_TIMEOUT_TICKS) return false;   // safety: never hang the cleanup forever
+		GroundItemTracker.Entry best = bestLoot();
+		if (best == null) return false;   // nothing left that we have room for
+		if (now - lastLootClickTick >= LOOT_ACTION_INTERVAL || !best.tile.equals(lastLootTile))
+		{
+			router.takeGroundItem(best.itemId, best.tile, lootName(best.itemId));
+			lastLootClickTick = now;
+			lastLootTile = best.tile;
+			step("Cleanup", "loot: take " + lootName(best.itemId) + " @ " + best.tile);
+		}
+		return true;
+	}
+
+	/** Highest total-GE-value ground item from THIS kill, inside the arena, that we have room to take. */
+	private GroundItemTracker.Entry bestLoot()
+	{
+		GroundItemTracker.Entry best = null;
+		long bestGp = Long.MIN_VALUE;
+		for (GroundItemTracker.Entry e : groundItems.spawnedSince(lastDeathTick))
+		{
+			if (!insideArenaWalls(e.tile)) continue;         // only this arena's drops
+			if (!inventoryHasRoomFor(e.itemId)) continue;    // take only what FITS (no sacrifice yet)
+			long gp = itemPrice(e.itemId) * Math.max(1, e.quantity);
+			if (gp > bestGp) { bestGp = gp; best = e; }
+		}
+		return best;
+	}
+
+	/** Room for one more of {@code itemId}: any free inventory slot, or (inventory full) a stackable we hold. */
+	private boolean inventoryHasRoomFor(int itemId)
+	{
+		ItemContainer inv = client.getItemContainer(InventoryID.INVENTORY);
+		if (inv == null) return false;
+		int used = 0; boolean present = false;
+		for (Item it : inv.getItems())
+		{
+			if (it == null || it.getId() < 0) continue;
+			used++;
+			if (it.getId() == itemId) present = true;
+		}
+		if (used < 28) return true;
+		if (!present) return false;
+		try { net.runelite.api.ItemComposition c = client.getItemDefinition(itemId); return c != null && c.isStackable(); }
+		catch (Throwable t) { return false; }
+	}
+
+	private long itemPrice(int itemId)
+	{
+		try { return itemManager == null ? 0L : itemManager.getItemPrice(itemId); }
+		catch (Throwable t) { return 0L; }
+	}
+
+	private String lootName(int itemId)
+	{
+		try { net.runelite.api.ItemComposition c = client.getItemDefinition(itemId); return c == null ? "" : c.getName(); }
+		catch (Throwable t) { return ""; }
+	}
+
+	/** Hard tile exclusion: true if {@code pt} is currently blacklisted (never step there). */
+	private boolean blacklisted(WorldPoint pt) { return !tileBlacklist.isEmpty() && pt != null && tileBlacklist.contains(pt); }
+
+	/** A special (seeds / screech / siphon) is running right now. */
+	private boolean anySpecialActive()
+	{
+		return seedPhaseActive || !hidePillarChainOwTiles.isEmpty() || inSiphonPhase();
+	}
+
+	/**
+	 * True ONLY in the PRE-SEED window -- so we never stand on a seed-spawn tile when the seed lands (stepping on
+	 * it prematurely breaks the seed). Covers: phase-1 tentacles (entry unknown -> seeds possible), the seed
+	 * TELEGRAPH window (10248 fired, seeds not yet on the ground), and the tentacle gap right after siphon
+	 * (siphon -> seeds). RELEASES the instant the seeds physically spawn (the seed handler then navigates them);
+	 * OFF during screech/siphon, the gaps after seeds/after screech, and enrage.
+	 */
+	private boolean seedsZoneActive()
+	{
+		if (enragePhaseActive) return false;
+		if (seedsSpawnedThisPhase) return false;              // seeds already on the ground this phase -> guard done
+		if (lastSpecial == null) return true;                 // phase 1: first special unknown -> could be seeds
+		if (seedPhaseActive) return true;                     // seed telegraph fired, seeds NOT yet down -> still guard
+		if (anySpecialActive()) return false;                 // screech / siphon running -> tiles are safe
+		return lastSpecial.next() == WhisSpecialPhase.CORRUPTED_SEEDS;   // tentacle gap before seeds
+	}
+
+	/** Rebuild {@link #tileBlacklist} for this tick: the seed-danger tiles (live-converted) while
+	 *  {@link #seedsZoneActive()}, else empty. */
+	private void refreshSeedBlacklist()
+	{
+		if (!seedsZoneActive() || SEED_BLACKLIST_TEMPLATE.length == 0)
+		{
+			tileBlacklist = java.util.Collections.emptySet();
+			return;
+		}
+		java.util.Set<WorldPoint> live = new java.util.HashSet<>();
+		for (WorldPoint t : SEED_BLACKLIST_TEMPLATE)
+		{
+			WorldPoint l = InstanceCoords.fromTemplate(client, t);
+			if (l != null) live.add(l);
+		}
+		tileBlacklist = live;
 	}
 
 	private boolean handleFightStart(int tick)
@@ -3744,13 +4260,16 @@ public class WhispererAutoMain
 			oddFigureDisturbed = false;   // timed out with no wake anim -> try again below
 		}
 
-		// Not yet disturbed. HUMAN shortcut: if we're between the start tile and HER (or south of the start
-		// tile), just poke from here -- no point walking down to the start tile only to walk back up to reach
-		// her. We reposition down to the start tile ONLY if we're actually north of her (unusual). Her centre Y
-		// is the line: at/south of it -> poke now; north of it -> drop to the start tile first.
+		// Not yet disturbed. Poke ONLY when we are strictly SOUTH of the Whisperer herself: at/south of her centre
+		// Y line AND within her 3 footprint columns (centreX +/- 1 -- i.e. template x 2655-2657, computed off her
+		// LIVE centre for the instance). That keeps us directly below her 3x3, not merely south of the centre line
+		// but off to one side. If we are north of her OR out of her columns, drop to the start tile first (it sits
+		// on centreX, due south) and poke from there.
 		WorldPoint wc = whispererCenterTile();
 		int pokeLineY = wc != null ? wc.getY() : start.getY();
-		if (me.getY() > pokeLineY && !me.equals(start))
+		int centreX   = wc != null ? wc.getX() : start.getX();
+		boolean strictlySouth = me.getY() <= pokeLineY && Math.abs(me.getX() - centreX) <= 1;
+		if (!strictlySouth && !me.equals(start))
 		{
 			if (!start.equals(lastStartClick))
 			{

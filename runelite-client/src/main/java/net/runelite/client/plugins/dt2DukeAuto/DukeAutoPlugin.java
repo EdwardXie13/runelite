@@ -16,6 +16,7 @@ import net.runelite.api.events.ChatMessage;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.autoBossCore.debug.CaptureLogger;
+import net.runelite.client.plugins.autoBossCore.loot.GroundItemTracker;
 import net.runelite.client.plugins.autoBossCore.state.MirrorState;
 import net.runelite.client.ui.overlay.OverlayManager;
 
@@ -46,6 +47,7 @@ public class DukeAutoPlugin extends Plugin implements KeyListener
 
 	@Inject private MirrorState mirrorState;
 	@Inject private CaptureLogger captureLogger;
+	@Inject private GroundItemTracker groundItems;
 	@Inject private DukeAutoMain main;
 
 	@Provides
@@ -63,6 +65,8 @@ public class DukeAutoPlugin extends Plugin implements KeyListener
 	{
 		eventBus.register(mirrorState);
 		eventBus.register(captureLogger);
+		groundItems.clear();                 // fresh start -> drop any stale ground items from a prior session
+		eventBus.register(groundItems);      // event-driven loot DETECTION (handling per boss is added later)
 		keyManager.registerKeyListener(this);
 		overlayManager.add(overlay);
 		overlayManager.add(pathOverlay);
@@ -78,6 +82,7 @@ public class DukeAutoPlugin extends Plugin implements KeyListener
 		overlayManager.remove(overlay);
 		overlayManager.remove(pathOverlay);
 		keyManager.unregisterKeyListener(this);
+		eventBus.unregister(groundItems);
 		eventBus.unregister(captureLogger);
 		eventBus.unregister(mirrorState);
 	}
