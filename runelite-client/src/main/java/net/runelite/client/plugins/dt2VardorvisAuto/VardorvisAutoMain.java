@@ -15,6 +15,7 @@ import net.runelite.api.Prayer;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.autoBossCore.combat.ClickRouter;
+import net.runelite.client.plugins.autoBossCore.loot.LootCollector;
 import net.runelite.client.plugins.autoBossCore.combat.ThrallManager;
 import net.runelite.client.plugins.autoBossCore.combat.Hazard;
 import net.runelite.client.plugins.autoBossCore.combat.PrayerSwapper;
@@ -57,6 +58,7 @@ public class VardorvisAutoMain
 	private final ClickRouter router;
 	private final SchedulingTileDodger dodger;
 	private final PrayerSwapper prayers;
+	private final LootCollector lootCollector;   // shared post-death loot pass
 
 	// --- Boss state -------------------------------------------------
 	private final ConsumptionEngine engine;
@@ -88,6 +90,8 @@ public class VardorvisAutoMain
 	/** Latched once the boss HP bar reads 0 (the kill) so every prayer is dropped at death and
 	 *  prayer camping does not flick them back on through the death animation. Reset between kills. */
 	private boolean deathPrayersOff = false;
+	/** getTickCount() of the kill, anchoring the post-death loot pass (-1 = not dead / loot done). */
+	private int lastDeathTick = -1;
 	/** Was Vardorvis present last tick? Drives the despawn backstop for prayers-off. */
 	private boolean vardorvisWasPresent = false;
 
@@ -137,13 +141,15 @@ public class VardorvisAutoMain
 		MirrorState mirror,
 		ClickRouter router,
 		SchedulingTileDodger dodger,
-		PrayerSwapper prayers)
+		PrayerSwapper prayers,
+		LootCollector lootCollector)
 	{
 		this.client  = client;
 		this.mirror  = mirror;
 		this.router  = router;
 		this.dodger  = dodger;
 		this.prayers = prayers;
+		this.lootCollector = lootCollector;
 
 		this.engine = new ConsumptionEngine(VardorvisSupply.PROFILE, mirror);
 		this.thrall = new ThrallManager(VardorvisAutoIDs.THRALL_CAST_WIDGET, "Vardorvis thrall");
@@ -205,6 +211,7 @@ public class VardorvisAutoMain
 		if (!deathPrayersOff && vardorvis != null && bossCurrentHp() == 0)
 		{
 			deathPrayersOff = true;
+			lastDeathTick = client.getTickCount();   // anchor the loot pass on the tracker's clock
 			turnPrayersOff(tick);
 		}
 
@@ -232,6 +239,14 @@ public class VardorvisAutoMain
 		}
 
 		if (!active) return;
+
+		// POST-DEATH LOOT: drain the drop pile (richest first, what fits) before anything else. Holds the tick
+		// while collecting; clears itself once the pile is gone / nothing fits / it times out.
+		if (lastDeathTick >= 0)
+		{
+			if (lootCollector.collect(router, lastDeathTick, null) != null) return;
+			lastDeathTick = -1;
+		}
 
 		// 2. Captcha phase: click all visible QTE_MODEL children (cluster-ordered, capped per tick).
 		if (phase.current() == VardPhase.CAPTCHA)

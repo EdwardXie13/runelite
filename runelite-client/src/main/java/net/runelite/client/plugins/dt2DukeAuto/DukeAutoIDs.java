@@ -224,9 +224,13 @@ public final class DukeAutoIDs
 	public static final WorldPoint ENTRY_TILE = new WorldPoint(3039, 6433, 0);
 
 	/** Tile the overhead camera focuses on (template coords; converted to instance at runtime). */
+	/** Overhead camera centre during PREP (collect / brew / wake). */
 	public static final WorldPoint ARENA_CAMERA_CENTER = new WorldPoint(3039, 6447, 0);
+	/** Overhead camera centre during the actual FIGHT (Duke awake: FIGHT / SHIELD). */
+	public static final WorldPoint ARENA_CAMERA_CENTER_FIGHT = new WorldPoint(3039, 6451, 0);
 	/** Overhead-camera zoom (CAMERA_DO_ZOOM arg; lower = wider field, higher = closer). */
-	public static final int ARENA_CAMERA_ZOOM = 250;
+	public static final int ARENA_CAMERA_ZOOM = 250;        // PREP overhead zoom (wide, for collecting)
+	public static final int ARENA_CAMERA_ZOOM_FIGHT = 550;  // FIGHT overhead zoom (tight on Duke)
 
 	/**
 	 * Arena WALL tiles (TEMPLATE coords, region 12132) the BFS path planner treats as
@@ -443,6 +447,9 @@ public final class DukeAutoIDs
 	// DIVINE_RANGE exactly like Leviathan, and have DukeAutoMain request those kinds.
 	public static final int FOOD_PRIMARY = ItemID.SHARK;
 	public static final int FOOD_COMBO   = ItemID.TBWT_COOKED_KARAMBWAN;
+	// Two-bite backup food: eat the HALF (already bitten) before opening a new FULL one.
+	public static final int ITEM_PINEAPPLE_PIZZA      = 2301;
+	public static final int ITEM_HALF_PINEAPPLE_PIZZA = 2303;
 
 	public static final int[] PRAYER_POT_DOSES = new int[] {
 		ItemID._1DOSEPRAYERRESTORE,

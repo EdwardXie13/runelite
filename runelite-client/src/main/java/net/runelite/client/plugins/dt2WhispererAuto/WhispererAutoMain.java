@@ -438,7 +438,7 @@ public class WhispererAutoMain
 	/** Loot: wait this many ticks after death for the drop pile to spawn before grabbing. */
 	private static final int LOOT_SPAWN_GRACE_TICKS = 2;
 	/** Loot: minimum ticks between pickup clicks (one action every couple ticks, like Vorkath). */
-	private static final int LOOT_ACTION_INTERVAL = 2;
+	private static final int LOOT_ACTION_INTERVAL = 1;   // one pickup per tick (human-spam pace, like Vorkath)
 	/** Loot: give up the pickup pass this many ticks after death (safety so cleanup can't hang). */
 	private static final int LOOT_TIMEOUT_TICKS = 60;
 	private int lastLootClickTick = -100;

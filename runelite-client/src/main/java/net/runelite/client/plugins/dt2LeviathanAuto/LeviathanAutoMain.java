@@ -11,6 +11,7 @@ import net.runelite.api.Tile;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.autoBossCore.combat.ClickRouter;
+import net.runelite.client.plugins.autoBossCore.loot.LootCollector;
 import net.runelite.client.plugins.autoBossCore.combat.Hazard;
 import net.runelite.client.plugins.autoBossCore.combat.PrayerSwapper;
 import net.runelite.client.plugins.autoBossCore.combat.SchedulingTileDodger;
@@ -61,6 +62,7 @@ public class LeviathanAutoMain
 	private final ClickRouter router;
 	private final SchedulingTileDodger dodger;
 	private final PrayerSwapper prayers;
+	private final LootCollector lootCollector;   // shared post-death loot pass
 
 	// --- Boss state -------------------------------------------------
 	private final ConsumptionEngine engine;
@@ -196,6 +198,8 @@ public class LeviathanAutoMain
 	// Latched once the boss HP widget reads 0 (the kill), so prayers are turned off at death
 	// -- a few ticks before the NPC despawns -- and only once. Cleared in resetFightState.
 	private boolean deathPrayersOff = false;
+	/** getTickCount() of the kill, anchoring the post-death loot pass (-1 = not dead / loot done). */
+	private int lastDeathTick = -1;
 
 	/**
 	 * Projectile identities (endTick<<16 ^ id) we've already scheduled a prayer swap for,
@@ -500,13 +504,15 @@ public class LeviathanAutoMain
 		MirrorState mirror,
 		ClickRouter router,
 		SchedulingTileDodger dodger,
-		PrayerSwapper prayers)
+		PrayerSwapper prayers,
+		LootCollector lootCollector)
 	{
 		this.client  = client;
 		this.mirror  = mirror;
 		this.router  = router;
 		this.dodger  = dodger;
 		this.prayers = prayers;
+		this.lootCollector = lootCollector;
 
 		this.engine = new ConsumptionEngine(LeviathanSupply.PROFILE, mirror);
 
@@ -631,6 +637,7 @@ public class LeviathanAutoMain
 		if (!deathPrayersOff && leviathan != null && bossCurrentHp() == 0)
 		{
 			deathPrayersOff = true;
+			lastDeathTick = client.getTickCount();   // anchor the loot pass on the tracker's clock
 			turnPrayersOff(tick);
 		}
 		phase.update(tick);
@@ -820,6 +827,14 @@ public class LeviathanAutoMain
 		updateOverlay();
 
 		if (!active) return;
+
+		// POST-DEATH LOOT: drain the drop pile (richest first, what fits) before anything else. Holds the tick
+		// while collecting; clears itself once the pile is gone / nothing fits / it times out.
+		if (lastDeathTick >= 0)
+		{
+			if (lootCollector.collect(router, lastDeathTick, null) != null) return;
+			lastDeathTick = -1;
+		}
 
 		// Movement planning.
 		resolveInstanceTilesIfNeeded(tick);
