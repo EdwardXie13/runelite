@@ -14,6 +14,8 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.autoBossCore.camera.ArenaCamera;
 import net.runelite.client.plugins.autoBossCore.combat.ClickRouter;
 import net.runelite.client.plugins.autoBossCore.loot.LootCollector;
+import net.runelite.client.plugins.autoBossCore.loot.GroundItemTracker;
+import net.runelite.client.plugins.autoBossCore.loot.DecantManager;
 import net.runelite.client.plugins.autoBossCore.combat.Hazard;
 import net.runelite.client.plugins.autoBossCore.combat.PrayerSwapper;
 import net.runelite.client.plugins.autoBossCore.combat.SchedulingTileDodger;
@@ -95,9 +97,9 @@ public class DukeAutoMain
 	private int lastDecantTick = -100;
 	private static final int DECANT_COOLDOWN_TICKS = 1;   // at most ONE decant action per tick (no spam)
 	private static final int CLEANUP_MAX_TICKS = 60;      // hard cap so the between-fights cleanup never hangs
-	private static final int[][] DECANT_POTION_DOSES = {
-		DukeAutoIDs.PRAYER_POT_DOSES, DukeAutoIDs.SUPER_COMBAT_DOSES,
-		DukeAutoIDs.DIVINE_SUPER_COMBAT_DOSES, DukeAutoIDs.STAMINA_DOSES };
+	/** Shared potion-decant / inventory-tidy / make-room pass (SupplyProfile-driven). */
+	private final GroundItemTracker groundItems;
+	private final DecantManager decant;
 
 	// --- Boss state -------------------------------------------------
 	private final ConsumptionEngine engine;
@@ -364,7 +366,8 @@ public class DukeAutoMain
 		SchedulingTileDodger dodger,
 		PrayerSwapper prayers,
 		ArenaCamera camera,
-		LootCollector lootCollector)
+		LootCollector lootCollector,
+		GroundItemTracker groundItems)
 	{
 		this.client  = client;
 		this.mirror  = mirror;
@@ -373,6 +376,8 @@ public class DukeAutoMain
 		this.prayers = prayers;
 		this.camera  = camera;
 		this.lootCollector = lootCollector;
+		this.groundItems = groundItems;
+		this.decant = new DecantManager(client, DukeSupply.PROFILE);
 
 		this.engine = new ConsumptionEngine(DukeSupply.PROFILE, mirror);
 		this.thrall = new ThrallManager(DukeAutoIDs.THRALL_CAST_WIDGET, "Duke thrall");
@@ -402,7 +407,7 @@ public class DukeAutoMain
 		ventAnchorTick = null;   // fresh run -> re-sync the vent cycle from the next witnessed spawn
 		ventWatchStart = -1;
 		extremityAnchorTick = null; extremityWatchStart = -1;   // re-sync the extremity cycle too
-		holdForHazard = false; holdGoal = null; saltTargetTpl = null; saltApproachTpl = null; decantActive = false; decantStartTick = -1;
+		holdForHazard = false; holdGoal = null; saltTargetTpl = null; saltApproachTpl = null; decantActive = false; decantStartTick = -1; decant.reset();
 		dukeAttackTick = -100; dukePrevAnim = -1;
 		dukeAttackPhase = -1; dukeEnraged = false; gazeTick = -100; gazeActive = false; feedingStarted = false; eatDelay.reset(); thrall.reset();
 		sawDeathAnim = false;
@@ -610,7 +615,8 @@ public class DukeAutoMain
 					return;
 				}
 				if (cleanupTopOffTick(tick)) return;   // 1) top HP/prayer/run off at camp
-				if (decantTick(tick)) return;          // 2) then combine pizzas + consolidate potion doses
+				if (decantTick(tick)) return;          // 2) combine pizzas (Duke-only)
+				if (decant.tick(router, groundItems, tick)) return;   // 3) decant potions / tidy vials / make room (shared)
 			}
 			decantActive = false;
 		}
@@ -2247,7 +2253,7 @@ public class DukeAutoMain
 		ventAnchorTick = null;   // vents restart with the new kill -> re-sync from the next witnessed spawn
 		ventWatchStart = tick;
 		extremityAnchorTick = null; extremityWatchStart = tick;   // extremities restart too -> re-sync
-		holdForHazard = false; holdGoal = null; decantActive = false; decantStartTick = -1;
+		holdForHazard = false; holdGoal = null; decantActive = false; decantStartTick = -1; decant.reset();
 		dukeAttackTick = -100; dukePrevAnim = -1;
 		dukeAttackPhase = -1; dukeEnraged = false; gazeTick = -100; gazeActive = false; feedingStarted = false; eatDelay.reset(); thrall.reset();
 		fightCamp = null;
@@ -2323,7 +2329,7 @@ public class DukeAutoMain
 		boolean downtime = phase.current() != DukePhase.FIGHT
 			|| client.getLocalDestinationLocation() != null
 			|| gazeActive;   // the gaze suppresses our attacks -> a free window to sip
-		ConsumptionEngine.requestPrayerSip(b, mirror, Math.max(1, mirror.getMaxPrayer() / 2),
+		ConsumptionEngine.requestPrayerSip(b, mirror, 30,
 			DukeSupply.PROFILE.prayerSipJitterWindow, downtime);
 
 		if (mirror.getRunEnergy() <= DukeSupply.PROFILE.runEnergySipStam
@@ -2623,10 +2629,8 @@ private boolean isInArenaTemplate()
 	 */
 	private boolean decantTick(int tick)
 	{
-		if (tick - lastDecantTick < DECANT_COOLDOWN_TICKS) return true;   // one decant per tick, still active
+		if (tick - lastDecantTick < DECANT_COOLDOWN_TICKS) return true;   // one action per tick, still active
 		if (combineTwoOf(DukeAutoIDs.ITEM_HALF_PINEAPPLE_PIZZA, tick)) return true;   // two halves -> one full
-		for (int[] doses : DECANT_POTION_DOSES)
-			if (decantPotion(doses, tick)) return true;
 		return false;
 	}
 
@@ -2645,50 +2649,6 @@ private boolean isInArenaTemplate()
 		if (s1 < 0 || s2 < 0) return false;
 		decantUse(s1, itemId, s2, itemId, tick);
 		return true;
-	}
-
-	/**
-	 * Consolidate one potion type (its 1..4-dose ids) by packing doses into FULL (4-dose) potions. While TWO
-	 * OR MORE non-full (1..3) vials exist, pour the smallest-dose one into the largest-dose one. Each pour
-	 * strictly cuts the non-full count (the source empties, or the target hits 4 and the source shrinks), so
-	 * it ends at <=1 partial vial = as many full potions as the doses allow. Also tops up equal partials, e.g.
-	 * (3)+(3) -> (4)+(2). One combine per call; full vials are never touched.
-	 */
-	private boolean decantPotion(int[] doseIds, int tick)
-	{
-		net.runelite.api.ItemContainer inv = client.getItemContainer(net.runelite.api.InventoryID.INVENTORY);
-		if (inv == null) return false;
-		net.runelite.api.Item[] items = inv.getItems();
-		int srcSlot = -1, srcId = -1, srcDose = Integer.MAX_VALUE;   // smallest-dose non-full vial (the donor)
-		int tgtSlot = -1, tgtId = -1, tgtDose = -1;                  // largest-dose non-full vial (filled toward 4)
-		int partials = 0;
-		for (int i = 0; i < items.length; i++)
-		{
-			if (items[i] == null) continue;
-			int d = doseOf(items[i].getId(), doseIds);
-			if (d <= 0 || d >= 4) continue;   // not this type, or already full (leave it)
-			partials++;
-			if (d < srcDose) { srcDose = d; srcSlot = i; srcId = items[i].getId(); }
-			if (d > tgtDose) { tgtDose = d; tgtSlot = i; tgtId = items[i].getId(); }
-		}
-		if (partials < 2) return false;   // <=1 partial left -> maximally packed
-		if (tgtSlot == srcSlot)           // all partials equal -> min and max are the same vial; pick another target
-			for (int i = 0; i < items.length; i++)
-			{
-				if (i == srcSlot || items[i] == null) continue;
-				int d = doseOf(items[i].getId(), doseIds);
-				if (d > 0 && d < 4) { tgtSlot = i; tgtId = items[i].getId(); break; }
-			}
-		decantUse(srcSlot, srcId, tgtSlot, tgtId, tick);
-		return true;
-	}
-
-	/** Dose level (1..4) of a potion item within its type's id list, or 0 if not of this type. */
-	private int doseOf(int itemId, int[] doseIds)
-	{
-		for (int k = 0; k < doseIds.length; k++)
-			if (doseIds[k] == itemId) return k + 1;
-		return 0;
 	}
 
 	/** Raw "Use src on tgt" (WIDGET_TARGET then WIDGET_TARGET_ON_WIDGET), by inventory slot. */
@@ -2718,7 +2678,7 @@ private boolean isInArenaTemplate()
 		ConsumptionEngine.Request.Builder b = ConsumptionEngine.Request.builder();
 		b.wantEat(canEatNow);
 		b.allowComboEat(canEatNow);
-		ConsumptionEngine.requestPrayerSip(b, mirror, Math.max(1, mirror.getMaxPrayer() / 2),
+		ConsumptionEngine.requestPrayerSip(b, mirror, 30,
 			DukeSupply.PROFILE.prayerSipJitterWindow, true);
 		if (mirror.getRunEnergy() <= DukeSupply.PROFILE.runEnergySipStam
 			&& DukeSupply.PROFILE.hasPotion(SupplyProfile.DrinkKind.STAMINA))

@@ -450,6 +450,8 @@ public final class DukeAutoIDs
 	// Two-bite backup food: eat the HALF (already bitten) before opening a new FULL one.
 	public static final int ITEM_PINEAPPLE_PIZZA      = 2301;
 	public static final int ITEM_HALF_PINEAPPLE_PIZZA = 2303;
+	/** Empty vial left behind by decanting a potion. Dropped during the cleanup decant pass to free a slot. */
+	public static final int ITEM_EMPTY_VIAL = 229;
 
 	public static final int[] PRAYER_POT_DOSES = new int[] {
 		ItemID._1DOSEPRAYERRESTORE,

@@ -29,6 +29,7 @@ import net.runelite.client.plugins.autoBossCore.consume.SupplyProfile;
 import net.runelite.client.plugins.autoBossCore.phase.PhaseTracker;
 import net.runelite.client.plugins.autoBossCore.state.InstanceCoords;
 import net.runelite.client.plugins.autoBossCore.loot.GroundItemTracker;
+import net.runelite.client.plugins.autoBossCore.loot.DecantManager;
 import net.runelite.client.plugins.autoBossCore.state.WidgetReader;
 import net.runelite.client.plugins.autoBossCore.state.MirrorState;
 import net.runelite.client.plugins.autoBossCore.trip.TripState;
@@ -106,6 +107,8 @@ public class WhispererAutoMain
 	private final MirrorState mirror;
 	private final ClickRouter router;
 	private final GroundItemTracker groundItems;
+	/** Shared potion-decant / inventory-tidy / make-room pass (SupplyProfile-driven). */
+	private final DecantManager decant;
 	private final ItemManager itemManager;
 	private final SchedulingTileDodger dodger;
 	private final PrayerSwapper prayers;
@@ -141,6 +144,8 @@ public class WhispererAutoMain
 	 *  alive). Anchors the loot pass: only drops
 	 *  spawned on/after this are this-kill loot, and the pickup grace/timeout count from it. */
 	private int lastDeathTick = -1;
+	/** getTickCounter() of the last between-fights top-off eat -- paces cleanup eating so it does not spam. */
+	private int lastCleanupEatTick = -100;
 
 	// --- Seed phase (crossing) --------------------------------------
 	// Populated each tick from the scene scan: the tiles of the good (47573) and bad (47574)
@@ -583,6 +588,7 @@ public class WhispererAutoMain
 		this.groundItems = groundItems;
 		this.itemManager = itemManager;
 
+		this.decant = new DecantManager(client, WhispererSupply.PROFILE);
 		this.engine = new ConsumptionEngine(WhispererSupply.PROFILE, mirror);
 		this.thrall = new ThrallManager(WhispererAutoIDs.THRALL_CAST_WIDGET, "Whisperer thrall");
 
@@ -825,6 +831,7 @@ public class WhispererAutoMain
 			}
 			deathPrayersOff = false;   // fresh fight -> re-arm prayer management
 			lastDeathTick = -1;        // fresh fight -> re-arm the loot pass
+			decant.reset();            // fresh fight -> abandon any mid-sequence inventory juggle
 			lastSpecial = null;        // fresh fight -> entry unknown again (seed-danger anticipation re-arms)
 			seedsSpawnedThisPhase = false;
 			tentacleRays.clear();      // fresh fight -> drop any stale tentacle hazard rays
@@ -4098,6 +4105,13 @@ public class WhispererAutoMain
 		// TODO 1 -> DONE: pick up the drop pile (event-driven tracker, richest first, take what fits).
 		if (pickUpLoot()) return true;       // still collecting -> hold the window
 
+		// Top off HP + prayer to full before the next kill -- a safe idle window, so it costs no DPS.
+		if (cleanupTopOffTick(tick)) return true;
+
+		// Loot done: tidy the inventory -- drop empty vials, consolidate partial potions, and make room to
+		// pick up a floor potion we can decant into our stock. One action per tick; safe in this idle window.
+		if (decant.tick(router, groundItems, tick)) return true;
+
 		// TODO 2: decide whether to keep going (start another kill) or stop / bank.
 		// TODO 3: wait for the Odd Figure (12203) to respawn (~10s) and top off supplies (eat / drink) if needed
 		//         while waiting -- this is a safe idle window, so a heal/sip here costs no DPS.
@@ -4142,6 +4156,7 @@ public class WhispererAutoMain
 		long bestGp = Long.MIN_VALUE;
 		for (GroundItemTracker.Entry e : groundItems.spawnedSince(lastDeathTick))
 		{
+			if (e.itemId == 229) continue;                   // junk -- never re-grab a dropped empty vial
 			if (!insideArenaWalls(e.tile)) continue;         // only this arena's drops
 			if (!inventoryHasRoomFor(e.itemId)) continue;    // take only what FITS (no sacrifice yet)
 			long gp = itemPrice(e.itemId) * Math.max(1, e.quantity);
@@ -4563,7 +4578,7 @@ public class WhispererAutoMain
 		b.allowComboEat(needFood);
 
 		// Prayer: sip around 45 (jittered) whenever low; when we're also eating, piggyback a free top-up.
-		ConsumptionEngine.requestPrayerSip(b, mirror, 45,
+		ConsumptionEngine.requestPrayerSip(b, mirror, 30,
 			WhispererSupply.PROFILE.prayerSipJitterWindow, needFood);
 
 		// TODO: offensive magic boost top-off + any utility potions (stamina, etc.) go here.
@@ -4592,6 +4607,27 @@ public class WhispererAutoMain
 			if (id > 0 && mirror.countItem(id) > 0) return id;
 		}
 		return -1;
+	}
+
+	/** Between-fights top-off: eat toward MAX hp and sip prayer to full before the next kill. Eats at most
+	 *  once every few ticks (no spam); prayer free-tops each tick. True while still restoring (hold the
+	 *  window), false once as full as the supplies allow. */
+	private boolean cleanupTopOffTick(int tick)
+	{
+		boolean full = mirror.getHp() >= mirror.getMaxHp();
+		boolean canEatNow = !full && tick - lastCleanupEatTick >= 3;   // ~eat delay, so we don't spam food
+		ConsumptionEngine.Request.Builder b = ConsumptionEngine.Request.builder();
+		b.wantEat(canEatNow);
+		b.allowComboEat(canEatNow);
+		ConsumptionEngine.requestPrayerSip(b, mirror, 30, WhispererSupply.PROFILE.prayerSipJitterWindow, true);
+		ConsumptionEngine.Result r = engine.evaluate(b.build());
+		if (r.hasAction())
+		{
+			if (r.primaryEat != null || r.comboEat != null) lastCleanupEatTick = tick;
+			applyConsumption(r);
+			return true;
+		}
+		return !full && tick - lastCleanupEatTick < 3;   // hold while a just-eaten bite is still landing
 	}
 
 	// -----------------------------------------------------------------

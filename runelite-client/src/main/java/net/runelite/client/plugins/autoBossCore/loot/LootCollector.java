@@ -35,6 +35,9 @@ public class LootCollector
 	private static final int ACTION_INTERVAL = 1;
 	/** Give up the pass this many ticks after the kill, so a stuck pickup can't hang the caller forever. */
 	private static final int TIMEOUT_TICKS = 60;
+	/** Never grab these junk ids even if they spawn in the loot window (e.g. an empty vial we just
+	 *  dropped after decanting -- otherwise the pass would immediately pick it back up). */
+	private static final int EMPTY_VIAL_ITEM_ID = 229;
 
 	private final Client client;
 	private final ItemManager itemManager;
@@ -97,6 +100,7 @@ public class LootCollector
 		long bestGp = Long.MIN_VALUE;
 		for (GroundItemTracker.Entry e : groundItems.spawnedSince(deathTick))
 		{
+			if (e.itemId == EMPTY_VIAL_ITEM_ID) continue;   // junk -- never re-grab a dropped empty vial
 			if (inArena != null && e.tile != null && !inArena.test(e.tile)) continue;
 			if (!hasRoomFor(e.itemId)) continue;
 			long gp = itemPrice(e.itemId) * Math.max(1, e.quantity);

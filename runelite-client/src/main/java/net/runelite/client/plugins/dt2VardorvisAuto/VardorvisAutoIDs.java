@@ -93,6 +93,16 @@ public final class VardorvisAutoIDs
 	public static final WorldPoint HOME_TEMPLATE      = new WorldPoint(1125, 3423, 0);
 	/** The single dodge tile. Two SE of home, outside the NW-corner axe path. */
 	public static final WorldPoint SAFE_TILE_TEMPLATE = new WorldPoint(1127, 3421, 0);
+	/** Second safe/dodge tile, one tile NORTH of the first. Used when BOTH home (camp) and the first
+	 *  safe tile are occupied -- e.g. an axe sits on the camp corner while a spike sprouts under the
+	 *  first safe tile, which otherwise makes the HOME<->SAFE dance oscillate into the moving axe. */
+	public static final WorldPoint SAFE_TILE_2_TEMPLATE = new WorldPoint(1127, 3422, 0);
+	/** Third fallback refuge (east of camp), used when BOTH camp and the first safe tile are compromised
+	 *  and the second safe tile is also blocked -- gives the planner two escape tiles to choose from. */
+	public static final WorldPoint SAFE_TILE_3_TEMPLATE = new WorldPoint(1126, 3423, 0);
+	/** Pre-wake staging tile. After a kill we stand here (with Protect from Melee up) before poking the
+	 *  next Vardorvis awake, so the wake is pre-empted from a known, safe position. */
+	public static final WorldPoint PREWAKE_TILE_TEMPLATE = new WorldPoint(1127, 3419, 0);
 
 	/*
 	 * Arena bounding box in TEMPLATE coords. Vardorvis arena is 11x11, with the HOME tile
@@ -111,6 +121,9 @@ public final class VardorvisAutoIDs
 	 *  by direction prediction. HOME is at the north edge -- do NOT use it as the
 	 *  classifier reference. */
 	public static final WorldPoint ARENA_CENTER_TEMPLATE = new WorldPoint(1129, 3418, 0);
+	/** Camera framing: detached overhead view centred here at ARENA_CAMERA_ZOOM. */
+	public static final WorldPoint ARENA_CAMERA_CENTER_TEMPLATE = new WorldPoint(1126, 3420, 0);
+	public static final int ARENA_CAMERA_ZOOM = 550;
 
 	/** Flying axe (12227) tile footprint size. */
 	public static final int AXE_SIZE = 3;
@@ -156,4 +169,7 @@ public final class VardorvisAutoIDs
 		ItemID._3DOSESTAMINA,
 		ItemID._4DOSESTAMINA
 	};
+
+	/** Empty vial left behind by decanting a potion. Dropped during the cleanup decant pass to free a slot. */
+	public static final int ITEM_EMPTY_VIAL = 229;
 }

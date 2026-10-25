@@ -12,12 +12,12 @@ public final class VardorvisSupply
 	private VardorvisSupply() {}
 
 	/**
-	 * HP eat threshold centred on 40 with a small +/-2 jitter ([38, 42]) for human-like variation.
+	 * HP eat threshold jittered over [25, 32] for human-like variation.
 	 * Note: with the opportunistic-eat model (request shark + kara each tick, the engine's overheal
 	 * cap is the real gate) this field is informational only; actual eating tops off whenever a food
-	 * still fits under the cap. Stays above the critical floor (35).
+	 * still fits under the cap. Stays above the critical floor (20).
 	 */
-	private static final int RANDOM_EAT_THRESHOLD = ThreadLocalRandom.current().nextInt(38, 43);
+	private static final int RANDOM_EAT_THRESHOLD = ThreadLocalRandom.current().nextInt(25, 33);
 
 	public static final SupplyProfile PROFILE = SupplyProfile.builder()
 		.food(
@@ -29,7 +29,7 @@ public final class VardorvisSupply
 		.potion(SupplyProfile.DrinkKind.SUPER_COMBAT, new SupplyProfile.PotionEntry(VardorvisAutoIDs.SUPER_COMBAT_DOSES, "Super combat"))
 		.potion(SupplyProfile.DrinkKind.STAMINA,      new SupplyProfile.PotionEntry(VardorvisAutoIDs.STAMINA_DOSES, "Stamina"))
 		.hpEatThreshold(RANDOM_EAT_THRESHOLD)
-		.hpEatCriticalThreshold(35)
+		.hpEatCriticalThreshold(20)
 		.prayerSipJitterWindow(8)
 		.prayerSipPokeFloor(50)
 		.runEnergySipStam(25)
