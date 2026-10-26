@@ -65,14 +65,27 @@ public class LootCollector
 	 */
 	public String collect(ClickRouter router, int deathTick, Predicate<WorldPoint> inArena)
 	{
+		return collect(router, deathTick, inArena, false);
+	}
+
+	/**
+	 * As {@link #collect(ClickRouter, int, java.util.function.Predicate)}, but when {@code includeAllTracked}
+	 * is true the pass considers EVERY tracked ground item (not only drops since {@code deathTick}). This lets
+	 * us come back for loot left behind on an earlier kill (e.g. a full inventory) instead of abandoning it.
+	 */
+	public String collect(ClickRouter router, int deathTick, Predicate<WorldPoint> inArena, boolean includeAllTracked)
+	{
 		if (router == null || groundItems == null || deathTick < 0) return null;
 		if (deathTick != passDeathTick) { passDeathTick = deathTick; sawLoot = false; }   // new kill -> fresh pass
 		int now = client.getTickCount();
 		if (now - deathTick < SPAWN_GRACE_TICKS) return "loot: waiting for drop pile";   // let the drops land first
 		if (now - deathTick > TIMEOUT_TICKS) return null;                                 // safety: never hang forever
-		GroundItemTracker.Entry best = bestLoot(deathTick, inArena);
+		GroundItemTracker.Entry best = bestLoot(deathTick, inArena, includeAllTracked);
 		if (best == null)
 		{
+			// Loot still on the ground but nothing fits (inventory full): HOLD so the caller frees a slot and we
+			// keep draining the pile across make-room cycles, instead of one pass then leaving loot behind.
+			if (includeAllTracked && hasAnyLoot(deathTick, inArena, includeAllTracked)) return "loot: full -- making room";
 			// If we've already grabbed loot this pass, an empty pile means we're DONE. If we haven't grabbed
 			// anything yet, the drops just may not have landed (DT2 loot can lag the kill by several ticks), so
 			// HOLD and keep checking until the timeout rather than bailing on tick one.
@@ -93,12 +106,25 @@ public class LootCollector
 		return "loot: collecting";
 	}
 
+	/** True if ANY non-vial tracked loot remains (ignoring inventory room) -- lets {@link #collect} tell a full
+	 *  inventory (hold & make room) apart from a cleared pile (done). */
+	private boolean hasAnyLoot(int deathTick, Predicate<WorldPoint> inArena, boolean includeAllTracked)
+	{
+		for (GroundItemTracker.Entry e : includeAllTracked ? groundItems.all() : groundItems.spawnedSince(deathTick))
+		{
+			if (e.itemId == EMPTY_VIAL_ITEM_ID) continue;
+			if (inArena != null && e.tile != null && !inArena.test(e.tile)) continue;
+			return true;
+		}
+		return false;
+	}
+
 	/** Highest total-GE-value this-kill ground item (optionally arena-filtered) that we have room to take. */
-	private GroundItemTracker.Entry bestLoot(int deathTick, Predicate<WorldPoint> inArena)
+	private GroundItemTracker.Entry bestLoot(int deathTick, Predicate<WorldPoint> inArena, boolean includeAllTracked)
 	{
 		GroundItemTracker.Entry best = null;
 		long bestGp = Long.MIN_VALUE;
-		for (GroundItemTracker.Entry e : groundItems.spawnedSince(deathTick))
+		for (GroundItemTracker.Entry e : includeAllTracked ? groundItems.all() : groundItems.spawnedSince(deathTick))
 		{
 			if (e.itemId == EMPTY_VIAL_ITEM_ID) continue;   // junk -- never re-grab a dropped empty vial
 			if (inArena != null && e.tile != null && !inArena.test(e.tile)) continue;

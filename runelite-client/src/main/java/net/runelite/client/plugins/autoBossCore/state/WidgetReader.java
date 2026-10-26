@@ -16,11 +16,11 @@ public final class WidgetReader
 	private WidgetReader() {}
 
 	/**
-	 * Packed component id of the universal boss HP bar HUD shared by the DT2 bosses (the in-fight
-	 * "current / max" health overlay). It reads 0 at the kill a few ticks before the NPC despawns.
-	 * Parse with {@link #fraction} (index 0 = current HP, index 1 = max), or use {@link #bossHp}.
+	 * Packed component id of the universal boss HP bar HUD shared by the DT2 bosses (group 303/child 21,
+	 * the in-fight "current / max" health overlay). It reads 0 at the kill a few ticks before the NPC
+	 * despawns. Parse with {@link #fraction} (index 0 = current HP, index 1 = max), or use {@link #bossHp}.
 	 */
-	public static final int BOSS_HP_COMPONENT = 19857428;
+	public static final int BOSS_HP_COMPONENT = 19857429;
 
 	/** Current boss HP from {@link #BOSS_HP_COMPONENT}, or -1 when the bar is not showing. */
 	public static int bossHp(Client client)

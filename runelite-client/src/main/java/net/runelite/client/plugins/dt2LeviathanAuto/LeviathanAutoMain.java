@@ -11,7 +11,10 @@ import net.runelite.api.Tile;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.autoBossCore.combat.ClickRouter;
+import net.runelite.client.plugins.autoBossCore.camera.ArenaCamera;
 import net.runelite.client.plugins.autoBossCore.loot.LootCollector;
+import net.runelite.client.plugins.autoBossCore.loot.GroundItemTracker;
+import net.runelite.client.plugins.autoBossCore.loot.DecantManager;
 import net.runelite.client.plugins.autoBossCore.combat.Hazard;
 import net.runelite.client.plugins.autoBossCore.combat.PrayerSwapper;
 import net.runelite.client.plugins.autoBossCore.combat.SchedulingTileDodger;
@@ -63,6 +66,8 @@ public class LeviathanAutoMain
 	private final SchedulingTileDodger dodger;
 	private final PrayerSwapper prayers;
 	private final LootCollector lootCollector;   // shared post-death loot pass
+	private final GroundItemTracker groundItems; // shared ground-item tracker (loot + decant make-room)
+	private final DecantManager decant;          // shared potion-decant / tidy / make-room pass
 
 	// --- Boss state -------------------------------------------------
 	private final ConsumptionEngine engine;
@@ -74,6 +79,9 @@ public class LeviathanAutoMain
 	private final PhaseTracker<LevPhase> phase;
 
 	private volatile boolean active = false;
+	/** Detached overhead arena camera (shared helper). */
+	private final ArenaCamera camera;
+	private WorldPoint lastCamCenter = null;   // instance tile the camera is currently framed on
 
 	// -----------------------------------------------------------------
 	// Section-1 dynamic configuration.
@@ -200,6 +208,14 @@ public class LeviathanAutoMain
 	private boolean deathPrayersOff = false;
 	/** getTickCount() of the kill, anchoring the post-death loot pass (-1 = not dead / loot done). */
 	private int lastDeathTick = -1;
+	/** Ticks of lookback when arming loot on a MISSED HP-0 read: anchor at despawn, reach back to the kill. */
+	private static final int LEVIATHAN_LOOT_LOOKBACK = 12;
+	/** Last readable boss HP, cached each tick. The HP bar can briefly read -1 (hidden) at the phase-2-end
+	 *  animation transition -- exactly when the next-section route is decided -- so we fall back to this. */
+	private int lastKnownBossHp = -1;
+	/** getTickCount() of the last between-fights top-off eat -- paces cleanup eating (no EatDelay here). */
+	private int lastCleanupEatTick = -100;
+	private int lastTopOffEatTick = -100;   // paces in-fight top-off eating during the safe run windows
 
 	/**
 	 * Projectile identities (endTick<<16 ^ id) we've already scheduled a prayer swap for,
@@ -305,6 +321,13 @@ public class LeviathanAutoMain
 	public enum EnrageQuadrant { UNKNOWN, NE, SE, SW, NW }
 	/** True once GFX_ENRAGE_PLUS has been seen. Cleared on fight start / Leviathan despawn. */
 	private boolean enragePhaseActive = false;
+	/** SW corner (TEMPLATE) of the 3x3 the GFX_ENRAGE_PLUS (2298) '+' marked at the instant enrage began --
+	 *  captured once and committed as the approach target, so we run straight there from wherever we were
+	 *  when it appeared instead of re-chasing the moving pathfinder (which dithered CW<->CCW). */
+	private WorldPoint enrageApproachTargetTemplate = null;
+	/** Eagle Eye enrage latch: set once we stand in the pathfinder 3x3 during enrage, then kept ON until
+	 *  the kill ends. Reset at fight start only (NOT per cycle). */
+	private boolean eagleEyeEnrageLatched = false;
 	/** Resolved from the + layout the tick enrage is first seen. */
 	private EnrageQuadrant enrageQuadrant = EnrageQuadrant.UNKNOWN;
 	/** The Abyssal Pathfinder reference once it spawns (NPC id 12220). */
@@ -505,7 +528,9 @@ public class LeviathanAutoMain
 		ClickRouter router,
 		SchedulingTileDodger dodger,
 		PrayerSwapper prayers,
-		LootCollector lootCollector)
+		LootCollector lootCollector,
+		ArenaCamera camera,
+		GroundItemTracker groundItems)
 	{
 		this.client  = client;
 		this.mirror  = mirror;
@@ -513,6 +538,9 @@ public class LeviathanAutoMain
 		this.dodger  = dodger;
 		this.prayers = prayers;
 		this.lootCollector = lootCollector;
+		this.camera = camera;
+		this.groundItems = groundItems;
+		this.decant = new DecantManager(client, LeviathanSupply.PROFILE);
 
 		this.engine = new ConsumptionEngine(LeviathanSupply.PROFILE, mirror);
 
@@ -532,6 +560,8 @@ public class LeviathanAutoMain
 	{
 		active = true;
 		leviathanWasPresent = false;
+		lastCamCenter = null;
+		decant.reset();
 		resetFightState();
 	}
 
@@ -558,8 +588,11 @@ public class LeviathanAutoMain
 		trackedRockDropTemplates.clear();
 		section2Phase = Section2Phase.UNKNOWN;
 		enragePhaseActive = false;
+		eagleEyeEnrageLatched = false;
+		lastKnownBossHp = -1;
 		enrageQuadrant = EnrageQuadrant.UNKNOWN;
 		abyssalPathfinder = null;
+		enrageApproachTargetTemplate = null;
 		shadowRushCast = false;
 		shadowRushCastConfirmed = false;
 		spineAttackDone = false;
@@ -591,7 +624,7 @@ public class LeviathanAutoMain
 		lastWalkTarget = null;
 		lastWalkTick = -100;
 	}
-	public void      stop()         { active = false;  }
+	public void      stop()         { camera.reset(); decant.reset(); active = false; lastCamCenter = null; }
 	public LevPhase  currentPhase() { return phase.current(); }
 	public TripState trip()         { return trip; }
 
@@ -613,11 +646,26 @@ public class LeviathanAutoMain
 		}
 	}
 
+	/** Frame the arena camera: detached overhead view centred on ARENA_CENTER_TEMPLATE (2081,6372) at zoom
+	 *  350. Applied once per instance (re-applies if the resolved tile changes); does not fight manual
+	 *  nudges within an instance, and only while we are in the Leviathan arena region. */
+	private void applyArenaCamera()
+	{
+		WorldPoint tpl = InstanceCoords.toTemplate(client, mirror.getPlayerTile());
+		if (tpl == null || tpl.getRegionID() != LeviathanAutoIDs.ARENA_REGION) return;   // only in the arena
+		WorldPoint centre = InstanceCoords.fromTemplate(client, LeviathanAutoIDs.ARENA_CENTER_TEMPLATE);
+		if (centre == null || centre.equals(lastCamCenter)) return;
+		camera.overhead(centre, LeviathanAutoIDs.ARENA_CAMERA_ZOOM);
+		lastCamCenter = centre;
+	}
+
 	public void onGameTick()
 	{
 		int tick = mirror.getTickCounter();
 
 		leviathan = findLeviathan();
+		int bhpNow = bossCurrentHp();
+		if (bhpNow >= 0) lastKnownBossHp = bhpNow;   // cache while readable; used when the bar is hidden
 		if (leviathanWasPresent && leviathan == null)
 		{
 			// Death / despawn: full reset so the next kill starts clean from the home
@@ -627,6 +675,9 @@ public class LeviathanAutoMain
 			// Backstop prayers-off on despawn (the HP-0 check below is the primary, earlier
 			// trigger). resetFightState cleared deathPrayersOff, so this re-disables cleanly.
 			turnPrayersOff(tick);
+			// Loot-arm backstop: if the HP-0 read was missed, the loot pass never got armed. Anchor it at
+			// despawn with a lookback so the GroundItemTracker still covers the drops that landed at the kill.
+			if (lastDeathTick < 0) lastDeathTick = client.getTickCount() - LEVIATHAN_LOOT_LOOKBACK;
 		}
 		leviathanWasPresent = (leviathan != null);
 
@@ -634,8 +685,17 @@ public class LeviathanAutoMain
 		// NPC despawns. Turn prayers off immediately (once) so we stop draining during the death
 		// animation. deathPrayersOff also gates watchPrayerProjectiles so a last in-flight shot
 		// can't flick an overhead back on.
-		if (!deathPrayersOff && leviathan != null && bossCurrentHp() == 0)
+		// Primary: HP bar reads 0. Fallback: Leviathan's death animation (10293) -- in case the HP bar
+		// hides without a clean 0 read, we still drop prayers at death.
+		if (!deathPrayersOff && leviathan != null
+			&& (bossCurrentHp() == 0 || leviathan.getAnimation() == LeviathanAutoIDs.ANIM_DEATH))
 		{
+			// Kill confirmed. Reset ALL per-fight state NOW -- phase-2 sub-phase (boulder/lightning), cycle
+			// index, section-1 progression, rock tracker -- so the NEXT kill in a multi-kill trip starts clean.
+			// The despawn-time reset doesn't reliably fire between back-to-back kills, which left phase 2 carrying
+			// over (e.g. starting on boulder because the previous fight ended on boulder). resetFightState leaves
+			// lastDeathTick untouched and clears deathPrayersOff, so re-arm both AFTER it.
+			resetFightState();
 			deathPrayersOff = true;
 			lastDeathTick = client.getTickCount();   // anchor the loot pass on the tracker's clock
 			turnPrayersOff(tick);
@@ -820,6 +880,21 @@ public class LeviathanAutoMain
 		dodger.onGameTick(tick);
 		prayers.onGameTick(tick);
 
+		// Eagle Eye: ON during DPS windows (section-1 roars, boulder, the post-Shadow-Rush back-hit) and
+		// latched ON through the enrage once we reach the pathfinder 3x3; OFF during lightning, the shadow-
+		// stun/approach, movement between windows, and outside the fight. EAGLE_EYE is not an overhead, so
+		// this never fights the projectile-driven protect swaps.
+		if (enragePhaseActive && isInsidePathfinderFootprint()) eagleEyeEnrageLatched = true;
+		if (wantEagleEye())
+		{
+			prayers.ensureOn(tick, Prayer.EAGLE_EYE);
+		}
+		else
+		{
+			prayers.ensureOnlyOn(tick, java.util.Collections.emptySet(),
+				java.util.Collections.singleton(Prayer.EAGLE_EYE));
+		}
+
 		// Prayers are driven entirely by watchPrayerProjectiles (called from pushHazards):
 		// pray against any prayable projectile in flight, overheads OFF whenever there's
 		// nothing to pray against. No phase-specific camp here -- the shadow-stun window
@@ -828,12 +903,34 @@ public class LeviathanAutoMain
 
 		if (!active) return;
 
+		applyArenaCamera();   // detached overhead framing; no-op once framed for this instance
+
 		// POST-DEATH LOOT: drain the drop pile (richest first, what fits) before anything else. Holds the tick
 		// while collecting; clears itself once the pile is gone / nothing fits / it times out.
 		if (lastDeathTick >= 0)
 		{
-			if (lootCollector.collect(router, lastDeathTick, null) != null) return;
+			String lootStatus = lootCollector.collect(router, lastDeathTick, null, true);  // includeAllTracked: never abandon leftover loot
+			if (lootStatus != null)
+			{
+				// Full inventory with nothing that fits: the pass would just hold on the pile until the loot
+				// timeout. Free a slot via decant/make-room (consolidate partials, drop vials, make room) so the
+				// NEXT tick can pick the drop up. Skip when collect just issued a take-click this tick (a stackable
+				// we already hold can be grabbed even at 28 slots) so we don't double-click. DecantManager self-
+				// gates make-room to "only when full".
+				if (inventoryFull() && !lootStatus.startsWith("loot: take")) decant.tick(router, groundItems, tick, true);
+				return;
+			}
 			lastDeathTick = -1;
+		}
+
+		// BETWEEN-FIGHTS, ON THE MOVE: once Leviathan is dead, run back to the start tile (the movement block
+		// below does that) while tidying up EN ROUTE. Fire ONE non-blocking action per tick -- top off HP/
+		// prayer/stamina first, else decant (drop empty vials + consolidate partial potions). We do NOT
+		// return, so the walk home still fires this tick. Make-room is disabled (false) so decant never
+		// walks us off the route to chase a floor potion.
+		if (leviathan == null)
+		{
+			if (!cleanupTopOffTick(tick)) decant.tick(router, groundItems, tick, false);
 		}
 
 		// Movement planning.
@@ -869,7 +966,12 @@ public class LeviathanAutoMain
 			// has resolved, skip THIS tick's walk when the weapon is off cooldown so the
 			// attack maintenance below fires. The walk resumes next tick (cooldown
 			// blocked), so we still reach the next tile -- just landing shots on the way.
-			boolean attackInsteadOfWalk = phase2EndResolved && leviathan != null
+			// Hit-and-run: interleave attacks with the walk while repositioning but safe this tick -- the
+			// post-phase-2 transit (as before) AND section 1 (if Leviathan spawned before we reached the start
+			// tile, we run there while landing shots). !currentDangerSoon keeps a dodge-walk from being traded
+			// for a shot.
+			boolean section1Run = phase.current() == LevPhase.FIGHT && !shadowRushCast && !enragePhaseActive;
+			boolean attackInsteadOfWalk = (phase2EndResolved || section1Run) && leviathan != null
 				&& canAttack(tick) && !shouldSuppressAttack() && !currentDangerSoon;
 			if (step != null && !step.equals(me) && !attackInsteadOfWalk)
 			{
@@ -893,7 +995,7 @@ public class LeviathanAutoMain
 				boolean ateThisTick = false;
 				if (eatPhaseAllowed())
 				{
-					ateThisTick = doConsumption(tick);
+					ateThisTick = doConsumption(tick, true);
 				}
 				int dx = Math.abs(step.getX() - me.getX());
 				int dy = Math.abs(step.getY() - me.getY());
@@ -1478,6 +1580,16 @@ public class LeviathanAutoMain
 
 			if (!current.equals(destInstance))
 			{
+				// After phase 2 resolves, our oscillation end tile sits ON a lightning lane/corner. Those
+				// count as bite tiles ONLY during this weave to the next roar start -- so before running
+				// there, step OFF the blacklist tile first (biased toward the destination), then resume next
+				// tick. Gated to phase2EndResolved: it is fine to stand on these tiles during the lightning
+				// phase itself (active lightning returns above anyway) and during the shadow-rush run.
+				if (phase2EndResolved && isOnLightningLane(current))
+				{
+					WorldPoint esc = enrageEscapeTile(current, tick, destInstance);
+					if (esc != null && !esc.equals(current)) return esc;
+				}
 				// Transit dodge: only interrupt the straight run if STANDING where we'd be next
 				// tick would put us on a live hazard. A hazard we merely pass through is ignored.
 				// On a hit, step one tile aside (staying closest to dest); the sidestep is a
@@ -1608,6 +1720,10 @@ public class LeviathanAutoMain
 		int centerY = LeviathanAutoIDs.ARENA_CENTER_TEMPLATE.getY();
 		int plane = cfg.plane;
 		java.util.List<WorldPoint> cands = new java.util.ArrayList<>();
+		// Stay-put candidate (dist 0): if the tile we're already standing on is still safe, hold it until
+		// the anchor clears instead of drifting one more tile aside each tick. In P2 current is bad, so
+		// it gets filtered out and we still step off. Restores the INCLUDES-current behavior the P1 caller documents.
+		cands.add(fromTpl);
 		if (cfg.axis == Axis.COLUMN)
 		{
 			int y = fromTpl.getY();
@@ -1651,9 +1767,13 @@ public class LeviathanAutoMain
 	// Assumed run speed for transit-dodge prediction. OSRS run moves 2 tiles/tick; walking
 	// moves 1. We check both so a low-energy walk tick is still covered.
 	private static final int RUN_TILES_PER_TICK = 2;
-	// How many ticks of the walked path to look ahead when checking for a hazard landing on
-	// us. The arena hop is short, so this rarely binds; it just caps the loop.
-	private static final int TRANSIT_DODGE_HORIZON = 10;
+	// How many ticks of the walked path to look ahead when checking for a hazard landing on us.
+	// Kept short (2) so we react to an IMMINENT path hazard like a human -- stepping aside a tick or
+	// two out -- instead of pausing many tiles early for a hazard we have not reached yet (Duke uses 2).
+	private static final int TRANSIT_DODGE_HORIZON = 2;
+	/** Max lookahead for isDestinationHazardAtArrival -- ~4 tiles at run speed. Beyond this the dodger's
+	 *  predictions are too noisy to act on, so a far target is not rejected on far-future hazards. */
+	private static final int ARRIVAL_HAZARD_MAX_TICKS = 2;
 	// BFS node budget for the in-arena path. The playable box is ~25x25, so a near goal is
 	// found in far fewer; this is a safety cap.
 	private static final int ARENA_PATH_BUDGET = 400;
@@ -1749,23 +1869,48 @@ public class LeviathanAutoMain
 		java.util.function.Predicate<WorldPoint> passable)
 	{
 		if (from == null || dest == null) return null;
-		WorldPoint best = null; int bestDist = Integer.MAX_VALUE;
-		for (int ddx = -1; ddx <= 1; ddx++)
+		// We RUN (RUN_TILES_PER_TICK tiles/tick), so consider every tile reachable in ONE run tick -- up to a
+		// knight's-L two-tile hop, not just a 1-tile sidestep. Pick the safe landing tile CLOSEST to dest
+		// (tiebreak: the bigger hop), so the dodge advances TOWARD the goal and loses no ground instead of
+		// stepping aside and stalling.
+		// Tiered: a dodge MUST survive arrival (now+1). Prefer a tile also safe at now+2, but if none
+		// qualifies accept an arrival-safe tile toward the goal rather than returning nothing (which made
+		// the caller walk straight into the hazard). Both tiers pick CLOSEST to dest, tiebreak bigger hop.
+		WorldPoint best2 = null; int best2Dist = Integer.MAX_VALUE; int best2Step = 0;  // safe now+1 AND now+2
+		WorldPoint best1 = null; int best1Dist = Integer.MAX_VALUE; int best1Step = 0;  // safe now+1 only (fallback)
+		for (int ddx = -RUN_TILES_PER_TICK; ddx <= RUN_TILES_PER_TICK; ddx++)
 		{
-			for (int ddy = -1; ddy <= 1; ddy++)
+			for (int ddy = -RUN_TILES_PER_TICK; ddy <= RUN_TILES_PER_TICK; ddy++)
 			{
 				if (ddx == 0 && ddy == 0) continue;
+				int step = Math.max(Math.abs(ddx), Math.abs(ddy));   // Chebyshev tiles this run tick (1..2)
 				WorldPoint cand = new WorldPoint(from.getX() + ddx, from.getY() + ddy, from.getPlane());
 				WorldPoint candTpl = InstanceCoords.toTemplate(client, cand);
 				if (candTpl == null || LeviathanAutoIDs.isInaccessibleTemplate(candTpl)) continue;
-				if (!passable.test(cand)) continue;  // never sidestep into a blocked tile (boss footprint / lane)
-				if (dodger.isTileDangerousAt(cand, now + 1)) continue;
-				if (dodger.isTileDangerousAt(cand, now + 2)) continue;
+				if (!passable.test(cand)) continue;  // never LAND on a blocked tile (boss footprint / lane)
+				if (step == 2)
+				{
+					// A 2-tile run passes through one intermediate (diagonal) tile: it must be walkable or the
+					// server can't reach cand this tick. The run SKIPS it, so a hazard there doesn't touch us.
+					WorldPoint mid = new WorldPoint(from.getX() + Integer.signum(ddx),
+						from.getY() + Integer.signum(ddy), from.getPlane());
+					WorldPoint midTpl = InstanceCoords.toTemplate(client, mid);
+					if (midTpl == null || LeviathanAutoIDs.isInaccessibleTemplate(midTpl) || !passable.test(mid)) continue;
+				}
+				if (dodger.isTileDangerousAt(cand, now + 1)) continue;   // hard: must survive arrival
 				int d = Math.max(Math.abs(cand.getX() - dest.getX()), Math.abs(cand.getY() - dest.getY()));
-				if (d < bestDist) { bestDist = d; best = cand; }
+				if (!dodger.isTileDangerousAt(cand, now + 2)
+					&& (d < best2Dist || (d == best2Dist && step > best2Step)))
+				{
+					best2Dist = d; best2 = cand; best2Step = step;
+				}
+				if (d < best1Dist || (d == best1Dist && step > best1Step))
+				{
+					best1Dist = d; best1 = cand; best1Step = step;
+				}
 			}
 		}
-		return best;
+		return best2 != null ? best2 : best1;   // prefer 2-tick-safe, else any arrival-safe tile toward the goal
 	}
 
 	/**
@@ -1917,7 +2062,43 @@ public class LeviathanAutoMain
 	// Supply.
 	// -----------------------------------------------------------------
 
-	private ConsumptionEngine.Request buildConsumptionRequest()
+	/** Between-fights top-off: eat toward MAX hp and sip prayer (and stamina) to full before tidy/decant.
+	 *  No EatDelay tracker here, so eating is paced with a ~3-tick gap. The ranged boost is NOT sipped --
+	 *  it would decay before the next kill. True while still restoring (hold the window), false once full. */
+	/** True when all 28 inventory slots are occupied. */
+	private boolean inventoryFull()
+	{
+		net.runelite.api.ItemContainer inv = client.getItemContainer(net.runelite.api.InventoryID.INVENTORY);
+		if (inv == null) return false;
+		int used = 0;
+		for (net.runelite.api.Item it : inv.getItems()) if (it != null && it.getId() >= 0) used++;
+		return used >= 28;
+	}
+
+	private boolean cleanupTopOffTick(int tick)
+	{
+		boolean full = mirror.getHp() >= mirror.getMaxHp();
+		boolean canEatNow = !full && tick - lastCleanupEatTick >= 3;
+		ConsumptionEngine.Request.Builder b = ConsumptionEngine.Request.builder();
+		b.wantEat(canEatNow);
+		b.allowComboEat(canEatNow);
+		ConsumptionEngine.requestPrayerSip(b, mirror, 30, LeviathanSupply.PROFILE.prayerSipJitterWindow, true);
+		if (mirror.getRunEnergy() <= LeviathanSupply.PROFILE.runEnergySipStam
+			&& LeviathanSupply.PROFILE.hasPotion(net.runelite.client.plugins.autoBossCore.consume.SupplyProfile.DrinkKind.STAMINA))
+		{
+			b.opportunisticSip(net.runelite.client.plugins.autoBossCore.consume.SupplyProfile.DrinkKind.STAMINA);
+		}
+		ConsumptionEngine.Result r = engine.evaluate(b.build());
+		if (r.hasAction())
+		{
+			if (r.primaryEat != null || r.comboEat != null) lastCleanupEatTick = tick;
+			applyConsumption(r);
+			return true;
+		}
+		return !full && tick - lastCleanupEatTick < 3;   // hold while a just-eaten bite is still landing
+	}
+
+	private ConsumptionEngine.Request buildConsumptionRequest(boolean topOff, int tick)
 	{
 		ConsumptionEngine.Request.Builder b = ConsumptionEngine.Request.builder();
 
@@ -1926,15 +2107,18 @@ public class LeviathanAutoMain
 		// and the enrage APPROACH run to the pathfinder. Everywhere else (roars, lightning,
 		// boulder, in-footprint enrage, transit back) eating is OFF -- the fight is mostly chip
 		// damage. No critical-HP override.
-		// Eat only in a safe (non-attacking) phase AND once HP has fallen to the threshold -- topping
-		// off wastes food and each eat delays our next attack (DPS loss).
-		boolean needFood = eatPhaseAllowed()
-			&& mirror.getHp() <= LeviathanSupply.PROFILE.hpEatThreshold;
+		// Eat only in a safe (non-attacking) phase. PARKED/attacking (topOff=false): wait for the HP
+		// threshold so an eat doesn't cost a shot. RUNNING through a safe window (topOff=true -- the walk
+		// to Leviathan's back and the run to the pathfinder): not attacking, so top off to full, paced to
+		// the ~3-tick food cooldown; primary food only (no combo) so we don't waste karambwan.
+		boolean needFood = eatPhaseAllowed() && (topOff
+			? (mirror.getHp() < mirror.getMaxHp() && tick - lastTopOffEatTick >= 3)
+			: (mirror.getHp() <= LeviathanSupply.PROFILE.hpEatThreshold));
 		b.wantEat(needFood);
-		b.allowComboEat(needFood);
+		b.allowComboEat(needFood && !topOff);
 
 		// Prayer: standalone sip below HALF of max (jittered); when eating, piggyback a free top-up.
-		ConsumptionEngine.requestPrayerSip(b, mirror, Math.max(1, mirror.getMaxPrayer() / 2),
+		ConsumptionEngine.requestPrayerSip(b, mirror, 30,
 			LeviathanSupply.PROFILE.prayerSipJitterWindow, needFood);
 
 		if (mirror.getRunEnergy() <= LeviathanSupply.PROFILE.runEnergySipStam
@@ -1960,25 +2144,41 @@ public class LeviathanAutoMain
 	/** Build, evaluate and apply the consumption request this tick. Returns true if an eat
 	 *  (primary or combo food) was actually issued. Skips entirely on the lightning end-arrival
 	 *  attack tick -- a same-tick attackNpc + CC_OP eat re-paths us off the oscillation. */
-	private boolean doConsumption(int tick)
+	private boolean doConsumption(int tick) { return doConsumption(tick, false); }
+
+	private boolean doConsumption(int tick, boolean topOff)
 	{
 		boolean lightningAttackThisTick = lightningPhaseActive && lightningEndAttackedAtTick == tick;
 		if (lightningAttackThisTick) return false;
-		ConsumptionEngine.Request req = buildConsumptionRequest();
+		ConsumptionEngine.Request req = buildConsumptionRequest(topOff, tick);
 		ConsumptionEngine.Result res = engine.evaluate(req);
 		applyConsumption(res);
-		return res != null && (res.primaryEat != null || res.comboEat != null);
+		boolean ate = res != null && (res.primaryEat != null || res.comboEat != null);
+		if (ate) lastTopOffEatTick = tick;
+		return ate;
 	}
 
 	private void applyConsumption(ConsumptionEngine.Result r)
 	{
 		if (r == null || !r.hasAction()) return;
-		if (r.drink      != null) router.useInventoryItem(bestDoseId(r.drink), "Drink");
+		// Potions (prayer / stamina / combat-boost) are only ever sipped INSIDE Leviathan's arena.
+		// Outside it (bank, Handholds approach, overworld) we never drink; food eating is unaffected.
+		boolean mayDrink = r.drink != null && isWithinLeviathanArena();
+		if (mayDrink) router.useInventoryItem(bestDoseId(r.drink), "Drink");
 		if (r.primaryEat != null) router.useInventoryItem(r.primaryEat.itemId, "Eat");
 		if (r.comboEat   != null) router.useInventoryItem(r.comboEat.itemId, "Eat");
 		// Restart the divine-ranging 5-min timer whenever a divine dose actually went down.
-		if (r.drink == net.runelite.client.plugins.autoBossCore.consume.SupplyProfile.DrinkKind.DIVINE_RANGE)
+		if (mayDrink && r.drink == net.runelite.client.plugins.autoBossCore.consume.SupplyProfile.DrinkKind.DIVINE_RANGE)
 			rangingBoost.onDivineSipped(mirror.getTickCounter());
+	}
+
+	/** True when the player's current tile is inside the mapped Leviathan arena box. Potions are
+	 *  gated to this -- we never sip outside the arena (bank, Handholds approach, overworld). */
+	private boolean isWithinLeviathanArena()
+	{
+		WorldPoint me = mirror.getPlayerTile();
+		if (me == null) return false;
+		return LeviathanAutoIDs.isWithinArenaTemplate(InstanceCoords.toTemplate(client, me));
 	}
 
 	/** Pick the LOWEST available dose id for a potion kind, so partial (1/2/3-dose) vials drain first and
@@ -2049,6 +2249,24 @@ public class LeviathanAutoMain
 		if (lightningPhaseActive) return true;
 		if (boulderPhaseActive) return true;
 		return false;
+	}
+
+	/** True while Eagle Eye should be up: the DPS windows (section-1 roars, boulder, and the post-Shadow-
+	 *  Rush back-hit), plus the whole enrage once we have reached the pathfinder 3x3 (latched to end of
+	 *  kill). OFF during lightning, the shadow-stun/approach, movement between windows, and out of fight.
+	 *  Per-cycle flags (shadowRushCast, section1RoarCount, boulder/lightning) reset in beginCycle, so this
+	 *  re-arms each cycle's roars; the enrage latch is the only state that persists across cycles. */
+	private boolean wantEagleEye()
+	{
+		if (deathPrayersOff) return false;                             // Leviathan HP hit 0 -- all prayers off, stay off
+		if (phase.current() != LevPhase.FIGHT) return false;
+		if (enragePhaseActive) return eagleEyeEnrageLatched;            // on once in the 3x3, stays on to kill end
+		if (lightningPhaseActive) return false;                        // lightning kite -- no DPS
+		if (shadowRushCast && !shadowRushCastConfirmed) return false;  // shadow-stun / moving to the back
+		if (boulderPhaseActive) return true;                           // boulder DPS
+		if (shadowRushCastConfirmed && !spineAttackDone) return !isTravelingToPostCast();  // off while walking to the back; on once ON the spine tile, then attack
+		if (!shadowRushCast && !isSection1Complete()) return true;     // section-1 roars
+		return false;                                                  // between windows / other movement
 	}
 
 	/** True if the player's current tile is inside the Abyssal Pathfinder's 3x3 footprint. */
@@ -2236,6 +2454,14 @@ public class LeviathanAutoMain
 		SectionConfig mapped = phase2End == null ? null : PHASE2_END_TO_NEXT_SECTION.get(phase2End);
 		if (mapped == null) return null;
 		int hp = bossCurrentHp();
+		if (hp < 0) hp = lastKnownBossHp;   // HP bar can read -1 at the phase-2-end anim transition; use last known
+		// After an east-lightning phase-2, our higher-than-expected DPS can leave Leviathan very low; the
+		// usual SW zigzag / low-HP north roar then over-runs the pathfinder setup. If HP <= NE_ROAR_HP_THRESHOLD
+		// (400), route straight to the NE-quadrant roar (2090,6380 = the mapped lightning follow-up) instead.
+		if (isEastLightningEnd(phase2End) && hp >= 0 && hp <= LeviathanAutoIDs.NE_ROAR_HP_THRESHOLD)
+		{
+			return mapped;
+		}
 		if (hp >= 0 && hp < LeviathanAutoIDs.LOW_HP_ROAR_THRESHOLD)
 		{
 			return LOW_HP_ROAR_CONFIG;
@@ -2486,6 +2712,15 @@ public class LeviathanAutoMain
 			if (g != null && g.getId() == LeviathanAutoIDs.GFX_ENRAGE_PLUS) { seen = true; break; }
 		}
 		if (!seen) return;
+		// Edge case: the enrage '+' markers (GFX_ENRAGE_PLUS) can appear while Leviathan is still
+		// mid smoke-blast (ANIM_SMOKE_BLAST, 10290) from the boulder-phase finisher. Committing to
+		// the enrage approach now means we start walking before that smoke attack lands and eat it.
+		// Defer to the next tick and re-check: as long as the smoke blast is animating we hold, and
+		// boulder-phase routing keeps us parked on the cluster until it resolves.
+		if (leviathan != null && leviathan.getAnimation() == LeviathanAutoIDs.ANIM_SMOKE_BLAST)
+		{
+			return;
+		}
 		enragePhaseActive = true;
 		// Boulder/lightning are over the moment enrage starts. Clear their state so
 		// their flags don't suppress attacks or route into stale targets.
@@ -2494,6 +2729,10 @@ public class LeviathanAutoMain
 		lightningChargeMsgTick = -100;
 		activeBoulderCluster = null;
 		activeLightningEnd = null;
+		// Snapshot the 2298 '+' footprint NOW, at the instant enrage begins, as the committed approach
+		// target: we run to this fixed 3x3 from wherever we are rather than re-chasing the moving NPC.
+		WorldPoint plusSw = enragePlusFootprintSW();
+		if (plusSw != null) enrageApproachTargetTemplate = InstanceCoords.toTemplate(client, plusSw);
 		// Resolve quadrant and stash pathfinder.
 		resolveEnrageQuadrantAndPathfinder();
 	}
@@ -2560,10 +2799,16 @@ public class LeviathanAutoMain
 				keys.add(((long) tile.getX() << 32) | (tile.getY() & 0xffffffffL));
 			}
 		}
+		// Also blacklist the four corner tiles where the lanes meet -- still enrage melee range.
+		for (WorldPoint tile : LeviathanAutoIDs.ENRAGE_CORNER_BLACKLIST)
+		{
+			keys.add(((long) tile.getX() << 32) | (tile.getY() & 0xffffffffL));
+		}
 		return keys;
 	}
 
-	/** True if the given INSTANCE tile corresponds to a template tile on any lightning lane. */
+	/** True if the given INSTANCE tile is a template tile on any lightning lane OR one of the four
+	 *  enrage corner-blacklist tiles -- all off-limits during enrage. */
 	private boolean isOnLightningLane(WorldPoint instanceTile)
 	{
 		if (instanceTile == null) return false;
@@ -2688,22 +2933,27 @@ public class LeviathanAutoMain
 	}
 
 	/**
-	 * The "leading + 1" tile in the direction of pathfinder travel: 1 tile past
-	 * the current leading edge, which is the leading edge of the pathfinder's
-	 * next-tick footprint. Clicking here means we arrive just as the pathfinder
-	 * slides forward to meet us. Y-coord (for EAST/WEST) is the middle row.
+	 * Nearest usable tile of the committed enrage approach target -- the 3x3 the 2298 '+' marked when
+	 * enrage began ({@link #enrageApproachTargetTemplate}), or {@code fallbackSw} (the live footprint) if
+	 * we never captured it. INSTANCE coords; falls back to the 3x3 center if no cell is usable.
 	 */
-	private WorldPoint leadPlusOneTile(WorldPoint sw, PathfinderDir dir)
+	private WorldPoint approachTargetNearestTile(WorldPoint current, int tick, WorldPoint fallbackSw)
 	{
-		int cx = sw.getX() + 1, cy = sw.getY() + 1, pl = sw.getPlane();
-		switch (dir)
-		{
-			case EAST:  return new WorldPoint(sw.getX() + 3, cy,            pl);
-			case WEST:  return new WorldPoint(sw.getX() - 1, cy,            pl);
-			case SOUTH: return new WorldPoint(cx,            sw.getY() - 1, pl);
-			case NORTH: return new WorldPoint(cx,            sw.getY() + 3, pl);
-			default:    return new WorldPoint(cx, cy, pl);
-		}
+		// Once the pathfinder NPC is live, approach ITS CURRENT footprint (fallbackSw) by shortest path.
+		// The 2298 snapshot only guides the PRE-SPAWN run -- it goes stale the moment the pathfinder slides
+		// off its spawn tile, and chasing it then runs us to an empty / unreachable spot (the red X click).
+		boolean npcLive = abyssalPathfinder != null && abyssalPathfinder.getWorldLocation() != null;
+		WorldPoint sw = (!npcLive && enrageApproachTargetTemplate != null)
+			? InstanceCoords.fromTemplate(client, enrageApproachTargetTemplate)
+			: fallbackSw;
+		if (sw == null) return null;
+		java.util.List<WorldPoint> cells = new java.util.ArrayList<>();
+		for (int x = sw.getX(); x <= sw.getX() + 2; x++)
+			for (int y = sw.getY(); y <= sw.getY() + 2; y++)
+				cells.add(new WorldPoint(x, y, sw.getPlane()));
+		WorldPoint t = nearestUsableEnrageTile(cells, current, tick);
+		if (t == null) t = new WorldPoint(sw.getX() + 1, sw.getY() + 1, sw.getPlane());
+		return t;
 	}
 
 	/** True if `tile` sits inside the 3x3 footprint rooted at `sw`. */
@@ -2731,6 +2981,17 @@ public class LeviathanAutoMain
 	 */
 	private WorldPoint planEnrageTile(WorldPoint current, int tick)
 	{
+		// ESCAPE (highest priority): if we are standing ON a forbidden tile -- a lightning lane or one
+		// of the four corner-blacklist tiles -- getting off it beats everything else (attacking, holding,
+		// chasing the pathfinder). Leviathan melees/bites anything parked here during enrage, so step to
+		// the nearest safe off-forbidden tile on the next possible tick. This covers both running to the
+		// pathfinder and maintaining its footprint. Only if no escape tile exists do we fall through to
+		// normal planning (whose scan also avoids these tiles).
+		if (isOnLightningLane(current))
+		{
+			WorldPoint esc = enrageEscapeTile(current, tick);
+			if (esc != null && !esc.equals(current)) return esc;
+		}
 		// Max-DPS short-circuit: if the weapon is off cooldown and the current tile
 		// won't be hit THIS tick, return null so step() falls through to the attack
 		// branch. We'll reposition on the next cooldown-blocked tick (walkTo cancels
@@ -2768,31 +3029,9 @@ public class LeviathanAutoMain
 		if (!npcSpawned)
 		{
 			if (inFootprint(current, sw)) return null;  // already inside -> hold & attack
-			// Aim for the LEADING edge in the pathfinder's (clockwise) travel direction, not the
-			// nearest tile: a 3x3 moving (say) east carries us longest if we start on its east
-			// column, since it slides east-edge -> middle -> west-edge -> exit over ~3 ticks. The
-			// heading comes from classifyPathfinderDirection on the footprint center (the same
-			// turn-tile rule the moving NPC uses). Among the leading-edge tiles pick the nearest
-			// SAFE one; if the whole leading edge is blocked, fall back to the nearest safe tile
-			// anywhere in the 3x3 so we still get inside before the spawn.
-			PathfinderDir preDir = classifyPathfinderDirection(new WorldPoint(sw.getX() + 1, sw.getY() + 1, plane));
-			java.util.List<WorldPoint> leadingEdge = new java.util.ArrayList<>();
-			switch (preDir)
-			{
-				case EAST:  for (int y = minY; y <= maxY; y++) leadingEdge.add(new WorldPoint(maxX, y, plane)); break;
-				case WEST:  for (int y = minY; y <= maxY; y++) leadingEdge.add(new WorldPoint(minX, y, plane)); break;
-				case SOUTH: for (int x = minX; x <= maxX; x++) leadingEdge.add(new WorldPoint(x, minY, plane)); break;
-				case NORTH: for (int x = minX; x <= maxX; x++) leadingEdge.add(new WorldPoint(x, maxY, plane)); break;
-			}
-			WorldPoint lead = nearestUsableEnrageTile(leadingEdge, current, tick);
-			if (lead == null)
-			{
-				java.util.List<WorldPoint> whole = new java.util.ArrayList<>();
-				for (int x = minX; x <= maxX; x++)
-					for (int y = minY; y <= maxY; y++) whole.add(new WorldPoint(x, y, plane));
-				lead = nearestUsableEnrageTile(whole, current, tick);
-			}
-			return guardEnrageApproach(current, lead, tick);  // leading-edge safe tile (null -> hold)
+			// Run to the committed 2298 footprint (snapshotted when enrage began) by the shortest lane-safe
+			// path from wherever we are -- no travel-direction bias. guardEnrageApproach keeps us off lanes.
+			return guardEnrageApproach(current, approachTargetNearestTile(current, tick, sw), tick);  // null -> hold
 		}
 
 		// Predict the pathfinder's next-tick footprint and decide where to click:
@@ -2807,24 +3046,23 @@ public class LeviathanAutoMain
 		boolean insideNextTick = inFootprint(current, swNext);
 		boolean cooldownReady = canAttack(tick);
 		if (insideNextTick && !isEnrageTileHazard(current, tick) && !isOnLightningLane(current)
-			&& (!cooldownReady || !isLosBlockedFromEnrageTile(current)))
+			&& (!cooldownReady || !isLosBlockedFromEnrageTile(current))
+			&& leadScore(current.getX(), current.getY(), sw.getX() + 1, sw.getY() + 1, dir) >= 1)
 		{
-			return null; // stay put: safe, in next-tick footprint, LOS OK when it matters
+			// Hold & attack ONLY at the leading edge or ahead. From center/trailing we fall through to the scan
+			// and advance to lead+1 -- otherwise the pathfinder's 1-tile slide keeps shoving us to the back.
+			return null;
 		}
 
-		// Lead+1 intercept: only when we're ALREADY close (inside current OR next
-		// footprint). Walking lead+1 while far behind would route us through tiles
-		// outside the pathfinder's radius. The 3x3 scan below handles catch-up.
-		if (insideNow || insideNextTick)
+		// FAR APPROACH: only for a genuine cross-arena run (enrage start, or we've lagged well behind) --
+		// nearest-tile targeting. When we've merely fallen 1-2 tiles off the BACK, the nearest tile is the
+		// trailing/center one and we'd just chase the pathfinder; hand those close cases to the lead+1 scan
+		// below instead. (dist > 4 ~= more than 2 tiles past the footprint edge = a real cross-arena gap.)
+		int ctrDist = Math.max(Math.abs(current.getX() - (sw.getX() + 1)), Math.abs(current.getY() - (sw.getY() + 1)));
+		if (!insideNow && !insideNextTick && ctrDist > 4)
 		{
-			WorldPoint lead = leadPlusOneTile(sw, dir);
-			if (lead != null
-				&& !isDestinationHazardAtArrival(lead, current, tick)
-				&& !isOnLightningLane(lead)
-				&& (!cooldownReady || !isLosBlockedFromEnrageTile(lead)))
-			{
-				if (!current.equals(lead)) return lead;
-			}
+			WorldPoint t = approachTargetNearestTile(current, tick, sw);
+			if (t != null && !t.equals(current)) return guardEnrageApproach(current, t, tick);
 		}
 
 		// Scan the 25 tiles for a stand-tile. Scoring (high to low priority):
@@ -2834,24 +3072,45 @@ public class LeviathanAutoMain
 		//   2. Chebyshev distance to our current tile -- minimize travel.
 		// Hard filters: hazards (3-tick lookahead) and lightning-lane tiles.
 		int cx = sw.getX() + 1, cy = sw.getY() + 1;
-		// dir already computed at the top of this method for the next-tick/lead+1 logic.
+		// Extend the scan ONE tile past the leading edge in the travel direction (the "lead+1" line): standing
+		// there puts us on the leading column AFTER the pathfinder slides, so we ride lead -> center -> trailing
+		// instead of being shoved to the trailing column every tick. leadScore makes those tiles win; lane tiles
+		// stay hard-excluded and the pick is routed lane-safely below, so we never path into bite range.
+		int sMinX = minX, sMaxX = maxX, sMinY = minY, sMaxY = maxY;
+		switch (dir)
+		{
+			case EAST:  sMaxX = maxX + 1; break;
+			case WEST:  sMinX = minX - 1; break;
+			case SOUTH: sMinY = minY - 1; break;
+			case NORTH: sMaxY = maxY + 1; break;
+		}
 		WorldPoint best = null;
 		int bestLead = Integer.MIN_VALUE;
+		boolean bestSafe = false;
 		int bestDist = Integer.MAX_VALUE;
-		for (int x = minX; x <= maxX; x++)
+		for (int x = sMinX; x <= sMaxX; x++)
 		{
-			for (int y = minY; y <= maxY; y++)
+			for (int y = sMinY; y <= sMaxY; y++)
 			{
 				WorldPoint cand = new WorldPoint(x, y, plane);
-				if (isDestinationHazardAtArrival(cand, current, tick)) continue;
-				if (isOnLightningLane(cand)) continue; // lightning-square sides are off-limits
+				WorldPoint candTpl = InstanceCoords.toTemplate(client, cand);
+				if (candTpl == null || LeviathanAutoIDs.isInaccessibleTemplate(candTpl)) continue; // lead+1 may be out of bounds
+				if (isOnLightningLane(cand)) continue; // lightning-square sides are off-limits (enrage melee range)
 				if (cooldownReady && isLosBlockedFromEnrageTile(cand)) continue; // only matters when we're shooting
 				int lead = leadScore(x, y, cx, cy, dir);
+				boolean safe = !isDestinationHazardAtArrival(cand, current, tick);
 				int d = Math.max(Math.abs(x - current.getX()), Math.abs(y - current.getY()));
-				if (lead > bestLead || (lead == bestLead && d < bestDist))
+				// Forward-ness (leadScore) DOMINATES: we hold the leading edge in the travel direction and never
+				// retreat behind it to dodge. Safety is only a tiebreak AMONG equally-forward tiles (prefer a safe
+				// leading-edge tile; else stay on the leading edge and eat the hit), then nearest.
+				boolean better = lead > bestLead
+					|| (lead == bestLead && safe && !bestSafe)
+					|| (lead == bestLead && safe == bestSafe && d < bestDist);
+				if (better)
 				{
 					best = cand;
 					bestLead = lead;
+					bestSafe = safe;
 					bestDist = d;
 				}
 			}
@@ -2859,7 +3118,7 @@ public class LeviathanAutoMain
 
 		if (best == null)
 		{
-			// All 25 tiles hazardous. Eat the hit at center rather than leave the zone.
+			// Every tile is a lane / LOS-blocked. Fall back to center rather than leave the zone.
 			WorldPoint centerFallback = new WorldPoint(cx, cy, plane);
 			return current.equals(centerFallback) ? null : centerFallback;
 		}
@@ -2883,14 +3142,26 @@ public class LeviathanAutoMain
 			WorldPoint aside = findTransitDodge(current, target, tick, this::enrageApproachPassable);
 			if (aside != null && !aside.equals(current))
 			{
-				return aside;
+				// NEVER dodge BACKWARD during the approach. At the sealed blacklist-corner bottleneck the only
+				// arrival-safe tile can be behind us (a rock blocks the single forward tile). Stepping there and
+				// forward again next tick as the rock clears is the east-side N/S oscillation. If the dodge loses
+				// ground toward the target, prefer to HOLD on our current tile (when it is safe to stand on) and
+				// let the rock land/clear; take the backward dodge only as a last resort if standing here is unsafe.
+				int curD   = Math.max(Math.abs(current.getX() - target.getX()), Math.abs(current.getY() - target.getY()));
+				int asideD = Math.max(Math.abs(aside.getX() - target.getX()),   Math.abs(aside.getY() - target.getY()));
+				if (asideD <= curD) return aside;   // dodge only when it does not lose ground
+				if (!dodger.isTileDangerousAt(current, tick + 1)) return current;  // backward dodge -> hold instead
+				return aside;                       // holding is unsafe -> accept the backward step
 			}
+			// Our next step lands on a hazard and no run-move toward the goal is arrival-safe: HOLD on the
+			// current (safe) tile and re-evaluate next tick -- never walk the straight waypoint into the hazard.
+			return current;
 		}
-		// Follow the lane-free BFS ROUTE rather than clicking the destination directly: a single
-		// click to a far tile lets the server path us straight THROUGH a lightning lane (bite
-		// range). Walk the route by clicking the farthest waypoint on the initial straight run of
-		// the lane-free path -- the server walks exactly that segment, and we re-evaluate (course-
-		// correct) each tick around every bend until we reach the destination off-lane.
+		// Click the farthest LANE-FREE waypoint toward the target rather than the target itself: a direct
+		// click lets the server path us straight THROUGH a lightning lane (Leviathan's melee/bite range).
+		// When the route is already a straight, lane-free line this waypoint IS the target -- one smooth
+		// click -- so it only bends us around a lane when one actually lies in the path (the redirect we
+		// want), re-evaluating at each bend. The single dodge above still handles a hazard on the route.
 		WorldPoint wp = nextLaneSafeWaypoint(current, target);
 		return wp != null ? wp : target;
 	}
@@ -2907,18 +3178,80 @@ public class LeviathanAutoMain
 			client.getTopLevelWorldView(), current, dest, this::enrageApproachPassable, this::inArenaInstance,
 			ARENA_PATH_BUDGET);
 		if (path.size() < 2) return null;
-		WorldPoint p1 = path.get(1);
-		int dx = Integer.signum(p1.getX() - current.getX());
-		int dy = Integer.signum(p1.getY() - current.getY());
-		int plane = current.getPlane();
-		WorldPoint best = p1;
+		// Click the FARTHEST tile on the lane-free route reachable in a single straight run -- the last path
+		// tile whose straight line from `current` is itself all lane-free + accessible. The server walks that
+		// clear line directly (no lane crossing), so one click covers the whole run instead of re-clicking
+		// every couple of tiles; it only shortens when a lane actually bends the route.
+		WorldPoint best = path.get(1);
 		for (int i = 2; i < path.size(); i++)
 		{
-			WorldPoint expected = new WorldPoint(current.getX() + dx * i, current.getY() + dy * i, plane);
-			if (!path.get(i).equals(expected)) break;  // route bends here -- click up to the bend
+			if (!straightLineClear(current, path.get(i))) break;
 			best = path.get(i);
 		}
 		return best;
+	}
+
+	/** True if the OSRS straight run from {@code a} to {@code b} (diagonal until axis-aligned, then
+	 *  cardinal) stays entirely on lane-free, accessible tiles -- so a single click walks it without
+	 *  the server detouring through a lightning lane. Used only by the enrage approach waypoint. */
+	private boolean straightLineClear(WorldPoint a, WorldPoint b)
+	{
+		int x = a.getX(), y = a.getY(), plane = a.getPlane();
+		while (x != b.getX() || y != b.getY())
+		{
+			x += Integer.signum(b.getX() - x);
+			y += Integer.signum(b.getY() - y);
+			WorldPoint t = new WorldPoint(x, y, plane);
+			if (!enrageApproachPassable(t)) return false;
+			WorldPoint tpl = InstanceCoords.toTemplate(client, t);
+			if (tpl == null || LeviathanAutoIDs.isInaccessibleTemplate(tpl)) return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Nearest tile to step to when we are standing on a forbidden enrage tile (a lightning lane or a
+	 * corner-blacklist tile). Spirals outward by Chebyshev radius and returns the closest tile that is
+	 * accessible, passable, off every forbidden tile, reachable by a lane-free straight run, and not a
+	 * hazard on arrival. Returns null if none is found within the search radius.
+	 */
+	private WorldPoint enrageEscapeTile(WorldPoint current, int tick)
+	{
+		return enrageEscapeTile(current, tick, null);
+	}
+
+	/**
+	 * As {@link #enrageEscapeTile(WorldPoint, int)}, but when {@code goal} is non-null the tiles in the
+	 * closest usable ring are tie-broken toward {@code goal} -- so we step OFF the blacklist tile in the
+	 * direction we actually want to run (e.g. toward the next roar start) rather than an arbitrary side.
+	 */
+	private WorldPoint enrageEscapeTile(WorldPoint current, int tick, WorldPoint goal)
+	{
+		int plane = current.getPlane();
+		for (int r = 1; r <= 4; r++)
+		{
+			WorldPoint best = null;
+			int bestGoalDist = Integer.MAX_VALUE;
+			for (int dx = -r; dx <= r; dx++)
+			{
+				for (int dy = -r; dy <= r; dy++)
+				{
+					if (Math.max(Math.abs(dx), Math.abs(dy)) != r) continue; // ring at radius r only
+					WorldPoint cand = new WorldPoint(current.getX() + dx, current.getY() + dy, plane);
+					WorldPoint tpl = InstanceCoords.toTemplate(client, cand);
+					if (tpl == null || LeviathanAutoIDs.isInaccessibleTemplate(tpl)) continue;
+					if (isOnLightningLane(cand)) continue;                 // off both lanes AND corners
+					if (!transitPassable(cand)) continue;
+					if (!straightLineClear(current, cand)) continue;       // don't cross a lane getting off
+					if (isDestinationHazardAtArrival(cand, current, tick)) continue;
+					if (goal == null) return cand;                         // no bias -> first in this ring
+					int gd = Math.max(Math.abs(cand.getX() - goal.getX()), Math.abs(cand.getY() - goal.getY()));
+					if (gd < bestGoalDist) { best = cand; bestGoalDist = gd; }
+				}
+			}
+			if (best != null) return best; // closest ring wins, biased toward goal
+		}
+		return null;
 	}
 
 	/** Strict hazard check (used when we're deciding whether to STAY on a tile):
@@ -2941,7 +3274,12 @@ public class LeviathanAutoMain
 		int dx = Math.abs(dest.getX() - from.getX());
 		int dy = Math.abs(dest.getY() - from.getY());
 		int cheby = Math.max(dx, dy);
-		int travelTicks = Math.max(1, (cheby + 1) / 2);
+		// "On arrival" means the IMPACT tick we would actually be standing there. Cap the lookahead at
+		// ARRIVAL_HAZARD_MAX_TICKS (~4 tiles at run speed): past that the dodger's rock predictions are
+		// noisy and flip tick-to-tick, which made the far cross-arena approach reject/jitter its target
+		// cell. A rock predicted 5-6 ticks out will have resolved before we get there anyway, and we
+		// re-evaluate the real stand tile with the close-range scan once we are within ~2 tiles.
+		int travelTicks = Math.min(ARRIVAL_HAZARD_MAX_TICKS, Math.max(1, (cheby + 1) / 2));
 		return dodger.isTileDangerousAt(dest, tick + travelTicks);
 	}
 
@@ -3178,6 +3516,8 @@ public class LeviathanAutoMain
 	 */
 	private int bossCurrentHp()
 	{
+		// Boss HP HUD (shared BOSS_HP_COMPONENT, group 303/child 21) -- a "cur / max" fraction; we take the
+		// numerator (current HP). Reads -1 when the bar is hidden; callers fall back to lastKnownBossHp.
 		int[] hp = WidgetReader.fraction(client, WidgetReader.BOSS_HP_COMPONENT);
 		return hp == null ? -1 : hp[0];
 	}

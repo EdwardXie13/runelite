@@ -247,6 +247,11 @@ public class ConsumptionEngine
 		return new ArrayList<>(m.values());
 	}
 
+	/** Minimum overheal (HP gained ABOVE max) an anglerfish-type food must grant to be worth eating when
+	 *  we're not in danger -- below this we save it instead of burning one for a tiny buffer. At HP level
+	 *  93+ this means eating anglerfish only at >= 89 HP. */
+	private static final int ANGLERFISH_MIN_OVERHEAL = 12;
+
 	/** Pick the best non-karambwan food in the inventory that fits HP room (highest fitting heal). */
 	protected FoodEntry pickPrimary()
 	{
@@ -255,16 +260,29 @@ public class ConsumptionEngine
 		int headroom = profile.overhealHeadroom;
 
 		// Any recognised non-combo food available (brought or scavenged, no distinction) that fits room.
+		// Prefer NORMAL food (shark) over overheal food (anglerfish): anglerfish wastes its level-scaled
+		// overheal when we're not buffering above max, so eat it only when no normal food fits.
 		FoodEntry best = null;
 		int bestHeal = -1;
+		FoodEntry bestOver = null;
+		int bestOverHeal = -1;
 		for (FoodEntry f : candidateFoods())
 		{
 			if (f.combo || mirror.countItem(f.itemId) <= 0) continue;
 			int heal = f.healAmount(maxHp);
-			if (hp + heal > f.ceiling(maxHp) - headroom) continue;   // would overheal
-			if (heal > bestHeal) { best = f; bestHeal = heal; }
+			if (hp + heal > f.ceiling(maxHp) - headroom) continue;   // would overheal past its own ceiling
+			if (f.ceiling(maxHp) > maxHp)
+			{
+				// Overheal food (anglerfish): worth eating only when it buffers us WELL above max. Skip unless the
+				// overheal (HP gained above max) is at least ANGLERFISH_MIN_OVERHEAL, so we don't burn one for a tiny
+				// buffer (at HP level 93+ that means HP >= 89). Critical-HP survival (eat anything) is handled below.
+				int overheal = Math.min(hp + heal, f.ceiling(maxHp)) - maxHp;
+				if (overheal >= ANGLERFISH_MIN_OVERHEAL && heal > bestOverHeal) { bestOver = f; bestOverHeal = heal; }
+			}
+			else if (heal > bestHeal) { best = f; bestHeal = heal; }
 		}
-		if (best != null) return best;
+		if (best != null) return best;         // normal food available -- eat it first
+		if (bestOver != null) return bestOver; // only overheal food (anglerfish) fits -- eat it now
 
 		// Everything overheals -- at critical HP eat the SMALLEST available anyway (waste the least),
 		// better to overheal a few than die on a 1hp miss.

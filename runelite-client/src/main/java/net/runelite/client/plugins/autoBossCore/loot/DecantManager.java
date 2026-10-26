@@ -77,13 +77,21 @@ public final class DecantManager
 	/** Run one decant/tidy action. Returns true while busy (hold the tick), false once idle. */
 	public boolean tick(ClickRouter router, GroundItemTracker ground, int tick)
 	{
+		return tick(router, ground, tick, true);
+	}
+
+	/** As {@link #tick(ClickRouter, GroundItemTracker, int)}, but {@code allowMakeRoom=false} suppresses the
+	 *  make-room juggle (which WALKS to a floor potion) -- use it when the caller is moving and must not be
+	 *  pulled off its route. Drop-empty-vial and potion consolidation (no walking) still run. */
+	public boolean tick(ClickRouter router, GroundItemTracker ground, int tick, boolean allowMakeRoom)
+	{
 		if (router == null) return busy();
 		if (tick - lastActionTick < COOLDOWN_TICKS) return busy();   // pace: one action per tick
 
 		if (room != Room.NONE) return advanceRoom(router, ground, tick);
 		if (dropEmptyVial(tick)) return true;
 		if (consolidateAll(tick)) return true;
-		if (tryStartMakeRoom(router, ground, tick)) return true;
+		if (allowMakeRoom && tryStartMakeRoom(router, ground, tick)) return true;
 		return false;
 	}
 

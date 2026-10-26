@@ -79,6 +79,10 @@ public final class LeviathanAutoIDs
 	 */
 	public static final int ANIM_PHASE2_END = 10287;
 
+	/** Leviathan's DEATH animation. Fallback trigger for turning prayers off if the HP-0 read is missed
+	 *  (the HP bar can hide without a clean 0 read). */
+	public static final int ANIM_DEATH = 10293;
+
 	/**
 	 * Diagnostic reference only: the "canonical" round-2 section-1 start tile
 	 * (south-step down the east column from here). The planner no longer uses
@@ -191,7 +195,7 @@ public final class LeviathanAutoIDs
 	 * Attack-idx pattern is now controlled by {@link #BOULDER_CLUSTER_ATTACK_IDXS}
 	 * independently of this flag.
 	 */
-	public static final boolean[] BOULDER_CLUSTER_WALKBACK = { false, false, true, true };
+	public static final boolean[] BOULDER_CLUSTER_WALKBACK = { false, false, false, true };  // SW walkback removed (hold on backfill idx5)
 
 	/** Boulder projectile id -- observed in-fight. */
 	public static final int PROJ_BOULDER = 2472;
@@ -277,17 +281,16 @@ public final class LeviathanAutoIDs
 	public static final int GOBJ_HANDHOLDS = 47592;
 
 	/**
-	 * Packed component id of the boss HP readout widget (group 303 / child 20). Its
-	 * {@code getText()} reads like "700/700" -- parse with
-	 * {@link net.runelite.client.plugins.autoBossCore.state.WidgetReader#fraction}.
-	 */
-
-	/**
 	 * Below this boss HP, section-1 roars are done from the north-row finisher spot
 	 * {@link LeviathanAutoMain#LOW_HP_ROAR_CONFIG} instead of the mapped lane. Checked
 	 * only at a roar-phase START (never mid-roars).
 	 */
 	public static final int LOW_HP_ROAR_THRESHOLD = 250;
+
+	/** After an east-lightning phase-2, if Leviathan HP is at/below this, route the follow-up roar to the
+	 *  NE quadrant (2090,6380) instead of the SW zigzag / low-HP north roar -- our high DPS otherwise
+	 *  over-runs the pathfinder setup. */
+	public static final int NE_ROAR_HP_THRESHOLD = 450;
 
 	/** Template tiles from which the player climbs the {@link #GOBJ_HANDHOLDS}. */
 	public static final WorldPoint[] HANDHOLDS_CLIMB_TILES_TEMPLATE = {
@@ -451,6 +454,18 @@ public final class LeviathanAutoIDs
 	};
 	public static final String[] LIGHTNING_LANE_NAMES = { "EAST", "SOUTH", "WEST", "NORTH" };
 
+	/** The four corner tiles where the lightning-lane square meets -- the lanes themselves stop one
+	 *  tile short of each corner, so these gaps are not covered by LIGHTNING_LANES. During enrage we
+	 *  must not stand here either (still inside Leviathan's melee/bite reach), so they are blacklisted
+	 *  alongside the lanes. */
+	public static final WorldPoint[] ENRAGE_CORNER_BLACKLIST = {
+		new WorldPoint(2076, 6377, 0), new WorldPoint(2086, 6377, 0),
+		new WorldPoint(2086, 6367, 0), new WorldPoint(2076, 6367, 0),
+		// Inner diagonal corners (one tile in from each outer corner) -- also enrage melee range.
+		new WorldPoint(2077, 6376, 0), new WorldPoint(2085, 6376, 0),
+		new WorldPoint(2077, 6368, 0), new WorldPoint(2085, 6368, 0),
+	};
+
 	// BOULDER_POST_SPINE removed -- the active boulder cluster's position 1 tile
 	// is picked dynamically now; see LeviathanAutoMain#pickBoulderClusterIfNeeded.
 
@@ -485,7 +500,9 @@ public final class LeviathanAutoIDs
 
 	// --- Enrage phase geometry --------------------------------------
 	/** Arena center (template coords). Used to classify the pathfinder's quadrant. */
-	public static final WorldPoint ARENA_CENTER_TEMPLATE = new WorldPoint(2081, 6372, 0);
+	public static final WorldPoint ARENA_CENTER_TEMPLATE = new WorldPoint(2083, 6372, 0);
+	/** Camera framing: detached overhead view centred on ARENA_CENTER_TEMPLATE (2081,6372) at this zoom. */
+	public static final int ARENA_CAMERA_ZOOM = 350;
 
 	/**
 	 * Enrage destination tiles. Pathfinder travels CLOCKWISE around the arena, so

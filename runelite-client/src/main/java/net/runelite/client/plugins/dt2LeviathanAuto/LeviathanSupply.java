@@ -12,12 +12,12 @@ public final class LeviathanSupply
 	private LeviathanSupply() {}
 
 	/**
-	 * Randomized HP eat threshold in [45, 50]. Note: with the autoBossCore
+	 * Randomized HP eat threshold in [27, 35]. Note: with the autoBossCore
 	 * opportunistic-eat default (always request shark + kara each tick, engine's
 	 * overheal cap is the real gate), this field is informational only. See
 	 * {@link net.runelite.client.plugins.autoBossCore.consume.ConsumptionEngine} classdoc.
 	 */
-	private static final int RANDOM_EAT_THRESHOLD = ThreadLocalRandom.current().nextInt(45, 51);
+	private static final int RANDOM_EAT_THRESHOLD = ThreadLocalRandom.current().nextInt(27, 36);
 
 	public static final SupplyProfile PROFILE = SupplyProfile.builder()
 		.food(
@@ -29,7 +29,7 @@ public final class LeviathanSupply
 		.potion(SupplyProfile.DrinkKind.RANGING, new SupplyProfile.PotionEntry(LeviathanAutoIDs.RANGING_DOSES, "Ranging"))
 		.potion(SupplyProfile.DrinkKind.STAMINA,      new SupplyProfile.PotionEntry(LeviathanAutoIDs.STAMINA_DOSES, "Stamina"))
 		.hpEatThreshold(RANDOM_EAT_THRESHOLD)
-		.hpEatCriticalThreshold(35)
+		.hpEatCriticalThreshold(26)
 		.prayerSipJitterWindow(8)
 		.prayerSipPokeFloor(50)
 		.runEnergySipStam(25)

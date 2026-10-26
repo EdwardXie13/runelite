@@ -70,6 +70,14 @@ public final class SupplyProfile
 		/** Anglerfish OVERHEALS: a level-scaled heal that can push HP above max (to maxHp + overheal boost). */
 		public static FoodEntry anglerfish(int id) { return new FoodEntry(id, "Anglerfish", ANGLERFISH); }
 
+		/** OSRS anglerfish: restores a level-scaled amount and may overheal above max. Boost by Hitpoints-level
+		 *  bracket (2/4/6/8/13) plus floor(level/10); e.g. 99 HP -> +22 (heals to 121). VERIFY the exact table. */
+		private static final HealModel ANGLERFISH = new HealModel()
+		{
+			@Override public int healAmount(int maxHp) { return anglerBoost(maxHp); }
+			@Override public int ceiling(int maxHp)    { return maxHp + anglerBoost(maxHp); }
+		};
+
 		/**
 		 * Every food the engine recognises, keyed by item id. Lets the engine eat ANY known food
 		 * found in the inventory -- e.g. a boss drop -- even when it was not brought as a supply.
@@ -113,14 +121,6 @@ public final class SupplyProfile
 				@Override public int ceiling(int maxHp)    { return maxHp; }
 			};
 		}
-
-		/** OSRS anglerfish: restores a level-scaled amount and may overheal above max. Boost by Hitpoints-level
-		 *  bracket (2/4/6/8/13) plus floor(level/10); e.g. 99 HP -> +22 (heals to 121). VERIFY the exact table. */
-		private static final HealModel ANGLERFISH = new HealModel()
-		{
-			@Override public int healAmount(int maxHp) { return anglerBoost(maxHp); }
-			@Override public int ceiling(int maxHp)    { return maxHp + anglerBoost(maxHp); }
-		};
 
 		private static int anglerBoost(int level)
 		{
