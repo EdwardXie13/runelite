@@ -25,6 +25,7 @@ import net.runelite.client.plugins.autoBossCore.state.MirrorState;
 import net.runelite.client.plugins.autoBossCore.state.SceneScanner;
 import net.runelite.client.plugins.autoBossCore.state.WidgetReader;
 import net.runelite.client.plugins.autoBossCore.trip.TripState;
+import net.runelite.client.plugins.autoBossCore.bank.BankRun;
 import net.runelite.client.plugins.autoBossCore.ui.BaseOverlay;
 
 import javax.inject.Inject;
@@ -76,6 +77,7 @@ public class LeviathanAutoMain
 	private final net.runelite.client.plugins.autoBossCore.consume.CombatBoostTracker rangingBoost =
 		new net.runelite.client.plugins.autoBossCore.consume.CombatBoostTracker();
 	private final TripState trip = new TripState();
+	private final BankRun bankRun;   // shared POH->bank travel run (WIP: manual F7-in-POH trigger)
 	private final PhaseTracker<LevPhase> phase;
 
 	private volatile boolean active = false;
@@ -543,6 +545,7 @@ public class LeviathanAutoMain
 		this.decant = new DecantManager(client, LeviathanSupply.PROFILE);
 
 		this.engine = new ConsumptionEngine(LeviathanSupply.PROFILE, mirror);
+		this.bankRun = new BankRun(client, mirror, router, LeviathanSupply.BANK);
 
 		this.phase = new PhaseTracker<>(LevPhase.OUT_OF_FIGHT)
 			.on(LevPhase.FIGHT, () -> leviathan != null && isLeviathanActive(),
@@ -563,6 +566,10 @@ public class LeviathanAutoMain
 		lastCamCenter = null;
 		decant.reset();
 		resetFightState();
+		// WIP banking: starting the bot while standing in the POH means "go bank" -- kick off the
+		// POH->pool->nexus->booth travel run. Starting anywhere else is a normal (combat) start.
+		bankRun.reset();
+		if (bankRun.inPoh()) bankRun.begin();
 	}
 
 	/**
@@ -624,7 +631,7 @@ public class LeviathanAutoMain
 		lastWalkTarget = null;
 		lastWalkTick = -100;
 	}
-	public void      stop()         { camera.reset(); decant.reset(); active = false; lastCamCenter = null; }
+	public void      stop()         { camera.reset(); decant.reset(); bankRun.reset(); active = false; lastCamCenter = null; }
 	public LevPhase  currentPhase() { return phase.current(); }
 	public TripState trip()         { return trip; }
 
@@ -662,6 +669,21 @@ public class LeviathanAutoMain
 	public void onGameTick()
 	{
 		int tick = mirror.getTickCounter();
+
+		// WIP banking: while a bank run is travelling it OWNS the tick -- skip all combat logic. Once it
+		// reaches the open bank (READY) it stops owning the tick; there is no restock/return leg yet, so
+		// we just idle at the open bank until F7 stops the bot.
+		if (bankRun.active())
+		{
+			bankRun.step(tick);
+			if (overlay != null) overlay.setStep(bankRun.label());
+			return;
+		}
+		if (bankRun.bankReady())
+		{
+			if (overlay != null) overlay.setStep(bankRun.label());
+			return;
+		}
 
 		leviathan = findLeviathan();
 		int bhpNow = bossCurrentHp();

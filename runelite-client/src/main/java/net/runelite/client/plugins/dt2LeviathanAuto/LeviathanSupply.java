@@ -2,6 +2,8 @@ package net.runelite.client.plugins.dt2LeviathanAuto;
 
 import java.util.concurrent.ThreadLocalRandom;
 import net.runelite.client.plugins.autoBossCore.consume.SupplyProfile;
+import net.runelite.client.plugins.autoBossCore.bank.BankProfile;
+import net.runelite.api.coords.WorldPoint;
 
 /**
  * Leviathan-specific supply profile. Mirrors Vardorvis's layout as a starting point.
@@ -34,5 +36,17 @@ public final class LeviathanSupply
 		.prayerSipPokeFloor(50)
 		.runEnergySipStam(25)
 		.overhealHeadroom(0)
+		.build();
+
+	/**
+	 * Banking run config (POH -> rejuvenation pool -> Portal Nexus -> Lunar Isle bank). WIP: the
+	 * teleport-to-POH leg is a placeholder for now because the first test starts INSIDE the POH (the
+	 * TELE_TO_POH step auto-completes when already in the house). Fill in the real teletab item id or
+	 * house-tele spell widget before relying on the teleport leg from the arena.
+	 */
+	public static final BankProfile BANK = BankProfile.builder()
+		.nexusOption("Lunar Isle")
+		.restoreAtPool(true)
+		.bankBoothTile(new WorldPoint(2099, 3920, 0))
 		.build();
 }

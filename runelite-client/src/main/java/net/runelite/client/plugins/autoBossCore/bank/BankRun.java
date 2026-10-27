@@ -10,6 +10,8 @@ import net.runelite.client.plugins.autoBossCore.state.MirrorState;
 import net.runelite.client.plugins.autoBossCore.state.SceneScanner;
 import net.runelite.client.plugins.autoBossCore.state.WidgetReader;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 /**
  * Shared, TICK-DRIVEN banking run for bosses that can't bank in place. Scope: get from "need to bank" to a
  * standing-open bank, restoring at the POH pool on the way. It does NOT withdraw/deposit -- that loadout is
@@ -60,6 +62,8 @@ public final class BankRun
 
 	private Phase phase = Phase.IDLE;
 	private int lastActionTick = Integer.MIN_VALUE / 2;
+	private int openBankArriveTick = -1;   // tick we landed on Lunar Isle; gates the pre-click pause
+	private int openBankDelay = 0;          // random 2-3 tick human beat before the first booth click
 	private boolean restoredThisVisit = false;
 	private String label = "";
 
@@ -74,9 +78,14 @@ public final class BankRun
 		phase = Phase.TELE_TO_POH;
 		restoredThisVisit = false;
 		lastActionTick = Integer.MIN_VALUE / 2;
+		openBankArriveTick = -1;
+		openBankDelay = 0;
 	}
 
-	public void reset()            { phase = Phase.IDLE; restoredThisVisit = false; }
+	public void reset()            { phase = Phase.IDLE; restoredThisVisit = false; openBankArriveTick = -1; openBankDelay = 0; }
+	/** True when the player is currently inside their POH -- the boss uses this to decide whether an
+	 *  F7 start should kick off a bank run (starting in the POH means "go bank") vs. a normal start. */
+	public boolean inPoh()         { return inMapRegion(POH_REGION); }
 	public boolean active()        { return phase != Phase.IDLE && phase != Phase.READY; }
 	public boolean bankReady()     { return phase == Phase.READY; }
 	public Phase phase()           { return phase; }
@@ -116,7 +125,17 @@ public final class BankRun
 				return true;
 
 			case NEXUS_TO_LUNAR:
-				if (inMapRegion(LUNAR_ISLE_REGION)) { phase = Phase.OPEN_BANK; return true; }
+				if (inMapRegion(LUNAR_ISLE_REGION))
+				{
+					// Arrived on Lunar Isle. Clear the recent nexus-click debounce, then wait a short random
+					// 2-3 tick beat before clicking the booth -- an instant on-arrival click looks robotic.
+					phase = Phase.OPEN_BANK;
+					lastActionTick = Integer.MIN_VALUE / 2;
+					openBankArriveTick = tick;
+					openBankDelay = ThreadLocalRandom.current().nextInt(3, 6);   // 3 - 5 ticks
+					label = "bank: landed, pausing";
+					return true;
+				}
 				GameObject nexus = SceneScanner.first(client, go -> isAnyId(go.getId(), NEXUS_IDS));
 				if (nexus == null) { label = "bank: waiting for nexus"; return true; }
 				interactDebounced(tick, nexus, MenuAction.GAME_OBJECT_FIRST_OPTION, profile.nexusOption,
@@ -126,7 +145,13 @@ public final class BankRun
 			case OPEN_BANK:
 				if (WidgetReader.isBankOpen(client)) { phase = Phase.READY; label = "bank: open"; return true; }
 				if (!inMapRegion(LUNAR_ISLE_REGION)) { label = "bank: arriving at bank"; return true; }
-				GameObject booth = SceneScanner.firstById(client, BANK_BOOTH_ID);
+				if (tick - openBankArriveTick < openBankDelay) { label = "bank: landed, pausing"; return true; }
+				// Open the SPECIFIC booth at profile.bankBoothTile when set (the scene has several Lunar booths;
+				// firstById can grab one across the counter / unreachable). Fall back to first-by-id otherwise.
+				GameObject booth = (profile.bankBoothTile != null)
+					? SceneScanner.first(client, go -> go.getId() == BANK_BOOTH_ID
+						&& profile.bankBoothTile.equals(go.getWorldLocation()))
+					: SceneScanner.firstById(client, BANK_BOOTH_ID);
 				if (booth == null) { label = "bank: waiting for booth"; return true; }
 				interactDebounced(tick, booth, MenuAction.GAME_OBJECT_SECOND_OPTION, "Bank", "bank: open booth");
 				return true;
