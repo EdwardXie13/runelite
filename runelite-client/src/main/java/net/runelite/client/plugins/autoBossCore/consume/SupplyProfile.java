@@ -18,7 +18,8 @@ public final class SupplyProfile
 {
 	public enum DrinkKind
 	{
-		PRAYER, ANTIFIRE, ANTIVENOM, SUPER_COMBAT, DIVINE_SUPER_COMBAT, STAMINA, RANGING, DIVINE_RANGE, DIVINE_MAGIC
+		PRAYER, ANTIFIRE, ANTIVENOM, SUPER_COMBAT, DIVINE_SUPER_COMBAT, STAMINA, RANGING, DIVINE_RANGE, DIVINE_MAGIC,
+		ANCIENT_BREW   // prayer restore (+ magic boost); see PotionDoseModel.ancientBrew* for the formulas
 	}
 
 	public static final class FoodEntry
@@ -143,6 +144,12 @@ public final class SupplyProfile
 			this.name = name;
 		}
 	}
+
+	/** Ancient brew dose item ids, index 0 = 1-dose .. index 3 = 4-dose. */
+	public static final int[] ANCIENT_BREW_DOSE_IDS = { 26346, 26344, 26342, 26340 };
+	/** Ancient brew as a library potion -- prayer restore (+ magic boost); decants like any other potion once
+	 *  a boss registers it with {@code .potion(DrinkKind.ANCIENT_BREW, SupplyProfile.ancientBrew())}. */
+	public static PotionEntry ancientBrew() { return new PotionEntry(ANCIENT_BREW_DOSE_IDS, "Ancient brew"); }
 
 	private final List<FoodEntry> foods;
 	private final FoodEntry comboFood;

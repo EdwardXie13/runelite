@@ -21,7 +21,7 @@ final class WhispererArena
 
 	/** The fight start tile (where P stands): we walk here, then wake the Whisperer. In the same traced
 	 *  overworld space as the walls. */
-	static final WorldPoint START_TILE = new WorldPoint(2656, 6364, PLANE);
+	static final WorldPoint START_TILE = new WorldPoint(2656, 6367, PLANE);
 
 	/** The Whisperer's CENTRE tile (she is stationary): 5 tiles due north of the player start. Her 3x3
 	 *  footprint is therefore x 2655-2657, y 6368-6370. Reference for her overworld position. */

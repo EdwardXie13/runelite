@@ -232,6 +232,13 @@ public class WhispererAutoMain
 	 *  Venator bow). We re-wield THIS on the swap-back, so a charged/variant weapon id the config can't know
 	 *  (e.g. a charged Tumeken's shadow vs the uncharged id in {@link WhispererWeapon}) still re-equips. */
 	private int savedMainWeaponId = -1;
+	/** Item id in the OFFHAND (shield) slot at siphon start, captured because the Venator bow is 2-handed
+	 *  and knocks a 1-handed main's offhand (e.g. Mage's book) into the inventory. Re-wielded on swap-back. */
+	private int savedOffhandId = -1;
+	/** Weapon profile LATCHED at the dormant->awake transition (your real gear is on then, before any
+	 *  siphon bow swap), held for the whole fight. null until a wake is seen / after she despawns, where
+	 *  effectiveCooldown()/effectiveRange() fall back to live detection (covers starting mid-fight). */
+	private WhispererWeapon detectedWeapon = null;
 	/** Venator bow attack range (tiles). The corners sit 6-8 tiles from her centre, so a single tile can't
 	 *  reach all four at this range -- we approach each group to within it, fire, then step to the next. */
 	private static final int VENATOR_RANGE_TILES = 6;
@@ -448,6 +455,7 @@ public class WhispererAutoMain
 	private static final int LOOT_TIMEOUT_TICKS = 60;
 	private int lastLootClickTick = -100;
 	private WorldPoint lastLootTile = null;
+	private int lastCleanupWalkTick = -100;   // paces the walk-to-start-tile after looting is done
 	/** Seed-danger tiles to forbid while seeds is imminent, in TEMPLATE / traced-overworld coords (converted
 	 *  to the live instance each tick). EMPTY placeholder -- fill with the provided world points. */
 	private static final WorldPoint[] SEED_BLACKLIST_TEMPLATE = {
@@ -628,13 +636,31 @@ public class WhispererAutoMain
 		return dx >= 0 ? "Flee East" : "Flee West";
 	}
 
+	/** The weapon profile actually in use: AUTO-DETECTED from the worn main-hand weapon (matched by item
+	 *  id against {@link WhispererWeapon}), falling back to the config dropdown for anything unknown (e.g.
+	 *  a standard-spells staff). The numeric overrides in the config still win over both. */
+	private WhispererWeapon activeWeapon()
+	{
+		ItemContainer eq = client.getItemContainer(InventoryID.EQUIPMENT);
+		if (eq != null)
+		{
+			Item w = eq.getItem(EquipmentInventorySlot.WEAPON.getSlotIdx());
+			if (w != null)
+			{
+				WhispererWeapon det = WhispererWeapon.fromItemId(w.getId());
+				if (det != null) return det;
+			}
+		}
+		return WhispererWeapon.STANDARD_SPELLS;   // not one of the detected weapons -> standard-spells profile
+	}
+
 	/** Effective attack cooldown in ticks: config override if > 0, else the selected weapon's,
 	 *  else the {@link WhispererAutoIDs} fallback (before the config is bound). */
 	private int effectiveCooldown()
 	{
 		if (config == null) return WhispererAutoIDs.WEAPON_COOLDOWN;
 		if (config.attackTickOverride() > 0) return config.attackTickOverride();
-		return config.weapon().cooldownTicks;
+		return (detectedWeapon != null ? detectedWeapon : activeWeapon()).cooldownTicks;
 	}
 
 	/** Effective attack range in tiles: config override if > 0, else the selected weapon's. */
@@ -642,7 +668,7 @@ public class WhispererAutoMain
 	{
 		if (config == null) return 10;
 		if (config.attackRangeOverride() > 0) return config.attackRangeOverride();
-		return config.weapon().rangeTiles;
+		return (detectedWeapon != null ? detectedWeapon : activeWeapon()).rangeTiles;
 	}
 
 	/** Effective tentacle dodge delay in ticks: config value if bound, else the {@link WhispererAutoIDs}
@@ -811,7 +837,7 @@ public class WhispererAutoMain
 			if (siphonWasActive)
 			{
 				equipMainWeapon();
-				mainWeaponSwapPending = false;
+				if (!gearNeedsRestore()) mainWeaponSwapPending = false;
 			}
 		}
 		siphonWasActive = siphonNow;
@@ -821,8 +847,10 @@ public class WhispererAutoMain
 		// tile we land on as the dance anchor and the tile one south of it. Latch firstSpecialStarted once any
 		// special begins (ends the dance). Clear it all when the fight ends (boss gone).
 		boolean awakeNow = whisperer != null && isWhispererAwake();
+		if (whisperer == null) detectedWeapon = null;   // fight over -> re-detect on the next wake
 		if (awakeNow && !wasWhispererAwake)
 		{
+			detectedWeapon = activeWeapon();   // latch the worn main weapon at wake (bow swap comes later)
 			WorldPoint k = mirror.getPlayerTile();
 			if (k != null)
 			{
@@ -1084,7 +1112,7 @@ public class WhispererAutoMain
 		// it now. Self-correcting: once worn, countItem == 0 and this stops. Gated on swingSpecial==NONE so it never
 		// fights the deferred wield inside the swing.
 		if (inOverworld() && isWhispererAwake() && !inSiphonPhase()
-			&& swingSpecial == Special.NONE && mainWeaponWieldId() > 0)
+			&& swingSpecial == Special.NONE && gearNeedsRestore())
 		{
 			equipMainWeapon();
 			mainWeaponSwapPending = false;
@@ -1788,9 +1816,12 @@ public class WhispererAutoMain
 		//    boss being in the scene; equipping claims the tick (returns true) so no walk cancels the wield.
 		if (mainWeaponSwapPending)
 		{
+			// equipMainWeapon restores ONE piece per tick (weapon first, offhand next -- no same-tick slot
+			// race). Keep the flag set, re-claiming the tick, until BOTH the weapon and the 1h offhand (e.g.
+			// Mage's book, knocked off by the 2h bow) are back on.
 			equipMainWeapon();
-			mainWeaponSwapPending = false;
-			step("Phase-end bind", "phase-end: equip main weapon");
+			if (!gearNeedsRestore()) mainWeaponSwapPending = false;
+			step("Phase-end bind", "phase-end: equip main weapon/offhand");
 			return true;
 		}
 
@@ -4053,10 +4084,12 @@ public class WhispererAutoMain
 		}
 		if (path == null || path.size() < 2) return null;
 		WorldPoint leg = firstRunEnd(path);   // END of the first straight leg: one click runs it, re-click to turn
-		// ...but only commit that whole leg when it actually gets us CLOSER to the goal. If the first leg arcs
-		// sideways/away (around her 5x5 or a ray wall), step ONE tile and re-plan next tick instead of running the
-		// wrong way -- this is what stops the "run 5 tiles out to a tentacle tile" overshoot.
-		if (leg == null || leg.distanceTo(goal) >= me.distanceTo(goal)) return path.get(1);
+		// Commit the whole first straight leg even when it arcs SIDEWAYS to round her 5x5 (going "up" before
+		// turning toward an east goal doesn't reduce Chebyshev distance, but it's the correct first move). The
+		// old "must get closer or step one tile" guard collapsed that rounding move into a redundant single-tile
+		// click. Safe to drop here: reposition only runs with hazardAvoid EMPTY (callers gate on it), so there is
+		// no tentacle tile to overshoot onto, and firstRunEnd already bounds the leg to the first turn.
+		if (leg == null) return path.get(1);
 		return leg;
 	}
 
@@ -4112,11 +4145,22 @@ public class WhispererAutoMain
 		// pick up a floor potion we can decant into our stock. One action per tick; safe in this idle window.
 		if (decant.tick(router, groundItems, tick)) return true;
 
+		// Looting + tidying done: walk back to the fight start tile so we're positioned for the next kill.
+		// (Arena is instanced -- convert the template start tile to this instance to walk/compare.)
+		WorldPoint me = mirror.getPlayerTile();
+		WorldPoint start = InstanceCoords.fromTemplate(client, WhispererArena.START_TILE);
+		if (me != null && start != null && me.distanceTo(start) > 0)
+		{
+			if (tick - lastCleanupWalkTick >= 3) { router.walkTo(start); lastCleanupWalkTick = tick; }
+			step("Cleanup", "cleanup: walk to start tile");
+			return true;
+		}
+
 		// TODO 2: decide whether to keep going (start another kill) or stop / bank.
 		// TODO 3: wait for the Odd Figure (12203) to respawn (~10s) and top off supplies (eat / drink) if needed
 		//         while waiting -- this is a safe idle window, so a heal/sip here costs no DPS.
 
-		step("Cleanup", "cleanup: loot done -- (TODO) decide / wait for respawn");
+		step("Cleanup", "cleanup: at start tile -- (TODO) wait for respawn");
 		return true;
 	}
 
@@ -4348,17 +4392,34 @@ public class WhispererAutoMain
 	}
 
 	/**
-	 * Equip the configured MAIN weapon from the inventory -- the swap-back after the siphon's Venator bow.
-	 * Keyed off {@link WhispererAutoConfig#weapon()} / {@link WhispererWeapon#itemId}; e.g. Shadow is the
+	 * Equip the MAIN weapon from the inventory -- the swap-back after the siphon's Venator bow. Resolves the
+	 * id live (captured worn id, else the auto-detected weapon's {@link WhispererWeapon#itemId}); e.g. Shadow is the
 	 * captured CC_OP id=3 itemId=27275 option='Wield'. The slot is resolved live by
 	 * {@link ClickRouter#useInventoryItem} (findInventorySlot), so it's slot-safe. No-op if the weapon's
 	 * id is unknown (-1) or it isn't in the inventory (already worn / absent).
 	 */
 	private void equipMainWeapon()
 	{
+		// Restore the main weapon AND the 1-handed offhand (e.g. Mage's book, knocked off by the 2h Venator
+		// bow) in the SAME tick, weapon-first. This has to be atomic with the blackstone cross-back: the next
+		// tick we have already left the shadow realm, so a deferred offhand wield is lost. Same-tick is
+		// slot-safe -- useInventoryItem resolves each item's slot independently, and removing one item never
+		// shifts another's slot, so the book's click stays valid after the weapon wield.
 		int id = mainWeaponWieldId();
-		if (id <= 0) return;                            // nothing to wield is in the inventory
-		router.useInventoryItem(id, 3, "Wield");
+		if (id > 0) router.useInventoryItem(id, 3, "Wield");                              // main weapon
+		if (offhandNeedsRestore()) router.useInventoryItem(savedOffhandId, 3, "Wield");   // 1h offhand, same tick
+	}
+
+	/** True if the saved offhand was knocked into the inventory by the 2h bow swap and is not worn again yet. */
+	private boolean offhandNeedsRestore()
+	{
+		return savedOffhandId > 0 && mirror.countItem(savedOffhandId) > 0;
+	}
+
+	/** True while either the main weapon or the offhand still needs re-wielding after a siphon bow swap. */
+	private boolean gearNeedsRestore()
+	{
+		return mainWeaponWieldId() > 0 || offhandNeedsRestore();
 	}
 
 	/** Snapshot the item id currently in our WEAPON equipment slot (called at siphon start, before we swap to the
@@ -4369,9 +4430,10 @@ public class WhispererAutoMain
 		if (eq == null) return;
 		Item w = eq.getItem(EquipmentInventorySlot.WEAPON.getSlotIdx());
 		if (w != null && w.getId() > 0) savedMainWeaponId = w.getId();
+		Item off = eq.getItem(EquipmentInventorySlot.SHIELD.getSlotIdx());
+		savedOffhandId = (off != null && off.getId() > 0) ? off.getId() : -1;   // -1 if 2h / no offhand worn
 		if (config != null && config.captureMode())
-			log.info("[weaponSwap] captured worn weapon id={} (config id={})",
-				savedMainWeaponId, config.weapon() == null ? -1 : config.weapon().itemId);
+			log.info("[weaponSwap] captured worn weapon id={} offhand id={}", savedMainWeaponId, savedOffhandId);
 	}
 
 	/** The id to wield as the main weapon, resolved to whatever is ACTUALLY in the inventory: first the exact id
@@ -4380,7 +4442,7 @@ public class WhispererAutoMain
 	private int mainWeaponWieldId()
 	{
 		if (savedMainWeaponId > 0 && mirror.countItem(savedMainWeaponId) > 0) return savedMainWeaponId;
-		WhispererWeapon w = config == null ? WhispererWeapon.STANDARD_SPELLS : config.weapon();
+		WhispererWeapon w = detectedWeapon != null ? detectedWeapon : WhispererWeapon.STANDARD_SPELLS;
 		if (w != null && w.itemId > 0 && mirror.countItem(w.itemId) > 0) return w.itemId;
 		return -1;
 	}

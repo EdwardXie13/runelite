@@ -13,13 +13,13 @@ import net.runelite.client.plugins.autoBossCore.state.WidgetReader;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Shared, TICK-DRIVEN banking run for bosses that can't bank in place. Scope: get from "need to bank" to a
- * standing-open bank, restoring at the POH pool on the way. It does NOT withdraw/deposit -- that loadout is
- * boss-specific, so the boss takes over once {@link #bankReady()} is true.
+ * Shared, TICK-DRIVEN banking run: from INSIDE THE POH to a standing-open Lunar Isle bank, restoring at the
+ * rejuvenation pool on the way. Getting to the POH is the boss's OWN job (there is no teleport here -- that is
+ * travel, which differs per boss); call {@link #begin()} only once already in the POH. It does NOT
+ * withdraw/deposit either -- that loadout is boss-specific, so the boss takes over once {@link #bankReady()}.
  *
  * <p>Pipeline (each phase advances on a real game signal, never a blocking wait):
  * <ol>
- *   <li>TELE_TO_POH   -- teletab / house-tele spell; done when the POH map region is loaded.</li>
  *   <li>RESTORE_POOL  -- Drink the rejuvenation pool once (latched on the drink anim); skipped if disabled.</li>
  *   <li>NEXUS_TO_LUNAR-- take the Portal Nexus option to the bank; done when the bank's map region loads.</li>
  *   <li>OPEN_BANK     -- click the bank booth; done when the bank interface opens.</li>
@@ -32,11 +32,10 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class BankRun
 {
-	public enum Phase { IDLE, TELE_TO_POH, RESTORE_POOL, NEXUS_TO_LUNAR, OPEN_BANK, READY }
+	public enum Phase { IDLE, RESTORE_POOL, NEXUS_TO_LUNAR, OPEN_BANK, READY }
 
 	// Map regions.
 	private static final int POH_REGION            = 7534;
-	private static final int POH_TRANSITION_REGION = 11826;   // the "entering your house" loading screen
 	private static final int LUNAR_ISLE_REGION     = 8253;
 
 	// Rejuvenation-pool drink animation (restore stats + run energy).
@@ -75,7 +74,7 @@ public final class BankRun
 	/** Boss calls this when it decides a bank run is needed. */
 	public void begin()
 	{
-		phase = Phase.TELE_TO_POH;
+		phase = Phase.RESTORE_POOL;
 		restoredThisVisit = false;
 		lastActionTick = Integer.MIN_VALUE / 2;
 		openBankArriveTick = -1;
@@ -101,20 +100,6 @@ public final class BankRun
 		{
 			case IDLE:
 				return false;
-
-			case TELE_TO_POH:
-				if (inMapRegion(POH_REGION)) { phase = Phase.RESTORE_POOL; restoredThisVisit = false; return true; }
-				if (inMapRegion(POH_TRANSITION_REGION)) { label = "bank: entering house"; return true; }
-				label = "bank: teleport to POH";
-				if (tick - lastActionTick >= ACTION_DEBOUNCE_TICKS)
-				{
-					lastActionTick = tick;
-					if (profile.teleportKind == BankProfile.TeleportKind.TELETAB)
-						router.useInventoryItem(profile.teleTabItemId, profile.teleTabOption);
-					else
-						router.castWidget(profile.houseTeleWidgetId, profile.houseTeleOption, profile.houseTeleName);
-				}
-				return true;
 
 			case RESTORE_POOL:
 				if (playerAnim() == POOL_DRINK_ANIM) restoredThisVisit = true;   // latch the drink

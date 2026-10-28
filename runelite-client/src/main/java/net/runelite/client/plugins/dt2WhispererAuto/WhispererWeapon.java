@@ -12,10 +12,10 @@ package net.runelite.client.plugins.dt2WhispererAuto;
  */
 public enum WhispererWeapon
 {
-	STANDARD_SPELLS("Standard spells",   5, 10, -1),
-	TRIDENT        ("Trident",           4, 10, 12899),   // Trident of the swamp
-	SANGUINESTI    ("Sanguinesti staff", 4, 10, -1),
-	SHADOW         ("Tumeken's shadow",  5, 10, 27275);
+	STANDARD_SPELLS("Standard spells", 5, 10, -1),
+	TRIDENT        ("Trident", 4, 7, 12899),   // Trident of the swamp
+	SANGUINESTI    ("Sang", 4, 7, 22323),
+	SHADOW         ("Shadow", 5, 8, 27275);
 
 	/** Human-readable name shown in the config dropdown. */
 	public final String label;
@@ -36,4 +36,13 @@ public enum WhispererWeapon
 
 	@Override
 	public String toString() { return label; }
+
+	/** The weapon whose wield item id matches {@code itemId}, or null if none (unknown weapon). Used to
+	 *  auto-detect the worn main-hand weapon instead of relying on the config dropdown. */
+	public static WhispererWeapon fromItemId(int itemId)
+	{
+		if (itemId <= 0) return null;
+		for (WhispererWeapon w : values()) if (w.itemId == itemId) return w;
+		return null;
+	}
 }

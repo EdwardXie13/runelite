@@ -33,15 +33,6 @@ public interface WhispererAutoConfig extends Config
 	String weaponSection = "weaponSection";
 
 	@ConfigItem(
-		keyName = "weapon",
-		name = "Weapon",
-		description = "Active weapon. Sets the default attack speed (ticks) and range (tiles).",
-		section = weaponSection,
-		position = 0
-	)
-	default WhispererWeapon weapon() { return WhispererWeapon.STANDARD_SPELLS; }
-
-	@ConfigItem(
 		keyName = "attackTickOverride",
 		name = "Attack tick override",
 		description = "Override the weapon's attack speed, in ticks. 0 = use the weapon default.",

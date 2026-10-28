@@ -26,6 +26,7 @@ public final class WhispererSupply
 			SupplyProfile.FoodEntry.shark(WhispererAutoIDs.FOOD_PRIMARY)
 		)
 		.potion(SupplyProfile.DrinkKind.PRAYER, new SupplyProfile.PotionEntry(WhispererAutoIDs.PRAYER_POT_DOSES, "Prayer potion"))
+		.potion(SupplyProfile.DrinkKind.ANCIENT_BREW, SupplyProfile.ancientBrew())   // prayer restore: drained before the prayer potion
 		.hpEatThreshold(RANDOM_EAT_THRESHOLD)
 		.hpEatCriticalThreshold(35)
 		.prayerSipJitterWindow(8)

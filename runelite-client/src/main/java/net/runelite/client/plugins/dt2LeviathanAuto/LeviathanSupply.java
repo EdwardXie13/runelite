@@ -39,10 +39,8 @@ public final class LeviathanSupply
 		.build();
 
 	/**
-	 * Banking run config (POH -> rejuvenation pool -> Portal Nexus -> Lunar Isle bank). WIP: the
-	 * teleport-to-POH leg is a placeholder for now because the first test starts INSIDE the POH (the
-	 * TELE_TO_POH step auto-completes when already in the house). Fill in the real teletab item id or
-	 * house-tele spell widget before relying on the teleport leg from the arena.
+	 * Banking config (POH -> rejuvenation pool -> Portal Nexus -> Lunar Isle booth). BankRun starts INSIDE
+	 * the POH -- getting there is the boss's own job -- and stops once the bank is open.
 	 */
 	public static final BankProfile BANK = BankProfile.builder()
 		.nexusOption("Lunar Isle")

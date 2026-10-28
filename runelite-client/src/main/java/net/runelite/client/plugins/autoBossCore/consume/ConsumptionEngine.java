@@ -61,6 +61,7 @@ public class ConsumptionEngine
 	// and this list only orders the universal drinks when several are fireable on one tick.
 	// Any requested kind NOT listed here is still consumed (divine variants first).
 	public static final List<DrinkKind> DEFAULT_DRINK_PRIORITY = Collections.unmodifiableList(Arrays.asList(
+		DrinkKind.ANCIENT_BREW,   // prayer restore: prefer ancient brew over the prayer potion when carried
 		DrinkKind.PRAYER,
 		DrinkKind.ANTIFIRE,
 		DrinkKind.ANTIVENOM,
@@ -221,15 +222,15 @@ public class ConsumptionEngine
 			// Free top-up: sip whenever there is room for a full dose (no-waste ceiling), jittered.
 			int topUp = Math.max(1, maxPray - (7 + maxPray / 4)
 				- java.util.concurrent.ThreadLocalRandom.current().nextInt(0, jw + 1));
-			if (pray <= topUp) b.requireSip(DrinkKind.PRAYER);
+			if (pray <= topUp) b.requireSip(DrinkKind.ANCIENT_BREW, DrinkKind.PRAYER);
 		}
 		else
 		{
 			// Standalone: jittered point around base, with a hard floor so we never run dry.
 			int floor = Math.max(1, base - jw);
 			int sipAt = Math.max(1, base - java.util.concurrent.ThreadLocalRandom.current().nextInt(0, jw + 1));
-			if (pray <= floor) b.requireSip(DrinkKind.PRAYER);
-			else if (pray <= sipAt) b.opportunisticSip(DrinkKind.PRAYER);
+			if (pray <= floor) b.requireSip(DrinkKind.ANCIENT_BREW, DrinkKind.PRAYER);
+			else if (pray <= sipAt) b.opportunisticSip(DrinkKind.ANCIENT_BREW, DrinkKind.PRAYER);
 		}
 	}
 
@@ -346,7 +347,7 @@ public class ConsumptionEngine
 		for (DrinkKind k : order)
 		{
 			if (!want.contains(k)) continue;
-			if (opportunistic && eating && k != DrinkKind.PRAYER) continue;
+			if (opportunistic && eating && k != DrinkKind.PRAYER && k != DrinkKind.ANCIENT_BREW) continue;
 			if (!canFire(k)) continue;
 			return k;
 		}
@@ -363,7 +364,7 @@ public class ConsumptionEngine
 		});
 		for (DrinkKind k : rest)
 		{
-			if (opportunistic && eating && k != DrinkKind.PRAYER) continue;
+			if (opportunistic && eating && k != DrinkKind.PRAYER && k != DrinkKind.ANCIENT_BREW) continue;
 			if (!canFire(k)) continue;
 			return k;
 		}

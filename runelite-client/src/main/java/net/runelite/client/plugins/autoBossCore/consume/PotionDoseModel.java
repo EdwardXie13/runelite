@@ -27,6 +27,23 @@ public final class PotionDoseModel
 		return countDoses(mirror, potion);
 	}
 
+	/** Prayer points ONE dose of Ancient brew restores: 2 + 10% of the Prayer LEVEL (floored). */
+	public static int ancientBrewPrayerPerDose(int prayerLevel) { return 2 + prayerLevel / 10; }
+
+	/** Highest prayer Ancient brew may take us to: max prayer + 5% of the Prayer level overheal (floored). */
+	public static int ancientBrewPrayerCeiling(int maxPrayer, int prayerLevel) { return maxPrayer + prayerLevel / 20; }
+
+	/** Magic levels Ancient brew boosts: 2 + 5% of the Magic level (floored). */
+	public static int ancientBrewMagicBoost(int magicLevel) { return 2 + magicLevel / 20; }
+
+	/** Prayer after {@code doses} sips of a potion restoring {@code perDose} each, capped at {@code ceiling}
+	 *  (use {@link #ancientBrewPrayerCeiling} for Ancient brew's overheal, or maxPrayer for a plain restore). */
+	public static int projectedPrayerCapped(int current, int ceiling, int perDose, int doses)
+	{
+		if (doses <= 0 || perDose <= 0) return current;
+		return Math.min(ceiling, current + doses * perDose);
+	}
+
 	public static int projectedPrayer(int current, int maxPrayer, int prayerLevel, int availableDoses)
 	{
 		if (availableDoses <= 0) return current;
