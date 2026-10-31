@@ -562,6 +562,14 @@ public class LeviathanAutoMain
 	public void      start()
 	{
 		active = true;
+		prayers.setPrayerRestoreItemIds(LeviathanSupply.PROFILE.prayerRestoreItemIds());   // enable the out-of-prayer gate
+		// Only track ground items dropped inside the arena region, so stray loot seen en route is never
+		// recorded (phantom loot target). TEMPLATE coords: raw regionID is the dynamic id inside an instance.
+		groundItems.setAcceptZone(wp ->
+		{
+			WorldPoint zTpl = InstanceCoords.toTemplate(client, wp);
+			return zTpl != null && zTpl.getRegionID() == LeviathanAutoIDs.ARENA_REGION;
+		});
 		leviathanWasPresent = false;
 		lastCamCenter = null;
 		decant.reset();
@@ -631,7 +639,7 @@ public class LeviathanAutoMain
 		lastWalkTarget = null;
 		lastWalkTick = -100;
 	}
-	public void      stop()         { camera.reset(); decant.reset(); bankRun.reset(); active = false; lastCamCenter = null; }
+	public void      stop()         { camera.reset(); decant.reset(); bankRun.reset(); active = false; lastCamCenter = null; groundItems.setAcceptZone(null); }
 	public LevPhase  currentPhase() { return phase.current(); }
 	public TripState trip()         { return trip; }
 

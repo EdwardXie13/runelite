@@ -180,6 +180,24 @@ public final class SupplyProfile
 	public FoodEntry backupFood()  { return foods.size() < 2 ? null : foods.get(1); }
 	public FoodEntry comboFood()   { return comboFood; }
 	public PotionEntry potion(DrinkKind k) { return potions.get(k); }
+
+	/**
+	 * Item ids of every prayer-restoring potion dose this profile carries (prayer potion + ancient brew), for
+	 * the PrayerSwapper out-of-prayer gate. Empty when the profile carries no prayer restore.
+	 */
+	public int[] prayerRestoreItemIds()
+	{
+		java.util.List<Integer> ids = new java.util.ArrayList<>();
+		for (DrinkKind k : new DrinkKind[]{ DrinkKind.PRAYER, DrinkKind.ANCIENT_BREW })
+		{
+			PotionEntry pot = potions.get(k);
+			if (pot == null) continue;
+			for (int id : pot.doseIds) if (id > 0) ids.add(id);
+		}
+		int[] out = new int[ids.size()];
+		for (int i = 0; i < out.length; i++) out[i] = ids.get(i);
+		return out;
+	}
 	public boolean hasPotion(DrinkKind k)  { return potions.containsKey(k); }
 
 	public static Builder builder() { return new Builder(); }

@@ -113,6 +113,7 @@ public class LootCollector
 		for (GroundItemTracker.Entry e : includeAllTracked ? groundItems.all() : groundItems.spawnedSince(deathTick))
 		{
 			if (e.itemId == EMPTY_VIAL_ITEM_ID) continue;
+			if (e.tile != null && !WorldPoint.isInScene(client, e.tile.getX(), e.tile.getY())) continue;   // not in loaded scene -> unreachable
 			if (inArena != null && e.tile != null && !inArena.test(e.tile)) continue;
 			return true;
 		}
@@ -127,6 +128,7 @@ public class LootCollector
 		for (GroundItemTracker.Entry e : includeAllTracked ? groundItems.all() : groundItems.spawnedSince(deathTick))
 		{
 			if (e.itemId == EMPTY_VIAL_ITEM_ID) continue;   // junk -- never re-grab a dropped empty vial
+			if (e.tile != null && !WorldPoint.isInScene(client, e.tile.getX(), e.tile.getY())) continue;   // not in loaded scene -> unreachable (e.g. tracked during travel)
 			if (inArena != null && e.tile != null && !inArena.test(e.tile)) continue;
 			if (!hasRoomFor(e.itemId)) continue;
 			long gp = itemPrice(e.itemId) * Math.max(1, e.quantity);

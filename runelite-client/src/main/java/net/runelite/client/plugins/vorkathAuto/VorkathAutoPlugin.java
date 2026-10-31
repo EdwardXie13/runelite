@@ -12,6 +12,8 @@ import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.input.KeyListener;
+import net.runelite.client.input.KeyManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.bloodRuneTrue.BloodRuneTrueMain;
@@ -20,6 +22,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -29,7 +32,7 @@ import static net.runelite.client.plugins.agilityAid.AgilityAidWorldPoints.CANFI
 
 @PluginDescriptor(name = "VorkathPlus", enabledByDefault = false)
 @Slf4j
-public class VorkathAutoPlugin extends Plugin {
+public class VorkathAutoPlugin extends Plugin implements KeyListener {
     @Inject
     private Client client;
 
@@ -47,6 +50,9 @@ public class VorkathAutoPlugin extends Plugin {
 
     @Inject
     private ItemManager itemManager;
+
+    @Inject
+    private KeyManager keyManager;
 
     @Getter
     private volatile WorldPoint localPlayerLocation;
@@ -324,6 +330,7 @@ public class VorkathAutoPlugin extends Plugin {
         }
         VorkathAutoObjectIDs.setAllVarsNull();
         overlayManager.add(overlay);
+        keyManager.registerKeyListener(this);
 
         if (main == null) {
             main = new VorkathAutoMain(client, clientThread, overlay, this, eventBus, itemManager);
@@ -334,8 +341,26 @@ public class VorkathAutoPlugin extends Plugin {
     @Override
     protected void shutDown() throws Exception {
         stopMain();
+        keyManager.unregisterKeyListener(this);
         VorkathAutoObjectIDs.setAllVarsNull();
         overlayManager.remove(overlay);
+    }
+
+    // --- F7 start/stop toggle (replaces the old chatbox "1"/"2" trigger) ---
+    @Override public void keyTyped(KeyEvent e) {}
+    @Override public void keyReleased(KeyEvent e) {}
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() != KeyEvent.VK_F7) return;
+        if (main != null && main.isRunning && hasStarted) {
+            stopMain();
+            hasStarted = false;
+        } else if (main == null || !main.isRunning) {
+            startMain();
+            hasStarted = true;
+        }
+        e.consume();
     }
 
     /** Start the worker thread. Idempotent — no-op if already running. */
@@ -406,7 +431,6 @@ public class VorkathAutoPlugin extends Plugin {
     public void onClientTick(ClientTick event) throws AWTException {
         try {
         if (main != null) main.updateMirroredGameState();   // push client-thread-only reads to worker-safe mirrors
-        toggleStatus();
         getShapeForTileObject();
         getClickboxes();
 
@@ -698,22 +722,6 @@ public class VorkathAutoPlugin extends Plugin {
     private String stripTargetAnchors(String text) {
         Matcher m = Pattern.compile("ff>(.*?)</c").matcher(text);
         return m.find() ? m.group(1) : "";
-    }
-
-    private void toggleStatus() {
-        Widget chatboxInput = client.getWidget(WidgetInfo.CHATBOX_MESSAGE_LINES);
-        if (chatboxInput == null) return;
-
-        String chatBoxMessage = stripTargetAnchors(chatboxInput.getText());
-        if(chatBoxMessage == null) return;
-
-        if (chatBoxMessage.equals("1") && (main == null || !main.isRunning) && !hasStarted) {
-            startMain();
-            hasStarted = true;
-        } else if (chatBoxMessage.equals("2") && main != null && main.isRunning && hasStarted) {
-            stopMain();
-            hasStarted = false;
-        }
     }
 
     public boolean getIsBankOpen() {

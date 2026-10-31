@@ -4,6 +4,7 @@ import net.runelite.api.Client;
 import net.runelite.api.GameObject;
 import net.runelite.api.Scene;
 import net.runelite.api.Tile;
+import net.runelite.api.WallObject;
 import net.runelite.api.coords.WorldPoint;
 
 import java.util.ArrayList;
@@ -83,6 +84,69 @@ public final class SceneScanner
 	public static GameObject firstById(Client client, int id)
 	{
 		return first(client, go -> go.getId() == id);
+	}
+
+	/**
+	 * The first {@link WallObject} (a gate / door built into a wall) on the current plane with id {@code id},
+	 * or {@code null}. Gates are wall objects, NOT game objects, so {@link #firstById} never finds them.
+	 */
+	public static WallObject firstWallById(Client client, int id)
+	{
+		if (client == null) return null;
+		Scene scene = client.getScene();
+		if (scene == null) return null;
+		Tile[][][] planes = scene.getTiles();
+		if (planes == null) return null;
+		int plane = client.getPlane();
+		if (plane < 0 || plane >= planes.length) return null;
+		Tile[][] tiles = planes[plane];
+		if (tiles == null) return null;
+		for (Tile[] col : tiles)
+		{
+			if (col == null) continue;
+			for (Tile t : col)
+			{
+				if (t == null) continue;
+				WallObject w = t.getWallObject();
+				if (w != null && w.getId() == id) return w;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * The {@link WallObject} with id {@code id} NEAREST to {@code from} (Chebyshev, same plane), or null.
+	 * Use this when several wall objects share an id (e.g. many identical gates in a region) and you want the
+	 * one in front of the player rather than whichever the scan hits first.
+	 */
+	public static WallObject nearestWallById(Client client, int id, WorldPoint from)
+	{
+		if (client == null || from == null) return null;
+		Scene scene = client.getScene();
+		if (scene == null) return null;
+		Tile[][][] planes = scene.getTiles();
+		if (planes == null) return null;
+		int plane = client.getPlane();
+		if (plane < 0 || plane >= planes.length) return null;
+		Tile[][] tiles = planes[plane];
+		if (tiles == null) return null;
+		WallObject best = null;
+		int bestD = Integer.MAX_VALUE;
+		for (Tile[] col : tiles)
+		{
+			if (col == null) continue;
+			for (Tile t : col)
+			{
+				if (t == null) continue;
+				WallObject w = t.getWallObject();
+				if (w == null || w.getId() != id) continue;
+				WorldPoint wp = w.getWorldLocation();
+				if (wp == null || wp.getPlane() != from.getPlane()) continue;
+				int d = Math.max(Math.abs(wp.getX() - from.getX()), Math.abs(wp.getY() - from.getY()));
+				if (d < bestD) { bestD = d; best = w; }
+			}
+		}
+		return best;
 	}
 
 	/**

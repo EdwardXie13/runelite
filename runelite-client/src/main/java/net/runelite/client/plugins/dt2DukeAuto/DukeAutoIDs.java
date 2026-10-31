@@ -2,6 +2,7 @@ package net.runelite.client.plugins.dt2DukeAuto;
 
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.gameval.ItemID;
+import net.runelite.client.plugins.autoBossCore.bank.BankProfile;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -486,4 +487,66 @@ public final class DukeAutoIDs
 		ItemID._3DOSESTAMINA,
 		ItemID._4DOSESTAMINA
 	};
+
+	// --- Auto-retaliate ----------------------------------------------
+	/** Auto-retaliate VarPlayer: 0 = ON, 1 = OFF. Duke must be fought with it OFF so his hits don't trigger
+	 *  an off-cadence auto-attack back at him (which fought our manual attack timing). */
+	public static final int VARP_AUTO_RETALIATE = 172;
+	/** Combat-options tab toggle for auto-retaliate (CC_OP). */
+	public static final int WIDGET_AUTO_RETALIATE = net.runelite.api.gameval.InterfaceID.CombatInterface.RETALIATE;
+
+	// --- Travel ------------------------------------------------------
+	/** Ghorrock Dungeon region -- arrival point of the Ring of shadows teleport (step 1 of the trip there). */
+	public static final int DUNGEON_REGION = 11681;
+	/** Ring of shadows, and its captured "Ghorrock Dungeon" inventory teleport (CC_OP op id + option). */
+	public static final int RING_OF_SHADOWS = 28327;
+	public static final int RING_GHORROCK_OP = 131075;
+	public static final String RING_GHORROCK_OPTION = "Ghorrock Dungeon";
+	/** Dungeon barriers on the way to the arena: a Gate ("Open") OR a Heavy Door ("Enter"), whichever is in
+	 *  the scene at each waypoint. */
+	public static final int GATE_OBJ = 46658;
+	public static final int HEAVY_DOOR_OBJ = 49513;
+	/** Ring of shadows teleport landing point -- the 5x5 around it is where we do the first (early) gate check. */
+	public static final WorldPoint RING_LANDING = new WorldPoint(2912, 10334, 0);
+	/** Up-close gate checkpoint (right by the gate) -- the second check in case the gate closed during the run. */
+	public static final WorldPoint DUNGEON_BARRIER_2 = new WorldPoint(2927, 10341, 0);
+	/** Isolation anchors: the gate we want at each barrier is the 46658 wall object NEAREST these tiles (many
+	 *  46658 gates share the id across region 11681). PLACEHOLDERS = the barrier waypoints; replace with the
+	 *  exact tile each target gate sits closest to. */
+	// Same single gate, checked twice: once early from the arrival area (open it so it's open by the time we
+	// run there) and again up close in case it closed during the run. Both anchors point at that gate tile.
+	public static final WorldPoint GATE_ANCHOR_1 = new WorldPoint(2927, 10340, 0);   // the ONE 46658 gate we open
+	public static final WorldPoint GATE_ANCHOR_2 = new WorldPoint(2927, 10340, 0);   // same gate, re-check up close
+	/** A 46658 gate is opened only when the nearest one is within this many tiles of the anchor; otherwise the
+	 *  barrier falls through to the Heavy Door. Keeps us from opening a distant duplicate gate. */
+	public static final int GATE_MATCH_RADIUS = 2;
+
+	// --- Boss instance entrance (region 12132 is BOTH the outside approach AND the instance) -------
+	/** Region 12132 is shared: template Y < this = OUTSIDE the instance (approach); Y >= this = inside. */
+	public static final int ARENA_INSTANCE_MIN_Y = 6433;
+	/** Instance entrance Gate (outside 12132), opened via GAME_OBJECT_FIRST_OPTION "Open" (target "Gate"). */
+	public static final int ENTRANCE_GATE = 49138;
+	/** Tile directly in front of the entrance gate -- isolate the one 49138 gate nearest here. */
+	public static final WorldPoint ARENA_DOOR_FRONT = new WorldPoint(3039, 6432, 0);
+
+	// --- Emergency teleport-out (under-supplied bail) -----------------------------------------------
+	/** Placeholder bail trigger: we teleport out when we DON'T hold a 4-dose prayer potion. */
+	public static final int PRAYER_POTION_4 = ItemID._4DOSEPRAYERRESTORE;
+	/** Construction cape -> "Tele to POH": CC_OP identifier 6 (action id=6 itemId=9790). */
+	public static final int CONSTRUCTION_CAPE = 9790;
+	public static final int CONSTRUCTION_CAPE_POH_OP = 6;
+	public static final String CONSTRUCTION_CAPE_POH_OPTION = "Tele to POH";
+	/** Teleport to house tablet -> "Break": CC_OP identifier 2 (action id=2 itemId=8013). */
+	public static final int HOUSE_TELETAB = 8013;
+	public static final int HOUSE_TELETAB_BREAK_OP = 2;
+	public static final String HOUSE_TELETAB_OPTION = "Break";
+
+	// --- Shared bank config (in-POH -> Lunar Isle booth), consumed by autoBossCore BankRun ------------
+	/** Exact tile of the Lunar Isle bank booth BankRun opens (same booth the ring-teleport trip starts from). */
+	public static final WorldPoint LUNAR_BANK_BOOTH_TILE = new WorldPoint(2099, 3920, 0);
+	public static final BankProfile BANK = BankProfile.builder()
+		.nexusOption("Lunar Isle")
+		.restoreAtPool(true)
+		.bankBoothTile(LUNAR_BANK_BOOTH_TILE)
+		.build();
 }

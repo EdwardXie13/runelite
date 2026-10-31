@@ -199,11 +199,18 @@ public class VardorvisAutoMain
 	public void    start()
 	{
 		active = true;
+		// Only track ground items dropped inside the arena region, so stray loot seen en route is never
+		// recorded (phantom loot target). TEMPLATE coords: raw regionID is the dynamic id inside an instance.
+		groundItems.setAcceptZone(wp ->
+		{
+			WorldPoint zTpl = InstanceCoords.toTemplate(client, wp);
+			return zTpl != null && zTpl.getRegionID() == VardorvisAutoIDs.ARENA_REGION;
+		});
 		loggedMissingNpcIds.clear();
 		cleanupActive = false; cleanupStartTick = -1; decant.reset();
 		lastCamCenter = null;
 	}
-	public void    stop()          { camera.reset(); active = false; lastCamCenter = null; }
+	public void    stop()          { camera.reset(); active = false; lastCamCenter = null; groundItems.setAcceptZone(null); }
 	public VardPhase currentPhase(){ return phase.current(); }
 	public TripState trip()        { return trip; }
 

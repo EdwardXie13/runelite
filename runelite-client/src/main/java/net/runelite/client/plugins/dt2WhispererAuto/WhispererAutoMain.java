@@ -710,10 +710,11 @@ public class WhispererAutoMain
 			e.setDeprioritized(true);
 		}
 	}
-	public void      start()        { active = true; }
+	public void      start()        { active = true; prayers.setPrayerRestoreItemIds(WhispererSupply.PROFILE.prayerRestoreItemIds()); groundItems.setAcceptZone(wp -> { WorldPoint zTpl = InstanceCoords.toTemplate(client, wp); return zTpl != null && zTpl.getRegionID() == WhispererAutoIDs.OVERWORLD_REGION; }); }
 	public void      stop()
 	{
 		active = false;
+		groundItems.setAcceptZone(null);   // overworld-only loot zone cleared (shared singleton)
 		// Drop any pending overhead swap so a stale one can't fire after toggle-off.
 		prayers.clearScheduled();
 		// Reset scout / crossing state so a re-toggle starts clean.

@@ -117,7 +117,7 @@ public final class BankRun
 					phase = Phase.OPEN_BANK;
 					lastActionTick = Integer.MIN_VALUE / 2;
 					openBankArriveTick = tick;
-					openBankDelay = ThreadLocalRandom.current().nextInt(3, 6);   // 3 - 5 ticks
+					openBankDelay = ThreadLocalRandom.current().nextInt(2, 4);   // 2 - 3 ticks
 					label = "bank: landed, pausing";
 					return true;
 				}

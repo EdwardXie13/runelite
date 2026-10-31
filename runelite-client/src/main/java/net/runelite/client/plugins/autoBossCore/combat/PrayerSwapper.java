@@ -2,7 +2,11 @@ package net.runelite.client.plugins.autoBossCore.combat;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.InventoryID;
+import net.runelite.api.Item;
+import net.runelite.api.ItemContainer;
 import net.runelite.api.Prayer;
+import net.runelite.api.Skill;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -39,6 +43,10 @@ public class PrayerSwapper
 	/** Guard: within this cooldown (ticks) we won't re-fire activation on the same prayer. */
 	private final Map<Prayer, Integer> lastClickTick = new HashMap<>();
 	private static final int SAME_PRAYER_CLICK_COOLDOWN = 2;
+
+	/** Prayer-restore dose ids the boss carries (prayer potion + ancient brew). When set, the swapper stops
+	 *  clicking prayers ON once prayer hits 0 and none of these remain. null/empty => gate off. */
+	private int[] prayerRestoreItemIds = null;
 
 	@Inject
 	public PrayerSwapper(Client client, ClickRouter router)
@@ -139,6 +147,24 @@ public class PrayerSwapper
 	// Helpers.
 	// -----------------------------------------------------------------
 
+	/** Configure the prayer-restore dose ids the active boss carries, enabling the out-of-prayer gate. */
+	public void setPrayerRestoreItemIds(int... ids) { this.prayerRestoreItemIds = ids; }
+
+	/** True unless the gate is configured AND no configured prayer-restore dose is in the inventory. Errs to
+	 *  true (never wrongly blocks) when unconfigured or the inventory can't be read. */
+	private boolean hasPrayerRestore()
+	{
+		if (prayerRestoreItemIds == null || prayerRestoreItemIds.length == 0) return true;
+		ItemContainer inv = client.getItemContainer(InventoryID.INVENTORY);
+		if (inv == null) return true;
+		for (Item it : inv.getItems())
+		{
+			if (it == null) continue;
+			for (int id : prayerRestoreItemIds) if (it.getId() == id) return true;
+		}
+		return false;
+	}
+
 	private void click(Prayer p, int tickCounter)
 	{
 		Integer last = lastClickTick.get(p);
@@ -150,6 +176,14 @@ public class PrayerSwapper
 			return;
 		}
 		boolean want = !client.isPrayerActive(p);
+		// Out-of-prayer short-circuit: at 0 prayer points with no restore left in the pack there is no point
+		// clicking a prayer ON (the game refuses activation at 0 and nothing will refill it) -- blocking the
+		// wasted clicks lets the boss's own survival logic take over. Deactivation (want == false) still fires.
+		if (want && client.getBoostedSkillLevel(Skill.PRAYER) <= 0 && !hasPrayerRestore())
+		{
+			log.debug("[pray] skip activate {} -- 0 prayer and no restore in pack", p);
+			return;
+		}
 		String name = Prayers.name(p);
 		log.info("[pray] click tick={} prayer={} widgetId=0x{} name='{}' action={}",
 			tickCounter, p, Integer.toHexString(widget), name, want ? "Activate" : "Deactivate");

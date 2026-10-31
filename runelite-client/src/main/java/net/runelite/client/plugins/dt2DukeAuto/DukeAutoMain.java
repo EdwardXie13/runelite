@@ -12,6 +12,7 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldArea;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.autoBossCore.camera.ArenaCamera;
+import net.runelite.client.plugins.autoBossCore.bank.BankRun;
 import net.runelite.client.plugins.autoBossCore.combat.ClickRouter;
 import net.runelite.client.plugins.autoBossCore.loot.LootCollector;
 import net.runelite.client.plugins.autoBossCore.loot.GroundItemTracker;
@@ -84,6 +85,7 @@ public class DukeAutoMain
 	private final PrayerSwapper prayers;
 	private final ArenaCamera camera;
 	private final LootCollector lootCollector;   // shared post-death loot pass
+	private final BankRun bankRun;               // shared POH -> Lunar bank run (pool + nexus + open bank)
 	private WorldPoint lastCamTemplate = null;   // last overhead camera centre applied (template), to avoid re-spam
 	private int lastCamZoom = -1;                // last overhead camera zoom applied, to avoid re-spam
 	/** getTickCount() of the kill, anchoring the post-death loot pass (-1 = not dead / loot done). */
@@ -116,6 +118,15 @@ public class DukeAutoMain
 
 	private NPC duke;
 	private int lastAttackTick = -100;
+	private int lastRetaliateToggleTick = -100;
+	private static final int RETALIATE_TOGGLE_COOLDOWN = 3;   // ticks between toggle attempts (let the varp settle)
+	private int lastTravelActionTick = -100;
+	private int lastTeleOutTick = -100;   // last emergency teleport-out click (throttled like travel)
+	private static final int TRAVEL_ACTION_COOLDOWN = 4;   // ticks between travel clicks (teleport / walk / enter)
+	/** Gate for the whole trip-to-boss sequence. Set true after banking/restock completes; hardcoded for now. */
+	private boolean readyForBoss = true;
+	private static final int ANIM_RING_TELEPORT = 10134;   // Ring of shadows teleport animation
+	private boolean ringTpInFlight = false;   // latched when the TP anim starts; blocks re-clicks until we arrive
 	/** Shared eat/combo-eat attack-delay tracker (see autoBossCore EatDelay). */
 	private final EatDelay eatDelay = new EatDelay();
 	/** Tick Duke last STARTED his melee attack animation, and his previous-tick anim (to detect the start). */
@@ -378,6 +389,7 @@ public class DukeAutoMain
 		this.lootCollector = lootCollector;
 		this.groundItems = groundItems;
 		this.decant = new DecantManager(client, DukeSupply.PROFILE);
+		this.bankRun = new BankRun(client, mirror, router, DukeAutoIDs.BANK);
 
 		this.engine = new ConsumptionEngine(DukeSupply.PROFILE, mirror);
 		this.thrall = new ThrallManager(DukeAutoIDs.THRALL_CAST_WIDGET, "Duke thrall");
@@ -413,8 +425,20 @@ public class DukeAutoMain
 		sawDeathAnim = false;
 		vatState.clear();
 		active = true;
+		readyForBoss = true;   // F7 = ready to go -- clear any sticky 'bailed under-supplied' state from a prior run
+		prayers.setPrayerRestoreItemIds(DukeSupply.PROFILE.prayerRestoreItemIds());   // enable the out-of-prayer gate
+		// Only track ground items that drop inside the arena region, so loot seen while running in through
+		// Ghorrock Dungeon (e.g. a stray Iron bar) is never recorded and can't become a phantom loot target.
+		bankRun.reset();
+		groundItems.setAcceptZone(wp ->
+		{
+			// Convert to TEMPLATE coords first: inside the instance a tile's raw regionID is the dynamic id,
+			// not 12132, so a raw check would reject the real arena drops. toTemplate handles both cases.
+			WorldPoint zTpl = InstanceCoords.toTemplate(client, wp);
+			return zTpl != null && zTpl.getRegionID() == DukeAutoIDs.ARENA_REGION;
+		});
 	}
-	public void    stop()          { camera.reset(); active = false;  }
+	public void    stop()          { camera.reset(); active = false; groundItems.setAcceptZone(null); bankRun.reset(); }
 	public DukePhase currentPhase(){ return phase.current(); }
 
 	/**
@@ -507,22 +531,66 @@ public class DukeAutoMain
 
 		if (!active) return;
 
+		ensureAutoRetaliateOff(tick);   // Duke: fight with auto-retaliate OFF so his hits don't desync our cadence
+
+		// Emergency bail-out: if we're under-supplied, teleport OUT to the POH. Placeholder trigger for now --
+		// we bail whenever we don't hold a 4-dose prayer potion. Only from INSIDE the instance (never mid-travel).
+		if (insideBossInstance() && maybeTeleportOut(tick)) return;
+
+		// Shared bank run: once we've bailed to the POH, run pool -> Portal Nexus -> open Lunar bank (it steps
+		// across the region change and owns the tick while active). Restock is still TODO -- for now we HOLD at
+		// the open bank; travelTick only resumes once readyForBoss is set true again (after restock).
+		if (bankRun.inPoh() && !bankRun.active() && !bankRun.bankReady()) bankRun.begin();
+		if (bankRun.active())
+		{
+			if (camera.isDetached()) camera.reset();   // player-follow camera for the POH / bank walk
+			bankRun.step(tick);
+			if (overlay != null) overlay.setStep(bankRun.label());
+			return;
+		}
+		if (bankRun.bankReady())
+		{
+			// TODO: restock here (withdraw prayer potions / food / etc.), then set readyForBoss = true and call
+			// bankRun.reset() so travelTick carries us back. Until restock is built, hold at the open bank.
+			if (overlay != null) overlay.setStep("bank: open -- restock TODO");
+			return;
+		}
+
+		// Not in the Duke arena yet -> run the overworld travel sequence to get there, then skip the arena-only
+		// logic below. (Prep / fight / loot all require being in the arena region.)
+		if (!insideBossInstance()) { travelTick(tick); return; }
+
 		applyArenaCamera();   // prep centre vs fight centre, re-framed on phase change
 
 		// POST-DEATH LOOT: drain Duke's drop pile (richest first, what fits) before the next-kill prep walks off.
 		// Holds the tick while collecting; clears itself once the pile is gone / nothing fits / it times out.
 		if (lastDeathTick >= 0)
 		{
-			if (lootCollector.collect(router, lastDeathTick, null) != null) return;
+			// includeAllTracked = true: never abandon leftover loot -- come back for drops left on the ground
+			// from an earlier kill when the inventory was full, not just this kill's pile.
+			String lootStatus = lootCollector.collect(router, lastDeathTick, null, true);
+			if (lootStatus != null)
+			{
+				// Full inventory, nothing fits: the pass would just hold on the pile until it times out. Free a
+				// slot via decant/make-room (consolidate partial doses, drop empty vials) so the NEXT tick can
+				// grab the drop. Skip when collect just issued a take this tick (a stackable we already hold is
+				// grabbable even at 28 slots), so we don't double-click.
+				if (inventoryFull() && !lootStatus.startsWith("loot: take")) decant.tick(router, groundItems, tick, true);
+				return;
+			}
 			lastDeathTick = -1;
-			decantActive = true; decantStartTick = tick;   // loot done -> run the cleanup decant pass next
+			// If we already hold enough potions to feed (prepStep == FEED_DUKE, set in onDukeDead), run the
+			// between-fights cleanup to a camp tile and wait there to feed Duke on respawn. If we're OUT of
+			// potions (prepStep == COLLECT_ARDER), SKIP the camp cleanup so prep starts walking to the mushroom
+			// lanes this tick instead of idling at camp until Duke respawns.
+			if (prepStep == PrepStep.FEED_DUKE) { decantActive = true; decantStartTick = tick; }
 		}
 
 		// 1b. Optimistic grind. Grinding is a free action that continues while we walk, so we grind
 		// one mushroom on every prep tick -- during the transit legs and even on a dodge tick (the
 		// movement block below issues the dodge/destination walk AFTER this, so the walk is never
 		// cancelled). Per-type gating inside keeps it from eating a count we're still collecting.
-		if (phase.current() == DukePhase.PREP) grindTick(tick);
+		if (canRunPrep()) grindTick(tick);
 
 		// 2. Movement planning (priority: falling hazards -> movement -> attack).
 		WorldPoint me = mirror.getPlayerTile();
@@ -532,7 +600,7 @@ public class DukeAutoMain
 			// preempts the collector -- so a dodge off the starter never leaves preApproachDone unset
 			// (which made the collector keep walking us BACK to it = oscillation). One walk-back to the
 			// starter is fine; this just stops the repeated ping-pong.
-			if (phase.current() == DukePhase.PREP && !preApproachDone)
+			if (canRunPrep() && !preApproachDone)
 			{
 				WorldPoint preT = activePreTile();
 				if (preT != null && atLaneStartPassby(me, preT)) preApproachDone = true;
@@ -584,7 +652,7 @@ public class DukeAutoMain
 				// chip-damage fight); in PREP it's transit between collection spots, where we top off for
 				// the coming fight. We skip the FEED_DUKE step so eating never competes with the wake feed.
 				boolean topOffHere = phase.current() == DukePhase.FIGHT
-					|| (phase.current() == DukePhase.PREP && prepStep != PrepStep.FEED_DUKE);
+					|| (canRunPrep() && prepStep != PrepStep.FEED_DUKE);
 				if (topOffHere)
 				{
 					applyConsumption(engine.evaluate(buildConsumptionRequest()), true);
@@ -621,30 +689,9 @@ public class DukeAutoMain
 			decantActive = false;
 		}
 
-		// 3. Fight cadence (on camp; movement above already handled any gas-bottle camp switch).
-		// Attack Duke, then the NEXT tick click our camp tile to hold position (tick stall);
-		// the only real relocation is the camp switch handled in planFightMove.
-		if (phase.current() == DukePhase.FIGHT)
-		{
-			if (fightClickCampNext)
-			{
-				WorldPoint c = toInstance(fightCamp);
-				if (c != null) router.walkTo(c);
-				fightClickCampNext = false;
-				if (overlay != null) overlay.setStep("fight: hold camp");
-			}
-			else if (canAttack(tick))
-			{
-				router.attackNpc(duke);
-				lastAttackTick = tick;
-				fightClickCampNext = true;
-				if (overlay != null) overlay.setStep("fight: attack duke");
-			}
-		}
-
 		// 3b. Prep actions (gather ingredients, etc). Hazard dodging already took priority in
 		// the movement block above (it returns early), so prep only runs when the tile is safe.
-		if (phase.current() == DukePhase.PREP)
+		if (canRunPrep())
 		{
 			runPrep(tick);
 		}
@@ -669,6 +716,29 @@ public class DukeAutoMain
 			// a drink/eat or cancels a swing.
 			if (!res.hasAction())
 				thrall.maintain(tick, mirror, router, thrallConditionsOk());
+		}
+
+		// 3. Fight cadence (on camp; movement above already handled any gas-bottle camp switch). REORDERED to
+		// run AFTER supply consumption: a shark/karambwan eaten THIS tick has already set the eat delay, so
+		// canAttack sees it and skips the swing -- we never attempt an attack on a tick we ate.
+		// Attack Duke, then the NEXT tick click our camp tile to hold position (tick stall);
+		// the only real relocation is the camp switch handled in planFightMove.
+		if (phase.current() == DukePhase.FIGHT)
+		{
+			if (fightClickCampNext)
+			{
+				WorldPoint c = toInstance(fightCamp);
+				if (c != null) router.walkTo(c);
+				fightClickCampNext = false;
+				if (overlay != null) overlay.setStep("fight: hold camp");
+			}
+			else if (canAttack(tick))
+			{
+				router.attackNpc(duke);
+				lastAttackTick = tick;
+				fightClickCampNext = true;
+				if (overlay != null) overlay.setStep("fight: attack duke");
+			}
 		}
 
 		// DEBUG: per-tick gaze trace (end of tick, so lastAttackTick reflects this tick's attack).
@@ -777,7 +847,7 @@ public class DukeAutoMain
 				// POWDER_GOAL, not raw mushroom count -- so concurrent grinding never skews it.
 				int y = DukeAutoIDs.herbloreMushroomYield(client.getRealSkillLevel(Skill.HERBLORE));
 				if (collectByPicking(tick, DukeAutoIDs.MENU_ID_ARDER_MUSHROOMS, DukeAutoIDs.ARDER_PRE_TILE,
-						WEST_LANE_EXIT, DukeAutoIDs.PICK_OPTION, DukeAutoIDs.ITEM_ARDER_MUSHROOM, batchPowderGoal(),
+						WEST_LANE_EXIT, DukeAutoIDs.ARDER_MUSHROOMS_STAND, DukeAutoIDs.PICK_OPTION, DukeAutoIDs.ITEM_ARDER_MUSHROOM, batchPowderGoal(),
 						-1, DukeAutoIDs.ITEM_ARDER_POWDER, y))
 					prepStep = PrepStep.COLLECT_MUSCA;
 				break;
@@ -787,7 +857,7 @@ public class DukeAutoMain
 			{
 				int y = DukeAutoIDs.herbloreMushroomYield(client.getRealSkillLevel(Skill.HERBLORE));
 				if (collectByPicking(tick, DukeAutoIDs.MENU_ID_MUSCA_MUSHROOMS, DukeAutoIDs.MUSCA_PRE_TILE,
-						EAST_LANE_EXIT, DukeAutoIDs.PICK_OPTION, DukeAutoIDs.ITEM_MUSCA_MUSHROOM, batchPowderGoal(),
+						EAST_LANE_EXIT, DukeAutoIDs.MUSCA_MUSHROOMS_STAND, DukeAutoIDs.PICK_OPTION, DukeAutoIDs.ITEM_MUSCA_MUSHROOM, batchPowderGoal(),
 						-1, DukeAutoIDs.ITEM_MUSCA_POWDER, y))
 					prepStep = PrepStep.COLLECT_SALT;
 				break;
@@ -798,7 +868,7 @@ public class DukeAutoMain
 				// (Mining-level dependent), so we just count the item. busyAnim=7139 (mining): while
 				// that animation plays we're mining (wait); if we arrive and aren't playing it, the
 				// click didn't latch -> re-click promptly instead of standing idle.
-				if (collectByPicking(tick, DukeAutoIDs.GOBJ_SALT_DEPOSIT, null, null, DukeAutoIDs.SALT_OPTION,
+				if (collectByPicking(tick, DukeAutoIDs.GOBJ_SALT_DEPOSIT, null, null, null, DukeAutoIDs.SALT_OPTION,
 						DukeAutoIDs.ITEM_SALAX_SALT, batchSaltGoal(), ANIM_MINE_SALT, 0, 0))
 					prepStep = PrepStep.FILL_VATS;
 				// (grinding runs globally every tick via grindTick, overlapping this stage)
@@ -849,7 +919,7 @@ public class DukeAutoMain
 	 * the busy animation is playing, or within the cooldown. Returns true once we hold {@code need}
 	 * of {@code itemId}. A null object (depleted / regrowing / out of scene) just waits.
 	 */
-	private boolean collectByPicking(int tick, int objId, WorldPoint preTile, WorldPoint exitTile, String option,
+	private boolean collectByPicking(int tick, int objId, WorldPoint preTile, WorldPoint exitTile, WorldPoint standTile, String option,
 		int itemId, int need, int busyAnim, int powderItemId, int yieldPerMushroom)
 	{
 		// For mushrooms we gate on TOTAL POWDER-EQUIVALENT in the inventory: raw mushrooms count as
@@ -990,7 +1060,21 @@ public class DukeAutoMain
 		if (picksRequested >= need) return false;       // all needed picks already requested -- wait for them
 
 		GameObject go = firstReachableById(objId, tick, preTile);   // mushrooms: lock onto the nearest entry-column one (ranked by TEMPLATE distance to the fixed pre-tile); salt (preTile==null): prefer a hazard-free approach among the two deposits
-		if (go == null) return false;   // depleted / regrowing / not in scene / all blocked -- wait
+		if (go == null)
+		{
+			// Not pickable yet: the mushroom is depleted / hasn't respawned (it flips back to the full pick id
+			// only when Duke respawns). Don't idle at the lane START -- walk up to the mushroom STAND tile during
+			// this safe dead time so we're already in position to pick the instant it respawns, instead of only
+			// starting the lane walk after respawn. Salt (standTile == null) has no pre-position -- it just waits.
+			if (standTile != null && me != null && !atTemplate(me, standTile))
+			{
+				WorldPoint standI = toInstance(standTile);
+				if (standI != null && pathWillBeHit(me, standI, tick, "to stand", 1))
+				{ holdForHazard = true; holdGoal = standI; return false; }   // imminent hazard -- wait on our safe tile
+				walkArena(standTile, tick, "prep: advance to mushroom");
+			}
+			return false;   // depleted / regrowing / not in scene / all blocked -- wait (now parked in position)
+		}
 
 		WorldPoint rock = go.getWorldLocation();
 		// SALT (no pre-tile): walk to a WALKABLE approach tile FIRST, then interact once adjacent. Clicking the
@@ -1062,6 +1146,8 @@ public class DukeAutoMain
 		int bestPrio = -1;
 		int bestCheb = Integer.MAX_VALUE;
 		int[][] nbrs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+		GameObject pinnedGo = null;        // the currently-pinned salt deposit, if still in scene this pass
+		boolean    pinnedBlocked = false;  // its blocked state, from the SAME check the selection below uses
 		for (GameObject go : gos)
 		{
 			WorldPoint t = go.getWorldLocation();
@@ -1105,6 +1191,9 @@ public class DukeAutoMain
 			for (int k = 0; k <= 8; k++)
 				if (dodger.isTileDangerousAt(approach, tick + k) || ventGassedAt(approach, tick + k)) { blocked = true; break; }
 			int prio = isLeft ? (blocked ? 1 : 3) : 2;
+			// Remember the pin's OWN blocked state (same approach tile / same check as the selection) so the
+			// pin-hold below never second-guesses it with a differently-computed one.
+			if (saltTargetTpl != null && rockTpl != null && rockTpl.equals(saltTargetTpl)) { pinnedGo = go; pinnedBlocked = blocked; }
 			int saltCheb = Math.max(Math.abs(me.getX() - t.getX()), Math.abs(me.getY() - t.getY()));
 			boolean better = (best == null) || prio > bestPrio || (prio == bestPrio && saltCheb < bestCheb);
 			if (better) { best = go; bestPrio = prio; bestCheb = saltCheb; bestLen = len; }
@@ -1116,11 +1205,11 @@ public class DukeAutoMain
 			WorldPoint bestTpl = InstanceCoords.toTemplate(client, best.getWorldLocation());
 			if (saltTargetTpl != null && !inSaltZone(me))
 			{
-				for (GameObject go2 : gos)
-				{
-					WorldPoint gt = InstanceCoords.toTemplate(client, go2.getWorldLocation());
-					if (gt != null && gt.equals(saltTargetTpl)) { best = go2; bestTpl = gt; break; }
-				}
+				// Hold the pinned deposit ONLY while it is still SAFE -- judged by the SAME per-deposit blocked check
+				// the selection loop used (captured in pinnedBlocked), not a second check on a different approach
+				// tile that could disagree and wrongly keep us on a gassed deposit. If the pin is blocked (or no
+				// longer in scene), DROP it and keep the freshly-chosen safe `best` -> we redirect to the clear one.
+				if (pinnedGo != null && !pinnedBlocked) { best = pinnedGo; bestTpl = saltTargetTpl; }
 			}
 			saltTargetTpl = bestTpl;
 			saltApproachTpl = nearestApproachTpl(best, me);   // walkable neighbour of the FINAL deposit, for the transit dodge
@@ -1148,6 +1237,28 @@ public class DukeAutoMain
 			if (!path.isEmpty() && path.size() < bestLen) { bestLen = path.size(); best = nb; }
 		}
 		return best == null ? null : InstanceCoords.toTemplate(client, best);
+	}
+
+	/**
+	 * Nearest WALKABLE instance tile adjacent to a vat (template tile {@code vatTpl}), for the vat hazard
+	 * check. The vat object tile is impassable, so a BFS path straight to it is empty -- which pathWillBeHit
+	 * treats as "clear", letting us auto-walk through a toxic cloud. Routing the check to a reachable
+	 * neighbour gives pathWillBeHit a real path to sample. Returns null if no neighbour is reachable.
+	 */
+	private WorldPoint vatApproachInst(WorldPoint vatTpl, WorldPoint meInst)
+	{
+		WorldPoint objInst = toInstance(vatTpl);
+		if (objInst == null || meInst == null) return null;
+		int[][] nbrs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+		WorldPoint best = null; int bestLen = Integer.MAX_VALUE;
+		for (int[] d : nbrs)
+		{
+			WorldPoint nb = new WorldPoint(objInst.getX() + d[0], objInst.getY() + d[1], objInst.getPlane());
+			java.util.List<WorldPoint> path = TilePathPredictor.path(
+				client.getTopLevelWorldView(), meInst, nb, null, this::inArena, ARENA_PATH_BUDGET);
+			if (!path.isEmpty() && path.size() < bestLen) { bestLen = path.size(); best = nb; }
+		}
+		return best;
 	}
 
 	/**
@@ -1365,7 +1476,11 @@ public class DukeAutoMain
 			{
 				GameObject ready = vatObjOnSide(west, DukeAutoIDs.GOBJ_FERMENTATION_VAT_READY);
 				if (ready == null) continue;
-				if (me != null && inst != null && pathWillBeHit(me, inst, tick, "vat")) return false; // unsafe -> wait
+				// Hazard-check against a WALKABLE tile beside the vat, NOT the vat's own impassable tile:
+				// a path to the impassable tile is empty, which pathWillBeHit reads as "clear" -- that is why we
+				// used to auto-walk straight through a toxic cloud to the vat. If the approach path is gassed, wait.
+				WorldPoint apprI = vatApproachInst(v, me);
+				if (me != null && apprI != null && pathWillBeHit(me, apprI, tick, "vat")) return false; // unsafe (cloud on path) -> wait
 				pendingCollectBaseline = mirror.countItem(DukeAutoIDs.ITEM_ARDER_MUSCA_POTION);
 				router.interactGameObject(ready, MenuAction.GAME_OBJECT_FIRST_OPTION, DukeAutoIDs.COLLECT_FROM_OPTION);
 				pendingVat = v; pendingVatIsFill = false; lastPrepActionTick = tick;
@@ -1376,7 +1491,11 @@ public class DukeAutoMain
 			{
 				GameObject vat = vatObjOnSide(west, DukeAutoIDs.GOBJ_FERMENTATION_VAT);
 				if (vat == null) continue;                                           // not fillable yet -> try other / wait
-				if (me != null && inst != null && pathWillBeHit(me, inst, tick, "vat")) return false; // unsafe -> wait
+				// Hazard-check against a WALKABLE tile beside the vat, NOT the vat's own impassable tile:
+				// a path to the impassable tile is empty, which pathWillBeHit reads as "clear" -- that is why we
+				// used to auto-walk straight through a toxic cloud to the vat. If the approach path is gassed, wait.
+				WorldPoint apprI = vatApproachInst(v, me);
+				if (me != null && apprI != null && pathWillBeHit(me, apprI, tick, "vat")) return false; // unsafe (cloud on path) -> wait
 				router.interactGameObject(vat, MenuAction.GAME_OBJECT_FIRST_OPTION, DukeAutoIDs.FILL_OPTION);
 				pendingVat = v; pendingVatIsFill = true; lastPrepActionTick = tick;
 				if (overlay != null) overlay.setStep("prep: fill vat (" + collected + "/" + wanted + ")");
@@ -1391,8 +1510,9 @@ public class DukeAutoMain
 			WorldPoint inst = toInstance(brewVat);
 			boolean atVat = me != null && inst != null && me.getPlane() == inst.getPlane()
 				&& Math.abs(me.getX() - inst.getX()) <= 2 && Math.abs(me.getY() - inst.getY()) <= 2;
-			if (!atVat && inst != null && client.getLocalDestinationLocation() == null
-				&& !pathWillBeHit(me, inst, tick, "vat-prewalk"))
+			WorldPoint apprI = vatApproachInst(brewVat, me);   // walkable neighbour (vat tile itself is impassable)
+			if (!atVat && apprI != null && client.getLocalDestinationLocation() == null
+				&& !pathWillBeHit(me, apprI, tick, "vat-prewalk"))
 				walkArena(brewVat, tick, "vats: wait to ferment");
 		}
 		if (overlay != null) overlay.setStep("prep: wait for vats to ferment");
@@ -2240,7 +2360,11 @@ public class DukeAutoMain
 
 	private void onDukeDead(int tick)
 	{
-		if (!sawDeathAnim) lastDeathTick = client.getTickCount() - DUKE_LOOT_LOOKBACK;   // anim missed -> anchor at despawn with a lookback to catch the drops
+		// Arm (and RE-ARM) the loot pass at despawn. lastDeathTick < 0 means it isn't armed: either the death
+		// anim was missed (never set), OR an earlier pass already finished and cleared it. Re-arming in the
+		// latter case is the retry Leviathan does -- we come back for drops that landed late, or a pile we
+		// couldn't fit until we freed a slot. A pass that's still collecting (lastDeathTick >= 0) is left alone.
+		if (lastDeathTick < 0) lastDeathTick = client.getTickCount() - DUKE_LOOT_LOOKBACK;   // despawn lookback catches the kill's drops
 		// Turn ALL our prayers off on death -- the overheads AND the offensive Piety (ensureOnlyOn only
 		// touches prayers in the managed set, so we widen it beyond OVERHEAD_SET to include Piety).
 		prayers.clearScheduled();
@@ -2315,6 +2439,10 @@ public class DukeAutoMain
 		// Otherwise ('normal') be OPPORTUNISTIC -- only eat once HP has fallen to the threshold. Either way it's
 		// gated to eatWindowOpen (never mid-swing while camped), paced by the eat delay (no food spam), and the
 		// overheal cap refuses a bite over max. Eating delays the next attack -- canAttack gates on eatDelay.
+		// HYBRID eat rule. A FREE window is one where a swing isn't being spent: the gaze (we idle on camp, our
+		// attacks are suppressed) or while RUNNING (the gas-bottle camp switch / transit). In a free window, TOP
+		// OFF -- eat whenever a shark would heal (room below max). Eating sets the eat delay; the fight cadence now
+		// runs AFTER consumption, so canAttack sees that delay and never fires a swing on a tick we ate.
 		boolean running    = client.getLocalDestinationLocation() != null;   // camp switch / transit (not attacking)
 		boolean freeWindow = gazeActive || running;                          // no swing being spent -> top off
 		boolean needFood = eatWindowOpen()
@@ -2558,6 +2686,176 @@ public class DukeAutoMain
 	 * registers once per swing, and it re-anchors every swing -> picks up the 5->4 enrage change for
 	 * free. Logs each swing so the offset vs our own attacks can be eyeballed / tuned.
 	 */
+	/**
+	 * Overworld travel to Duke's arena -- runs whenever we're active but not yet in the arena region. Built
+	 * up step by step. STEP 1 (now): if we're not in Ghorrock Dungeon, teleport there with the Ring of shadows
+	 * (captured CC_OP). TODO: navigate the dungeon to the arena entrance and enter the instance.
+	 */
+	private void travelTick(int tick)
+	{
+		// Final step: region 12132 but outside the instance (Y < ARENA_INSTANCE_MIN_Y, so insideBossInstance()
+		// is false and we land here) -- we're at the arena door. Open the entrance gate to zone in. MUST be
+		// before the Ghorrock branch: in 12132 we are NOT in DUNGEON_REGION, so otherwise step 1 re-teleports.
+		if (inRegionId(DukeAutoIDs.ARENA_REGION)) { ringTpInFlight = false; enterBossInstance(tick); return; }
+
+		// Step 1: once ready for the boss (post-bank), teleport to Ghorrock Dungeon with the Ring of shadows,
+		// unless we're already there.
+		if (!inRegionId(DukeAutoIDs.DUNGEON_REGION))
+		{
+			// Once the TP animation starts, latch it and stop clicking the ring until we actually arrive -- the
+			// anim + region load span several ticks and a re-click mid-teleport wastes a second cast.
+			if (playerAnim() == ANIM_RING_TELEPORT) ringTpInFlight = true;
+			if (readyForBoss && !ringTpInFlight && mirror.countItem(DukeAutoIDs.RING_OF_SHADOWS) > 0
+				&& tick - lastTravelActionTick >= TRAVEL_ACTION_COOLDOWN)
+			{
+				router.useInventoryItem(DukeAutoIDs.RING_OF_SHADOWS, DukeAutoIDs.RING_GHORROCK_OP, DukeAutoIDs.RING_GHORROCK_OPTION);
+				lastTravelActionTick = tick;
+			}
+			if (overlay != null) overlay.setStep(ringTpInFlight ? "travel: teleporting..." : "travel: teleport to Ghorrock Dungeon");
+			return;
+		}
+		ringTpInFlight = false;   // arrived in the dungeon -> re-arm the ring gate for the next trip
+
+		// Step 2: in the dungeon -- pass the two barriers toward the arena. At each waypoint (the TP arrival
+		// 5x5 around BARRIER_1, and the exact BARRIER_2 tile) open the Gate (46658) if it's in the scene, else
+		// enter the Heavy Door (49513). The interaction auto-walks us up to and through the barrier.
+		WorldPoint me = mirror.getPlayerTile();
+		if (near(me, DukeAutoIDs.RING_LANDING, 2)) { passDungeonBarrier(tick, DukeAutoIDs.GATE_ANCHOR_1); return; }
+		if (near(me, DukeAutoIDs.DUNGEON_BARRIER_2, 0)) { passDungeonBarrier(tick, DukeAutoIDs.GATE_ANCHOR_2); return; }
+		// TODO step 3: navigate between / past the barriers to the arena entrance and enter the instance.
+		if (overlay != null) overlay.setStep("travel: in Ghorrock Dungeon -- nav TODO");
+	}
+
+	/** At a dungeon barrier: Open the Gate (46658) if present, else Enter the Heavy Door (49513). Throttled. */
+	private void passDungeonBarrier(int tick, WorldPoint gateAnchor)
+	{
+		if (tick - lastTravelActionTick < TRAVEL_ACTION_COOLDOWN) return;
+		// The Gate (46658) is a WALL object, not a game object, so scan wall objects for it and fire the
+		// interaction with its scene coords (firstById only finds game objects -- that's why we were falling
+		// through to the Heavy Door). Matches the captured GAME_OBJECT_FIRST_OPTION "Open" on the gate.
+		// Several gates in region 11681 share id 46658 -- isolate THIS barrier's gate as the 46658 wall object
+		// nearest the provided anchor tile (not nearest the player), so we never grab a distant duplicate.
+		net.runelite.api.WallObject gate = SceneScanner.nearestWallById(client, DukeAutoIDs.GATE_OBJ, gateAnchor);
+		// Only accept it if it's actually AT the anchor (within GATE_MATCH_RADIUS) -- otherwise this barrier
+		// has no target gate and we fall through to the Heavy Door instead of opening a far duplicate.
+		if (gate != null && near(gate.getWorldLocation(), gateAnchor, DukeAutoIDs.GATE_MATCH_RADIUS))
+		{
+			net.runelite.api.coords.LocalPoint lp = gate.getLocalLocation();
+			if (lp != null)
+			{
+				router.gameObjectAction(lp.getSceneX(), lp.getSceneY(), MenuAction.GAME_OBJECT_FIRST_OPTION,
+					DukeAutoIDs.GATE_OBJ, "Open", "Gate");
+				lastTravelActionTick = tick;
+				if (overlay != null) overlay.setStep("travel: open gate");
+				return;
+			}
+		}
+		GameObject door = SceneScanner.firstById(client, DukeAutoIDs.HEAVY_DOOR_OBJ);
+		if (door != null)
+		{
+			router.interactGameObject(door, MenuAction.GAME_OBJECT_FIRST_OPTION, "Enter");
+			lastTravelActionTick = tick;
+			if (overlay != null) overlay.setStep("travel: enter heavy door");
+		}
+	}
+
+	/**
+	 * Final travel step: enter the boss instance. Region 12132 with template Y < ARENA_INSTANCE_MIN_Y is
+	 * the outside approach; open the entrance Gate (49138), the one nearest the door-front tile, to zone
+	 * in. Several 49138 gates can share the id, so isolate it by ARENA_DOOR_FRONT like the dungeon gate.
+	 */
+	private void enterBossInstance(int tick)
+	{
+		if (tick - lastTravelActionTick < TRAVEL_ACTION_COOLDOWN) return;
+		// The entrance gate is a WALL object (target "Gate", like the dungeon gate 46658). Isolate THIS one
+		// as the 49138 wall nearest the door-front tile, then open it with its scene coords.
+		net.runelite.api.WallObject gate = SceneScanner.nearestWallById(client, DukeAutoIDs.ENTRANCE_GATE, DukeAutoIDs.ARENA_DOOR_FRONT);
+		if (gate != null)
+		{
+			net.runelite.api.coords.LocalPoint lp = gate.getLocalLocation();
+			if (lp != null)
+			{
+				router.gameObjectAction(lp.getSceneX(), lp.getSceneY(), MenuAction.GAME_OBJECT_FIRST_OPTION,
+					DukeAutoIDs.ENTRANCE_GATE, "Open", "Gate");
+				lastTravelActionTick = tick;
+				if (overlay != null) overlay.setStep("travel: enter boss instance");
+				return;
+			}
+		}
+		// Fallback if 49138 turns out to be a GAME object rather than a wall object: open the first one.
+		GameObject goGate = SceneScanner.firstById(client, DukeAutoIDs.ENTRANCE_GATE);
+		if (goGate != null)
+		{
+			router.interactGameObject(goGate, MenuAction.GAME_OBJECT_FIRST_OPTION, "Open");
+			lastTravelActionTick = tick;
+			if (overlay != null) overlay.setStep("travel: enter boss instance (obj)");
+			return;
+		}
+		if (overlay != null) overlay.setStep("travel: at instance entrance -- gate not found");
+	}
+
+	/** Plane-aware Chebyshev proximity: {@code me} within {@code rad} tiles of {@code c} (rad 0 = exact tile). */
+	private boolean near(WorldPoint me, WorldPoint c, int rad)
+	{
+		return me != null && c != null && me.getPlane() == c.getPlane()
+			&& Math.abs(me.getX() - c.getX()) <= rad && Math.abs(me.getY() - c.getY()) <= rad;
+	}
+
+	/** Player's current TEMPLATE region id equals {@code regionId} (overworld / non-instanced check). */
+	private boolean inRegionId(int regionId)
+	{
+		WorldPoint tpl = InstanceCoords.toTemplate(client, mirror.getPlayerTile());
+		return tpl != null && tpl.getRegionID() == regionId;
+	}
+
+	/**
+	 * Keep auto-retaliate OFF during the fight. With it ON, Duke's hits make us auto-attack him back off our
+	 * manual cadence -- the mistimed / oscillating attacking. VarPlayer 172 is 0 when ON; if so, click the
+	 * combat-tab toggle (throttled so the varp has time to update before we retry).
+	 */
+	/**
+	 * Emergency bail: teleport OUT to the POH when under-supplied. Placeholder trigger -- for now we bail
+	 * whenever we don't hold a 4-dose prayer potion. Prefers the Construction cape ("Tele to POH"), else a
+	 * house teleport tablet ("Break"). Returns true while a teleport is being issued (caller stops other
+	 * actions); throttled so we click once and ride out the teleport delay rather than spamming it.
+	 */
+	private boolean maybeTeleportOut(int tick)
+	{
+		if (mirror.countItem(DukeAutoIDs.PRAYER_POTION_4) > 0) return false;   // supplied enough -> no bail
+		if (tick - lastTeleOutTick < TRAVEL_ACTION_COOLDOWN) return true;      // just clicked -> ride the delay
+		// useInventoryItem fires the CC_OP only when the item is actually held, returning false otherwise, so the
+		// || short-circuits to exactly one teleport: Construction cape first, House teletab as fallback.
+		if (router.useInventoryItem(DukeAutoIDs.CONSTRUCTION_CAPE, DukeAutoIDs.CONSTRUCTION_CAPE_POH_OP, DukeAutoIDs.CONSTRUCTION_CAPE_POH_OPTION)
+			|| router.useInventoryItem(DukeAutoIDs.HOUSE_TELETAB, DukeAutoIDs.HOUSE_TELETAB_BREAK_OP, DukeAutoIDs.HOUSE_TELETAB_OPTION))
+		{
+			lastTeleOutTick = tick;
+			readyForBoss = false;   // bailed under-supplied -> not ready to re-engage until restocked
+			if (overlay != null) overlay.setStep("bail: teleport out (no prayer potion)");
+			return true;
+		}
+		// No teleport item held -- can't bail; let normal logic continue (and surface it on the overlay).
+		if (overlay != null) overlay.setStep("bail: NO teleport item (need cape/teletab)");
+		return false;
+	}
+
+	private void ensureAutoRetaliateOff(int tick)
+	{
+		if (client.getVarpValue(DukeAutoIDs.VARP_AUTO_RETALIATE) != 0) return;   // already OFF
+		if (tick - lastRetaliateToggleTick < RETALIATE_TOGGLE_COOLDOWN) return;
+		router.castWidget(DukeAutoIDs.WIDGET_AUTO_RETALIATE, "Auto retaliate", "");
+		lastRetaliateToggleTick = tick;
+	}
+
+	/** Inventory has no free slots (28 used). Used to gate the post-death make-room decant. */
+	private boolean inventoryFull()
+	{
+		net.runelite.api.ItemContainer inv = client.getItemContainer(net.runelite.api.InventoryID.INVENTORY);
+		if (inv == null) return false;
+		int used = 0;
+		for (net.runelite.api.Item it : inv.getItems()) if (it != null && it.getId() >= 0) used++;
+		return used >= 28;
+	}
+
 	private void trackDukeAttack(int tick)
 	{
 		// Enrage is HP-driven (authoritative): at/below ENRAGE_HP Duke switches to a 4-tick cycle. ONLY
@@ -2604,10 +2902,34 @@ public class DukeAutoMain
 		dukePrevAnim = anim;
 	}
 
+	/**
+	 * Prep (gather -> brew -> feed) may run while Duke is dormant (PREP) AND during the post-kill gap before he
+	 * respawns (OUT_OF_FIGHT while still in the arena). The latter removes the dead-time where, with no potions,
+	 * we used to stand idle until Duke respawned before starting the next prep -- now we head for the mushroom
+	 * lanes the moment the loot pass finishes. Gated to the arena so it never fires when we're elsewhere.
+	 */
+	private boolean canRunPrep()
+	{
+		DukePhase p = phase.current();
+		return (p == DukePhase.PREP || p == DukePhase.OUT_OF_FIGHT) && isInArenaTemplate();
+	}
+
 private boolean isInArenaTemplate()
 	{
 		WorldPoint tpl = InstanceCoords.toTemplate(client, mirror.getPlayerTile());
 		return tpl != null && tpl.getRegionID() == DukeAutoIDs.ARENA_REGION;
+	}
+
+	/**
+	 * Region 12132 is BOTH the outside approach AND the boss instance, split by template Y: Y <
+	 * ARENA_INSTANCE_MIN_Y is the approach (still travelling), Y >= it is the instance proper. Prep/
+	 * fight/loot gate on this; the outside approach routes to travelTick to open the entrance gate.
+	 */
+	private boolean insideBossInstance()
+	{
+		WorldPoint tpl = InstanceCoords.toTemplate(client, mirror.getPlayerTile());
+		return tpl != null && tpl.getRegionID() == DukeAutoIDs.ARENA_REGION
+			&& tpl.getY() >= DukeAutoIDs.ARENA_INSTANCE_MIN_Y;
 	}
 
 	private void updateOverlay()

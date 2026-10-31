@@ -54,6 +54,10 @@ public class GroundItemTracker
 
 	private final Client client;
 	private final List<Entry> items = new CopyOnWriteArrayList<>();
+	/** Optional record filter: when set, only items whose tile it accepts are tracked; others are ignored
+	 *  at spawn. Null = track everywhere. A boss sets it to its arena so drops seen while travelling in
+	 *  (dungeon / overworld) are never recorded. Shared singleton: each boss sets its own in start()/null in stop(). */
+	private volatile Predicate<WorldPoint> acceptZone = null;
 
 	@Inject
 	public GroundItemTracker(Client client)
@@ -71,6 +75,7 @@ public class GroundItemTracker
 			if (item == null || tile == null) return;
 			WorldPoint wp = tile.getWorldLocation();
 			if (wp == null) return;
+			if (acceptZone != null && !acceptZone.test(wp)) return;   // outside the tracked zone -> never record it
 			int id = item.getId();
 			int qty = item.getQuantity();
 			for (Entry e : items)
@@ -128,7 +133,7 @@ public class GroundItemTracker
 					return;
 				}
 			}
-			if (event.getNewQuantity() > 0)
+			if (event.getNewQuantity() > 0 && (acceptZone == null || acceptZone.test(wp)))
 				items.add(new Entry(wp, id, event.getNewQuantity(), client.getTickCount()));
 		}
 		catch (Throwable t) { log.debug("[groundItem] qtyChanged", t); }
@@ -162,4 +167,8 @@ public class GroundItemTracker
 	/** Drop all tracked items. A boss calls this when leaving the arena / starting a fresh kill, since the
 	 *  WorldPoints are only valid in the current scene (and instanced arenas reuse coordinates). */
 	public void clear() { items.clear(); }
+
+	/** Restrict tracking to tiles this predicate accepts (null = track everywhere). Clears existing entries
+	 *  so any pile recorded before the filter can't linger. */
+	public void setAcceptZone(Predicate<WorldPoint> zone) { this.acceptZone = zone; items.clear(); }
 }
