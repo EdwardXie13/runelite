@@ -3974,37 +3974,37 @@ public final class ItemID
 	public static final int RUNE_PICKAXE = 1275;
 
 	/**
-	 * Bronze sword
+	 * Bronze shortsword
 	 */
 	public static final int BRONZE_SWORD = 1277;
 
 	/**
-	 * Iron sword
+	 * Iron shortsword
 	 */
 	public static final int IRON_SWORD = 1279;
 
 	/**
-	 * Steel sword
+	 * Steel shortsword
 	 */
 	public static final int STEEL_SWORD = 1281;
 
 	/**
-	 * Black sword
+	 * Black shortsword
 	 */
 	public static final int BLACK_SWORD = 1283;
 
 	/**
-	 * Mithril sword
+	 * Mithril shortsword
 	 */
 	public static final int MITHRIL_SWORD = 1285;
 
 	/**
-	 * Adamant sword
+	 * Adamant shortsword
 	 */
 	public static final int ADAMANT_SWORD = 1287;
 
 	/**
-	 * Rune sword
+	 * Rune shortsword
 	 */
 	public static final int RUNE_SWORD = 1289;
 
@@ -20949,7 +20949,7 @@ public final class ItemID
 	public static final int WHITE_MAGIC_STAFF = 6603;
 
 	/**
-	 * White sword
+	 * White shortsword
 	 */
 	public static final int WHITE_SWORD = 6605;
 
@@ -24834,7 +24834,7 @@ public final class ItemID
 	public static final int CERT_POH_BOXING_GLOVES_BLUE = 7674;
 
 	/**
-	 * Wooden sword
+	 * Wooden shortsword
 	 */
 	public static final int POH_WOODEN_SWORD = 7675;
 
@@ -31926,7 +31926,7 @@ public final class ItemID
 	public static final int AIDE_STICK = 9702;
 
 	/**
-	 * Training sword
+	 * Training shortsword
 	 */
 	public static final int AIDE_SHORTSWORD = 9703;
 
@@ -31936,7 +31936,7 @@ public final class ItemID
 	public static final int AIDE_SHIELD = 9704;
 
 	/**
-	 * Training bow
+	 * Training shortbow
 	 */
 	public static final int AIDE_SHORTBOW = 9705;
 
@@ -51610,7 +51610,7 @@ public final class ItemID
 	public static final int KODAI_WAND = 21006;
 
 	/**
-	 * Dragon sword
+	 * Dragon shortsword
 	 */
 	public static final int DRAGON_SHORTSWORD = 21009;
 
@@ -52105,7 +52105,7 @@ public final class ItemID
 	public static final int BR_ELDER_MAUL = 21205;
 
 	/**
-	 * Dragon sword
+	 * Dragon shortsword
 	 */
 	public static final int BR_DRAGON_SWORD = 21206;
 
@@ -71299,7 +71299,7 @@ public final class ItemID
 	public static final int BH_DRAGON_MACE_CORRUPTED = 28027;
 
 	/**
-	 * Dragon sword (cr)
+	 * Dragon shortsword (cr)
 	 */
 	public static final int BH_DRAGON_SHORTSWORD_CORRUPTED = 28029;
 
@@ -90730,6 +90730,330 @@ public final class ItemID
 	 */
 	public static final int PVPTUT_REWARD_VOUCHER = 34644;
 
+	/**
+	 * Orion
+	 */
+	public static final int OCELLUSPET = 34646;
+
+	/**
+	 * Orion
+	 */
+	public static final int OCELLUSPET_VARIANT_1 = 34648;
+
+	/**
+	 * Xari
+	 */
+	public static final int XARTHPET = 34649;
+
+	/**
+	 * Archie
+	 */
+	public static final int GUARDIANPET = 34650;
+
+	/**
+	 * Chubbles
+	 */
+	public static final int JELLYPET = 34651;
+
+	/**
+	 * Cole
+	 */
+	public static final int DAGONHAIPET = 34652;
+
+	/**
+	 * Zeke
+	 */
+	public static final int EZEKIELPET = 34653;
+
+	/**
+	 * Mimi
+	 */
+	public static final int MOIAPET = 34654;
+
+	/**
+	 * Dork
+	 */
+	public static final int BORKPET = 34655;
+	public static final int TFA_OCELLUS_P2_SWORD_DISCHARGE = 34656;
+
+	/**
+	 * Alliance's message
+	 */
+	public static final int TFA_START_MESSAGE = 34657;
+
+	/**
+	 * Archive key
+	 */
+	public static final int TFA_RECORDS_ROOM_KEY = 34658;
+
+	/**
+	 * Living record (tier 1)
+	 */
+	public static final int TFA_CAPE_T1 = 34659;
+
+	/**
+	 * Living record (tier 2)
+	 */
+	public static final int TFA_CAPE_T2 = 34661;
+
+	/**
+	 * Living record (tier 3)
+	 */
+	public static final int TFA_CAPE_T3 = 34663;
+
+	/**
+	 * Living record (tier 4)
+	 */
+	public static final int TFA_CAPE_T4 = 34665;
+
+	/**
+	 * Living record (tier 5)
+	 */
+	public static final int TFA_CAPE_T5 = 34667;
+
+	/**
+	 * Ascension shards
+	 */
+	public static final int ASCENSION_SHARDS = 34669;
+
+	/**
+	 * Fragment of living earth
+	 */
+	public static final int TFA_MOTE_EARTH = 34671;
+
+	/**
+	 * Fragment of deep water
+	 */
+	public static final int TFA_MOTE_WATER = 34673;
+
+	/**
+	 * Fragment of whispering wind
+	 */
+	public static final int TFA_MOTE_AIR = 34675;
+
+	/**
+	 * Fragment of burning fire
+	 */
+	public static final int TFA_MOTE_FIRE = 34677;
+
+	/**
+	 * Horn of Bran
+	 */
+	public static final int TFA_ZEAL_REWARD = 34679;
+
+	/**
+	 * Ascension crossbows
+	 */
+	public static final int ASCENSION_CROSSBOWS = 34681;
+
+	/**
+	 * Ascension bolts
+	 */
+	public static final int ASCENSION_BOLTS = 34684;
+	public static final int ASCENSION_BOLTS_2 = 34686;
+	public static final int ASCENSION_BOLTS_3 = 34687;
+	public static final int ASCENSION_BOLTS_4 = 34688;
+	public static final int ASCENSION_BOLTS_5 = 34689;
+
+	/**
+	 * Diamond ascension bolts
+	 */
+	public static final int ASCENSION_BOLTS_DIAMOND_UNENCHANTED = 34690;
+	public static final int ASCENSION_BOLTS_DIAMOND_UNENCHANTED_2 = 34692;
+	public static final int ASCENSION_BOLTS_DIAMOND_UNENCHANTED_3 = 34693;
+	public static final int ASCENSION_BOLTS_DIAMOND_UNENCHANTED_4 = 34694;
+	public static final int ASCENSION_BOLTS_DIAMOND_UNENCHANTED_5 = 34695;
+
+	/**
+	 * Diamond ascension bolts (e)
+	 */
+	public static final int ASCENSION_BOLTS_DIAMOND_ENCHANTED = 34696;
+	public static final int ASCENSION_BOLTS_DIAMOND_ENCHANTED_2 = 34698;
+	public static final int ASCENSION_BOLTS_DIAMOND_ENCHANTED_3 = 34699;
+	public static final int ASCENSION_BOLTS_DIAMOND_ENCHANTED_4 = 34700;
+	public static final int ASCENSION_BOLTS_DIAMOND_ENCHANTED_5 = 34701;
+
+	/**
+	 * Onyx ascension bolts
+	 */
+	public static final int ASCENSION_BOLTS_ONYX_UNENCHANTED = 34702;
+	public static final int ASCENSION_BOLTS_ONYX_UNENCHANTED_2 = 34704;
+	public static final int ASCENSION_BOLTS_ONYX_UNENCHANTED_3 = 34705;
+	public static final int ASCENSION_BOLTS_ONYX_UNENCHANTED_4 = 34706;
+	public static final int ASCENSION_BOLTS_ONYX_UNENCHANTED_5 = 34707;
+
+	/**
+	 * Onyx ascension bolts (e)
+	 */
+	public static final int ASCENSION_BOLTS_ONYX_ENCHANTED = 34708;
+	public static final int ASCENSION_BOLTS_ONYX_ENCHANTED_2 = 34710;
+	public static final int ASCENSION_BOLTS_ONYX_ENCHANTED_3 = 34711;
+	public static final int ASCENSION_BOLTS_ONYX_ENCHANTED_4 = 34712;
+	public static final int ASCENSION_BOLTS_ONYX_ENCHANTED_5 = 34713;
+	public static final int ASCENSION_CROSSBOW_DUMMY = 34714;
+
+	/**
+	 * Obligator
+	 */
+	public static final int OBLIGATOR = 34715;
+
+	/**
+	 * Obligator (uncharged)
+	 */
+	public static final int OBLIGATOR_UNCHARGED = 34717;
+
+	/**
+	 * Rondache
+	 */
+	public static final int RONDACHE = 34719;
+
+	/**
+	 * Archivist's folio (inert)
+	 */
+	public static final int ARCHIVISTS_FOLIO_EMPTY = 34722;
+
+	/**
+	 * Archivist's folio
+	 */
+	public static final int ARCHIVISTS_FOLIO = 34723;
+
+	/**
+	 * Zorya's tome
+	 */
+	public static final int ZORYAS_TOME = 34725;
+
+	/**
+	 * Zorya's tome (uncharged)
+	 */
+	public static final int ZORYAS_TOME_UNCHARGED = 34727;
+
+	/**
+	 * Alliance log
+	 */
+	public static final int TFA_MIDRAID_SUPPLIES_NOTE = 34729;
+
+	/**
+	 * Leftovers
+	 */
+	public static final int TFA_MIDRAID_SUPPLIES_LEFTOVERS = 34730;
+	public static final int FLETCHING_BOLT_SHAFT_FLIGHTED_ASCENSION = 34731;
+
+	/**
+	 * Candy onion
+	 */
+	public static final int HW26_CANDY_ONION = 34732;
+
+	/**
+	 * Sugar
+	 */
+	public static final int HW26_SUGAR = 34734;
+
+	/**
+	 * Molten sugar
+	 */
+	public static final int HW26_MOLTEN_SUGAR = 34736;
+
+	/**
+	 * Old onion
+	 */
+	public static final int HW26_ONION = 34738;
+
+	/**
+	 * Vampyre monocle
+	 */
+	public static final int HW26_REWARD_HEAD = 34740;
+
+	/**
+	 * Vampyre costume top
+	 */
+	public static final int HW26_REWARD_TOP = 34742;
+
+	/**
+	 * Vampyre costume bottom
+	 */
+	public static final int HW26_REWARD_LEGS = 34744;
+
+	/**
+	 * Vampyre costume cape
+	 */
+	public static final int HW26_REWARD_CAPE = 34746;
+
+	/**
+	 * Antique lamp
+	 */
+	public static final int BKF_LAMP = 34748;
+
+	/**
+	 * Antique lamp
+	 */
+	public static final int DEMON_SLAYER_LAMP = 34749;
+
+	/**
+	 * Antique lamp
+	 */
+	public static final int ERNEST_CHICKEN_LAMP = 34750;
+
+	/**
+	 * Antique lamp
+	 */
+	public static final int MBA_LAMP = 34751;
+
+	/**
+	 * Mudfoot
+	 */
+	public static final int MBA_MUDFOOT_FOLLOWER_OBJ = 34752;
+
+	/**
+	 * Mudfoot
+	 */
+	public static final int MBA_MUDFOOT_FOLLOWER_SPEAR_OBJ = 34753;
+
+	/**
+	 * Antique lamp
+	 */
+	public static final int RANDJ_LAMP = 34754;
+
+	/**
+	 * Antique lamp
+	 */
+	public static final int SOA_LAMP = 34755;
+
+	/**
+	 * Letter
+	 */
+	public static final int WOTW_LETTER_LANDS_END = 34756;
+
+	/**
+	 * Newspaper cutting
+	 */
+	public static final int WOTW_NEWS_LANDS_END = 34757;
+
+	/**
+	 * Bloody knife
+	 */
+	public static final int WOTW_KNIFE_LANDS_END = 34758;
+
+	/**
+	 * Human head
+	 */
+	public static final int WOTW_HEAD_HOSIDIUS = 34759;
+
+	/**
+	 * Letter
+	 */
+	public static final int WOTW_LETTER_HOSIDIUS = 34760;
+
+	/**
+	 * Certificate
+	 */
+	public static final int WOTW_CERTIFICATE_HOSIDIUS = 34761;
+
+	/**
+	 * Amulet of sight
+	 */
+	public static final int AMULET_OF_SIGHT = 34762;
+	public static final int SPINNING_WHEEL_ICON_DUMMY = 34765;
+
 	public static final class Cert
 	{
 		public static final int TWPART1 = 7;
@@ -95456,6 +95780,12 @@ public final class ItemID
 		public static final int BR_TORVA_HELM = 34618;
 		public static final int BR_ABYSSAL_TENTACLE = 34620;
 		public static final int BR_DRAGON_BOOTS = 34622;
+		public static final int TFA_ZEAL_REWARD = 34680;
+		public static final int ASCENSION_CROSSBOWS = 34682;
+		public static final int OBLIGATOR_UNCHARGED = 34718;
+		public static final int RONDACHE = 34720;
+		public static final int ZORYAS_TOME_UNCHARGED = 34728;
+		public static final int AMULET_OF_SIGHT = 34763;
 	}
 
 	public static final class Placeholder
@@ -105445,6 +105775,36 @@ public final class ItemID
 		public static final int MA2_ZAROS_CAPE_DARKER = 34640;
 		public static final int PVPTUT_FABRIC = 34642;
 		public static final int PVPTUT_REWARD_VOUCHER = 34645;
+		public static final int OCELLUSPET = 34647;
+		public static final int TFA_CAPE_T1 = 34660;
+		public static final int TFA_CAPE_T2 = 34662;
+		public static final int TFA_CAPE_T3 = 34664;
+		public static final int TFA_CAPE_T4 = 34666;
+		public static final int TFA_CAPE_T5 = 34668;
+		public static final int ASCENSION_SHARDS = 34670;
+		public static final int TFA_MOTE_EARTH = 34672;
+		public static final int TFA_MOTE_WATER = 34674;
+		public static final int TFA_MOTE_AIR = 34676;
+		public static final int TFA_MOTE_FIRE = 34678;
+		public static final int ASCENSION_CROSSBOWS = 34683;
+		public static final int ASCENSION_BOLTS = 34685;
+		public static final int ASCENSION_BOLTS_DIAMOND_UNENCHANTED = 34691;
+		public static final int ASCENSION_BOLTS_DIAMOND_ENCHANTED = 34697;
+		public static final int ASCENSION_BOLTS_ONYX_UNENCHANTED = 34703;
+		public static final int ASCENSION_BOLTS_ONYX_ENCHANTED = 34709;
+		public static final int OBLIGATOR = 34716;
+		public static final int RONDACHE = 34721;
+		public static final int ARCHIVISTS_FOLIO = 34724;
+		public static final int ZORYAS_TOME = 34726;
+		public static final int HW26_CANDY_ONION = 34733;
+		public static final int HW26_SUGAR = 34735;
+		public static final int HW26_MOLTEN_SUGAR = 34737;
+		public static final int HW26_ONION = 34739;
+		public static final int HW26_REWARD_HEAD = 34741;
+		public static final int HW26_REWARD_TOP = 34743;
+		public static final int HW26_REWARD_LEGS = 34745;
+		public static final int HW26_REWARD_CAPE = 34747;
+		public static final int AMULET_OF_SIGHT = 34764;
 	}
 /* This file is automatically generated. Do not edit. */
 }
