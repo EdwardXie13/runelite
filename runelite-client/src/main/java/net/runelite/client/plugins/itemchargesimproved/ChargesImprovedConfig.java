@@ -117,6 +117,7 @@ public interface ChargesImprovedConfig extends Config {
     String tumekens_shadow = "tumekens_shadow";
     String digsite_pendant = "digsite_pendant";
     String pendant_of_ates = "pendant_of_ates";
+    String eye_of_ayak = "eye_of_ayak";
 
     @ConfigSection(
         name = "General",
@@ -279,6 +280,13 @@ public interface ChargesImprovedConfig extends Config {
             description = "",
             section = infoboxes
         ) default boolean tumekensShadowInfobox() { return true; }
+
+        @ConfigItem(
+                keyName = eye_of_ayak + infobox,
+                name = "Eye of Ayak",
+                description = "",
+                section = infoboxes
+        ) default boolean eyeOfAyakInfobox() { return true; }
 
         @ConfigItem(
             keyName = master_scroll_book + infobox,
@@ -930,6 +938,13 @@ public interface ChargesImprovedConfig extends Config {
             description = "",
             section = overlays
         ) default boolean tumekensShadowOverlay() { return true; }
+
+        @ConfigItem(
+                keyName = eye_of_ayak + overlay,
+                name = "Eye of Ayak",
+                description = "",
+                section = overlays
+        ) default boolean eyeOfAyakOverlay() { return true; }
 
         @ConfigItem(
             keyName = master_scroll_book + overlay,
