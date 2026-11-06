@@ -5,18 +5,19 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
-import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.input.KeyListener;
+import net.runelite.client.input.KeyManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.plusUtils.StepOverlay;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
+import java.awt.event.KeyEvent;
 
 /**
  * Gemstone Crab automation plugin.
@@ -25,17 +26,18 @@ import javax.inject.Inject;
  * loop in GemstoneCrabAutoMain re-attacks any tick the crab is alive and
  * we're not currently interacting with it.
  *
- * Chat toggle: type "1" in chatbox to start, "2" to stop.
+ * F7 toggle: press F7 to start the worker, press again to stop.
  */
 @PluginDescriptor(name = "GemstoneCrabAuto", enabledByDefault = false)
 @Slf4j
-public class GemstoneCrabAutoPlugin extends Plugin {
+public class GemstoneCrabAutoPlugin extends Plugin implements KeyListener {
     @Inject private Client client;
     @Inject private ClientThread clientThread;
     @Inject private OverlayManager overlayManager;
     @Inject private StepOverlay overlay;
     @Inject private EventBus eventBus;
     @Inject private ItemManager itemManager;
+    @Inject private KeyManager keyManager;
 
     @Getter
     private volatile WorldPoint localPlayerLocation;
@@ -69,6 +71,7 @@ public class GemstoneCrabAutoPlugin extends Plugin {
         GemstoneCrabAutoNPCIDs.setAllVarsNull();
         GemstoneCrabAutoObjectIDs.setAllVarsNull();
         overlayManager.add(overlay);
+        keyManager.registerKeyListener(this);
         if (main == null) {
             main = new GemstoneCrabAutoMain(client, clientThread, overlay, this,
                     eventBus, itemManager);
@@ -79,6 +82,7 @@ public class GemstoneCrabAutoPlugin extends Plugin {
     @Override
     protected void shutDown() throws Exception {
         stopMain();
+        keyManager.unregisterKeyListener(this);
         GemstoneCrabAutoNPCIDs.setAllVarsNull();
         GemstoneCrabAutoObjectIDs.setAllVarsNull();
         overlayManager.remove(overlay);
@@ -124,29 +128,21 @@ public class GemstoneCrabAutoPlugin extends Plugin {
         System.out.println("gemstoneCrabAuto status is stop");
     }
 
-    private void toggleStatus() {
-        Widget chatboxInput = client.getWidget(WidgetInfo.CHATBOX_MESSAGE_LINES);
-        if (chatboxInput == null) return;
-        String txt = chatboxInput.getText();
-        if (txt == null) return;
-        java.util.regex.Matcher m = java.util.regex.Pattern
-                .compile("ff>(.*?)</c").matcher(txt);
-        String msg = m.find() ? m.group(1) : "";
-        if ("1".equals(msg) || "2".equals(msg)) {
-            System.out.println("[gc.toggleStatus] msg=" + msg + " raw=" + txt
-                + " main==null?" + (main == null)
-                + " isRunning=" + (main == null ? "n/a" : String.valueOf(main.isRunning))
-                + " hasStarted=" + hasStarted);
-        }
-        if (msg.equals("1") && (main == null || !main.isRunning) && !hasStarted) {
-            System.out.println("[gc.toggleStatus] START gate passed — calling startMain()");
-            startMain();
-            hasStarted = true;
-        } else if (msg.equals("2") && main != null && main.isRunning && hasStarted) {
-            System.out.println("[gc.toggleStatus] STOP gate passed — calling stopMain()");
+    // --- F7 start/stop toggle (replaces the old chatbox "1"/"2" trigger) ---
+    @Override public void keyTyped(KeyEvent e) {}
+    @Override public void keyReleased(KeyEvent e) {}
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() != KeyEvent.VK_F7) return;
+        if (main != null && main.isRunning && hasStarted) {
             stopMain();
             hasStarted = false;
+        } else if (main == null || !main.isRunning) {
+            startMain();
+            hasStarted = true;
         }
+        e.consume();
     }
 
     // ---- @Subscribe hooks --------------------------------------------------
@@ -154,11 +150,21 @@ public class GemstoneCrabAutoPlugin extends Plugin {
     public void onClientTick(ClientTick event) {
         try {
             if (main != null) main.updateMirroredGameState();
-            toggleStatus();
             Player p = client.getLocalPlayer();
             localPlayerLocation = p != null ? p.getWorldLocation() : null;
         } catch (Throwable ex) {
             GemstoneCrabAutoMain.logCaught("Plugin.onClientTick", ex);
+        }
+    }
+
+    // Auto-stop if we drop to the login screen while running (same as VorkathAuto).
+    @Subscribe
+    private void onGameStateChanged(GameStateChanged event) {
+        if (event.getGameState() == GameState.LOGIN_SCREEN && main != null && main.isRunning && hasStarted)
+        {
+            stopMain();
+            hasStarted = false;
+            System.out.println("gemstoneCrabAuto status is stop (login screen)");
         }
     }
 
