@@ -9,7 +9,6 @@ import net.runelite.api.Prayer;
 import net.runelite.api.Projectile;
 import net.runelite.api.events.AnimationChanged;
 import net.runelite.api.events.GameTick;
-import net.runelite.api.events.NpcDespawned;
 import net.runelite.api.events.ProjectileMoved;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -25,7 +24,6 @@ import javax.inject.Inject;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,19 +34,19 @@ import java.util.Set;
  * attack animation (rears up, 7592) pray Magic, its ranged attack animation (slams its feet, 7593) pray
  * Missiles. Jad's long wind-up means the animation leads the hit, so reacting in time works.
  * <p>
- * Jal-Xil (ranger) and Jal-Zek (mager): their style is FIXED (ranger always Missiles, mager always Magic) and
- * they attack every 4 ticks with no wind-up -- animation and projectile launch on the same tick, and
- * protection locks at launch, so reacting to the animation is a tick too late. Instead each mob's 4-tick
- * cadence is ANCHORED off a seen attack and the overhead is PRE-PRAYED a tick early, so it is already up when
- * the next attack launches. Tracked per NPC, so any number of off-ticked rangers/magers are handled; a mob is
- * dropped once it stops attacking or despawns. Melee is ignored (we are never in melee range of these two).
+ * Jal-Xil (ranger) / Jal-Zek (mager) "set" switching. Style is FIXED (Xil = Missiles, Zek = Magic), both attack
+ * every 4 ticks. You turn on the overhead for the FIRST mob yourself and attack it. On that mob's first attack
+ * aimed at you, it becomes the first mob: from then on your starting prayer is up ONLY on its attack ticks
+ * (T, T+4, T+8 ...) and the other prayer is up on every tick in between, which covers the second mob without
+ * tracking it. A click is active the next tick, so the other prayer is clicked on T (up T+1) and the starting
+ * prayer on T+3 (up T+4). If a Xil and Zek attack on the same tick, magic wins. Xil dies -> mage only;
+ * Zek dies -> range only. Jad wins any tick it needs a prayer.
  * <p>
- * All targeting is by id OR name (case-insensitive) so new variants are covered. On a same-tick style clash
- * Magic always wins -- you never want to eat a magic hit.
+ * All targeting is by id OR name (case-insensitive) so new variants are covered.
  */
 @PluginDescriptor(
 	name = "Prayer Help J",
-	description = "Inferno prayer helper: reacts to Jad's attack animation, and pre-prays Jal-Xil / Jal-Zek on their 4-tick cadence.",
+	description = "Inferno prayer helper: reacts to Jad's attack animation, and switches prayers for a Jal-Xil / Jal-Zek set.",
 	tags = {"prayer", "protect", "overhead", "jad", "jaltok", "jal-xil", "jal-zek", "inferno", "helper"},
 	enabledByDefault = false
 )
@@ -61,7 +59,7 @@ public class PrayerHelpJPlugin extends Plugin implements KeyListener
 	private static final int[] MAGE_ANIMS  = { 7592 };   // JalTok-Jad magic attack (rears up)
 	private static final int[] RANGE_ANIMS = { 7593 };   // JalTok-Jad ranged attack (slams feet)
 
-	// ---- Jal-Xil (ranger) / Jal-Zek (mager): style is FIXED -> predict the 4-tick cadence and pre-pray. ----
+	// ---- Jal-Xil (ranger) / Jal-Zek (mager): style is FIXED -> set switching on the first mob's 4-tick cycle. ----
 	private static final int[] XIL_IDS = { 7698, 7702 };   // Jal-Xil  -> always Protect from Missiles
 	private static final String XIL_NAME = "Jal-Xil";
 	private static final int XIL_RANGE_ANIM = 7605;        // its ranged attack -- the cadence anchor
@@ -72,7 +70,6 @@ public class PrayerHelpJPlugin extends Plugin implements KeyListener
 	private static final int ZEK_MAGE_PROJECTILE  = 1374;  // Jal-Zek magic projectile  (timing logger only)
 
 	private static final int ATTACK_PERIOD = 4;   // both ranger and mager attack every 4 ticks
-	private static final int STALE_TICKS = 5;     // drop a tracked mob this many ticks after its last seen attack
 	private static final int PRAY_DELAY = 2;      // measured: a Jad hit lands at animation+3, and a click is active the next tick, so click at animation+2
 
 	@Inject private Client client;
@@ -90,19 +87,19 @@ public class PrayerHelpJPlugin extends Plugin implements KeyListener
 	// animation). Two Jads scheduled for the same tick with different styles resolve to magic (never eat magic).
 	private final Map<Integer, Prayer> pending = new HashMap<>();
 
-	/** Per ranger/mager (keyed by NPC index): its fixed overhead and the tick of its last observed attack. */
-	private final Map<Integer, Sched> cadence = new HashMap<>();
+	// ---- Xil/Zek set switching. "First mob" = the one whose style matches the overhead you turned on. ----
+	private NPC primary = null;              // the first mob (null = not switching)
+	private Prayer primaryStyle = null;      // your starting prayer: up only on the first mob's attack ticks
+	private Prayer otherStyle = null;        // the other prayer: up on every tick in between
+	private int anchor = -1;                 // tick of the first mob's last attack animation
+	private int lastSwitchClickTick = -1;    // at most one switching click per tick
+	private Prayer lastSwitchClicked = null;
+	private int jadClickTick = -1;           // a Jad prayer was clicked this tick -> Jad wins, no switching click
+	private int lastZekAttackTick = -1;      // same-tick rule: a Zek attacking you on the first mob's tick -> magic
+	private NPC lastZekAttacker = null;
 
 	/** Projectiles already logged (first sight = launch tick), so the timing logger prints each once. */
 	private final Set<Projectile> seenProjectiles = new HashSet<>();
-
-	private static final class Sched
-	{
-		final Prayer style;
-		int anchor;
-		final NPC npc;
-		Sched(Prayer style, int anchor, NPC npc) { this.style = style; this.anchor = anchor; this.npc = npc; }
-	}
 
 	/** Whether the helper is armed -- read by the overlay. */
 	boolean isFlicking() { return flicking; }
@@ -124,8 +121,8 @@ public class PrayerHelpJPlugin extends Plugin implements KeyListener
 	protected void shutDown()
 	{
 		flicking = false;
-		cadence.clear();
 		pending.clear();
+		primary = null; primaryStyle = null; otherStyle = null; anchor = -1;
 		keyManager.unregisterKeyListener(this);
 		overlayManager.remove(overlay);
 	}
@@ -159,17 +156,36 @@ public class PrayerHelpJPlugin extends Plugin implements KeyListener
 			return;
 		}
 
-		// Ranger / mager: fixed style. Anchor its 4-tick cadence off this attack so onGameTick can have the
-		// overhead up on its NEXT attack tick (anchor+4), clicked at anchor+3.
-		Prayer fixed = fixedStyleOf(npc);
-		if (fixed == null) return;
-		if (!isAttackAnim(fixed, anim)) return;   // only its attack animation anchors (melee / idle / move ignored)
-		// Bail only if it is clearly attacking SOMEONE ELSE. getInteracting() can read null on the attack tick, and the
-		// old strict "== me" check here silently dropped Zek every time (never scheduled -> mage never went up).
+		// ---- Jal-Xil / Jal-Zek set switching ----
+		Prayer style = fixedStyleOf(npc);
+		if (style == null || !isAttackAnim(style, anim)) return;
+		int now = client.getTickCount();
 		Actor tgt = npc.getInteracting();
-		if (tgt != null && tgt != client.getLocalPlayer()) return;
-		cadence.put(npc.getIndex(), new Sched(fixed, client.getTickCount(), npc));
-		log.info("prayerHelpJ: {} cadence anchored at tick {}", fixed == Prayer.PROTECT_FROM_MAGIC ? "ZEK" : "XIL", client.getTickCount());
+		boolean atMe = tgt == null || tgt == client.getLocalPlayer();   // null can flicker on the attack tick; the glyph is not us
+		if (style == Prayer.PROTECT_FROM_MAGIC && atMe) { lastZekAttackTick = now; lastZekAttacker = npc; }
+
+		if (primary == null)
+		{
+			// Not switching yet: the mob whose style matches the overhead YOU turned on becomes the first mob, on its
+			// first attack aimed at you -- and only while both a Xil and a Zek are alive.
+			if (!atMe || !client.isPrayerActive(style) || !bothTypesAlive()) return;
+			if (style == Prayer.PROTECT_FROM_MISSILES && lastZekAttackTick == now && lastZekAttacker != null)
+				setPrimary(lastZekAttacker, Prayer.PROTECT_FROM_MAGIC, now, "Zek attacked on the same tick -> magic");
+			else
+				setPrimary(npc, style, now, "first attack with your overhead up");
+		}
+		else if (npc == primary)
+		{
+			anchor = now;   // re-sync on every attack it makes (any target), so the cycle never drifts
+			if (primaryStyle == Prayer.PROTECT_FROM_MISSILES && lastZekAttackTick == now && lastZekAttacker != null)
+				setPrimary(lastZekAttacker, Prayer.PROTECT_FROM_MAGIC, now, "Zek attacked on the same tick -> magic");
+		}
+		else if (primaryStyle == Prayer.PROTECT_FROM_MISSILES && style == Prayer.PROTECT_FROM_MAGIC && atMe && anchor == now)
+		{
+			setPrimary(npc, Prayer.PROTECT_FROM_MAGIC, now, "Zek attacked on the same tick -> magic");
+		}
+		else return;   // the second mob: ignored -- the other prayer already covers it in the gaps
+		drive(now);
 	}
 
 	@Subscribe
@@ -177,60 +193,113 @@ public class PrayerHelpJPlugin extends Plugin implements KeyListener
 	{
 		if (!flicking)
 		{
-			if (!cadence.isEmpty()) cadence.clear();
 			if (!pending.isEmpty()) pending.clear();
+			if (primary != null) clearPrimary("disarmed (F8)");
 			return;
 		}
 		int now = client.getTickCount();
 
-		// Fire the Jad overhead scheduled for this tick (PRAY_DELAY after its animation); drop any missed ones.
+		// Jad: fire the overhead scheduled for this tick. Jad wins -- nothing else clicks a prayer this tick.
 		Prayer due = pending.remove(now);
-		if (due != null) wantPrayer(due);
 		pending.keySet().removeIf(k -> k < now);
+		if (due != null) { wantPrayer(due); jadClickTick = now; return; }
 
-		// Ranger/mager cadence: pre-pray their fixed style a tick before each 4-tick launch (only if any tracked).
-		if (!cadence.isEmpty())
+		if (primary == null) return;
+
+		// Death rules, on the death itself (isDead), not the despawn: Xil dead -> mage only; Zek dead -> range only.
+		int xils = 0, zeks = 0;
+		boolean primaryAlive = false;
+		for (NPC n : client.getNpcs())
 		{
-			// Drop mobs that have stopped attacking us (no fresh attack animation within a cadence + slack window).
-			for (Iterator<Sched> it = cadence.values().iterator(); it.hasNext(); )
-			{
-				if (now - it.next().anchor > STALE_TICKS) it.remove();
-			}
-
-			// Each mob's hit is checked on its own 4-tick phase (anchor, anchor+4, ...). Click at anchor+3 so the
-			// overhead is up ON anchor+4, the mob's next attack tick. (anchor+1 was wrong: with two mobs 2 ticks apart
-			// it put each prayer up on the OTHER mob's attack tick -- log of tick 26146-26156.)
-			boolean needMagic = false, needRanged = false;
-			for (Sched s : cadence.values())
-			{
-				if (now - s.anchor != ATTACK_PERIOD - 1) continue;   // not one tick before this mob's next attack
-				// Skip only if it's clearly attacking SOMEONE ELSE. getInteracting() flickers to null between
-				// attacks, and the strict check used to drop the pre-pray on those ticks (missed swaps); null = still ours.
-				Actor tgt = s.npc.getInteracting();
-				if (tgt != null && tgt != client.getLocalPlayer()) continue;
-				if (s.style == Prayer.PROTECT_FROM_MAGIC) needMagic = true;
-				else if (s.style == Prayer.PROTECT_FROM_MISSILES) needRanged = true;
-			}
-			// Off-ticked, only one is ever true. If a ranger and mager ever launch together, magic wins.
-			if (needMagic)
-			{
-				boolean clicked = wantPrayer(Prayer.PROTECT_FROM_MAGIC);
-				log.info("prayerHelpJ: ZEK mage {} at tick {} -> up tick {}", clicked ? "CLICK" : "already up", now, now + 1);
-			}
-			else if (needRanged)
-			{
-				boolean clicked = wantPrayer(Prayer.PROTECT_FROM_MISSILES);
-				log.info("prayerHelpJ: XIL range {} at tick {} -> up tick {}", clicked ? "CLICK" : "already up", now, now + 1);
-			}
+			if (n == null || n.isDead()) continue;
+			Prayer s = fixedStyleOf(n);
+			if (s == Prayer.PROTECT_FROM_MISSILES) xils++;
+			else if (s == Prayer.PROTECT_FROM_MAGIC) zeks++;
+			else continue;
+			if (n == primary) primaryAlive = true;
 		}
-		// Leave-on: an overhead stays up until a different one is needed (activating it swaps the old one off).
+		if (xils == 0 || zeks == 0)
+		{
+			clearPrimary(xils == 0 && zeks == 0 ? "no Xil or Zek left" : (xils == 0 ? "Xil dead -> mage only" : "Zek dead -> range only"));
+			if (xils == 0 && zeks > 0) wantPrayer(Prayer.PROTECT_FROM_MAGIC);
+			else if (zeks == 0 && xils > 0) wantPrayer(Prayer.PROTECT_FROM_MISSILES);
+			return;
+		}
+		if (!primaryAlive)
+		{
+			clearPrimary("first mob died while another of its kind is alive -- next attack with your overhead up picks again");
+			return;
+		}
+		drive(now);
 	}
 
-	@Subscribe
-	public void onNpcDespawned(NpcDespawned event)
+	/**
+	 * Set switching: your starting prayer up ONLY on the first mob's attack ticks (anchor, anchor+4, ...), the other
+	 * prayer on every tick in between. A click is active the NEXT tick, so this picks the prayer for now+1. At most
+	 * one click per tick, and never re-clicks a prayer still waiting to come up (a second click would toggle it off).
+	 * Keeps switching on the last known timing even if the first mob turns to something else.
+	 */
+	private void drive(int now)
 	{
-		NPC npc = event.getNpc();
-		if (npc != null) cadence.remove(npc.getIndex());
+		if (primary == null) return;
+		if (jadClickTick == now || pending.containsKey(now)) return;   // Jad wins this tick
+		if (lastSwitchClickTick == now) return;
+		boolean attackNext = Math.floorMod(now + 1 - anchor, ATTACK_PERIOD) == 0;
+		Prayer want = attackNext ? primaryStyle : otherStyle;
+		if (client.isPrayerActive(want)) return;
+		if (lastSwitchClickTick == now - 1 && lastSwitchClicked == want) return;
+		if (wantPrayer(want))
+		{
+			lastSwitchClickTick = now;
+			lastSwitchClicked = want;
+			log.info("prayerHelpJ: SET {} CLICK at tick {} -> up tick {} ({})", nameOf(want), now, now + 1,
+				attackNext ? "first mob attacks then" : "gap");
+		}
+	}
+
+	private void setPrimary(NPC npc, Prayer style, int now, String why)
+	{
+		primary = npc;
+		primaryStyle = style;
+		otherStyle = style == Prayer.PROTECT_FROM_MAGIC ? Prayer.PROTECT_FROM_MISSILES : Prayer.PROTECT_FROM_MAGIC;
+		anchor = now;
+		log.info("prayerHelpJ: SET first mob = {} at tick {} ({}): {} on its attack ticks, {} in between",
+			style == Prayer.PROTECT_FROM_MAGIC ? "ZEK" : "XIL", now, why, nameOf(primaryStyle), nameOf(otherStyle));
+	}
+
+	private void clearPrimary(String why)
+	{
+		log.info("prayerHelpJ: SET switching stopped at tick {} -- {}", client.getTickCount(), why);
+		primary = null;
+		primaryStyle = null;
+		otherStyle = null;
+		anchor = -1;
+	}
+
+	/** True while at least one live (not dying) Jal-Xil AND one live Jal-Zek are in the scene. */
+	private boolean bothTypesAlive()
+	{
+		boolean x = false, z = false;
+		for (NPC n : client.getNpcs())
+		{
+			if (n == null || n.isDead()) continue;
+			Prayer st = fixedStyleOf(n);
+			if (st == Prayer.PROTECT_FROM_MISSILES) x = true;
+			else if (st == Prayer.PROTECT_FROM_MAGIC) z = true;
+		}
+		return x && z;
+	}
+
+	private static String nameOf(Prayer p)
+	{
+		return p == Prayer.PROTECT_FROM_MAGIC ? "mage" : (p == Prayer.PROTECT_FROM_MISSILES ? "range" : "none");
+	}
+
+	/** Overlay text: which mob the set switching is following, or "-" when not switching. */
+	String setStatus()
+	{
+		if (primary == null) return "-";
+		return primaryStyle == Prayer.PROTECT_FROM_MAGIC ? "Zek first" : "Xil first";
 	}
 
 	// --- Always-on timing logger for Xil/Zek (no F8 needed): logs each attack-animation START tick and each

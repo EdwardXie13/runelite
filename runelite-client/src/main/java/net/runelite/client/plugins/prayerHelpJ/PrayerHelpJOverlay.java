@@ -39,6 +39,10 @@ class PrayerHelpJOverlay extends OverlayPanel
 			.left("Jads:")
 			.right(Integer.toString(plugin.jadCount()))
 			.build());
+		panelComponent.getChildren().add(LineComponent.builder()
+			.left("Set:")
+			.right(plugin.setStatus())
+			.build());
 		return super.render(graphics);
 	}
 }
